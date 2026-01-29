@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bar Fermé - Beerdex</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            padding: 2rem;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+        }
+        .empty-glass {
+            width: 150px;
+            height: 150px;
+            margin-bottom: 2rem;
+            color: var(--accent-gold);
+            opacity: 0.8;
+            animation: tilt 2s infinite ease-in-out;
+        }
+        h1 { font-family: 'Russo One', sans-serif; margin-bottom: 1rem; }
+        p { color: #888; margin-bottom: 2rem; }
+        @keyframes tilt {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-5deg); }
+            75% { transform: rotate(5deg); }
+        }
+    </style>
+</head>
+<body>
+    <svg class="empty-glass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 2h-6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"></path>
+        <line x1="13" y1="2" x2="13" y2="16"></line>
+        <line x1="11" y1="18" x2="11" y2="22"></line>
+        <line x1="8" y1="22" x2="18" y2="22"></line>
+        <path d="M16 4h1a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-1"></path>
+    </svg>
+    
+    <h1>Le Bar est Fermé</h1>
+    <p>Il semble que vous n'ayez plus de connexion.<br>Vérifiez votre réseau et réessayez.</p>
+    
+    <button onclick="window.location.reload()" class="btn-primary">
+        Rafraîchir
+    </button>
+</body>
+</html>

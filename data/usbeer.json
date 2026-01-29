@@ -1,0 +1,32 @@
+[
+  {
+    "title": "GOOSE IPA",
+    "brewery": "GOOSE ISLAND (AB INBEV)",
+    "type": "Blonde",
+    "volume": "6 L",
+    "alcohol": "5.9°",
+    "id": "GOOSE IPA_BLONDE_6",
+    "image": "images/beer/us/GOOSE_IPA_BLONDE_6.png",
+    "production_volume": "Industrielle",
+    "distribution": "Partout",
+    "barrel_aged": false,
+    "community_rating": 3.5,
+    "ingredients": "Houblons US",
+    "rarity_rank": "Commun"
+  },
+  {
+    "title": "KENTUCKY IPA",
+    "brewery": "ALLTECH LEXINGTON BREWING AND DISTILLING CO (Kentucky)",
+    "type": "Blonde",
+    "volume": "0.33 L",
+    "alcohol": "5.5°",
+    "id": "KENTUCKY IPA_BLONDE_0.33",
+    "image": "images/beer/us/KENTUCKY_IPA_BLONDE_033.png",
+    "production_volume": "Régionale",
+    "distribution": "Cavistes spécialisés",
+    "barrel_aged": true,
+    "community_rating": 3.6,
+    "ingredients": "Fûts de Bourbon",
+    "rarity_rank": "Rare"
+  }
+]

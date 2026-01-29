@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#ffc107">
+    <title>Beerdex</title>
+    <meta name="description" content="Le Pokedex ultime pour vos bières. Collectionnez, notez et savourez.">
+    <!-- CSP for Security -->
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:;">
+    <meta name="keywords" content="Beerdex, Pokedex, bières, collection, notes, savourez">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Beerdex">
+    <meta property="og:description" content="Le Dex ultime pour vos bières.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://beerdex.dualsfwshield.be">
+    <meta property="og:image" content="https://beerdex.dualsfwshield.be/icons/logo-bnr.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="icons/logo-bnr.png">
+    <link rel="apple-touch-icon" href="icons/logo-bnr.png">
+
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&family=Russo+One&display=swap"
+        rel="stylesheet">
+
+    <!-- Styles -->
+    <script src="js/vendor/lz-string.min.js"></script>
+    <script src="js/vendor/qrcode.min.js"></script>
+    <script src="js/vendor/html5-qrcode.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div id="app">
+        <header class="app-header">
+            <div class="logo">
+                <img src="icons/logo-bnr.png" width="32" height="32" alt="Beerdex Logo">
+                <h1>Beerdex</h1>
+            </div>
+            <div class="header-toolbar" style="display: flex; gap: 10px; align-items: center;">
+                <button type="button" id="filter-toggle" class="icon-btn" aria-label="Ouvrir les filtres">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        aria-hidden="true">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                </button>
+                <button type="button" id="scan-toggle" class="icon-btn" aria-label="Scanner un code-barres">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+                        <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+                        <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+                        <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+                        <rect x="7" y="7" width="10" height="10"></rect>
+                    </svg>
+                </button>
+
+                <!-- Search Container: Will expand when active -->
+                <div id="header-search-container" style="display:flex; align-items:center; transition: all 0.3s;">
+                    <button type="button" id="search-toggle" class="icon-btn" aria-label="Ouvrir la recherche">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" aria-hidden="true">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Search Bar Overlay (Initially Hidden) -->
+        <div id="search-bar" class="search-bar hidden">
+            <input type="text" id="search-input" placeholder="Rechercher une bière..." autocomplete="off"
+                aria-label="Champs de recherche">
+
+            <!-- Quick API Search Button -->
+            <button type="button" id="btn-search-api-bar" class="btn-primary"
+                style="width:auto; margin:0; padding: 8px 12px; font-size: 0.8rem; background: var(--bg-card-hover); border: 1px solid var(--border-color); color: var(--accent-gold);"
+                aria-label="Recherche Approfondie (API)">
+                🌍 <span class="desktop-only" style="margin-left:5px;">OFF API</span>
+            </button>
+
+            <button type="button" id="search-close" class="icon-btn" aria-label="Fermer la recherche">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <main id="main-content" class="scroll-container">
+            <!-- Dynamic Content Injected Here -->
+            <div class="loading-state">
+                <div class="spinner"></div>
+                <p>Chargement du Beerdex...</p>
+            </div>
+        </main>
+
+        <!-- Floating Action Button for Adding Data -->
+        <button type="button" id="fab-add" class="fab" aria-label="Ajouter une bière manuellement">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+        </button>
+
+        <!-- Navigation Bar -->
+        <nav class="bottom-nav">
+            <button type="button" class="nav-item active" data-view="home" aria-label="Accueil - Liste des bières">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    aria-hidden="true">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                <span>Dex</span>
+            </button>
+            <button type="button" class="nav-item" data-view="drunk" aria-label="Historique de consommation">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    aria-hidden="true">
+                    <path
+                        d="M12 21.5C16.9706 21.5 21 17.2467 21 12C21 6.75329 16.9706 2.5 12 2.5C7.02944 2.5 3 6.75329 3 12C3 17.2467 7.02944 21.5 12 21.5Z" />
+                    <path d="M9 12L11 14L15 10" />
+                </svg>
+                <span>Bus</span>
+            </button>
+            <button type="button" class="nav-item" data-view="stats" aria-label="Statistiques et Succès">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    aria-hidden="true">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                <span>Stats</span>
+            </button>
+            <button type="button" class="nav-item" data-view="settings" aria-label="Paramètres">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    aria-hidden="true">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                    </path>
+                </svg>
+                <span>Paramètres</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Modals/Overlays -->
+    <div id="modal-container" class="modal-overlay hidden" aria-hidden="true">
+        <!-- Content injected dynamically -->
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+
+</html>
