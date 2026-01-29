@@ -5,6 +5,11 @@
 
 ![Beerdex Banner](icons/logo-bnr.png)
 
+## 📲 Disponibilité
+
+*   **Web** : [beerdex.be](https://beerdex.be)
+*   **Android** : [Télécharger sur le Play Store](https://play.google.com/store/apps/details?id=placeholder)
+
 ## 📖 À propos
 
 **Beerdex** est une Progressive Web App (PWA) conçue pour les amateurs de bière qui souhaitent garder une trace de leurs dégustations sans dépendre d'une application lourde ou payante.
