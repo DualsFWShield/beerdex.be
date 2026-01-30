@@ -608,6 +608,21 @@ function notifyUpdate(worker) {
 // This overwrites the previous definition in this file content block
 function renderCurrentView() {
     const mainContent = document.getElementById('main-content');
+    const appHeader = document.querySelector('.app-header');
+    const fab = document.getElementById('fab-add');
+
+    // Reset padding for non-beerpedia views
+    mainContent.style.padding = '';
+    mainContent.style.margin = '';
+    mainContent.style.paddingBottom = '';
+    mainContent.style.overscrollBehavior = '';
+
+    // Show header and FAB by default
+    if (appHeader) appHeader.style.display = '';
+    if (fab) fab.style.display = '';
+
+    // Reset body overscroll
+    document.body.style.overscrollBehavior = '';
 
     if (state.observer) {
         state.observer.disconnect();
@@ -655,6 +670,56 @@ function renderCurrentView() {
     } else if (state.view === 'stats') {
         const isDiscovery = Storage.getPreference('discoveryMode', false);
         UI.renderStats(state.beers, Storage.getAllUserData(), mainContent, isDiscovery);
+    } else if (state.view === 'beerpedia') {
+        // --- IMMERSIVE MODE ---
+        // Hide header for fullscreen experience
+        if (appHeader) appHeader.style.display = 'none';
+        // Hide FAB
+        if (fab) fab.style.display = 'none';
+
+        // Disable pull-to-refresh on mobile
+        mainContent.style.overscrollBehavior = 'none';
+        document.body.style.overscrollBehavior = 'none';
+
+        // Render Beerpedia iframe - truly fullscreen with loading spinner
+        mainContent.style.padding = '0';
+        mainContent.style.margin = '0';
+        mainContent.style.paddingBottom = '0';
+        mainContent.innerHTML = `
+            <div id="beerpedia-loader" style="
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+                z-index: 5;
+            ">
+                <div class="spinner" style="width: 50px; height: 50px;"></div>
+                <span style="color: var(--text-secondary); font-size: 0.9rem;">Chargement de Beerpedia...</span>
+            </div>
+            <iframe 
+                id="beerpedia-frame"
+                src="https://beerpedia.beerdex.be" 
+                style="
+                    width: 100%;
+                    height: calc(100vh - 60px);
+                    height: calc(100dvh - 60px);
+                    border: none;
+                    display: block;
+                    background: #0d0d0d;
+                    position: relative;
+                    z-index: 10;
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                "
+                title="Beerpedia - L'encyclopédie de la bière"
+                allow="fullscreen"
+                onload="this.style.opacity='1'; document.getElementById('beerpedia-loader')?.remove();"
+            ></iframe>
+        `;
     } else if (state.view === 'settings') {
         const isDiscovery = Storage.getPreference('discoveryMode', false);
         UI.renderSettings(state.beers, Storage.getAllUserData(), mainContent, isDiscovery, (newVal) => {
