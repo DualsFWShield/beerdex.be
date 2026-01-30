@@ -5,6 +5,7 @@ import * as Map from './map.js';
 import * as API from './api.js';
 import * as Scanner from './scanner.js';
 import { fetchProductByBarcode, searchProducts } from './off-api.js';
+import { Feedback } from './feedback.js'; // Added import for Feedback
 
 // We assume global libs: QRCode, Html5QrcodeScanner (handled via CDN)
 const QRCodeLib = window.QRCode;
@@ -1290,66 +1291,46 @@ export function renderBeerDetail(beer, onSave) {
             const particleColor = rarityColors[beer.rarity] || '#FFC000';
 
             overlay.innerHTML = `
-                <div class="reveal-card" style="border: 4px solid ${particleColor}; box-shadow: 0 0 50px ${particleColor};">
-                    <span style="font-size: 4rem; animation: rarity-shake 0.1s infinite;">🍺</span>
+                <div class="reveal-card animate__animated animate__jackInTheBox" style="border: 4px solid ${particleColor}; box-shadow: 0 0 50px ${particleColor};">
+                    <span style="font-size: 4rem;">🍺</span>
                 </div>
             `;
             overlay.appendChild(canvas);
             document.body.appendChild(overlay);
 
-            // Particle System
-            const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            const particles = [];
-            const particleCount = beer.rarity === 'ultra_legendaire' ? 300 : (beer.rarity === 'legendaire' ? 200 : 100);
+            // Close after delay
+            setTimeout(() => {
+                const card = overlay.querySelector('.reveal-card');
+                card.classList.replace('animate__jackInTheBox', 'animate__zoomOut');
+                overlay.style.transition = 'opacity 0.5s';
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.remove(), 500);
+            }, 3000);
 
-            class Particle {
-                constructor() {
-                    this.x = canvas.width / 2;
-                    this.y = canvas.height / 2;
-                    this.size = Math.random() * 8 + 2;
-                    this.speedX = (Math.random() - 0.5) * 20;
-                    this.speedY = (Math.random() - 0.5) * 20;
-                    this.color = particleColor;
-                    this.alpha = 1;
+            // FX Trigger
+            import('./fx.js').then(m => {
+                // Burst center
+                m.FX.burst(window.innerWidth / 2, window.innerHeight / 2, particleColor);
+                // Confetti for high rarity
+                if (['epique', 'mythique', 'legendaire', 'ultra_legendaire'].includes(beer.rarity)) {
+                    m.FX.confetti();
                 }
-                update() {
-                    this.x += this.speedX;
-                    this.y += this.speedY;
-                    this.alpha -= 0.015;
-                    this.size *= 0.98;
-                }
-                draw() {
-                    ctx.globalAlpha = this.alpha;
-                    ctx.fillStyle = this.color;
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-
-            function spawnParticles() {
-                for (let i = 0; i < particleCount; i++) {
-                    particles.push(new Particle());
-                }
-            }
-
-            function animateParticles() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                for (let i = particles.length - 1; i >= 0; i--) {
-                    particles[i].update();
-                    particles[i].draw();
-                    if (particles[i].alpha <= 0) particles.splice(i, 1);
-                }
-                if (particles.length > 0) requestAnimationFrame(animateParticles);
-            }
+            });
+            // Rumble Effect before explosion
+            setTimeout(() => {
+                const card = overlay.querySelector('.reveal-card');
+                if (card) card.classList.add('rumble-effect');
+            }, 1000);
 
             // Trigger explosion after delay (sync with card animation)
             setTimeout(() => {
-                spawnParticles();
-                animateParticles();
-            }, 1500); // Explode mid-shake
+                import('./fx.js').then(m => {
+                    const count = beer.rarity === 'ultra_legendaire' ? 300 : (beer.rarity === 'legendaire' ? 200 : 100);
+                    m.FX.particleExplosion(canvas, particleColor, count);
+                });
+                // Impact sound on explosion
+                import('./feedback.js').then(m => m.Feedback.impactHeavy());
+            }, 1500);
 
             // Wait for full animation then reveal
             setTimeout(() => {
@@ -1368,8 +1349,9 @@ export function renderBeerDetail(beer, onSave) {
                     ], { duration: 1000, easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' });
                 }
 
-                // Play Sound (placeholder)
-                // const audio = new Audio('sounds/reveal.mp3'); audio.play();
+                // Play Sound
+                Feedback.playRarity(beer.rarity);
+                Feedback.impactHeavy();
 
             }, 3000); // Sync with CSS animation length
         } else {
@@ -1666,6 +1648,8 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
                     if (product) {
                         renderAddBeerForm(onSave, editModeBeer, product);
                         showToast("Données trouvées !");
+                        Feedback.playScan(); // Play sound on successful scan
+                        Feedback.impactLight(); // Haptic feedback
                     } else {
                         showToast("Produit inconnu.");
                         renderAddBeerForm(onSave, editModeBeer, prefillData);
@@ -1945,6 +1929,33 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                 </div>
             </div>
 
+            <!-- 1.5 Immersion (Audio/Haptics) -->
+            <div class="stat-card mt-20">
+                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;">🔊 Immersion</h4>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <div style="text-align:left;">
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Effets Sonores</strong>
+                        <span style="font-size:0.8rem; color:#888;">Bips et fanfares 8-bit</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-sound" ${Storage.getPreference('soundEnabled', true) ? 'checked' : ''}>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="text-align:left;">
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Vibrations</strong>
+                        <span style="font-size:0.8rem; color:#888;">Retours haptiques (Mobile)</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-haptics" ${Storage.getPreference('hapticsEnabled', true) ? 'checked' : ''}>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+
             <!-- 2. Rareté (New) -->
             <div class="stat-card mt-20">
                 <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;">💎 Rareté</h4>
@@ -2075,6 +2086,19 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
             discoveryCallback(e.target.checked);
         };
     }
+
+    // Immersion Toggles
+    container.querySelector('#toggle-sound').onchange = (e) => {
+        Storage.savePreference('soundEnabled', e.target.checked);
+        Feedback.reloadSettings();
+        if (e.target.checked) Feedback.playSuccess();
+    };
+
+    container.querySelector('#toggle-haptics').onchange = (e) => {
+        Storage.savePreference('hapticsEnabled', e.target.checked);
+        Feedback.reloadSettings();
+        if (e.target.checked) Feedback.impactMedium();
+    };
 
     // --- Bindings ---
 
@@ -2555,6 +2579,16 @@ const TutorialSystem = {
             message: `
                 <h3>Recherche</h3>
                 <p>Trouvez vos bières instantanément.</p>
+                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">Suivant</button>
+            `
+        },
+        {
+            id: 'scan',
+            target: '#scan-toggle',
+            position: 'bottom',
+            message: `
+                <h3>Scanner Intelligent</h3>
+                <p>Scannez un code-barre pour ajouter une bière ou voir sa fiche.</p>
                 <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">Suivant</button>
             `
         },
@@ -3669,3 +3703,55 @@ export function renderShareLink(link) {
     openModal(wrapper);
 }
 
+// --- Auto-Animation Injector for Rarities ---
+const rarityObserver = new MutationObserver((mutations) => {
+    mutations.forEach(m => {
+        m.addedNodes.forEach(node => {
+            // Check direct element
+            if (node.nodeType === 1) {
+                if (node.classList && node.classList.contains('rarity-badge')) {
+                    addAnimClasses(node);
+                }
+                // Check children
+                node.querySelectorAll && node.querySelectorAll('.rarity-badge').forEach(addAnimClasses);
+            }
+        });
+    });
+});
+
+function addAnimClasses(badge) {
+    // Avoid double add
+    if (badge.dataset.animInit) return;
+    badge.dataset.animInit = 'true';
+
+    if (badge.classList.contains('rarity-mythique')) {
+        badge.classList.add('anim-mythique', 'rarity-frame-mythique');
+    }
+    if (badge.classList.contains('rarity-legendaire')) {
+        badge.classList.add('anim-legendaire');
+    }
+    if (badge.classList.contains('rarity-ultra_legendary')) {
+        badge.classList.add('card-anim-ultra_legendary', 'rarity-frame-ultra_legendary');
+    }
+    if (badge.classList.contains('rarity-epique')) {
+        badge.classList.add('anim-epique');
+    }
+    if (badge.classList.contains('rarity-rare')) {
+        badge.classList.add('anim-rare');
+    }
+    if (badge.classList.contains('rarity-commun')) {
+        badge.classList.add('anim-commun');
+    }
+    if (badge.classList.contains('rarity-super_rare')) {
+        badge.classList.add('anim-super_rare');
+    }
+}
+
+// Start watching
+if (document.body) {
+    rarityObserver.observe(document.body, { childList: true, subtree: true });
+} else {
+    window.addEventListener('DOMContentLoaded', () => {
+        rarityObserver.observe(document.body, { childList: true, subtree: true });
+    });
+}

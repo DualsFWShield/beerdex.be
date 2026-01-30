@@ -797,7 +797,161 @@ h3 {
     }
 }
 
-/* --- Added for UI Polish & Accessibility --- */
+/* --- Advanced Animations (Added by Agent) --- */
+
+/* Achievement Toast */
+.achievement-toast {
+    position: fixed;
+    top: 20px;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    width: fit-content;
+    /* transform: translateX(-50%) translateY(-100px); REMOVED for Animate.css compatibility */
+    background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+    border: 1px solid var(--accent-gold);
+    border-radius: 50px;
+    padding: 10px 25px 10px 10px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 192, 0, 0.2);
+    z-index: 10000;
+    overflow: hidden;
+    animation: ach-slide-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    min-width: 280px;
+}
+
+.achievement-toast.out {
+    animation: ach-slide-out 0.5s ease-in forwards;
+}
+
+.ach-icon {
+    width: 45px;
+    height: 45px;
+    background: var(--accent-gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    animation: ach-icon-pop 0.5s 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards;
+}
+
+.ach-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.ach-label {
+    font-size: 0.7rem;
+    color: var(--accent-gold);
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.ach-title {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #fff;
+}
+
+.ach-shine {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transform: skewX(-20deg);
+    animation: shine-pass 2s infinite;
+}
+
+@keyframes ach-slide-in {
+    to {
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes ach-slide-out {
+    to {
+        transform: translateX(-50%) translateY(-150px);
+        opacity: 0;
+    }
+}
+
+@keyframes ach-icon-pop {
+    from {
+        transform: scale(0);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+@keyframes shine-pass {
+    0% {
+        left: -100%;
+    }
+
+    100% {
+        left: 200%;
+    }
+}
+
+/* Enhanced Rarity Frames */
+.rarity-frame-mythique {
+    position: relative;
+}
+
+.rarity-frame-mythique::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 18px;
+    background: linear-gradient(45deg, #ff0000, #ff7300, #ff0000);
+    z-index: -1;
+    filter: blur(10px);
+    opacity: 0.6;
+    animation: pulse-fire 2s infinite;
+}
+
+@keyframes pulse-fire {
+    0% {
+        opacity: 0.5;
+        filter: blur(8px);
+    }
+
+    50% {
+        opacity: 0.8;
+        filter: blur(12px);
+    }
+
+    100% {
+        opacity: 0.5;
+        filter: blur(8px);
+    }
+}
+
+.rarity-frame-ultra_legendary::before {
+    background: linear-gradient(45deg, #ff00cc, #3333ff, #00ccff, #ff00cc);
+    background-size: 400%;
+    animation: rgb-border 3s linear infinite;
+}
+
+@keyframes rgb-border {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 100% 50%;
+    }
+}
+
 
 /* Accessibility & Utils */
 @media (max-width: 600px) {
@@ -1520,4 +1674,235 @@ body.modal-open {
     width: 0%;
     background: #fff;
     transition: width 0.1s linear;
+}
+
+/* --- Achievement Toast Styling --- */
+.achievement-toast {
+    position: relative;
+    /* Changed from fixed */
+    /* top/left/right removed */
+    margin: 0;
+    /* Wrapper handles centering */
+    z-index: 2147483647 !important;
+    /* Max Z-Index */
+    background: linear-gradient(135deg, rgba(20, 20, 20, 0.95), rgba(40, 40, 40, 0.95));
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 12px;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    /* Clean dark shadow only */
+    backdrop-filter: blur(10px);
+    width: fit-content;
+    max-width: 90vw;
+    pointer-events: none;
+}
+
+/* --- Achievement System & Toasts --- */
+
+.ach-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 15px;
+    padding: 10px 0;
+    justify-items: center;
+}
+
+/* Explicit clean style for Toast Icon to avoid artifacts */
+.achievement-toast .ach-item {
+    width: 40px !important;
+    height: 40px !important;
+    background: #000 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    cursor: default !important;
+    border-radius: 50% !important;
+}
+
+cursor: default !important;
+border-radius: 50% !important;
+}
+
+.achievement-toast .ach-icon,
+.achievement-toast .ach-icon * {
+    font-size: 1.2rem !important;
+    filter: none !important;
+    text-shadow: none !important;
+    color: #FFF !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+.ach-item {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    /* Force dark background */
+    background: linear-gradient(145deg, #1e1e1e, #2a2a2a) !important;
+    border: 2px solid #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 5px 5px 10px #151515, -5px -5px 10px #353535;
+    /* Soft neumorphism */
+    transition: all 0.2s ease;
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    color: #fff;
+    /* Default text color */
+}
+
+.ach-item[style*="opacity:1"] {
+    /* Unlocked state */
+    /* Gold Glow */
+    background: #000000 !important;
+    /* Pure Black for max contrast */
+}
+
+.ach-icon {
+    font-size: 1.8rem;
+    /* Restored size */
+    line-height: 1;
+    color: #FFFFFF;
+    /* White Text for readability against black */
+    text-align: center;
+    /* Removed heavy shadows that blur text */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    font-weight: 900;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-style: normal;
+    background: transparent !important;
+    /* Force transparent background globally */
+    text-shadow: none !important;
+    /* remove any shadow globally */
+}
+
+.ach-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 192, 0, 0.15);
+}
+
+.ach-item:active {
+    transform: scale(0.95);
+}
+
+/* Toast (reusing some achievement styles but specific alignment) */
+.achievement-toast .ach-icon {
+    width: auto;
+    height: auto;
+    margin-right: 0;
+}
+
+.ach-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.ach-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #FFC000;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.ach-title {
+    font-size: 1rem;
+    color: #fff;
+    font-weight: 600;
+}
+
+.ach-shine {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transform: skewX(-20deg);
+    animation: shine 2s infinite;
+    pointer-events: none;
+}
+
+@keyframes shine {
+    0% {
+        left: -100%;
+    }
+
+    100% {
+        left: 200%;
+    }
+}
+
+@keyframes rumble {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+
+    25% {
+        transform: translate(-2px, 2px) rotate(-1deg);
+    }
+
+    50% {
+        transform: translate(2px, -2px) rotate(1deg);
+    }
+
+    75% {
+        transform: translate(-2px, -2px) rotate(-1deg);
+    }
+
+    100% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+}
+
+.rumble-effect {
+    animation: rumble 0.1s infinite linear;
+}
+
+/* Custom Toast Animation (No side-effects) */
+@keyframes toastEntry {
+    0% {
+        transform: translateY(-100px);
+        opacity: 0;
+    }
+
+    60% {
+        transform: translateY(10px);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes toastExit {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(-100px);
+        opacity: 0;
+    }
+}
+
+.toast-enter-anim {
+    animation: toastEntry 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.toast-exit-anim {
+    animation: toastExit 0.5s ease-in forwards;
 }
