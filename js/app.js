@@ -681,45 +681,92 @@ function renderCurrentView() {
         mainContent.style.overscrollBehavior = 'none';
         document.body.style.overscrollBehavior = 'none';
 
-        // Render Beerpedia iframe - truly fullscreen with loading spinner
-        mainContent.style.padding = '0';
-        mainContent.style.margin = '0';
-        mainContent.style.paddingBottom = '0';
-        mainContent.innerHTML = `
-            <div id="beerpedia-loader" style="
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 15px;
-                z-index: 5;
-            ">
-                <div class="spinner" style="width: 50px; height: 50px;"></div>
-                <span style="color: var(--text-secondary); font-size: 0.9rem;">Chargement de Beerpedia...</span>
-            </div>
-            <iframe 
-                id="beerpedia-frame"
-                src="https://beerpedia.beerdex.be" 
-                style="
-                    width: 100%;
-                    height: calc(100vh - 60px);
-                    height: calc(100dvh - 60px);
-                    border: none;
-                    display: block;
-                    background: #0d0d0d;
-                    position: relative;
-                    z-index: 10;
-                    opacity: 0;
-                    transition: opacity 0.3s ease;
-                "
-                title="Beerpedia - L'encyclopédie de la bière"
-                allow="fullscreen"
-                onload="this.style.opacity='1'; document.getElementById('beerpedia-loader')?.remove();"
-            ></iframe>
-        `;
+        // Detect if we're in Median.co native app
+        const isMedian = typeof window.median !== 'undefined' ||
+            typeof window.gonative !== 'undefined' ||
+            navigator.userAgent.includes('median') ||
+            navigator.userAgent.includes('gonative');
+
+        if (isMedian) {
+            // In Median app: open in internal browser or external browser
+            mainContent.style.padding = 'var(--spacing-md)';
+            mainContent.innerHTML = `
+                <div style="
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    height: calc(100vh - 120px);
+                    gap: 20px;
+                    text-align: center;
+                    padding: 20px;
+                ">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="var(--accent-gold)" stroke-width="1.5">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                    </svg>
+                    <h2 style="color: var(--accent-gold); font-family: 'Russo One', sans-serif;">Beerpedia</h2>
+                    <p style="color: var(--text-secondary); max-width: 280px;">
+                        L'encyclopédie de la bière. Découvrez les styles, les brasseries et tout l'univers brassicole.
+                    </p>
+                    <button onclick="window.open('https://beerpedia.beerdex.be', '_blank')" class="btn-primary" style="
+                        width: auto;
+                        padding: 14px 30px;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        font-size: 1rem;
+                    ">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                        </svg>
+                        Ouvrir Beerpedia
+                    </button>
+                </div>
+            `;
+        } else {
+            // In browser: use iframe
+            mainContent.style.padding = '0';
+            mainContent.style.margin = '0';
+            mainContent.style.paddingBottom = '0';
+            mainContent.innerHTML = `
+                <div id="beerpedia-loader" style="
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 15px;
+                    z-index: 5;
+                ">
+                    <div class="spinner" style="width: 50px; height: 50px;"></div>
+                    <span style="color: var(--text-secondary); font-size: 0.9rem;">Chargement de Beerpedia...</span>
+                </div>
+                <iframe 
+                    id="beerpedia-frame"
+                    src="https://beerpedia.beerdex.be" 
+                    style="
+                        width: 100%;
+                        height: calc(100vh - 60px);
+                        height: calc(100dvh - 60px);
+                        border: none;
+                        display: block;
+                        background: #0d0d0d;
+                        position: relative;
+                        z-index: 10;
+                        opacity: 0;
+                        transition: opacity 0.3s ease;
+                    "
+                    title="Beerpedia - L'encyclopédie de la bière"
+                    allow="fullscreen"
+                    onload="this.style.opacity='1'; document.getElementById('beerpedia-loader')?.remove();"
+                ></iframe>
+            `;
+        }
     } else if (state.view === 'settings') {
         const isDiscovery = Storage.getPreference('discoveryMode', false);
         UI.renderSettings(state.beers, Storage.getAllUserData(), mainContent, isDiscovery, (newVal) => {
