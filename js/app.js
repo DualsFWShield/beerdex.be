@@ -149,9 +149,25 @@ function setupEventListeners() {
     // Navigation
     document.querySelectorAll('.nav-item').forEach(btn => {
         btn.addEventListener('click', (e) => {
+            const targetView = e.currentTarget.dataset.view;
+
+            // Special handling for Beerpedia in Median app
+            if (targetView === 'beerpedia') {
+                const isMedian = typeof window.median !== 'undefined' ||
+                    typeof window.gonative !== 'undefined' ||
+                    navigator.userAgent.includes('median') ||
+                    navigator.userAgent.includes('gonative');
+
+                if (isMedian) {
+                    // Open directly in browser, don't change view
+                    window.open('https://beerpedia.beerdex.be', '_blank');
+                    return; // Don't change active state or view
+                }
+            }
+
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
             e.currentTarget.classList.add('active');
-            state.view = e.currentTarget.dataset.view;
+            state.view = targetView;
             renderCurrentView();
         });
     });
