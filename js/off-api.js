@@ -77,45 +77,14 @@ function mapProductToBeer(product) {
     const categories = (product.categories || '') + ' ' + (product.categories_tags || []).join(' ');
 
     // 0. Beer Validation (Reject non-beers)
-    // Stricter validation: Must have explicit beer indicators OR alcohol + beer-specific keywords
-
+    // We check keywords in Title, Categories, and Brands (Generic check)
+    const validKeywords = /bi[eè]re|beer|bier|cerveza|birra|pivo|ipa|ale|stout|porter|lager|pils|lambic|gueuze|trappist|abbaye|brewery|brasserie|brauerei|cidre/i;
     const validationText = (rawTitle + ' ' + categories + ' ' + brands).toLowerCase();
 
-    // Check categories for explicit "beer" tag
-    const isExplicitlyBeer = (product.categories_tags || []).some(t =>
-        t.includes('beers') ||
-        t.includes('bières') ||
-        t.includes('en:beers')
-    );
-
-    // Beer-specific keywords (NOT cidre, NOT generic "alcohol")
-    const beerKeywords = /bi[eè]re|beer|bier|cerveza|birra|pivo|brewery|brasserie|brauerei/i;
-
-    // Beer style keywords
-    const beerStyles = /\b(ipa|ale|stout|porter|lager|pils|pilsner|lambic|gueuze|trappist|abbaye|tripel|dubbel|quadrupel|saison|wheat|weizen|witbier|helles|bock|blonde|brune|ambrée|blanche)\b/i;
-
-    // Explicit rejection list (food items, non-beer alcohol)
-    const rejectedKeywords = /chips|crisp|snack|chocolat|biscuit|cookie|candy|bonbon|soda|juice|jus|vin\b|wine|whisky|vodka|rhum|rum|gin\b|tequila|liqueur|cidre|cider/i;
-
-    // Check for rejection first
-    if (rejectedKeywords.test(validationText)) {
-        console.warn("Product rejected (Explicit non-beer):", rawTitle);
-        return null;
-    }
-
-    // Acceptance criteria: Must be explicitly beer OR have beer keywords + styles
-    const hasBeerKeyword = beerKeywords.test(validationText);
-    const hasBeerStyle = beerStyles.test(validationText);
-
-    if (!isExplicitlyBeer && !hasBeerKeyword && !hasBeerStyle) {
-        console.warn("Product rejected (Not a beer):", rawTitle, categories);
-        return null;
-    }
-
-    // Extra safety: If has alcohol but no beer indicator, reject
-    const alcoholValue = product.alcohol_value || product.alcohol || 0;
-    if (alcoholValue > 0 && !isExplicitlyBeer && !hasBeerKeyword) {
-        console.warn("Product rejected (Alcohol but not beer):", rawTitle);
+    if (!validKeywords.test(validationText)) {
+        console.warn("Product rejected (Not a beer):", rawTitle);
+        // We could return a special error object, but null forces "Not Found" handling
+        // Or we rely on UI to handle null as "Not a beer / Not found"
         return null;
     }
 
@@ -243,23 +212,14 @@ export async function searchProducts(query, page = 1) {
     }
 
     try {
-        // Use the reliable CGI search endpoint for fuzzy text search
-        // V2 API often ignores search_terms if not configured perfectly
-        const baseUrl = 'https://world.openfoodfacts.org/cgi/search.pl';
-        const params = new URLSearchParams({
-            search_terms: query,
-            search_simple: '1',
-            action: 'process',
-            json: '1',
-            categories_tags: 'beers', // Filter by beer category
-            page: page,
-            page_size: '24',
-            fields: 'product_name,brands,image_front_url,alcohol_value,quantity,categories,ingredients_text,_id,code'
-        });
+        // search.pl is the older CGI endpoint but more flexible for text search
+        // v2 search endpoint is better structured: /api/v2/search
+        const url = `https://world.openfoodfacts.net/api/v2/search?categories_tags=beers&countries_tags_en=belgium,france,germany,world&fields=product_name,brands,image_front_url,alcohol_value,quantity,categories,ingredients_text,_id&sort_by=product_name&page_size=20&page=${page}&product_name_${localStorage.getItem('lang') || 'fr'}=${encodeURIComponent(query)}`;
 
-        const url = `${baseUrl}?${params.toString()}`;
+        // Fallback to simpler search
+        const simpleUrl = `${API_BASE_URL}/search?categories_tags=beers&search_terms=${encodeURIComponent(query)}&page=${page}&page_size=24&json=true`;
 
-        const response = await fetch(url, {
+        const response = await fetch(simpleUrl, {
             method: 'GET',
             headers: { 'User-Agent': 'Beerdex/1.0 (clément.picoret@gmail.com)' }
         });
@@ -267,19 +227,12 @@ export async function searchProducts(query, page = 1) {
         if (!response.ok) return { products: [], count: 0 };
 
         const data = await response.json();
-        // search.pl returns "products" array
-        // API v2 returns "products" array
-        const products = (data.products || []).map(mapProductToBeer).filter(p => p !== null);
-
-        // For search.pl, count might be total match.
-        // If not present, we guess based on result length.
-        const count = data.count || (data.skip ? data.count : products.length);
+        const products = (data.products || []).map(mapProductToBeer);
 
         return {
             products: products,
-            count: count,
-            page: page,
-            pageSize: data.page_size || 24
+            count: data.count || 0,
+            page: data.page || 1
         };
 
     } catch (e) {

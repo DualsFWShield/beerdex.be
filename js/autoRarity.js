@@ -64,7 +64,7 @@ export function calculateRarity(beer) {
         score += 3;
         reasons.push("Style Fermentation Mixte/Sauvage (+3)");
     }
-    else if (type.match(/gueuze|lambic|kriek.*traditionnelle/)) {
+    else if (type.match(/gueuze|lambic|kriek (traditionnelle)/)) {
         score += 5;
         reasons.push("Lambic/Gueuze (+5)");
     }
