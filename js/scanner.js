@@ -21,10 +21,8 @@ export async function startScanner(elementId, onScanSuccess, onScanFailure) {
     }
 
     try {
-        // If instance exists, clear it first
-        if (html5QrCode) {
-            await stopScanner();
-        }
+        // Ensure clean slate
+        await stopScanner();
 
         html5QrCode = new Html5Qrcode(elementId);
 
@@ -33,7 +31,7 @@ export async function startScanner(elementId, onScanSuccess, onScanFailure) {
         // Prefer back camera
         const cameras = await Html5Qrcode.getCameras();
         if (cameras && cameras.length > 0) {
-            // Use the last camera (usually back camera on mobile) or specific logic
+            // Use the last camera (usually back camera on mobile)
             const cameraId = cameras[cameras.length - 1].id;
 
             await html5QrCode.start(
@@ -41,36 +39,31 @@ export async function startScanner(elementId, onScanSuccess, onScanFailure) {
                 config,
                 (decodedText, decodedResult) => {
                     console.log("[Scanner] Code detected:", decodedText);
-                    // Prevent multiple triggers if already processing
-                    if (html5QrCode.isProcessing) {
-                        console.log("[Scanner] Ignored - already processing");
-                        return;
-                    }
-                    html5QrCode.isProcessing = true;
-                    console.log("[Scanner] Processing...");
+                    // Prevent multiple triggers
+                    if (html5QrCode.isProcessing) return;
 
-                    // Pause on success to prevent multiple triggers while processing
+                    html5QrCode.isProcessing = true;
+                    // Pause immediately
                     html5QrCode.pause();
 
-                    // Allow callback to determine if we should stop (valid) or resume (invalid)
-                    Promise.resolve(onScanSuccess(decodedText, decodedResult)).then((shouldStop) => {
-                        if (shouldStop) {
-                            console.log("[Scanner] Callback requested stop.");
-                            stopScanner();
-                        } else {
-                            console.log("[Scanner] Callback requested resume.");
+                    // Process
+                    Promise.resolve(onScanSuccess(decodedText, decodedResult))
+                        .then((shouldStop) => {
+                            if (shouldStop) {
+                                stopScanner();
+                            } else {
+                                html5QrCode.isProcessing = false;
+                                html5QrCode.resume();
+                            }
+                        })
+                        .catch(err => {
+                            console.error("Scanner callback error:", err);
                             html5QrCode.isProcessing = false;
                             html5QrCode.resume();
-                        }
-                    }).catch(err => {
-                        console.error("Scanner callback error:", err);
-                        html5QrCode.isProcessing = false;
-                        html5QrCode.resume(); // Resume on error?
-                    });
+                        });
                 },
                 (errorMessage) => {
-                    // parse error, ignore mostly
-                    if (onScanFailure) onScanFailure(errorMessage);
+                    // Ignore parse errors, they are noisy
                 }
             );
         } else {
@@ -80,7 +73,10 @@ export async function startScanner(elementId, onScanSuccess, onScanFailure) {
 
     } catch (err) {
         console.error("Error starting scanner:", err);
-        alert("Erreur démarrage caméra: " + err);
+        // Don't alert if it's just a restart race condition, but log it
+        if (!err.toString().includes("already scanning")) {
+            alert("Erreur démarrage caméra: " + err);
+        }
     }
 }
 
@@ -95,10 +91,9 @@ export async function stopScanner() {
             }
             html5QrCode.clear();
         } catch (err) {
-            console.error("Failed to stop scanner", err);
+            console.warn("Failed to stop scanner (might be already stopped):", err);
         } finally {
             html5QrCode = null;
-            console.log("[Scanner] Instance cleared.");
         }
     }
 }

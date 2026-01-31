@@ -1,0 +1,225 @@
+{
+  "stats": {
+    "belgiumbeer.json": 212,
+    "newbeer.json": 908,
+    "breweries.json": 347,
+    "deutchbeer.json": 43,
+    "frenchbeer.json": 51,
+    "nlbeer.json": 13,
+    "usbeer.json": 2
+  },
+  "totalDuplicates": 29,
+  "breakdown": {
+    "belgiumbeer.json <-> belgiumbeer.json": 1,
+    "newbeer.json <-> newbeer.json": 20,
+    "belgiumbeer.json <-> newbeer.json": 5,
+    "newbeer.json <-> frenchbeer.json": 1,
+    "belgiumbeer.json <-> frenchbeer.json": 1,
+    "newbeer.json <-> nlbeer.json": 1
+  },
+  "duplicates": [
+    {
+      "title": "GRISETTE BLANCHE",
+      "originalFile": "belgiumbeer.json",
+      "duplicateFile": "belgiumbeer.json",
+      "originalId": "GRISETTE BLANCHE_BLANCHE_0.25",
+      "duplicateId": "GRISETTE BLANCHE_BLANCHE_20"
+    },
+    {
+      "title": "Maes",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "MAES_BLONDE_0.25",
+      "duplicateId": "MAES_BLONDE_0.33"
+    },
+    {
+      "title": "Bon Secours Blonde",
+      "originalFile": "belgiumbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "BONSECOURS BLONDE_BLONDE_0.33",
+      "duplicateId": "BON_SECOURS_BLONDE_BLONDE_0.33"
+    },
+    {
+      "title": "Stella Artois",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "STELLA_ARTOIS_BLONDE_0.33",
+      "duplicateId": "STELLA_ARTOIS_BLONDE_0.25"
+    },
+    {
+      "title": "Duvel 666",
+      "originalFile": "belgiumbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "DUVEL 6.66_BLONDE_0.33",
+      "duplicateId": "DUVEL_666_BLONDE_0.33"
+    },
+    {
+      "title": "Lindemans Tarot d’Or",
+      "originalFile": "belgiumbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "LINDEMANS TAROT D'OR_BLONDE_0.25",
+      "duplicateId": "LINDEMANS_TAROT_D_OR_BLONDE_0.25"
+    },
+    {
+      "title": "Westmalle Trappist Double",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "WESTMALLE_TRAPPIST_DOUBLE_BRUNE_0.33",
+      "duplicateId": "WESTMALLE_TRAPPIST_DOUBLE_BRUNE_0.75"
+    },
+    {
+      "title": "Mort Subite Geuze",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "MORT_SUBITE_GEUZE_BIERE_0.38",
+      "duplicateId": "MORT_SUBITE_GEUZE_BIERE_0.25"
+    },
+    {
+      "title": "Bon Secours Myrtille",
+      "originalFile": "belgiumbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "BONSECOURS MYRTILLE_ROUGE/RUBIS_0.33",
+      "duplicateId": "BON_SECOURS_MYRTILLE_ROUGE___FRUIT_0.33"
+    },
+    {
+      "title": "La Gauloise Blonde",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "LA_GAULOISE_BLONDE_BLONDE_0.33",
+      "duplicateId": "LA_GAULOISE_BLONDE_BLONDE_0.75"
+    },
+    {
+      "title": "Boon Gueuze Vieille",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "BOON_GUEUZE_VIEILLE_BLONDE_0.38",
+      "duplicateId": "BOON_GUEUZE_VIEILLE_BLONDE_0.25"
+    },
+    {
+      "title": "Saison Dupont Biologique",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "SAISON_DUPONT_BIOLOGIQUE_BLONDE_0.75",
+      "duplicateId": "SAISON_DUPONT_BIOLOGIQUE_BIERE_0.33"
+    },
+    {
+      "title": "La Trappe Witte Trappist Blanche  (NL)",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "LA_TRAPPE_WITTE_TRAPPIST_BLANCHE_NL_BLANCHE_0.75",
+      "duplicateId": "LA_TRAPPE_WITTE_TRAPPIST_BLANCHE_NL_BLANCHE_0.33"
+    },
+    {
+      "title": "Boon Framboise",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "BOON_FRAMBOISE_ROUGE___FRUIT_0.25",
+      "duplicateId": "BOON_FRAMBOISE_AMBREE_0.38"
+    },
+    {
+      "title": "Lindemans Cassis",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "LINDEMANS_CASSIS_AMBREE_0.25",
+      "duplicateId": "LINDEMANS_CASSIS_ROUGE___FRUIT_0.35"
+    },
+    {
+      "title": "Moinette Biologique",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "MOINETTE_BIOLOGIQUE_BLONDE_0.75",
+      "duplicateId": "MOINETTE_BIOLOGIQUE_BIERE_0.33"
+    },
+    {
+      "title": "Mc Chouffe",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "MC_CHOUFFE_BRUNE_0.33",
+      "duplicateId": "MC_CHOUFFE_BRUNE_0.75"
+    },
+    {
+      "title": "La Trappe Double  (NL)",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "LA_TRAPPE_DOUBLE_NL_BRUNE_0.75",
+      "duplicateId": "LA_TRAPPE_DOUBLE_NL_BRUNE_0.33"
+    },
+    {
+      "title": "Boon  Cerise",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "BOON_CERISE_ROUGE___FRUIT_0.38",
+      "duplicateId": "BOON_CERISE_ROUGE___FRUIT_0.25"
+    },
+    {
+      "title": "Bon Secours Ambree",
+      "originalFile": "belgiumbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "BONSECOURS AMBREE_AMBREE_0.33",
+      "duplicateId": "BON_SECOURS_AMBREE_AMBREE_0.33"
+    },
+    {
+      "title": "Lupulus Organicus",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "LUPULUS_ORGANICUS_BLONDE_0.33",
+      "duplicateId": "LUPULUS_ORGANICUS_BLONDE_0.75"
+    },
+    {
+      "title": "Kasteelbier Rouge Blik",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "KASTEELBIER_ROUGE_BLIK_ROUGE___FRUIT_0.50",
+      "duplicateId": "KASTEELBIER_ROUGE_BLIK_ROUGE___FRUIT_0.33"
+    },
+    {
+      "title": "Dominicains Tripel 8",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "DOMINICAINS_TRIPEL_8_BLONDE_0.33",
+      "duplicateId": "DOMINICAINS_TRIPEL_8_BLONDE_0.75"
+    },
+    {
+      "title": "Kapittel Prior",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "KAPITTEL_PRIOR_BRUNE_0.75",
+      "duplicateId": "KAPITTEL_PRIOR_BRUNE_0.33"
+    },
+    {
+      "title": "Kapittel Blonde",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "KAPITTEL_BLONDE_BLONDE_0.75",
+      "duplicateId": "KAPITTEL_BLONDE_BLONDE_0.33"
+    },
+    {
+      "title": "Chapeau Framboise",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "newbeer.json",
+      "originalId": "CHAPEAU_FRAMBOISE_AMBREE_0.25",
+      "duplicateId": "CHAPEAU_FRAMBOISE_AMBREE_0.25"
+    },
+    {
+      "title": "DESPERADOS",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "frenchbeer.json",
+      "originalId": "DESPERADOS_BIERE_0.33",
+      "duplicateId": "DESPERADOS_AROMATISEE_0.33"
+    },
+    {
+      "title": "BONSECOURS AMBREE",
+      "originalFile": "belgiumbeer.json",
+      "duplicateFile": "frenchbeer.json",
+      "originalId": "BONSECOURS AMBREE_AMBREE_0.33",
+      "duplicateId": "BONSECOURS AMBREE_AMBREE_0.33"
+    },
+    {
+      "title": "RODENBACH FRUITAGE",
+      "originalFile": "newbeer.json",
+      "duplicateFile": "nlbeer.json",
+      "originalId": "RODENBACH_FRUITAGE_BIERE_0.25",
+      "duplicateId": "RODENBACH FRUITAGE_ROUGE/RUBIS_0.25"
+    }
+  ]
+}

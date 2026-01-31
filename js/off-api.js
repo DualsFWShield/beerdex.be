@@ -78,13 +78,18 @@ function mapProductToBeer(product) {
 
     // 0. Beer Validation (Reject non-beers)
     // We check keywords in Title, Categories, and Brands (Generic check)
-    const validKeywords = /bi[eè]re|beer|bier|cerveza|birra|pivo|ipa|ale|stout|porter|lager|pils|lambic|gueuze|trappist|abbaye|brewery|brasserie|brauerei|cidre/i;
+    // Expanded regex to include trappist/abbey/generic
+    const validKeywords = /bi[eè]re|beer|bier|cerveza|birra|pivo|ipa|ale|stout|porter|lager|pils|lambic|gueuze|trappist|abbaye|brewery|brasserie|brauerei|cidre|tripel|dubbel|quadrupel|barley|saison|wheat|weizen|helles|bock/i;
+
+    // Check categories for explicit "beer" tag
+    const isExplicitlyBeer = (product.categories_tags || []).some(t => t.includes('beers') || t.includes('bières'));
+
     const validationText = (rawTitle + ' ' + categories + ' ' + brands).toLowerCase();
 
-    if (!validKeywords.test(validationText)) {
-        console.warn("Product rejected (Not a beer):", rawTitle);
-        // We could return a special error object, but null forces "Not Found" handling
-        // Or we rely on UI to handle null as "Not a beer / Not found"
+    if (!isExplicitlyBeer && !validKeywords.test(validationText)) {
+        console.warn("Product rejected (Not a beer):", rawTitle, categories);
+        // Less strict: if it has alcohol (e.g. > 1%), maybe accept it or query user?
+        // For now, return null to signal failure
         return null;
     }
 
