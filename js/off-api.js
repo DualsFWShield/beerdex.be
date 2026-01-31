@@ -77,19 +77,45 @@ function mapProductToBeer(product) {
     const categories = (product.categories || '') + ' ' + (product.categories_tags || []).join(' ');
 
     // 0. Beer Validation (Reject non-beers)
-    // We check keywords in Title, Categories, and Brands (Generic check)
-    // Expanded regex to include trappist/abbey/generic
-    const validKeywords = /bi[eè]re|beer|bier|cerveza|birra|pivo|ipa|ale|stout|porter|lager|pils|lambic|gueuze|trappist|abbaye|brewery|brasserie|brauerei|cidre|tripel|dubbel|quadrupel|barley|saison|wheat|weizen|helles|bock/i;
-
-    // Check categories for explicit "beer" tag
-    const isExplicitlyBeer = (product.categories_tags || []).some(t => t.includes('beers') || t.includes('bières'));
+    // Stricter validation: Must have explicit beer indicators OR alcohol + beer-specific keywords
 
     const validationText = (rawTitle + ' ' + categories + ' ' + brands).toLowerCase();
 
-    if (!isExplicitlyBeer && !validKeywords.test(validationText)) {
+    // Check categories for explicit "beer" tag
+    const isExplicitlyBeer = (product.categories_tags || []).some(t =>
+        t.includes('beers') ||
+        t.includes('bières') ||
+        t.includes('en:beers')
+    );
+
+    // Beer-specific keywords (NOT cidre, NOT generic "alcohol")
+    const beerKeywords = /bi[eè]re|beer|bier|cerveza|birra|pivo|brewery|brasserie|brauerei/i;
+
+    // Beer style keywords
+    const beerStyles = /\b(ipa|ale|stout|porter|lager|pils|pilsner|lambic|gueuze|trappist|abbaye|tripel|dubbel|quadrupel|saison|wheat|weizen|witbier|helles|bock|blonde|brune|ambrée|blanche)\b/i;
+
+    // Explicit rejection list (food items, non-beer alcohol)
+    const rejectedKeywords = /chips|crisp|snack|chocolat|biscuit|cookie|candy|bonbon|soda|juice|jus|vin\b|wine|whisky|vodka|rhum|rum|gin\b|tequila|liqueur|cidre|cider/i;
+
+    // Check for rejection first
+    if (rejectedKeywords.test(validationText)) {
+        console.warn("Product rejected (Explicit non-beer):", rawTitle);
+        return null;
+    }
+
+    // Acceptance criteria: Must be explicitly beer OR have beer keywords + styles
+    const hasBeerKeyword = beerKeywords.test(validationText);
+    const hasBeerStyle = beerStyles.test(validationText);
+
+    if (!isExplicitlyBeer && !hasBeerKeyword && !hasBeerStyle) {
         console.warn("Product rejected (Not a beer):", rawTitle, categories);
-        // Less strict: if it has alcohol (e.g. > 1%), maybe accept it or query user?
-        // For now, return null to signal failure
+        return null;
+    }
+
+    // Extra safety: If has alcohol but no beer indicator, reject
+    const alcoholValue = product.alcohol_value || product.alcohol || 0;
+    if (alcoholValue > 0 && !isExplicitlyBeer && !hasBeerKeyword) {
+        console.warn("Product rejected (Alcohol but not beer):", rawTitle);
         return null;
     }
 
@@ -241,12 +267,19 @@ export async function searchProducts(query, page = 1) {
         if (!response.ok) return { products: [], count: 0 };
 
         const data = await response.json();
+        // search.pl returns "products" array
+        // API v2 returns "products" array
         const products = (data.products || []).map(mapProductToBeer).filter(p => p !== null);
+
+        // For search.pl, count might be total match.
+        // If not present, we guess based on result length.
+        const count = data.count || (data.skip ? data.count : products.length);
 
         return {
             products: products,
-            count: data.count || products.length,
-            page: data.page || 1
+            count: count,
+            page: page,
+            pageSize: data.page_size || 24
         };
 
     } catch (e) {

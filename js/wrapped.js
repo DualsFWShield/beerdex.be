@@ -106,7 +106,7 @@ function calculateStats() {
         favoriteBeer,
         favoriteStyle,
         equivalence,
-        uniqueBeers: Object.keys(userData).length
+        uniqueBeers: Object.keys(userData).filter(k => (userData[k].count || 0) > 0).length
     };
 }
 

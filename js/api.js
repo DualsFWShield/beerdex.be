@@ -44,10 +44,10 @@ export function start(allBeersCallback) {
         case 'export':
             // ?action=export&scope=[all|custom|ratings]&ids=[1,2,3]&mode=[file|url]
             const scope = params.get('scope') || 'all';
-            const mode = params.get('mode') || 'file'; // 'file' or 'url'
+            const exportMode = params.get('mode') || 'file'; // 'file' or 'url'
             const idsRaw = params.get('ids');
             const ids = idsRaw ? idsRaw.split(',').filter(x => x) : null;
-            handleExport(scope, ids, mode);
+            handleExport(scope, ids, exportMode);
             break;
         case 'share':
             // ?action=share&id=123&score=15&comment=Bravo&fallback=true

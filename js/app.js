@@ -10,11 +10,13 @@ import { Feedback } from './feedback.js';
 window.Share = Share;
 
 import * as Wrapped from './wrapped.js';
+import * as BeerMatch from './beermatch.js';
 
 // Expose UI for inline HTML event handlers
 window.UI = UI;
 window.Wrapped = Wrapped;
 window.showToast = UI.showToast;
+window._getAllBeers = () => state.beers; // Expose for BeerMatch
 
 // App State
 
@@ -317,7 +319,7 @@ function setupEventListeners() {
                 // Stop local pagination
                 if (state.observer) state.observer.disconnect();
 
-                UI.renderApiSearchResults(products, main);
+                UI.renderApiSearchResults(products, main, query, products.length, 1);
 
                 if (products.length > 0) {
                     UI.showToast(`${products.length} résultats trouvés !`);
@@ -684,8 +686,7 @@ function renderCurrentView() {
         loadMoreBeers(mainContent, false, false, false);
 
     } else if (state.view === 'stats') {
-        const isDiscovery = Storage.getPreference('discoveryMode', false);
-        UI.renderStats(state.beers, Storage.getAllUserData(), mainContent, isDiscovery);
+        UI.renderStats(state.beers, Storage.getAllUserData(), mainContent);
     } else if (state.view === 'beerpedia') {
         // --- IMMERSIVE MODE ---
         // Hide header for fullscreen experience

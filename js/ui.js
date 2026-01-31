@@ -632,6 +632,39 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
                                 grid.appendChild(createApiBeerCard(p));
                             });
                             area.appendChild(grid);
+                            // Show "Load More" if needed
+                            if (products.length >= 24) {
+                                const loadMoreBtn = document.createElement('button');
+                                loadMoreBtn.className = 'btn-primary btn-load-more-api';
+                                loadMoreBtn.innerText = 'Charger la suite...';
+                                loadMoreBtn.style.marginTop = '20px';
+                                let currentPage = 1;
+                                loadMoreBtn.onclick = async () => {
+                                    loadMoreBtn.innerHTML = '<span class="spinner" style="width:20px;height:20px;border-width:2px;"></span> Chargement...';
+                                    loadMoreBtn.disabled = true;
+                                    try {
+                                        currentPage++;
+                                        const res = await searchProducts(filters.query, currentPage);
+                                        if (res.products.length > 0) {
+                                            res.products.forEach(p => grid.appendChild(createApiBeerCard(p)));
+                                            if (res.products.length < 24) {
+                                                loadMoreBtn.innerText = 'Plus de résultats';
+                                                loadMoreBtn.disabled = true;
+                                            } else {
+                                                loadMoreBtn.innerHTML = 'Charger la suite...';
+                                                loadMoreBtn.disabled = false;
+                                            }
+                                        } else {
+                                            loadMoreBtn.innerText = 'Plus de résultats';
+                                            loadMoreBtn.disabled = true;
+                                        }
+                                    } catch (e) {
+                                        console.error(e);
+                                        loadMoreBtn.innerText = 'Erreur chargement';
+                                    }
+                                };
+                                area.appendChild(loadMoreBtn);
+                            }
                         }
                     } catch (e) {
                         btn.innerHTML = '⚠️ Erreur';
@@ -644,10 +677,15 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
 }
 
 
-export function renderApiSearchResults(products, container) {
-    container.innerHTML = '';
+export function renderApiSearchResults(products, container, query, totalCount = 0, currentPage = 1) {
+    // If it's page 1, clear. Else append.
+    if (currentPage === 1) container.innerHTML = '';
 
-    if (!products || products.length === 0) {
+    // Remove old "Load More" button if appending
+    const oldBtn = container.querySelector('.btn-load-more-api');
+    if (oldBtn) oldBtn.remove();
+
+    if (currentPage === 1 && (!products || products.length === 0)) {
         container.innerHTML = `
             <div style="text-align:center; padding:40px; color:var(--text-secondary);">
                 <h3>Aucun résultat en ligne 😢</h3>
@@ -656,14 +694,50 @@ export function renderApiSearchResults(products, container) {
         return;
     }
 
-    const grid = document.createElement('div');
-    grid.className = 'beer-grid';
+    let grid;
+    if (currentPage === 1) {
+        grid = document.createElement('div');
+        grid.className = 'beer-grid';
+        container.appendChild(grid);
+    } else {
+        grid = container.querySelector('.beer-grid');
+    }
 
     products.forEach(product => {
         grid.appendChild(createApiBeerCard(product));
     });
 
-    container.appendChild(grid);
+    // Pagination Logic
+    // If we have products and totalCount > loaded (approx check)
+    // Actually search.pl doesn't always give reliable total count. 
+    // We check if we got a full page (24 items).
+    if (products.length >= 24) {
+        const loadMoreBtn = document.createElement('button');
+        loadMoreBtn.className = 'btn-primary btn-load-more-api';
+        loadMoreBtn.innerText = 'Charger la suite...';
+        loadMoreBtn.style.marginTop = '20px';
+        loadMoreBtn.onclick = async () => {
+            loadMoreBtn.innerHTML = '<span class="spinner" style="width:20px;height:20px;border-width:2px;"></span> Chargement...';
+            loadMoreBtn.disabled = true;
+            try {
+                const nextPage = currentPage + 1;
+                // Import dynamically or assume global access via API module if needed, 
+                // but better to pass the loader function or rely on imported 'searchProducts'.
+                // Since 'searchProducts' is imported at top of file, we use it.
+                const res = await searchProducts(query, nextPage);
+                if (res.products.length > 0) {
+                    renderApiSearchResults(res.products, container, query, res.count, nextPage);
+                } else {
+                    loadMoreBtn.innerText = 'Plus de résultats';
+                    loadMoreBtn.disabled = true;
+                }
+            } catch (e) {
+                console.error(e);
+                loadMoreBtn.innerText = 'Erreur chargement';
+            }
+        };
+        container.appendChild(loadMoreBtn);
+    }
 }
 
 // Helper to create API cards
@@ -3250,7 +3324,6 @@ export function renderMatchModal(allBeers) {
         const friendData = Match.parseQRData(qrString);
         if (!friendData) {
             alert("Code invalide !");
-            // Restart scanner if valid fail? No, easier to stay stopped.
             return;
         }
 
@@ -3258,7 +3331,8 @@ export function renderMatchModal(allBeers) {
         const ratings = userData.ratings || userData;
         const myIdsList = Object.keys(ratings).filter(k => ratings[k] && ratings[k].count > 0).map(k => k.split('_')[0]);
 
-        const results = Match.compare(allBeers, myIdsList, friendData);
+        // Pass full userData for advanced stats
+        const results = Match.compare(allBeers, myIdsList, friendData, userData);
         displayMatchResults(results);
     };
 
@@ -3271,6 +3345,40 @@ export function renderMatchModal(allBeers) {
         tabQr.style.display = 'none';
         tabScan.style.display = 'none';
 
+        // Build advanced stats section
+        let advancedStatsHTML = '';
+        if (results.myStats) {
+            const s = results.myStats;
+            advancedStatsHTML = `
+                <div style="margin:20px 0; padding:15px; background:#1a1a1a; border-radius:12px; border:1px solid #333;">
+                    <div style="color:var(--accent-gold); font-weight:bold; margin-bottom:10px; text-align:center;">📊 Vos Stats</div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:0.85rem;">
+                        <div style="background:#222; padding:8px; border-radius:6px; text-align:center;">
+                            <div style="color:#aaa; font-size:0.7rem;">Total Bus</div>
+                            <div style="color:#fff; font-weight:bold; font-size:1.1rem;">${s.totalBeers}</div>
+                        </div>
+                        <div style="background:#222; padding:8px; border-radius:6px; text-align:center;">
+                            <div style="color:#aaa; font-size:0.7rem;">Volume</div>
+                            <div style="color:#fff; font-weight:bold; font-size:1.1rem;">${s.totalLiters}L</div>
+                        </div>
+                        ${s.avgRating > 0 ? `
+                        <div style="background:#222; padding:8px; border-radius:6px; text-align:center;">
+                            <div style="color:#aaa; font-size:0.7rem;">Note Moy.</div>
+                            <div style="color:var(--accent-gold); font-weight:bold; font-size:1.1rem;">${s.avgRating}/20</div>
+                        </div>
+                        ` : ''}
+                        ${s.rarestBeer ? `
+                        <div style="background:#222; padding:8px; border-radius:6px; text-align:center; ${s.avgRating > 0 ? '' : 'grid-column: span 2;'}">
+                            <div style="color:#aaa; font-size:0.7rem;">+ Rare</div>
+                            <div style="color:#fff; font-weight:bold; font-size:0.75rem; line-height:1.2;">${s.rarestBeer.title}</div>
+                            <div style="color:#888; font-size:0.65rem;">${s.rarestBeer.rarity}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
         viewResult.innerHTML = `
             <div style="text-align:center; margin-bottom:20px;">
                 <h3 style="color:var(--accent-gold); margin:0;">Match avec ${results.userName}</h3>
@@ -3280,16 +3388,22 @@ export function renderMatchModal(allBeers) {
                 <div style="color:#aaa; font-size:0.9rem;">de compatibilité</div>
             </div>
 
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:20px;">
                 <div style="background:#222; padding:10px; border-radius:8px;">
                     <div style="font-size:1.5rem; font-weight:bold; color:#FFF;">${results.commonCount}</div>
                     <div style="font-size:0.8rem; color:#888; white-space:nowrap;">En commun</div>
                 </div>
-                 <div style="background:#222; padding:10px; border-radius:8px;">
+                <div style="background:#222; padding:10px; border-radius:8px;">
+                    <div style="font-size:1.5rem; font-weight:bold; color:#4CAF50;">${results.myTotal || '?'}</div>
+                    <div style="font-size:0.8rem; color:#888; white-space:nowrap;">Vous</div>
+                </div>
+                <div style="background:#222; padding:10px; border-radius:8px;">
                     <div style="font-size:1.5rem; font-weight:bold; color:var(--accent-gold);">${results.friendTotal}</div>
-                    <div style="font-size:0.8rem; color:#888; white-space:nowrap;">Total Ami</div>
+                    <div style="font-size:0.8rem; color:#888; white-space:nowrap;">Ami</div>
                 </div>
             </div>
+
+            ${advancedStatsHTML}
 
             ${results.commonCount > 0 ? `
             <div style="text-align:left; margin-bottom:20px;">
@@ -3703,7 +3817,394 @@ export function renderShareLink(link) {
     openModal(wrapper);
 }
 
-// --- Auto-Animation Injector for Rarities ---
+// --- BEER MATCH UI ---
+
+export function renderBeerMatchImport(onImportSuccess) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'modal-content';
+    wrapper.innerHTML = `
+        <h2 style="text-align:center; margin-bottom:20px;">⚔️ Beer Match</h2>
+        <p style="text-align:center; color:#888; margin-bottom:30px;">
+            Comparez votre profil avec celui d'un ami !
+        </p>
+
+        <div class="import-options" style="display:flex; flex-direction:column; gap:15px;">
+            <button id="btn-upload-json" class="btn-primary" style="background:var(--accent-gold); color:#000;">
+                📁 Importer un fichier JSON
+            </button>
+            <button id="btn-scan-qr" class="btn-primary">
+                📷 Scanner un QR Code
+            </button>
+            <div style="margin-top:10px;">
+                <label style="color:#888; display:block; margin-bottom:5px;">Ou coller les données :</label>
+                <textarea id="paste-data" placeholder="Collez le JSON ou le lien ici..." style="width:100%; height:100px; background:#111; color:#fff; border:1px solid #333; padding:10px; border-radius:8px;"></textarea>
+                <button id="btn-paste-import" class="btn-primary" style="margin-top:10px;">Valider</button>
+            </div>
+        </div>
+
+        <hr style="margin:30px 0; border-color:#333;">
+        
+        <div style="text-align:center;">
+            <p style="color:#888; font-size:0.9rem; margin-bottom:10px;">Vous n'avez pas de profil adverse ?</p>
+            <button id="btn-export-mine" class="form-input">📤 Exporter mon profil</button>
+        </div>
+    `;
+
+    openModal(wrapper);
+
+    // File upload
+    wrapper.querySelector('#btn-upload-json').onclick = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                onImportSuccess(data);
+            } catch (err) {
+                showToast('Fichier invalide', 'error');
+            }
+        };
+        input.click();
+    };
+
+    // QR Scanner
+    wrapper.querySelector('#btn-scan-qr').onclick = () => {
+        renderBeerMatchQRScanner(onImportSuccess);
+    };
+
+    // Paste import
+    wrapper.querySelector('#btn-paste-import').onclick = () => {
+        const textarea = wrapper.querySelector('#paste-data');
+        const text = textarea.value.trim();
+
+        if (!text) {
+            showToast('Aucune donnée', 'error');
+            return;
+        }
+
+        try {
+            // Try direct JSON
+            let data = JSON.parse(text);
+            onImportSuccess(data);
+        } catch {
+            // Try LZString decompression
+            if (window.LZString) {
+                try {
+                    const decompressed = LZString.decompressFromEncodedURIComponent(text);
+                    const data = JSON.parse(decompressed);
+                    onImportSuccess(data);
+                } catch {
+                    showToast('Format invalide', 'error');
+                }
+            } else {
+                showToast('Format invalide', 'error');
+            }
+        }
+    };
+
+    // Export mine
+    wrapper.querySelector('#btn-export-mine').onclick = () => {
+        // Trigger export modal with name/avatar input
+        renderBeerMatchExportProfile();
+    };
+}
+
+export function renderBeerMatchQRScanner(onScanSuccess) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'modal-content';
+    wrapper.innerHTML = `
+        <h2 style="text-align:center; margin-bottom:20px;">Scanner QR Code</h2>
+        <div id="qr-reader" style="max-width:500px; margin:0 auto;"></div>
+        <div id="qr-feedback" style="text-align:center; margin-top:15px; color:#888;"></div>
+    `;
+
+    openModal(wrapper);
+
+    const feedback = wrapper.querySelector('#qr-feedback');
+
+    Scanner.startScanner('qr-reader', async (decodedText) => {
+        feedback.textContent = '✅ QR détecté, décodage...';
+
+        try {
+            // Try direct JSON
+            let data = JSON.parse(decodedText);
+            await Scanner.stopScanner();
+            closeModal();
+            onScanSuccess(data);
+            return true;
+        } catch {
+            // Try LZString
+            if (window.LZString) {
+                try {
+                    const decompressed = LZString.decompressFromEncodedURIComponent(decodedText);
+                    const data = JSON.parse(decompressed);
+                    await Scanner.stopScanner();
+                    closeModal();
+                    onScanSuccess(data);
+                    return true;
+                } catch (err) {
+                    feedback.textContent = '❌ QR invalide';
+                    return false;
+                }
+            }
+            feedback.textContent = '❌ Format non reconnu';
+            return false;
+        }
+    });
+}
+
+export function renderBeerMatchExportProfile() {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'modal-content';
+    wrapper.innerHTML = `
+        <h2>Exporter Mon Profil</h2>
+        <p style="color:#888; margin-bottom:20px;">Personnalisez votre profil avant de le partager :</p>
+        
+        <div style="display:flex; flex-direction:column; gap:15px;">
+            <div>
+                <label style="color:#aaa;">Nom ou Pseudo</label>
+                <input type="text" id="match-name" class="form-input" placeholder="Votre nom..." maxlength="20" value="Anonyme">
+            </div>
+            <div>
+                <label style="color:#aaa;">Avatar (emoji)</label>
+                <input type="text" id="match-avatar" class="form-input" placeholder="🍺" maxlength="2" value="🍺">
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:30px;">
+            <button id="btn-export-json" class="btn-primary" style="flex:1;">📁 Fichier JSON</button>
+            <button id="btn-export-qr" class="btn-primary" style="flex:1; background:var(--accent-gold); color:#000;">📱 QR Code</button>
+        </div>
+    `;
+
+    openModal(wrapper);
+
+    const getName = () => wrapper.querySelector('#match-name').value || 'Anonyme';
+    const getAvatar = () => wrapper.querySelector('#match-avatar').value || '🍺';
+
+    // Export JSON
+    wrapper.querySelector('#btn-export-json').onclick = async () => {
+        const BeerMatch = await import('./beermatch.js');
+        const allBeers = window._getAllBeers ? window._getAllBeers() : [];
+        const profile = BeerMatch.exportMyProfile(allBeers, getName(), getAvatar());
+
+        const json = JSON.stringify(profile, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `beermatch_${getName().replace(/\s/g, '_')}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        showToast('Profil exporté !', 'success');
+    };
+
+    // Export QR
+    wrapper.querySelector('#btn-export-qr').onclick = async () => {
+        const BeerMatch = await import('./beermatch.js');
+        const allBeers = window._getAllBeers ? window._getAllBeers() : [];
+        const profile = BeerMatch.exportMyProfile(allBeers, getName(), getAvatar());
+
+        // Compress with LZString
+        const json = JSON.stringify(profile);
+        let qrData = json;
+
+        if (window.LZString) {
+            qrData = LZString.compressToEncodedURIComponent(json);
+        }
+
+        // Generate QR
+        const qrWrapper = document.createElement('div');
+        qrWrapper.className = 'modal-content';
+        qrWrapper.innerHTML = `
+            <h2 style="text-align:center;">Votre QR Code</h2>
+            <div id="qrcode-display" style="text-align:center; padding:20px; background:#fff; margin:20px auto; max-width:300px; border-radius:12px;"></div>
+            <p style="text-align:center; color:#888; font-size:0.85rem;">Scannez ce QR avec un autre appareil pour importer votre profil</p>
+        `;
+
+        openModal(qrWrapper);
+
+        new QRCodeLib(qrWrapper.querySelector('#qrcode-display'), {
+            text: qrData,
+            width: 256,
+            height: 256,
+            colorDark: '#000',
+            colorLight: '#fff'
+        });
+    };
+}
+
+export function renderBeerMatchResults(matchStats) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'beer-match-container';
+    wrapper.style.cssText = `
+        background: linear-gradient(135deg, #1a1a1a 0%, #2a1a3a 100%);
+        padding: 20px;
+        min-height: 100vh;
+        overflow-y: auto;
+    `;
+
+    const { me, opponent, winners, overallWinner, commonBeers, recommendations, myWins, opponentWins } = matchStats;
+
+    wrapper.innerHTML = `
+        <div class="match-header" style="text-align:center; margin-bottom:30px; position:relative;">
+            <h1 style="font-size:2.5rem; color:var(--accent-gold); margin-bottom:10px;">⚔️ BEER MATCH</h1>
+            <div style="display:flex; justify-content:space-around; align-items:center; margin-top:20px;">
+                <div class="player-info" style="text-align:center;">
+                    <div style="font-size:3rem;">${me.avatar}</div>
+                    <div style="font-weight:bold; margin-top:5px;">${me.name}</div>
+                    <div style="color:#888; font-size:0.85rem;">${me.totalBeers} 🍺</div>
+                </div>
+                
+                <div class="vs-badge" style="font-size:3rem; color:var(--accent-gold); text-shadow:0 0 20px rgba(255,192,0,0.8); animation:pulse 2s infinite;">
+                    VS
+                </div>
+                
+                <div class="player-info" style="text-align:center;">
+                    <div style="font-size:3rem;">${opponent.avatar}</div>
+                    <div style="font-weight:bold; margin-top:5px;">${opponent.name}</div>
+                    <div style="color:#888; font-size:0.85rem;">${opponent.totalBeers} 🍺</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid" style="display:grid; grid-template-columns:1fr; gap:15px; margin-bottom:30px;">
+            ${renderStatRow('🍺 Bières Bues', me.totalBeers, opponent.totalBeers, winners.totalBeers)}
+            ${renderStatRow('🌈 Découvertes', me.uniqueBeers, opponent.uniqueBeers, winners.uniqueBeers)}
+            ${renderStatRow('💧 Volume Total', me.totalLiters + 'L', opponent.totalLiters + 'L', winners.totalLiters)}
+            ${renderStatRow('⭐ Note Moyenne', me.avgRating + '/20', opponent.avgRating + '/20', winners.avgRating)}
+            ${renderStatRow('💎 Bière la + Rare',
+        me.rarestBeer ? `${me.rarestBeer.title} (${me.rarestBeer.rarity})` : 'Aucune',
+        opponent.rarestBeer ? `${opponent.rarestBeer.title} (${opponent.rarestBeer.rarity})` : 'Aucune',
+        winners.rarestBeer
+    )}
+        </div>
+
+        <!-- Overall Winner -->
+        <div class="overall-winner" style="text-align:center; margin:40px 0; padding:30px; background:rgba(255,192,0,0.1); border:2px solid var(--accent-gold); border-radius:20px;">
+            ${overallWinner === 'me' ? `
+                <div style="font-size:4rem; margin-bottom:10px;">🏆</div>
+                <h2 style="color:var(--accent-gold);">Victoire !</h2>
+                <p style="color:#888;">Vous avez remporté ${myWins} catégories sur ${myWins + opponentWins}</p>
+            ` : overallWinner === 'opponent' ? `
+                <div style="font-size:4rem; margin-bottom:10px;">😅</div>
+                <h2 style="color:#888;">Défaite</h2>
+                <p style="color:#888;">${opponent.name} a remporté ${opponentWins} catégories sur ${myWins + opponentWins}</p>
+            ` : `
+                <div style="font-size:4rem; margin-bottom:10px;">🤝</div>
+                <h2 style="color:var(--accent-gold);">Match Nul !</h2>
+                <p style="color:#888;">Égalité parfaite : ${myWins} - ${opponentWins}</p>
+            `}
+        </div>
+
+        <!-- Common Beers -->
+        ${commonBeers.length > 0 ? `
+            <div class="common-beers-section" style="margin-bottom:30px;">
+                <h3 style="color:var(--accent-gold); margin-bottom:15px;">🍺 Bières en Commun (${commonBeers.length})</h3>
+                <div class="beer-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:15px;">
+                    ${commonBeers.slice(0, 12).map(c => `
+                        <div class="beer-card mini" style="background:#222; padding:10px; border-radius:12px; text-align:center;">
+                            <img src="${c.beer.image}" alt="${c.beer.title}" style="width:60px; height:60px; object-fit:contain; margin-bottom:8px;">
+                            <div style="font-size:0.75rem; font-weight:bold;">${c.beer.title}</div>
+                            <div style="font-size:0.65rem; color:#888; margin-top:5px;">
+                                Vous: ${c.myCount}x | ${c.opponentCount}x :${opponent.name}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        ` : ''}
+
+        <!-- Recommendations -->
+        ${recommendations.length > 0 ? `
+            <div class="recommendations-section" style="margin-bottom:30px;">
+                <h3 style="color:var(--accent-gold); margin-bottom:15px;">💡 Recommandations pour Vous (${recommendations.length})</h3>
+                <p style="color:#888; font-size:0.85rem; margin-bottom:15px;">Ces bières ont été appréciées par ${opponent.name} :</p>
+                <div class="beer-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:15px;">
+                    ${recommendations.slice(0, 10).map(r => `
+                        <div class="beer-card mini" style="background:#222; padding:10px; border-radius:12px; text-align:center;">
+                            <img src="${r.beer.image}" alt="${r.beer.title}" style="width:60px; height:60px; object-fit:contain; margin-bottom:8px;">
+                            <div style="font-size:0.75rem; font-weight:bold;">${r.beer.title}</div>
+                            ${r.opponentRating ? `<div style="color:var(--accent-gold); font-size:0.7rem; margin-top:5px;">⭐ ${r.opponentRating}/20</div>` : ''}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        ` : ''}
+
+        <!-- Actions -->
+        <div class="match-actions" style="display:flex; gap:10px; justify-content:center; margin-top:40px;">
+            <button id="btn-new-match" class="btn-primary">🔄 Nouveau Match</button>
+            <button id="btn-close-match" class="btn-primary" style="background:#666;">Fermer</button>
+        </div>
+    `;
+
+    // Replace main content
+    const mainContent = document.getElementById('main-content');
+    if (mainContent) {
+        mainContent.innerHTML = '';
+        mainContent.appendChild(wrapper);
+    }
+
+    // Confetti for winner
+    if (overallWinner === 'me' && window.confetti) {
+        setTimeout(() => {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }, 500);
+    }
+
+    // Event listeners
+    wrapper.querySelector('#btn-new-match').onclick = async () => {
+        const BeerMatch = await import('./beermatch.js');
+        BeerMatch.clearOpponentProfile();
+        window.location.reload(); // Simple reload or re-render stats view
+    };
+
+    wrapper.querySelector('#btn-close-match').onclick = () => {
+        window.location.reload();
+    };
+}
+
+function renderStatRow(label, meValue, opponentValue, winner) {
+    const meWin = winner === 'me';
+    const oppWin = winner === 'opponent';
+    const tie = winner === 'tie';
+
+    return `
+        <div class="stat-row" style="
+            display:grid; 
+            grid-template-columns:1fr auto 1fr; 
+            align-items:center; 
+            padding:15px; 
+            background:rgba(0,0,0,0.3); 
+            border-radius:12px;
+            border:1px solid rgba(255,255,255,0.1);
+        ">
+            <div style="text-align:right; ${meWin ? 'color:var(--accent-gold); font-weight:bold;' : ''}">
+                ${meValue} ${meWin ? '🏆' : ''}
+            </div>
+            <div style="text-align:center; color:#888; padding:0 20px; white-space:nowrap; font-size:0.85rem;">
+                ${label}
+            </div>
+            <div style="text-align:left; ${oppWin ? 'color:var(--accent-gold); font-weight:bold;' : ''}">
+                ${oppWin ? '🏆 ' : ''}${opponentValue}
+            </div>
+        </div>
+    `;
+}
+
+// --- AUTO-ANIMATION INJECTOR FOR RARITIES ---
 const rarityObserver = new MutationObserver((mutations) => {
     mutations.forEach(m => {
         m.addedNodes.forEach(node => {

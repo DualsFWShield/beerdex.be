@@ -6,6 +6,8 @@
 // We assume Html5Qrcode is loaded globally via script tag in index.html
 const Html5Qrcode = window.Html5Qrcode;
 
+import { Feedback } from './feedback.js';
+
 let html5QrCode;
 
 /**
@@ -45,6 +47,10 @@ export async function startScanner(elementId, onScanSuccess, onScanFailure) {
                     html5QrCode.isProcessing = true;
                     // Pause immediately
                     html5QrCode.pause();
+
+                    // Feedback
+                    Feedback.playSuccess();
+                    Feedback.impactLight();
 
                     // Process
                     Promise.resolve(onScanSuccess(decodedText, decodedResult))
