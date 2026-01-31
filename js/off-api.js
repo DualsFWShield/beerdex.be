@@ -217,14 +217,23 @@ export async function searchProducts(query, page = 1) {
     }
 
     try {
-        // search.pl is the older CGI endpoint but more flexible for text search
-        // v2 search endpoint is better structured: /api/v2/search
-        const url = `https://world.openfoodfacts.net/api/v2/search?categories_tags=beers&countries_tags_en=belgium,france,germany,world&fields=product_name,brands,image_front_url,alcohol_value,quantity,categories,ingredients_text,_id&sort_by=product_name&page_size=20&page=${page}&product_name_${localStorage.getItem('lang') || 'fr'}=${encodeURIComponent(query)}`;
+        // Use the reliable CGI search endpoint for fuzzy text search
+        // V2 API often ignores search_terms if not configured perfectly
+        const baseUrl = 'https://world.openfoodfacts.org/cgi/search.pl';
+        const params = new URLSearchParams({
+            search_terms: query,
+            search_simple: '1',
+            action: 'process',
+            json: '1',
+            categories_tags: 'beers', // Filter by beer category
+            page: page,
+            page_size: '24',
+            fields: 'product_name,brands,image_front_url,alcohol_value,quantity,categories,ingredients_text,_id,code'
+        });
 
-        // Fallback to simpler search
-        const simpleUrl = `${API_BASE_URL}/search?categories_tags=beers&search_terms=${encodeURIComponent(query)}&page=${page}&page_size=24&json=true`;
+        const url = `${baseUrl}?${params.toString()}`;
 
-        const response = await fetch(simpleUrl, {
+        const response = await fetch(url, {
             method: 'GET',
             headers: { 'User-Agent': 'Beerdex/1.0 (clément.picoret@gmail.com)' }
         });
@@ -232,11 +241,11 @@ export async function searchProducts(query, page = 1) {
         if (!response.ok) return { products: [], count: 0 };
 
         const data = await response.json();
-        const products = (data.products || []).map(mapProductToBeer);
+        const products = (data.products || []).map(mapProductToBeer).filter(p => p !== null);
 
         return {
             products: products,
-            count: data.count || 0,
+            count: data.count || products.length,
             page: data.page || 1
         };
 
