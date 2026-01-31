@@ -208,31 +208,28 @@ function toTitleCase(str) {
 export async function searchProducts(query, page = 1) {
     if (!checkRateLimit('search')) {
         console.warn('OFF API Key Limit Reached (Search)');
-        throw new Error("Limite de recherche atteinte (10/min). Attendez un peu.");
+        throw new Error("Limite de recherche atteinte. Attendez un peu.");
     }
 
     try {
-        // search.pl is the older CGI endpoint but more flexible for text search
-        // v2 search endpoint is better structured: /api/v2/search
-        const url = `https://world.openfoodfacts.net/api/v2/search?categories_tags=beers&countries_tags_en=belgium,france,germany,world&fields=product_name,brands,image_front_url,alcohol_value,quantity,categories,ingredients_text,_id&sort_by=product_name&page_size=20&page=${page}&product_name_${localStorage.getItem('lang') || 'fr'}=${encodeURIComponent(query)}`;
+        // Use the robust CGI search endpoint which handles text search better than V2
+        const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&tagtype_0=categories&tag_contains_0=contains&tag_0=beers&json=1&page=${page}&page_size=24`;
 
-        // Fallback to simpler search
-        const simpleUrl = `${API_BASE_URL}/search?categories_tags=beers&search_terms=${encodeURIComponent(query)}&page=${page}&page_size=24&json=true`;
-
-        const response = await fetch(simpleUrl, {
+        const response = await fetch(url, {
             method: 'GET',
-            headers: { 'User-Agent': 'Beerdex/1.0 (clément.picoret@gmail.com)' }
+            headers: { 'User-Agent': 'Beerdex/1.0' }
         });
 
         if (!response.ok) return { products: [], count: 0 };
 
         const data = await response.json();
-        const products = (data.products || []).map(mapProductToBeer);
+        // search.pl returns { products: [], count: ... } or sometimes just list in products
+        const products = (data.products || []).map(mapProductToBeer).filter(b => b !== null);
 
         return {
             products: products,
-            count: data.count || 0,
-            page: data.page || 1
+            count: data.count || products.length,
+            page: data.page || page
         };
 
     } catch (e) {

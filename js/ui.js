@@ -17,6 +17,7 @@ const modalContainer = document.getElementById('modal-container');
 // Toast Queue
 const toastQueue = [];
 let isToastActive = false;
+let modalCleanup = null;
 
 export function showToast(message, type = 'default') {
     toastQueue.push({ message, type });
@@ -68,6 +69,10 @@ function processToastQueue() {
 }
 
 export function closeModal() {
+    if (modalCleanup) {
+        modalCleanup();
+        modalCleanup = null;
+    }
     modalContainer.classList.add('hidden');
     modalContainer.setAttribute('aria-hidden', 'true');
     modalContainer.innerHTML = '';
@@ -1759,26 +1764,18 @@ export function renderScannerModal(onScan) {
     // Give time for DOM to paint
     setTimeout(() => {
         Scanner.startScanner("reader", (decodedText, decodedResult) => {
-            // Success
-            // Stop scanner is handled inside startScanner callback wrapper usually or here
-            onScan(decodedText);
+            return onScan(decodedText);
         }, (errorMessage) => {
-            // console.log(errorMessage);
         });
     }, 100);
 
-    wrapper.querySelector('#btn-close-scanner').onclick = async () => {
-        await Scanner.stopScanner();
-        closeModal();
+    // Set cleanup for when modal closes
+    modalCleanup = () => {
+        Scanner.stopScanner();
     };
 
-    // Hook into global modal close to stop scanner if user clicks outside
-    const originalClose = modalContainer.onclick;
-    modalContainer.onclick = async (e) => {
-        if (e.target === modalContainer) {
-            await Scanner.stopScanner();
-            closeModal();
-        }
+    wrapper.querySelector('#btn-close-scanner').onclick = () => {
+        closeModal();
     };
 }
 
