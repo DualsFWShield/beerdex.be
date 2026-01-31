@@ -178,5 +178,20 @@
     "community_rating": 3.6,
     "ingredients": "Seule Blanche Trappiste",
     "rarity_rank": "Rare"
+  },
+  {
+    "title": "RODENBACH FRUITAGE",
+    "brewery": "PALM (BAVARIA)",
+    "type": "Rouge/Rubis",
+    "volume": "0.25 L",
+    "alcohol": "3.9°",
+    "id": "RODENBACH FRUITAGE_ROUGE/RUBIS_0.25",
+    "image": "images/beer/nl/RODENBACH_FRUITAGE_ROUGERUBIS_025.png",
+    "production_volume": "Régionale",
+    "distribution": "Partout",
+    "barrel_aged": false,
+    "community_rating": 3.3,
+    "ingredients": "Fruits Rouges",
+    "rarity_rank": "Commun"
   }
 ]

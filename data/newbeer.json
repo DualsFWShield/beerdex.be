@@ -1,80 +1,5 @@
 [
   {
-    "title": "Bon Secours Ambree",
-    "brewery": "Caulier",
-    "type": "Ambree",
-    "volume": "0.33 L",
-    "alcohol": "8°",
-    "id": "BON_SECOURS_AMBREE_AMBREE_0.33",
-    "image": "images/beer/be/bon-secours-ambree-33cl.png",
-    "production_volume": "Micro-brasserie",
-    "distribution": "Cavistes spécialisés",
-    "barrel_aged": false,
-    "community_rating": 3.4,
-    "ingredients": "Standard",
-    "rarity_rank": "Rare"
-  },
-  {
-    "title": "Bon Secours Blonde",
-    "brewery": "Caulier",
-    "type": "Blonde",
-    "volume": "0.33 L",
-    "alcohol": "8°",
-    "id": "BON_SECOURS_BLONDE_BLONDE_0.33",
-    "image": "images/beer/be/bon-secours-blonde-33cl.png",
-    "production_volume": "Régionale",
-    "distribution": "Cavistes spécialisés",
-    "barrel_aged": false,
-    "community_rating": 3.5,
-    "ingredients": "Standard",
-    "rarity_rank": "Rare"
-  },
-  {
-    "title": "Bon Secours Myrtille",
-    "brewery": "Brasserie Et Distillerie Caulier",
-    "type": "Rouge / Fruit",
-    "volume": "0.33 L",
-    "alcohol": "6.4°",
-    "id": "BON_SECOURS_MYRTILLE_ROUGE___FRUIT_0.33",
-    "image": "images/beer/be/bon-secours-myrtille-33cl.png",
-    "production_volume": "Régionale",
-    "distribution": "Cavistes spécialisés",
-    "barrel_aged": false,
-    "community_rating": 3.2,
-    "ingredients": "Myrtilles",
-    "rarity_rank": "Rare"
-  },
-  {
-    "title": "Duvel 666",
-    "brewery": "Duvel Moortgat",
-    "type": "Blonde",
-    "volume": "0.33 L",
-    "alcohol": "6.66°",
-    "id": "DUVEL_666_BLONDE_0.33",
-    "image": "images/beer/be/duvel-666-33cl.png",
-    "production_volume": "Industrielle",
-    "distribution": "Partout",
-    "barrel_aged": false,
-    "community_rating": 3.5,
-    "ingredients": "6 Variétés de Houblon",
-    "rarity_rank": "Commun"
-  },
-  {
-    "title": "Lindemans Tarot d’Or",
-    "brewery": "Lindemans",
-    "type": "Blonde",
-    "volume": "0.25 L",
-    "alcohol": "8°",
-    "id": "LINDEMANS_TAROT_D_OR_BLONDE_0.25",
-    "image": "images/beer/be/lindemans-tarot-dor-25cl.png",
-    "production_volume": "Industrielle",
-    "distribution": "Partout",
-    "barrel_aged": false,
-    "community_rating": 3.2,
-    "ingredients": "Fruits exotiques",
-    "rarity_rank": "Commun"
-  },
-  {
     "title": "Allgäuer Brauhaus Buble Edelweissbier",
     "brewery": "Allgäuer Brauhaus",
     "type": "Blonde",
@@ -93,10 +18,10 @@
     "title": "Maes",
     "brewery": "Alken-Maes",
     "type": "Blonde",
-    "volume": "0.33 L",
+    "volume": "0.25 L",
     "alcohol": "5.2°",
-    "id": "MAES_BLONDE_0.33",
-    "image": "images/beer/be/maes-33cl.png",
+    "id": "MAES_BLONDE_0.25",
+    "image": "images/beer/be/maes-25cl.png",
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
@@ -115,7 +40,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes & Supermarchés",
     "barrel_aged": false,
-    "community_rating": 4,
+    "community_rating": 4.0,
     "ingredients": "Levures Sauvages (Brettanomyces)",
     "rarity_rank": "Mythique"
   },
@@ -310,7 +235,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 2,
+    "community_rating": 2.0,
     "ingredients": "Sans alcool",
     "rarity_rank": "Base"
   },
@@ -325,7 +250,22 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
+    "ingredients": "Standard",
+    "rarity_rank": "Base"
+  },
+  {
+    "title": "Maes",
+    "brewery": "Alken-Maes",
+    "type": "Blonde",
+    "volume": "0.33 L",
+    "alcohol": "5.2°",
+    "id": "MAES_BLONDE_0.33",
+    "image": "images/beer/be/maes-33cl.png",
+    "production_volume": "Industrielle",
+    "distribution": "Partout",
+    "barrel_aged": false,
+    "community_rating": 2.6,
     "ingredients": "Standard",
     "rarity_rank": "Base"
   },
@@ -685,7 +625,7 @@
     "production_volume": "Industrielle",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -975,6 +915,21 @@
     "rarity_rank": "Saisonnière"
   },
   {
+    "title": "Bon Secours Blonde",
+    "brewery": "Caulier",
+    "type": "Blonde",
+    "volume": "0.33 L",
+    "alcohol": "8°",
+    "id": "BON_SECOURS_BLONDE_BLONDE_0.33",
+    "image": "images/beer/be/bon-secours-blonde-33cl.png",
+    "production_volume": "Régionale",
+    "distribution": "Cavistes spécialisés",
+    "barrel_aged": false,
+    "community_rating": 3.5,
+    "ingredients": "Standard",
+    "rarity_rank": "Rare"
+  },
+  {
     "title": "La Trappe Bio Puur  (NL)",
     "brewery": "Koningshoeven",
     "type": "Blonde",
@@ -1020,6 +975,21 @@
     "rarity_rank": "Commun"
   },
   {
+    "title": "Stella Artois",
+    "brewery": "Ab Inbev",
+    "type": "Blonde",
+    "volume": "0.25 L",
+    "alcohol": "5.2°",
+    "id": "STELLA_ARTOIS_BLONDE_0.25",
+    "image": "images/beer/be/stella-artois-25cl.png",
+    "production_volume": "Industrielle",
+    "distribution": "Partout",
+    "barrel_aged": false,
+    "community_rating": 2.9,
+    "ingredients": "Standard",
+    "rarity_rank": "Base"
+  },
+  {
     "title": "Estaminet Pils",
     "brewery": "Palm",
     "type": "Blonde",
@@ -1045,7 +1015,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Cerises",
     "rarity_rank": "Commun"
   },
@@ -1210,7 +1180,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Mélange Lambic",
     "rarity_rank": "Commun"
   },
@@ -1291,12 +1261,12 @@
   },
   {
     "title": "Saison Dupont Biologique",
-    "brewery": "Brasserie Dupont",
-    "type": "Saison (Blonde)",
-    "volume": "0.33 L",
+    "brewery": "Dupont",
+    "type": "Blonde",
+    "volume": "0.75 L",
     "alcohol": "5.5°",
-    "id": "SAISON_DUPONT_BIOLOGIQUE_BIERE_0.33",
-    "image": "images/beer/be/saison-dupont-biologique-33cl.png",
+    "id": "SAISON_DUPONT_BIOLOGIQUE_BLONDE_0.75",
+    "image": "images/beer/be/saison-dupont-biologique-75cl.png",
     "production_volume": "Régionale",
     "distribution": "Cavistes & Supermarchés",
     "barrel_aged": false,
@@ -1408,6 +1378,21 @@
     "community_rating": 3.4,
     "ingredients": "Standard",
     "rarity_rank": "Rare"
+  },
+  {
+    "title": "Duvel 666",
+    "brewery": "Duvel Moortgat",
+    "type": "Blonde",
+    "volume": "0.33 L",
+    "alcohol": "6.66°",
+    "id": "DUVEL_666_BLONDE_0.33",
+    "image": "images/beer/be/duvel-666-33cl.png",
+    "production_volume": "Industrielle",
+    "distribution": "Partout",
+    "barrel_aged": false,
+    "community_rating": 3.5,
+    "ingredients": "6 Variétés de Houblon",
+    "rarity_rank": "Commun"
   },
   {
     "title": "Coopers Original Pale Ale  (AUS)",
@@ -1750,7 +1735,7 @@
     "production_volume": "Industrielle",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Arômes Cerise",
     "rarity_rank": "Commun"
   },
@@ -1827,6 +1812,21 @@
     "barrel_aged": false,
     "community_rating": 3.3,
     "ingredients": "Standard",
+    "rarity_rank": "Commun"
+  },
+  {
+    "title": "Lindemans Tarot d’Or",
+    "brewery": "Lindemans",
+    "type": "Blonde",
+    "volume": "0.25 L",
+    "alcohol": "8°",
+    "id": "LINDEMANS_TAROT_D_OR_BLONDE_0.25",
+    "image": "images/beer/be/lindemans-tarot-dor-25cl.png",
+    "production_volume": "Industrielle",
+    "distribution": "Partout",
+    "barrel_aged": false,
+    "community_rating": 3.2,
+    "ingredients": "Fruits exotiques",
     "rarity_rank": "Commun"
   },
   {
@@ -2055,6 +2055,21 @@
     "rarity_rank": "Commun"
   },
   {
+    "title": "Westmalle Trappist Double",
+    "brewery": "Westmalle",
+    "type": "Brune",
+    "volume": "0.75 L",
+    "alcohol": "7°",
+    "id": "WESTMALLE_TRAPPIST_DOUBLE_BRUNE_0.75",
+    "image": "images/beer/be/westmalle-trappist-double-75cl.png",
+    "production_volume": "Régionale",
+    "distribution": "Partout",
+    "barrel_aged": false,
+    "community_rating": 3.8,
+    "ingredients": "Standard Trappiste",
+    "rarity_rank": "Rare"
+  },
+  {
     "title": "Vicaris Generaal",
     "brewery": "Dilewyns",
     "type": "Brune",
@@ -2140,7 +2155,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Standard",
     "rarity_rank": "Base"
   },
@@ -2200,7 +2215,7 @@
     "production_volume": "Industrielle",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -2365,7 +2380,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": true,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Copeaux de chêne / Sans alcool",
     "rarity_rank": "Base"
   },
@@ -2740,7 +2755,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Cerises",
     "rarity_rank": "Rare"
   },
@@ -2808,10 +2823,10 @@
     "title": "La Trappe Double  (NL)",
     "brewery": "Koningshoeven",
     "type": "Brune",
-    "volume": "0.33 L",
+    "volume": "0.75 L",
     "alcohol": "7°",
-    "id": "LA_TRAPPE_DOUBLE_NL_BRUNE_0.33",
-    "image": "images/beer/be/la-trappe-double-33cl-nl.png",
+    "id": "LA_TRAPPE_DOUBLE_NL_BRUNE_0.75",
+    "image": "images/beer/be/la-trappe-double-75cl-nl.png",
     "production_volume": "Régionale",
     "distribution": "Partout",
     "barrel_aged": false,
@@ -2875,7 +2890,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes & Supermarchés",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Sans alcool / Craft",
     "rarity_rank": "Rare"
   },
@@ -2950,7 +2965,7 @@
     "production_volume": "Régionale",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 4,
+    "community_rating": 4.0,
     "ingredients": "Standard Trappiste",
     "rarity_rank": "Rare"
   },
@@ -3055,7 +3070,7 @@
     "production_volume": "Industrielle",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -3093,10 +3108,10 @@
     "title": "La Trappe Witte Trappist Blanche  (NL)",
     "brewery": "Koningshoeven",
     "type": "Blanche",
-    "volume": "0.33 L",
+    "volume": "0.75 L",
     "alcohol": "5.5°",
-    "id": "LA_TRAPPE_WITTE_TRAPPIST_BLANCHE_NL_BLANCHE_0.33",
-    "image": "images/beer/be/la-trappe-witte-trappist-blanche-33cl-nl.png",
+    "id": "LA_TRAPPE_WITTE_TRAPPIST_BLANCHE_NL_BLANCHE_0.75",
+    "image": "images/beer/be/la-trappe-witte-trappist-blanche-75cl-nl.png",
     "production_volume": "Régionale",
     "distribution": "Partout",
     "barrel_aged": false,
@@ -3310,7 +3325,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 2,
+    "community_rating": 2.0,
     "ingredients": "Sans alcool",
     "rarity_rank": "Base"
   },
@@ -3466,18 +3481,33 @@
   },
   {
     "title": "Moinette Biologique",
-    "brewery": "Brasserie Dupont",
-    "type": "Blonde (Bio)",
-    "volume": "0.33 L",
+    "brewery": "Dupont",
+    "type": "Blonde",
+    "volume": "0.75 L",
     "alcohol": "7.5°",
-    "id": "MOINETTE_BIOLOGIQUE_BIERE_0.33",
-    "image": "images/beer/be/moinette-biologique-33cl.png",
+    "id": "MOINETTE_BIOLOGIQUE_BLONDE_0.75",
+    "image": "images/beer/be/moinette-biologique-75cl.png",
     "production_volume": "Régionale",
     "distribution": "Cavistes & Supermarchés",
     "barrel_aged": false,
-    "community_rating": 3.7,
+    "community_rating": 3.8,
     "ingredients": "Bio",
     "rarity_rank": "Rare"
+  },
+  {
+    "title": "Mort Subite Geuze",
+    "brewery": "Mort Subite (Alken-Maes)",
+    "type": "Gueuze (Ambrée)",
+    "volume": "0.25 L",
+    "alcohol": "4.5°",
+    "id": "MORT_SUBITE_GEUZE_BIERE_0.25",
+    "image": "images/beer/be/mort-subite-geuze-25cl.png",
+    "production_volume": "Industrielle",
+    "distribution": "Partout",
+    "barrel_aged": false,
+    "community_rating": 3.0,
+    "ingredients": "Mélange Lambic",
+    "rarity_rank": "Commun"
   },
   {
     "title": "Brugs Witbier",
@@ -3895,7 +3925,7 @@
     "production_volume": "Régionale",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Sans alcool",
     "rarity_rank": "Base"
   },
@@ -4105,7 +4135,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Jus de pêche",
     "rarity_rank": "Commun"
   },
@@ -4123,6 +4153,21 @@
     "community_rating": 3.4,
     "ingredients": "Standard",
     "rarity_rank": "Super Rare"
+  },
+  {
+    "title": "Bon Secours Myrtille",
+    "brewery": "Brasserie Et Distillerie Caulier",
+    "type": "Rouge / Fruit",
+    "volume": "0.33 L",
+    "alcohol": "6.4°",
+    "id": "BON_SECOURS_MYRTILLE_ROUGE___FRUIT_0.33",
+    "image": "images/beer/be/bon-secours-myrtille-33cl.png",
+    "production_volume": "Régionale",
+    "distribution": "Cavistes spécialisés",
+    "barrel_aged": false,
+    "community_rating": 3.2,
+    "ingredients": "Myrtilles",
+    "rarity_rank": "Rare"
   },
   {
     "title": "Bitburger",
@@ -4375,7 +4420,7 @@
     "production_volume": "Régionale",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Standard",
     "rarity_rank": "Base"
   },
@@ -4420,7 +4465,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Herbes de Gruut",
     "rarity_rank": "Base"
   },
@@ -4585,7 +4630,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Sans alcool",
     "rarity_rank": "Base"
   },
@@ -4785,6 +4830,21 @@
     "rarity_rank": "Rare"
   },
   {
+    "title": "La Gauloise Blonde",
+    "brewery": "Du Bocq",
+    "type": "Blonde",
+    "volume": "0.75 L",
+    "alcohol": "6.3°",
+    "id": "LA_GAULOISE_BLONDE_BLONDE_0.75",
+    "image": "images/beer/be/la-gauloise-blonde-75cl.png",
+    "production_volume": "Régionale",
+    "distribution": "Cavistes généralistes",
+    "barrel_aged": false,
+    "community_rating": 3.2,
+    "ingredients": "Standard",
+    "rarity_rank": "Commun"
+  },
+  {
     "title": "Timmermans Peche",
     "brewery": "Anthony Martin",
     "type": "Blonde",
@@ -4795,7 +4855,7 @@
     "production_volume": "Industrielle",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Arômes Pêche",
     "rarity_rank": "Base"
   },
@@ -5005,7 +5065,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Sans alcool",
     "rarity_rank": "Rare"
   },
@@ -5110,7 +5170,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 2,
+    "community_rating": 2.0,
     "ingredients": "Sans alcool",
     "rarity_rank": "Base"
   },
@@ -5143,6 +5203,21 @@
     "community_rating": 3.2,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
+  },
+  {
+    "title": "Boon Gueuze Vieille",
+    "brewery": "Boon",
+    "type": "Blonde",
+    "volume": "0.25 L",
+    "alcohol": "7°",
+    "id": "BOON_GUEUZE_VIEILLE_BLONDE_0.25",
+    "image": "images/beer/be/boon-gueuze-vieille-25cl.png",
+    "production_volume": "Régionale",
+    "distribution": "Partout",
+    "barrel_aged": false,
+    "community_rating": 3.9,
+    "ingredients": "Lambic",
+    "rarity_rank": "Rare"
   },
   {
     "title": "Wilderen Cuvee Clarisse",
@@ -5650,7 +5725,7 @@
     "production_volume": "Industrielle",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -6070,7 +6145,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Sans alcool",
     "rarity_rank": "Rare"
   },
@@ -6220,7 +6295,7 @@
     "production_volume": "Batch unique",
     "distribution": "Vente directe/Limitée",
     "barrel_aged": false,
-    "community_rating": 4,
+    "community_rating": 4.0,
     "ingredients": "Vinaigre Balsamique",
     "rarity_rank": "Épique"
   },
@@ -6385,7 +6460,7 @@
     "production_volume": "Régionale",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Fruits Rouges",
     "rarity_rank": "Commun"
   },
@@ -7125,6 +7200,21 @@
     "rarity_rank": "Commun"
   },
   {
+    "title": "Saison Dupont Biologique",
+    "brewery": "Brasserie Dupont",
+    "type": "Saison (Blonde)",
+    "volume": "0.33 L",
+    "alcohol": "5.5°",
+    "id": "SAISON_DUPONT_BIOLOGIQUE_BIERE_0.33",
+    "image": "images/beer/be/saison-dupont-biologique-33cl.png",
+    "production_volume": "Régionale",
+    "distribution": "Cavistes & Supermarchés",
+    "barrel_aged": false,
+    "community_rating": 3.8,
+    "ingredients": "Bio",
+    "rarity_rank": "Rare"
+  },
+  {
     "title": "Piraat Red",
     "brewery": "Van Steenberge",
     "type": "Ambrée / Fruitée",
@@ -7150,7 +7240,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Sarrasin / Bio",
     "rarity_rank": "Rare"
   },
@@ -7210,7 +7300,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Standard",
     "rarity_rank": "Base"
   },
@@ -7315,7 +7405,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -7450,7 +7540,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Sans alcool",
     "rarity_rank": "Rare"
   },
@@ -7540,7 +7630,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": true,
-    "community_rating": 4,
+    "community_rating": 4.0,
     "ingredients": "Infusion Rhum",
     "rarity_rank": "Super Rare"
   },
@@ -7830,6 +7920,21 @@
     "rarity_rank": "Rare"
   },
   {
+    "title": "La Trappe Witte Trappist Blanche  (NL)",
+    "brewery": "Koningshoeven",
+    "type": "Blanche",
+    "volume": "0.33 L",
+    "alcohol": "5.5°",
+    "id": "LA_TRAPPE_WITTE_TRAPPIST_BLANCHE_NL_BLANCHE_0.33",
+    "image": "images/beer/be/la-trappe-witte-trappist-blanche-33cl-nl.png",
+    "production_volume": "Régionale",
+    "distribution": "Partout",
+    "barrel_aged": false,
+    "community_rating": 3.5,
+    "ingredients": "Standard Trappiste",
+    "rarity_rank": "Rare"
+  },
+  {
     "title": "Ten of Clubs / Kleveretien",
     "brewery": "Het Nest",
     "type": "Brune",
@@ -7870,7 +7975,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes & Supermarchés",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Bio",
     "rarity_rank": "Commun"
   },
@@ -7893,10 +7998,10 @@
     "title": "Kapittel Prior",
     "brewery": "Van Eecke",
     "type": "Brune",
-    "volume": "0.33 L",
+    "volume": "0.75 L",
     "alcohol": "9°",
-    "id": "KAPITTEL_PRIOR_BRUNE_0.33",
-    "image": "images/beer/be/kapittel-prior-33cl.png",
+    "id": "KAPITTEL_PRIOR_BRUNE_0.75",
+    "image": "images/beer/be/kapittel-prior-75cl.png",
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
@@ -8155,7 +8260,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Sans alcool",
     "rarity_rank": "Rare"
   },
@@ -8328,16 +8433,31 @@
     "title": "Kapittel Blonde",
     "brewery": "Van Eecke",
     "type": "Blonde",
-    "volume": "0.33 L",
+    "volume": "0.75 L",
     "alcohol": "6.5°",
-    "id": "KAPITTEL_BLONDE_BLONDE_0.33",
-    "image": "images/beer/be/kapittel-blonde-33cl.png",
+    "id": "KAPITTEL_BLONDE_BLONDE_0.75",
+    "image": "images/beer/be/kapittel-blonde-75cl.png",
     "production_volume": "Régionale",
-    "distribution": "Supermarché",
+    "distribution": "Cavistes & Supermarchés",
     "barrel_aged": false,
-    "community_rating": 3.1,
+    "community_rating": 3.2,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
+  },
+  {
+    "title": "Boon Framboise",
+    "brewery": "Boon",
+    "type": "Ambree",
+    "volume": "0.38 L",
+    "alcohol": "5°",
+    "id": "BOON_FRAMBOISE_AMBREE_0.38",
+    "image": "images/beer/be/boon-framboise-375cl.png",
+    "production_volume": "Régionale",
+    "distribution": "Cavistes & Supermarchés",
+    "barrel_aged": false,
+    "community_rating": 3.6,
+    "ingredients": "Framboises fraîches",
+    "rarity_rank": "Rare"
   },
   {
     "title": "Boon Geuze Mariage Parfait",
@@ -8575,7 +8695,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes experts",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Cerises / Sans alcool",
     "rarity_rank": "Rare"
   },
@@ -8620,7 +8740,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Fraises",
     "rarity_rank": "Rare"
   },
@@ -8650,7 +8770,7 @@
     "production_volume": "Batch unique",
     "distribution": "Cavistes experts",
     "barrel_aged": true,
-    "community_rating": 4,
+    "community_rating": 4.0,
     "ingredients": "Fût Vin Rouge",
     "rarity_rank": "Épique"
   },
@@ -8730,6 +8850,21 @@
     "rarity_rank": "Rare"
   },
   {
+    "title": "Lindemans Cassis",
+    "brewery": "Lindemans",
+    "type": "Rouge / Fruit",
+    "volume": "0.35 L",
+    "alcohol": "3.5°",
+    "id": "LINDEMANS_CASSIS_ROUGE___FRUIT_0.35",
+    "image": "images/beer/be/lindemans-cassis-355cl.png",
+    "production_volume": "Industrielle",
+    "distribution": "Partout",
+    "barrel_aged": false,
+    "community_rating": 3.3,
+    "ingredients": "Cassis",
+    "rarity_rank": "Base"
+  },
+  {
     "title": "St Louis Gueuze Fond Tradition",
     "brewery": "Van Honsebrouck",
     "type": "Blonde",
@@ -8770,7 +8905,7 @@
     "production_volume": "Régionale",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Cerises",
     "rarity_rank": "Commun"
   },
@@ -8950,7 +9085,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Cerises",
     "rarity_rank": "Commun"
   },
@@ -9280,7 +9415,7 @@
     "production_volume": "Régionale",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Fruits Rouges",
     "rarity_rank": "Commun"
   },
@@ -9295,7 +9430,7 @@
     "production_volume": "Régionale",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Standard",
     "rarity_rank": "Base"
   },
@@ -9385,7 +9520,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -9463,6 +9598,21 @@
     "community_rating": 3.1,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
+  },
+  {
+    "title": "Moinette Biologique",
+    "brewery": "Brasserie Dupont",
+    "type": "Blonde (Bio)",
+    "volume": "0.33 L",
+    "alcohol": "7.5°",
+    "id": "MOINETTE_BIOLOGIQUE_BIERE_0.33",
+    "image": "images/beer/be/moinette-biologique-33cl.png",
+    "production_volume": "Régionale",
+    "distribution": "Cavistes & Supermarchés",
+    "barrel_aged": false,
+    "community_rating": 3.7,
+    "ingredients": "Bio",
+    "rarity_rank": "Rare"
   },
   {
     "title": "Luvanium Tripel",
@@ -9688,6 +9838,21 @@
     "community_rating": 3.6,
     "ingredients": "Epices",
     "rarity_rank": "Saisonnière"
+  },
+  {
+    "title": "Mc Chouffe",
+    "brewery": "Duvel Moortgat",
+    "type": "Brune",
+    "volume": "0.75 L",
+    "alcohol": "8°",
+    "id": "MC_CHOUFFE_BRUNE_0.75",
+    "image": "images/beer/be/mc-chouffe-75cl.png",
+    "production_volume": "Industrielle",
+    "distribution": "Partout",
+    "barrel_aged": false,
+    "community_rating": 3.6,
+    "ingredients": "Standard",
+    "rarity_rank": "Commun"
   },
   {
     "title": "Broeder Jacob Double Port",
@@ -9933,10 +10098,10 @@
     "title": "Kasteelbier Rouge Blik",
     "brewery": "Van Honsebrouck",
     "type": "Rouge / Fruit",
-    "volume": "0.33 L",
+    "volume": "0.50 L",
     "alcohol": "8°",
-    "id": "KASTEELBIER_ROUGE_BLIK_ROUGE___FRUIT_0.33",
-    "image": "images/beer/be/kasteelbier-rouge-blik-33cl.png",
+    "id": "KASTEELBIER_ROUGE_BLIK_ROUGE___FRUIT_0.50",
+    "image": "images/beer/be/kasteelbier-rouge-blik-50cl.png",
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
@@ -10015,7 +10180,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Sans alcool",
     "rarity_rank": "Rare"
   },
@@ -10180,7 +10345,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 2,
+    "community_rating": 2.0,
     "ingredients": "Sans alcool",
     "rarity_rank": "Base"
   },
@@ -10375,7 +10540,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Sans alcool",
     "rarity_rank": "Rare"
   },
@@ -10485,6 +10650,21 @@
     "rarity_rank": "Super Rare"
   },
   {
+    "title": "La Trappe Double  (NL)",
+    "brewery": "Koningshoeven",
+    "type": "Brune",
+    "volume": "0.33 L",
+    "alcohol": "7°",
+    "id": "LA_TRAPPE_DOUBLE_NL_BRUNE_0.33",
+    "image": "images/beer/be/la-trappe-double-33cl-nl.png",
+    "production_volume": "Régionale",
+    "distribution": "Partout",
+    "barrel_aged": false,
+    "community_rating": 3.6,
+    "ingredients": "Standard Trappiste",
+    "rarity_rank": "Rare"
+  },
+  {
     "title": "Erdinger NA Alkoholfrei  (DE)",
     "brewery": "Erdinger",
     "type": "Blonde",
@@ -10537,6 +10717,21 @@
     "alcohol": "4°",
     "id": "BOON_CERISE_ROUGE___FRUIT_0.38",
     "image": "images/beer/be/boon-cerise-375cl.png",
+    "production_volume": "Régionale",
+    "distribution": "Cavistes & Supermarchés",
+    "barrel_aged": false,
+    "community_rating": 3.5,
+    "ingredients": "Cerises fraîches",
+    "rarity_rank": "Rare"
+  },
+  {
+    "title": "Boon  Cerise",
+    "brewery": "Boon",
+    "type": "Rouge / Fruit",
+    "volume": "0.25 L",
+    "alcohol": "4°",
+    "id": "BOON_CERISE_ROUGE___FRUIT_0.25",
+    "image": "images/beer/be/boon-cerise-25cl.png",
     "production_volume": "Régionale",
     "distribution": "Cavistes & Supermarchés",
     "barrel_aged": false,
@@ -10708,6 +10903,21 @@
     "community_rating": 3.3,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
+  },
+  {
+    "title": "Bon Secours Ambree",
+    "brewery": "Caulier",
+    "type": "Ambree",
+    "volume": "0.33 L",
+    "alcohol": "8°",
+    "id": "BON_SECOURS_AMBREE_AMBREE_0.33",
+    "image": "images/beer/be/bon-secours-ambree-33cl.png",
+    "production_volume": "Micro-brasserie",
+    "distribution": "Cavistes spécialisés",
+    "barrel_aged": false,
+    "community_rating": 3.4,
+    "ingredients": "Standard",
+    "rarity_rank": "Rare"
   },
   {
     "title": "Valduc La Petite Soeur Blanche",
@@ -10990,7 +11200,7 @@
     "production_volume": "Batch unique",
     "distribution": "Vente directe/Limitée",
     "barrel_aged": true,
-    "community_rating": 4,
+    "community_rating": 4.0,
     "ingredients": "Vieille Gueuze",
     "rarity_rank": "Ultra Légendaire"
   },
@@ -11310,6 +11520,21 @@
     "rarity_rank": "Rare"
   },
   {
+    "title": "Lupulus Organicus",
+    "brewery": "Les 3 Fourquets",
+    "type": "Blonde",
+    "volume": "0.75 L",
+    "alcohol": "8.5°",
+    "id": "LUPULUS_ORGANICUS_BLONDE_0.75",
+    "image": "images/beer/be/lupulus-organicus-75cl.png",
+    "production_volume": "Régionale",
+    "distribution": "Cavistes & Supermarchés",
+    "barrel_aged": false,
+    "community_rating": 3.5,
+    "ingredients": "Bio",
+    "rarity_rank": "Rare"
+  },
+  {
     "title": "Kapittel Tripel Abt",
     "brewery": "Van Eecke",
     "type": "Blonde",
@@ -11350,7 +11575,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes & Supermarchés",
     "barrel_aged": true,
-    "community_rating": 4,
+    "community_rating": 4.0,
     "ingredients": "Vieille Kriek",
     "rarity_rank": "Rare"
   },
@@ -11430,6 +11655,21 @@
     "rarity_rank": "Commun"
   },
   {
+    "title": "Kasteelbier Rouge Blik",
+    "brewery": "Van Honsebrouck",
+    "type": "Rouge / Fruit",
+    "volume": "0.33 L",
+    "alcohol": "8°",
+    "id": "KASTEELBIER_ROUGE_BLIK_ROUGE___FRUIT_0.33",
+    "image": "images/beer/be/kasteelbier-rouge-blik-33cl.png",
+    "production_volume": "Industrielle",
+    "distribution": "Partout",
+    "barrel_aged": false,
+    "community_rating": 3.2,
+    "ingredients": "Liqueur de cerise",
+    "rarity_rank": "Commun"
+  },
+  {
     "title": "Briljant",
     "brewery": "Vissenberg",
     "type": "Blonde",
@@ -11473,6 +11713,21 @@
     "community_rating": 3.3,
     "ingredients": "Myrtilles",
     "rarity_rank": "Commun"
+  },
+  {
+    "title": "Dominicains Tripel 8",
+    "brewery": "Brasserie des 3F",
+    "type": "Blonde",
+    "volume": "0.75 L",
+    "alcohol": "8.2°",
+    "id": "DOMINICAINS_TRIPEL_8_BLONDE_0.75",
+    "image": "images/beer/be/dominicains-tripel-8-75cl.png",
+    "production_volume": "Micro-brasserie",
+    "distribution": "Cavistes spécialisés",
+    "barrel_aged": false,
+    "community_rating": 3.5,
+    "ingredients": "Standard",
+    "rarity_rank": "Rare"
   },
   {
     "title": "Circus Herb Tripel",
@@ -12000,6 +12255,21 @@
     "rarity_rank": "Rare"
   },
   {
+    "title": "Kapittel Prior",
+    "brewery": "Van Eecke",
+    "type": "Brune",
+    "volume": "0.33 L",
+    "alcohol": "9°",
+    "id": "KAPITTEL_PRIOR_BRUNE_0.33",
+    "image": "images/beer/be/kapittel-prior-33cl.png",
+    "production_volume": "Régionale",
+    "distribution": "Cavistes généralistes",
+    "barrel_aged": false,
+    "community_rating": 3.6,
+    "ingredients": "Standard",
+    "rarity_rank": "Commun"
+  },
+  {
     "title": "Watou Triple",
     "brewery": "St Bernard",
     "type": "Blonde",
@@ -12360,6 +12630,21 @@
     "rarity_rank": "Rare"
   },
   {
+    "title": "Kapittel Blonde",
+    "brewery": "Van Eecke",
+    "type": "Blonde",
+    "volume": "0.33 L",
+    "alcohol": "6.5°",
+    "id": "KAPITTEL_BLONDE_BLONDE_0.33",
+    "image": "images/beer/be/kapittel-blonde-33cl.png",
+    "production_volume": "Régionale",
+    "distribution": "Supermarché",
+    "barrel_aged": false,
+    "community_rating": 3.1,
+    "ingredients": "Standard",
+    "rarity_rank": "Commun"
+  },
+  {
     "title": "Ter Dolen Triple",
     "brewery": "Ter Dolen",
     "type": "Blonde",
@@ -12430,7 +12715,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -12658,6 +12943,21 @@
     "community_rating": 3.6,
     "ingredients": "Malt Fumé",
     "rarity_rank": "Super Rare"
+  },
+  {
+    "title": "Chapeau Framboise",
+    "brewery": "De Troch",
+    "type": "Ambree",
+    "volume": "0.25 L",
+    "alcohol": "3.5°",
+    "id": "CHAPEAU_FRAMBOISE_AMBREE_0.25",
+    "image": "images/beer/be/chapeau-framboise-25cl.png",
+    "production_volume": "Régionale",
+    "distribution": "Supermarché",
+    "barrel_aged": false,
+    "community_rating": 2.7,
+    "ingredients": "Arômes Framboise",
+    "rarity_rank": "Base"
   },
   {
     "title": "La Gauloise Amber",

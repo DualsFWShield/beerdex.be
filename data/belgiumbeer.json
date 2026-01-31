@@ -10,7 +10,7 @@
     "production_volume": "Industrielle",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 2,
+    "community_rating": 2.0,
     "ingredients": "Maïs/Standard",
     "rarity_rank": "Base"
   },
@@ -55,7 +55,7 @@
     "production_volume": "Régionale",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -342,6 +342,51 @@
     "barrel_aged": false,
     "community_rating": 3.1,
     "ingredients": "Fleurs",
+    "rarity_rank": "Rare"
+  },
+  {
+    "title": "BONSECOURS AMBREE",
+    "brewery": "CAULIER",
+    "type": "Ambrée",
+    "volume": "0.33 L",
+    "alcohol": "8°",
+    "id": "BONSECOURS AMBREE_AMBREE_0.33",
+    "image": "images/beer/be/BONSECOURS_AMBREE_AMBREE_033.png",
+    "production_volume": "Régionale",
+    "distribution": "Cavistes spécialisés",
+    "barrel_aged": false,
+    "community_rating": 3.5,
+    "ingredients": "Sucre candi",
+    "rarity_rank": "Rare"
+  },
+  {
+    "title": "BONSECOURS BLONDE",
+    "brewery": "CAULIER",
+    "type": "Blonde",
+    "volume": "0.33 L",
+    "alcohol": "8°",
+    "id": "BONSECOURS BLONDE_BLONDE_0.33",
+    "image": "images/beer/be/BONSECOURS_BLONDE_BLONDE_033.png",
+    "production_volume": "Régionale",
+    "distribution": "Cavistes spécialisés",
+    "barrel_aged": false,
+    "community_rating": 3.6,
+    "ingredients": "Standard",
+    "rarity_rank": "Rare"
+  },
+  {
+    "title": "BONSECOURS MYRTILLE",
+    "brewery": "CAULIER",
+    "type": "Rouge/Rubis",
+    "volume": "0.33 L",
+    "alcohol": "6.4°",
+    "id": "BONSECOURS MYRTILLE_ROUGE/RUBIS_0.33",
+    "image": "images/beer/be/BONSECOURS_MYRTILLE_ROUGERUBIS_033.png",
+    "production_volume": "Régionale",
+    "distribution": "Cavistes spécialisés",
+    "barrel_aged": false,
+    "community_rating": 3.2,
+    "ingredients": "Myrtilles",
     "rarity_rank": "Rare"
   },
   {
@@ -685,7 +730,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Faible Alcool",
     "rarity_rank": "Commun"
   },
@@ -975,6 +1020,21 @@
     "rarity_rank": "Commun"
   },
   {
+    "title": "DUVEL 6.66",
+    "brewery": "DUVEL MOORTGAT",
+    "type": "Blonde",
+    "volume": "0.33 L",
+    "alcohol": "6.66°",
+    "id": "DUVEL 6.66_BLONDE_0.33",
+    "image": "images/beer/be/DUVEL_666_BLONDE_033.png",
+    "production_volume": "Industrielle",
+    "distribution": "Partout",
+    "barrel_aged": false,
+    "community_rating": 3.5,
+    "ingredients": "6 Houblons",
+    "rarity_rank": "Commun"
+  },
+  {
     "title": "DUVEL TRIPLE HOP CITRA",
     "brewery": "DUVEL MOORTGAT",
     "type": "Blonde",
@@ -1170,6 +1230,21 @@
     "rarity_rank": "Commun"
   },
   {
+    "title": "GRISETTE BLANCHE",
+    "brewery": "SAINT FEUILLIEN",
+    "type": "Blanche",
+    "volume": "20 L",
+    "alcohol": "5.2°",
+    "id": "GRISETTE BLANCHE_BLANCHE_20",
+    "image": "",
+    "production_volume": "Régionale",
+    "distribution": "Horeca",
+    "barrel_aged": false,
+    "community_rating": 3.1,
+    "ingredients": "Bio / Sans Gluten",
+    "rarity_rank": "Commun"
+  },
+  {
     "title": "GRISETTE BLONDE SANS GLUTEN BIO",
     "brewery": "SAINT FEUILLIEN",
     "type": "Blonde",
@@ -1180,7 +1255,7 @@
     "production_volume": "Régionale",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Bio / Sans Gluten",
     "rarity_rank": "Commun"
   },
@@ -1690,7 +1765,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Jus de framboise",
     "rarity_rank": "Base"
   },
@@ -1723,6 +1798,21 @@
     "community_rating": 3.2,
     "ingredients": "Jus de pêche",
     "rarity_rank": "Base"
+  },
+  {
+    "title": "LINDEMANS TAROT D'OR",
+    "brewery": "LINDEMANS",
+    "type": "Blonde",
+    "volume": "0.25 L",
+    "alcohol": "8°",
+    "id": "LINDEMANS TAROT D'OR_BLONDE_0.25",
+    "image": "images/beer/be/LINDEMANS_TAROT_DOR_BLONDE_025.png",
+    "production_volume": "Industrielle",
+    "distribution": "Partout",
+    "barrel_aged": false,
+    "community_rating": 3.2,
+    "ingredients": "Fruits exotiques",
+    "rarity_rank": "Commun"
   },
   {
     "title": "LINDEMANS TAROT NOIR",
@@ -2035,7 +2125,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes & Supermarchés",
     "barrel_aged": false,
-    "community_rating": 4,
+    "community_rating": 4.0,
     "ingredients": "Levures Sauvages (Brettanomyces)",
     "rarity_rank": "Mythique"
   },
@@ -2215,7 +2305,7 @@
     "production_volume": "Régionale",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Pomme / Rhum",
     "rarity_rank": "Commun"
   },
@@ -2230,7 +2320,7 @@
     "production_volume": "Industrielle",
     "distribution": "Horeca",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -2380,7 +2470,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -2395,7 +2485,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Cerises",
     "rarity_rank": "Commun"
   },
@@ -2410,7 +2500,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -2545,7 +2635,7 @@
     "production_volume": "Régionale",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Fruits",
     "rarity_rank": "Commun"
   },
@@ -2710,7 +2800,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -2830,7 +2920,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": false,
-    "community_rating": 3,
+    "community_rating": 3.0,
     "ingredients": "Fruits",
     "rarity_rank": "Rare"
   },
