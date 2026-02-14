@@ -172,8 +172,8 @@ function setupEventListeners() {
         });
     });
 
-    // Scan Toggle
-    document.getElementById('scan-toggle')?.addEventListener('click', () => {
+    // Scan Toggle (New ID: fab-scan)
+    document.getElementById('fab-scan')?.addEventListener('click', () => {
         console.log("[App] Scan toggle clicked. Resetting session cache.");
         const scanCache = new Set();
 
@@ -188,9 +188,11 @@ function setupEventListeners() {
             UI.setScannerFeedback("🔍 Recherche...", false);
 
             try {
-                const product = await fetchProductByBarcode(barcode);
+                // Fetch product with enhanced status
+                const result = await fetchProductByBarcode(barcode);
+                const { status, product } = result || { status: 'error' };
 
-                if (product) {
+                if (status === 'success' && product) {
                     UI.setScannerFeedback("✅ Produit trouvé !", false);
 
                     // Stop scanner & Close modal after short delay
@@ -236,15 +238,8 @@ function setupEventListeners() {
                         }
 
                         if (bestMatch && bestScore > 0.8) {
-                            // Valid match found -> Stop scanner immediately
-                            // But we need to close the modal first or replace it?
-                            // renderBeerDetail opens a new modal (or replaces content).
-
                             UI.showToast(`Trouvé en local : ${bestMatch.title}`);
-
-                            // Close scanner first to stop camera
-                            UI.closeModal();
-
+                            UI.closeModal(); // Ensure close
                             UI.renderBeerDetail(bestMatch, (data) => {
                                 Storage.saveBeerRating(bestMatch.id, data);
                                 Achievements.checkAchievements(state.beers);
@@ -253,7 +248,7 @@ function setupEventListeners() {
                             return true; // STOP SCANNER
                         }
 
-                        // If no exact match, proceed with API product
+                        // If no exact match local, proceed with API product
                         UI.renderBeerDetail(product, (data) => {
                             if (product.fromAPI) {
                                 const newBeer = { ...product };
@@ -271,11 +266,59 @@ function setupEventListeners() {
                         });
 
                     }, 200);
-
                     return true; // Signal scanner to STOP
+
+                } else if (status === 'not_beer') {
+                    // FORCE ADD OPTION
+                    UI.setScannerFeedback(
+                        `<span>⛔ Pas une bière. <button id="btn-force-add" style="text-decoration:underline; background:none; border:none; color:inherit; cursor:pointer;">Ajouter quand même ?</button></span>`,
+                        true
+                    );
+
+                    // Bind the force add button dynamically? 
+                    // Warning: innerHTML replacement kills listeners if not careful.
+                    // Instead of complex delegation, we can check document click or rely on specific UI method.
+                    // For simplicity, we assume user might tap it. 
+                    // We need a way to hook this click. 
+                    // Hack: use a global delegation or timeout bind. 
+                    setTimeout(() => {
+                        document.getElementById('btn-force-add')?.addEventListener('click', (e) => {
+                            e.stopPropagation(); // prevent modal close if any
+                            UI.closeModal();
+                            // Open Add Form with pre-filled data if available? 
+                            // product comes from API even if rejected
+                            const prefill = product || {};
+                            UI.renderAddBeerForm((newBeer) => {
+                                Storage.saveCustomBeer(newBeer);
+                                state.beers.unshift(newBeer);
+                                Achievements.checkAchievements(state.beers);
+                                renderCurrentView();
+                                UI.closeModal();
+                                UI.showToast("Forcé et Ajouté !");
+                            }, null, prefill);
+                        }, { once: true });
+                    }, 100);
+
+                    return false; // Signal scanner to RESUME (user can decide)
+
                 } else {
-                    // Invalid / Not a beer
-                    UI.setScannerFeedback("⛔ Ce n'est pas une bière...", true);
+                    // NOT FOUND -> Search By Name
+                    UI.setScannerFeedback(
+                        `<span>🤔 Inconnu. <button id="btn-scan-search" style="text-decoration:underline; background:none; border:none; color:inherit; cursor:pointer;">Chercher par nom ?</button></span>`,
+                        true
+                    );
+
+                    setTimeout(() => {
+                        document.getElementById('btn-scan-search')?.addEventListener('click', () => {
+                            UI.closeModal();
+                            setTimeout(() => {
+                                const searchBtn = document.getElementById('search-toggle');
+                                if (searchBtn) searchBtn.click();
+                                // Focus input handled by toggle
+                            }, 300);
+                        }, { once: true });
+                    }, 100);
+
                     return false; // Signal scanner to RESUME
                 }
 
@@ -376,8 +419,8 @@ function setupEventListeners() {
         });
     });
 
-    // FAB - Add Custom Beer
-    document.getElementById('fab-add').addEventListener('click', () => {
+    // Add Manually Toggle (New ID: btn-add-header)
+    document.getElementById('btn-add-header')?.addEventListener('click', () => {
         UI.renderAddBeerForm((newBeer) => {
             Storage.saveCustomBeer(newBeer);
             state.beers.unshift(newBeer); // Add to top

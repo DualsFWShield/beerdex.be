@@ -33,35 +33,42 @@ function checkRateLimit(type) {
 export async function fetchProductByBarcode(barcode) {
     if (!checkRateLimit('product')) {
         console.warn('OFF API Key Limit Reached (Product)');
-        // throw new Error("Rate limit exceeded for product details");
-        return null;
+        return { status: 'rate_limit' };
     }
 
     try {
         const response = await fetch(`${API_BASE_URL}/product/${barcode}.json`, {
             method: 'GET',
             headers: {
-                'User-Agent': 'Beerdex/1.0 (clément.picoret@gmail.com)' // Replace with generic or user provided if available
+                'User-Agent': 'Beerdex/1.0 (clément.picoret@gmail.com)'
             }
         });
 
         if (!response.ok) {
             console.warn(`OFF API Error: ${response.status}`);
-            return null;
+            return { status: 'error' };
         }
 
         const data = await response.json();
 
         if (data.status === 0 || !data.product) {
             console.warn('Product not found in OFF');
-            return null;
+            return { status: 'not_found' };
         }
 
-        return mapProductToBeer(data.product);
+        // Map product
+        const product = mapProductToBeer(data.product);
+
+        // Check validity
+        if (!product.isValidBeer) {
+            return { status: 'not_beer', product: product };
+        }
+
+        return { status: 'success', product: product };
 
     } catch (error) {
         console.error('Error fetching from OFF:', error);
-        return null;
+        return { status: 'error' };
     }
 }
 
@@ -77,16 +84,15 @@ function mapProductToBeer(product) {
     const categories = (product.categories || '') + ' ' + (product.categories_tags || []).join(' ');
 
     // 0. Beer Validation (Reject non-beers)
-    // We check keywords in Title, Categories, and Brands (Generic check)
     const validKeywords = /bi[eè]re|beer|bier|cerveza|birra|pivo|ipa|ale|stout|porter|lager|pils|lambic|gueuze|trappist|abbaye|brewery|brasserie|brauerei|cidre/i;
     const validationText = (rawTitle + ' ' + categories + ' ' + brands).toLowerCase();
 
+    let isValidBeer = true;
     if (!validKeywords.test(validationText)) {
-        console.warn("Product rejected (Not a beer):", rawTitle);
-        // We could return a special error object, but null forces "Not Found" handling
-        // Or we rely on UI to handle null as "Not a beer / Not found"
-        return null;
+        console.warn("Product might not be a beer:", rawTitle);
+        isValidBeer = false;
     }
+
 
     // 2. Data Cleaning
     rawTitle = rawTitle
@@ -187,7 +193,8 @@ function mapProductToBeer(product) {
         isSeasonal: false,
         rarity: rarityData.rarity, // Use calculated rarity
         fromAPI: true, // Marker for API-sourced data
-        id: 'API_' + product._id // Transient ID
+        id: 'API_' + product._id, // Transient ID
+        isValidBeer: isValidBeer
     };
 }
 

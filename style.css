@@ -451,7 +451,7 @@ h3 {
     flex: 1;
     overflow-y: auto;
     padding: var(--spacing-md);
-    padding-bottom: calc(var(--nav-height) + 80px);
+    padding-bottom: calc(var(--nav-height) + 120px);
     /* Safe area for inputs & FAB */
     scroll-behavior: smooth;
 }
@@ -1116,6 +1116,7 @@ h3 {
 .app-header,
 .bottom-nav {
     -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
 }
 
 /* Update Toast */
@@ -1327,6 +1328,7 @@ body.modal-open {
     font-weight: 900;
     font-family: 'Russo One', sans-serif;
     background: -webkit-linear-gradient(#fff, #aaa);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 10px;
@@ -1729,9 +1731,7 @@ body.modal-open {
     border-radius: 50% !important;
 }
 
-cursor: default !important;
-border-radius: 50% !important;
-}
+
 
 .achievement-toast .ach-icon,
 .achievement-toast .ach-icon * {
@@ -1911,6 +1911,204 @@ border-radius: 50% !important;
     animation: toastEntry 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
-.toast-exit-anim {
-    animation: toastExit 0.5s ease-in forwards;
+/* --- New Scanner UI (Restored to Modal Size) --- */
+.modal-scanner {
+    background: #000 !important;
+    padding: 0 !important;
+    /* Remove full screen forcing */
+    width: 100%;
+    height: 60vh;
+    /* Fixed height for scanner window */
+    max-height: 600px;
+    border-radius: 12px !important;
+    /* Restore radius */
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+#reader {
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden;
+    position: relative;
+    background: #000;
+    flex: 1;
+}
+
+#reader video {
+    object-fit: cover !important;
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+}
+
+/* Overlay Controls - Adjusted for Modal */
+.cam-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    /* Gradient protection for buttons */
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+    padding: 10px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.cam-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 400px;
+}
+
+/* Zoom Row */
+.zoom-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 5px 15px;
+    border-radius: 20px;
+}
+
+.zoom-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.zoom-btn.active {
+    background: var(--accent-gold);
+    color: #000;
+    border-color: var(--accent-gold);
+    transform: scale(1.1);
+}
+
+/* Secondary Buttons (Close, Switch) */
+.cam-btn-secondary {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(60, 60, 60, 0.6);
+    border: none;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.cam-btn-secondary:active {
+    transform: scale(0.9);
+    background: rgba(80, 80, 80, 0.8);
+}
+
+/* Rotation Animation for Switch */
+.rotate-anim {
+    animation: spin 0.5s ease-in-out;
+}
+
+@keyframes spin {
+    100% {
+        transform: rotate(180deg);
+    }
+}
+
+/* Focus Ring */
+.focus-ring {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border: 2px solid rgba(255, 215, 0, 0.8);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 40;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.focus-ring.ping {
+    animation: focusPing 0.6s ease-out forwards;
+}
+
+@keyframes focusPing {
+    0% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+        border-color: #fff;
+    }
+}
+
+/* Scan Guide Corners */
+.scan-guide {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 250px;
+    height: 250px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    pointer-events: none;
+    box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.5);
+    /* Dim outside */
+    z-index: 5;
+}
+
+.scan-guide::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border: 2px solid transparent;
+    border-top-color: var(--accent-gold);
+    border-bottom-color: var(--accent-gold);
+    border-radius: 20px;
+    animation: breathe 3s infinite;
+}
+
+@keyframes breathe {
+
+    0%,
+    100% {
+        opacity: 0.5;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.02);
+    }
 }

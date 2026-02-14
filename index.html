@@ -59,14 +59,11 @@
                         <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                     </svg>
                 </button>
-                <button type="button" id="scan-toggle" class="icon-btn" aria-label="Scanner un code-barres">
+                <button type="button" id="btn-add-header" class="icon-btn" aria-label="Ajouter manuellement">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
-                        <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
-                        <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
-                        <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
-                        <rect x="7" y="7" width="10" height="10"></rect>
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
                 </button>
 
@@ -112,12 +109,17 @@
             </div>
         </main>
 
-        <!-- Floating Action Button for Adding Data -->
-        <button type="button" id="fab-add" class="fab" aria-label="Ajouter une bière manuellement">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                aria-hidden="true">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
+        <!-- Floating Action Button for Scanning -->
+        <button type="button" id="fab-scan" class="fab" aria-label="Scanner une bière">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
+                <path d="M17 3h2a2 2 0 0 1 2 2v2"></path>
+                <path d="M21 17v2a2 2 0 0 1-2 2h-2"></path>
+                <path d="M7 21H5a2 2 0 0 1-2-2v-2"></path>
+                <path d="M8 7h1v10H8z"></path>
+                <path d="M11 7h2v10h-2z"></path>
+                <path d="M15 7h1v10h-1z"></path>
             </svg>
         </button>
 

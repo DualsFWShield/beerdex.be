@@ -1744,38 +1744,165 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
     openModal(wrapper);
 }
 
-export function renderScannerModal(onScan) {
+export async function renderScannerModal(onScan) {
     const wrapper = document.createElement('div');
-    wrapper.className = 'modal-content';
+    wrapper.className = 'modal-content modal-scanner'; // Add specific class
+
+    // Init Overlay Structure
     wrapper.innerHTML = `
-        <h2 style="margin-bottom: 20px;">Scanner un Code-Barres</h2>
-        <div style="position:relative; margin-bottom: 15px;">
-            <div id="reader" style="width: 100%; min-height: 250px; background: #000; border-radius: 8px; overflow: hidden;"></div>
-            <div id="scanner-feedback" style="position:absolute; bottom:10px; left:0; width:100%; text-align:center; color:white; font-weight:bold; text-shadow:0 1px 3px rgba(0,0,0,0.8); pointer-events:none; z-index:10; font-size:1.2rem; transition:opacity 0.3s;"></div>
+        <h2 style="position:absolute; top:20px; left:0; width:100%; text-align:center; z-index:20; text-shadow:0 2px 4px rgba(0,0,0,0.8); pointer-events:none;">Scanner</h2>
+        
+        <div style="position:relative; width:100%; height:100%; background: #000; overflow: hidden; display:flex; justify-content:center; align-items:center;">
+            
+            <!-- Video Container -->
+            <div id="reader" style="width: 100%; height: 100%;"></div>
+
+            <!-- Focus Ring (Animated via JS) -->
+            <div id="focus-ring" class="focus-ring"></div>
+            
+            <!-- Safe Area Guide -->
+            <div class="scan-guide"></div>
+
+            <!-- Feedback Text -->
+            <div id="scanner-feedback" style="position:absolute; top:80px; width:100%; text-align:center; color:white; font-weight:bold; text-shadow:0 1px 3px rgba(0,0,0,0.8); pointer-events:none; z-index:10; font-size:1.1rem;"></div>
+
+            <!-- CAMERA CONTROLS (Bottom) -->
+            <div class="cam-controls">
+                
+                <!-- Zoom Row -->
+                <div id="zoom-controls" class="zoom-row">
+                    <!-- Buttons injected here -->
+                </div>
+
+                <!-- Bottom Action Row -->
+                <div class="cam-actions">
+                     <button id="btn-close-scanner" class="cam-btn-secondary">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+
+                    <div class="shutter-spacer"></div> <!-- Center spacer -->
+
+                    <button id="btn-switch-cam" class="cam-btn-secondary">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0-4.418-3.582-8-8-8s-8 3.582-8 8h-2l4 5 4-5h-2c0-3.3 2.7-6 6-6s6 2.7 6 6-2.7 6-6 6v2c4.418 0 8-3.582 8-8z"></path></svg>
+                    </button>
+                </div>
+            </div>
         </div>
-        <p style="text-align: center; color: #888; font-size: 0.9rem;">
-            Placez le code-barres de la bière devant la caméra.
-        </p>
-        <button id="btn-close-scanner" class="btn-primary" style="background:#333; margin-top:15px;">Fermer</button>
     `;
 
     openModal(wrapper);
 
-    // Give time for DOM to paint
-    setTimeout(() => {
-        Scanner.startScanner("reader", (decodedText, decodedResult) => {
-            return onScan(decodedText);
-        }, (errorMessage) => {
-        });
-    }, 100);
+    // Logic Variables
+    let currentCameraId = null;
+    let cameras = [];
 
-    // Set cleanup for when modal closes
-    modalCleanup = () => {
-        Scanner.stopScanner();
+    // Initialize
+    try {
+        cameras = await Scanner.getCameras();
+        if (cameras.length > 0) {
+            currentCameraId = cameras[cameras.length - 1].id; // Default back
+        }
+    } catch (e) { console.error(e); }
+
+    // Start Scanner Function
+    const initScanner = async (camId) => {
+        try {
+            const { capabilities, activeId } = await Scanner.startScanner("reader",
+                (decodedText) => onScan(decodedText),
+                () => { } // silent fail
+                , camId);
+
+            currentCameraId = activeId; // Sync
+
+            // Setup Zoom Controls
+            const zoomRow = wrapper.querySelector('#zoom-controls');
+            zoomRow.innerHTML = ''; // Clear
+
+            if (capabilities && capabilities.zoom) {
+                const min = capabilities.zoom.min || 1;
+                const max = capabilities.zoom.max || 1;
+
+                // Define Steps: 1x, 2x, 5x, 0.5x if available
+                const steps = [1];
+                if (min < 1) steps.unshift(0.5);
+                if (max >= 2) steps.push(2);
+                if (max >= 5) steps.push(5);
+
+                // Render Buttons
+                steps.forEach(zoomLevel => {
+                    const btn = document.createElement('button');
+                    btn.className = 'zoom-btn';
+                    btn.innerText = zoomLevel + 'x';
+                    btn.onclick = (e) => {
+                        e.stopPropagation();
+                        // Active state
+                        wrapper.querySelectorAll('.zoom-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        Scanner.applyConstraints({ advanced: [{ zoom: zoomLevel }] });
+                    };
+                    zoomRow.appendChild(btn);
+
+                    if (zoomLevel === 1) btn.classList.add('active');
+                });
+            }
+
+        } catch (e) {
+            setScannerFeedback("Erreur Caméra: " + e.message, true);
+        }
     };
 
-    wrapper.querySelector('#btn-close-scanner').onclick = () => {
-        closeModal();
+    // Initial Start
+    // Give minimal delay for DOM
+    setTimeout(() => initScanner(currentCameraId), 100);
+
+    // Switch Logic
+    const switchBtn = wrapper.querySelector('#btn-switch-cam');
+    if (cameras.length > 1) {
+        switchBtn.onclick = async () => {
+            // Find next camera index
+            const currentIdx = cameras.findIndex(c => c.id === currentCameraId);
+            const nextIdx = (currentIdx + 1) % cameras.length;
+            const nextCam = cameras[nextIdx];
+
+            switchBtn.classList.add('rotate-anim');
+            setTimeout(() => switchBtn.classList.remove('rotate-anim'), 500);
+
+            await initScanner(nextCam.id);
+        };
+    } else {
+        switchBtn.style.display = 'none'; // Hide if simplified
+    }
+
+    // Close Logic
+    const closeBtn = wrapper.querySelector('#btn-close-scanner');
+    closeBtn.onclick = () => closeModal();
+    modalCleanup = () => Scanner.stopScanner();
+
+    // Focus / Tap Logic
+    const readerDiv = wrapper.querySelector('#reader');
+    readerDiv.onclick = (e) => {
+        // Visual Feedback
+        const rect = readerDiv.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const ring = wrapper.querySelector('#focus-ring');
+        ring.style.left = (x - 40) + 'px';
+        ring.style.top = (y - 40) + 'px';
+        ring.style.opacity = '1';
+        ring.style.transform = 'scale(1)';
+
+        // Reset animation
+        ring.classList.remove('ping');
+        void ring.offsetWidth;
+        ring.classList.add('ping');
+
+        setTimeout(() => {
+            ring.style.opacity = '0';
+        }, 1000);
+
+        // Attempt Focus
+        Scanner.triggerFocus();
     };
 }
 

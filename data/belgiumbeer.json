@@ -3178,5 +3178,50 @@
     "community_rating": 3.5,
     "ingredients": "Houblons",
     "rarity_rank": "Commun"
+  },
+  {
+    "title": "LA VIEILLE SALM",
+    "brewery": "DETREMBLEUR (SALM)",
+    "type": "Ambrée",
+    "volume": "0.33 L",
+    "alcohol": "8.3°",
+    "id": "LA VIEILLE SALM_AMBREE_0.33",
+    "image": "",
+    "production_volume": "Micro-brasserie",
+    "distribution": "Local",
+    "barrel_aged": false,
+    "community_rating": 3.5,
+    "ingredients": "Arômes boisés",
+    "rarity_rank": "Rare"
+  },
+  {
+    "title": "SAS PILS",
+    "brewery": "LEROY BREWERIES (HET SAS)",
+    "type": "Pils",
+    "volume": "0.25 L",
+    "alcohol": "5°",
+    "id": "SAS PILS_PILS_0.25",
+    "image": "",
+    "production_volume": "Régionale",
+    "distribution": "Horeca",
+    "barrel_aged": false,
+    "community_rating": 2.8,
+    "ingredients": "Maïs/Riz",
+    "rarity_rank": "Commun"
+  },
+  {
+    "title": "SILLY TRIPLE",
+    "brewery": "DE SILLY",
+    "type": "Blonde",
+    "volume": "0.33 L",
+    "alcohol": "8°",
+    "id": "SILLY TRIPLE_BLONDE_0.33",
+    "image": "",
+    "production_volume": "Régionale",
+    "distribution": "Cavistes & Supermarchés",
+    "barrel_aged": false,
+    "community_rating": 3.4,
+    "ingredients": "Standard",
+    "rarity_rank": "Commun"
   }
 ]
