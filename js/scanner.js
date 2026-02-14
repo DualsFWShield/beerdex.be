@@ -42,16 +42,11 @@ export async function startScanner(elementId, onScanSuccess, onScanFailure, came
             await stopScanner();
         }
 
-        // Initialize with Experimental Features (Native Barcode Detector)
-        html5QrCode = new Html5Qrcode(elementId, {
-            experimentalFeatures: {
-                useBarCodeDetectorIfSupported: true
-            }
-        });
+        // Standard Init
+        html5QrCode = new Html5Qrcode(elementId);
 
         const config = {
             fps: 10,
-            // qrbox: { width: 250, height: 250 }, // Commented out to scan full frame for better performance
             aspectRatio: 1.0,
             formatsToSupport: [
                 Html5QrcodeSupportedFormats.QR_CODE,
@@ -62,18 +57,12 @@ export async function startScanner(elementId, onScanSuccess, onScanFailure, came
             ],
             videoConstraints: {
                 focusMode: 'continuous',
-                advanced: [{ focusMode: 'continuous' }] // Try to force continuous focus
+                advanced: [{ focusMode: 'continuous' }]
             }
         };
 
-        // Camera Logic
-        let selectedCameraId = cameraId;
-
-        // If no ID provided, we let Html5Qrcode use facingMode: environment
-        // preventing manual guess work that might pick front camera
-        // Define Callback inline to ensure it exists
+        // Define Callback inline
         const onScan = (decodedText, decodedResult) => {
-            // Prevent multiple triggers
             if (html5QrCode.isProcessing) return;
             html5QrCode.isProcessing = true;
             html5QrCode.pause();
@@ -105,9 +94,6 @@ export async function startScanner(elementId, onScanSuccess, onScanFailure, came
         }
 
         // Capture Active Track for Constraints (Zoom/Focus)
-        // HTML5Qrcode doesn't expose the stream directly easily, but we can hack it or use native query
-        // Actually, html5QrCode.getRunningTrackCapabilities() exists? No.
-        // We have to find the video element and get the stream
         const videoElement = document.querySelector(`#${elementId} video`);
         if (videoElement && videoElement.srcObject) {
             const track = videoElement.srcObject.getVideoTracks()[0];
@@ -116,7 +102,10 @@ export async function startScanner(elementId, onScanSuccess, onScanFailure, came
             // Return capabilities to UI
             const capabilities = track.getCapabilities ? track.getCapabilities() : {};
             const settings = track.getSettings ? track.getSettings() : {};
-            return { capabilities, settings, activeId: selectedCameraId };
+
+            // If we started with environment (null ID), try to get the real ID from settings
+            const activeId = settings.deviceId || selectedCameraId;
+            return { capabilities, settings, activeId };
         }
 
         return { activeId: selectedCameraId };
