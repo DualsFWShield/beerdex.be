@@ -68,42 +68,41 @@ export async function startScanner(elementId, onScanSuccess, onScanFailure, came
 
         // Camera Logic
         let selectedCameraId = cameraId;
-        if (!selectedCameraId) {
-            const cameras = await Html5Qrcode.getCameras();
-            if (cameras && cameras.length > 0) {
-                // Use the last camera (usually back camera on mobile)
-                selectedCameraId = cameras[cameras.length - 1].id;
-            } else {
-                throw new Error("No cameras found");
-            }
-        }
 
-        await html5QrCode.start(
-            selectedCameraId,
-            config,
-            (decodedText, decodedResult) => {
-                // Prevent multiple triggers
-                if (html5QrCode.isProcessing) return;
-                html5QrCode.isProcessing = true;
-                html5QrCode.pause();
+        // If no ID provided, we let Html5Qrcode use facingMode: environment
+        // preventing manual guess work that might pick front camera
+        // Define Callback inline to ensure it exists
+        const onScan = (decodedText, decodedResult) => {
+            // Prevent multiple triggers
+            if (html5QrCode.isProcessing) return;
+            html5QrCode.isProcessing = true;
+            html5QrCode.pause();
 
-                Promise.resolve(onScanSuccess(decodedText, decodedResult)).then((shouldStop) => {
-                    if (shouldStop) {
-                        stopScanner();
-                    } else {
-                        html5QrCode.isProcessing = false;
-                        html5QrCode.resume();
-                    }
-                }).catch(err => {
-                    console.error("Scanner callback error:", err);
+            Promise.resolve(onScanSuccess(decodedText, decodedResult)).then((shouldStop) => {
+                if (shouldStop) {
+                    stopScanner();
+                } else {
                     html5QrCode.isProcessing = false;
                     html5QrCode.resume();
-                });
-            },
-            (errorMessage) => {
-                if (onScanFailure) onScanFailure(errorMessage);
-            }
-        );
+                }
+            }).catch(err => {
+                console.error("Scanner callback error:", err);
+                html5QrCode.isProcessing = false;
+                html5QrCode.resume();
+            });
+        };
+
+        const onError = (errorMessage) => {
+            if (onScanFailure) onScanFailure(errorMessage);
+        };
+
+        // Camera Logic
+        // If no ID provided, we let Html5Qrcode use facingMode: environment
+        if (selectedCameraId) {
+            await html5QrCode.start(selectedCameraId, config, onScan, onError);
+        } else {
+            await html5QrCode.start({ facingMode: "environment" }, config, onScan, onError);
+        }
 
         // Capture Active Track for Constraints (Zoom/Focus)
         // HTML5Qrcode doesn't expose the stream directly easily, but we can hack it or use native query

@@ -1796,12 +1796,12 @@ export async function renderScannerModal(onScan) {
     let currentCameraId = null;
     let cameras = [];
 
-    // Initialize
+    // Initialize - Get cameras but DON'T select one yet. Let scanner choose environment default.
     try {
         cameras = await Scanner.getCameras();
-        if (cameras.length > 0) {
-            currentCameraId = cameras[cameras.length - 1].id; // Default back
-        }
+        // if (cameras.length > 0) {
+        //    currentCameraId = cameras[cameras.length - 1].id; 
+        // }
     } catch (e) { console.error(e); }
 
     // Start Scanner Function
