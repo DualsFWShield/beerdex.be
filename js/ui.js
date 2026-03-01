@@ -93,6 +93,90 @@ function openModal(content) {
     };
 }
 
+// --- App Welcome & Consent Flow ---
+
+export function checkAndShowWelcome() {
+    // Only show welcome if consent is already given
+    if (localStorage.getItem('beerdex_consent') !== 'true') return;
+
+    if (!Storage.getPreference('hasSeenWelcome', false)) {
+        setTimeout(() => {
+            renderWelcomeScreen(); // Assumes this function exists below
+            Storage.savePreference('hasSeenWelcome', true);
+        }, 500);
+    }
+}
+
+export function checkAndShowConsent(onAccept) {
+    if (localStorage.getItem('beerdex_consent') === 'true') {
+        if (onAccept) onAccept();
+        return;
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = `
+        background: var(--bg-card);
+        width: 90%;
+        max-width: 500px;
+        border-radius: 20px;
+        padding: var(--spacing-lg);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        border: 1px solid var(--accent-gold);
+        position: relative;
+    `;
+
+    wrapper.innerHTML = `
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 3rem; margin-bottom: 10px;">🍻</div>
+            <h2 style="color: var(--accent-gold); font-size: 1.6rem; margin-bottom: 10px;">Bienvenue sur Beerdex</h2>
+        </div>
+        
+        <div style="color: var(--text-secondary); line-height: 1.5; font-size: 0.95rem; margin-bottom: 25px; text-align: justify; background: var(--bg-dark); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color);">
+            <p style="margin-bottom: 15px; font-weight: bold; color: var(--text-primary);">Afin d'utiliser l'application, merci de lire et d'accepter nos conditions :</p>
+            <ul style="padding-left: 20px; list-style-type: '👉 ';">
+                <li style="margin-bottom: 10px;"><strong>Âge légal :</strong> Vous reconnaissez avoir l'âge légal pour consommer de l'alcool dans votre pays de résidence.</li>
+                <li style="margin-bottom: 10px;"><strong>Prévention :</strong> L'abus d'alcool est dangereux pour la santé, à consommer avec modération et responsabilité.</li>
+                <li><strong>Statistiques d'Usage :</strong> Nous collectons des données anonymes (via Google Analytics) pour analyser l'utilisation de l'app et améliorer l'expérience. Ces données sont 100% privées et ne sont en aucun cas vendues à des tiers.</li>
+            </ul>
+        </div>
+        
+        <button id="btn-accept-consent" class="btn-primary" style="font-size: 1.1rem; padding: 16px; width: 100%; box-shadow: 0 4px 15px rgba(255,192,0,0.3);">J'accepte les conditions</button>
+    `;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.style.zIndex = '9999999';
+    overlay.style.backdropFilter = 'blur(8px)';
+
+    overlay.onclick = (e) => {
+        if (e.target === overlay) {
+            wrapper.style.transform = 'translateX(-10px)';
+            setTimeout(() => wrapper.style.transform = 'translateX(10px)', 100);
+            setTimeout(() => wrapper.style.transform = 'translateX(-10px)', 200);
+            setTimeout(() => wrapper.style.transform = 'translateX(0)', 300);
+        }
+    };
+
+    overlay.appendChild(wrapper);
+    document.body.appendChild(overlay);
+
+    wrapper.querySelector('#btn-accept-consent').onclick = () => {
+        if (window.navigator && window.navigator.vibrate) navigator.vibrate(50);
+
+        localStorage.setItem('beerdex_consent', 'true');
+
+        overlay.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+        overlay.style.opacity = '0';
+        wrapper.style.transform = 'scale(0.9)';
+
+        setTimeout(() => {
+            overlay.remove();
+            if (onAccept) onAccept();
+            checkAndShowWelcome();
+        }, 400);
+    };
+}
+
 // --- Renders ---
 
 // Helper to remove white background from images using flood fill from corners
