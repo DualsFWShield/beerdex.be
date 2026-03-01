@@ -55,8 +55,8 @@ async function init() {
         // Check for Achievements on Load (Syncs import/offline data)
         Achievements.checkAchievements(state.beers);
 
-        // Check Welcome
-        UI.checkAndShowWelcome();
+        // Check Consent -> which checks Welcome
+        UI.checkAndShowConsent();
 
         // --- API AUTO-ACTION CHECK ---
         API.start(() => state.beers);
