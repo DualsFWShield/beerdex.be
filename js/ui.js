@@ -1358,7 +1358,13 @@ export function renderBeerDetail(beer, onSave) {
 
         const vol = wrapper.querySelector('#consumption-volume').value;
         const newData = Storage.addConsumption(beer.id, vol);
-        Analytics.track('beer_consumed', { beerId: beer.id, volume: vol });
+        Analytics.track('beer_consumed', {
+            beer_id: beer.id,
+            name: beer.title,
+            brewery: beer.brewery || 'Inconnu',
+            type: beer.type || 'Inconnu',
+            volume: vol
+        });
 
         // Update local object reference for immediate UI updates relying on it
         existingData.count = newData.count;
@@ -1518,7 +1524,11 @@ export function renderBeerDetail(beer, onSave) {
 
         // Track rating optionally filtering out null score
         if (data.score) {
-            Analytics.track('beer_rated', { beerId: beer.id, score: data.score });
+            Analytics.track('beer_rated', {
+                beer_id: beer.id,
+                name: beer.title,
+                score: data.score
+            });
         }
 
         // If API beer, we must save likely (auto-save on rate?)
@@ -1836,7 +1846,14 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
             Storage.saveCustomBeer(newBeer);
         }
 
-        Analytics.track('beer_added', { beerId: newBeer.id, title: newBeer.title, source: editModeBeer ? 'edit' : 'manual' });
+        Analytics.track('beer_added', {
+            beer_id: newBeer.id,
+            name: newBeer.title,
+            brewery: newBeer.brewery || 'Inconnu',
+            type: newBeer.type || 'Inconnu',
+            source: editModeBeer ? 'edit' : 'manual'
+        });
+
         onSave(newBeer);
     };
 
