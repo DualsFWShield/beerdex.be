@@ -99,12 +99,15 @@ export function checkAndShowWelcome() {
     // Only show welcome if consent is already given
     if (localStorage.getItem('beerdex_consent') !== 'true') return;
 
-    if (!Storage.getPreference('hasSeenWelcome', false)) {
-        setTimeout(() => {
-            renderWelcomeScreen(); // Assumes this function exists below
-            Storage.savePreference('hasSeenWelcome', true);
-        }, 500);
-    }
+    const HAS_SEEN_KEY = 'beerdex_welcome_seen_v3';
+    if (localStorage.getItem(HAS_SEEN_KEY)) return;
+
+    // Defer tutorial start to let UI settle
+    setTimeout(() => {
+        if (typeof TutorialSystem !== 'undefined') {
+            TutorialSystem.start();
+        }
+    }, 1000);
 }
 
 export function checkAndShowConsent(onAccept) {
@@ -3040,11 +3043,7 @@ const TutorialSystem = {
     }
 };
 
-export function checkAndShowWelcome() {
-    const HAS_SEEN_KEY = 'beerdex_welcome_seen_v3';
-    if (localStorage.getItem(HAS_SEEN_KEY)) return;
-    setTimeout(() => { TutorialSystem.start(); }, 1000);
-}
+
 
 window.restartTutorial = () => TutorialSystem.start();
 window.TutorialSystem = TutorialSystem;
