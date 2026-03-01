@@ -1,48 +1,47 @@
 /**
- * Beerdex Custom Analytics Module (Offline-First)
- * Handles telemetry data and syncing to Google Apps Script endpoint.
+ * Beerdex Custom Analytics Module (Google Analytics 4 - Offline-First)
+ * Handles telemetry data and syncing to GA4.
  */
 
 import * as Storage from './storage.js';
 
-// TODO: Noah doit remplacer ceci par l'URL "Application Web" de Google Apps Script.
-const ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbyIFsFsLFoNh_VyFkRZIxJ6TAZuYucIyuIV9a1R4aKAAGfVBR6KMzLGYPsZ1FD3MxLN/exec';
+// TODO: Remplacer ceci par ton ID de Mesure Google Analytics (commence par G-)
+const GA_MEASUREMENT_ID = 'G-JH9QGTJGXJ';
 
 class AnalyticsTracker {
     constructor() {
-        this.queueKey = 'beerdex_analytics_queue';
-        this.userIdKey = 'beerdex_anon_id';
-        this.userId = this._getOrGenerateId();
-        this.deviceInfo = this._getDeviceInfo();
+        this.queueKey = 'beerdex_ga4_queue';
+        this.isInitialized = false;
 
         // Listeners for sync triggers
         window.addEventListener('online', () => this.flush());
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden') this.flush();
+
+        // Inject GA4 Script if ID is configured
+        this._injectGA();
+    }
+
+    _injectGA() {
+        if (!GA_MEASUREMENT_ID || GA_MEASUREMENT_ID.includes('XXXXX')) {
+            console.warn('[Analytics] Google Analytics non configuré. Ajoute ton G-ID dans analytics.js');
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
+        document.head.appendChild(script);
+
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { window.dataLayer.push(arguments); }
+        window.gtag('js', new Date());
+        window.gtag('config', GA_MEASUREMENT_ID, {
+            'send_page_view': false // On gère nous mêmes
         });
 
-        // Optional periodic flush
-        setInterval(() => this.flush(), 5 * 60 * 1000); // 5 mins
-    }
+        this.isInitialized = true;
 
-    _getOrGenerateId() {
-        let id = localStorage.getItem(this.userIdKey);
-        if (!id) {
-            id = 'anon_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
-            localStorage.setItem(this.userIdKey, id);
-        }
-        return id;
-    }
-
-    _getDeviceInfo() {
-        return {
-            ua: navigator.userAgent,
-            platform: navigator.platform || 'unknown',
-            screen: `${window.screen.width}x${window.screen.height}`,
-            lang: navigator.language || 'unknown',
-            isStandalone: window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone || false,
-            isMedian: !!window.median
-        };
+        // Push queued events if we just initialized
+        setTimeout(() => this.flush(), 1000);
     }
 
     _getQueue() {
@@ -64,70 +63,65 @@ class AnalyticsTracker {
      * @param {Object} data - Contextual data payload
      */
     track(type, data = {}) {
-        if (!ENDPOINT_URL) return; // Skip if backend not configured
+        if (!this.isInitialized) return; // Silent skip if not configured
 
-        const event = {
-            timestamp: new Date().toISOString(),
-            type,
-            userId: this.userId,
-            device: this.deviceInfo,
-            data
-        };
+        const timestampMs = Date.now();
 
-        const queue = this._getQueue();
-        queue.push(event);
+        if (navigator.onLine && window.gtag) {
+            // Send directly
+            this._sendToGA(type, data);
+        } else {
+            // Queue for later
+            const queue = this._getQueue();
+            queue.push({ type, data, timestamp: timestampMs });
 
-        // Cap queue to 100 to prevent localstorage bloat
-        if (queue.length > 100) queue.shift();
+            // Cap queue to avoid bloat
+            if (queue.length > 100) queue.shift();
+            this._saveQueue(queue);
+        }
+    }
 
-        this._saveQueue(queue);
+    _sendToGA(type, data) {
+        if (!window.gtag) return;
 
-        // Try Immediate sync if we're online
-        if (navigator.onLine) {
-            this.flush();
+        if (type === 'app_open') {
+            window.gtag('event', 'app_open', { ...data });
+        } else if (type === 'view_change') {
+            window.gtag('event', 'page_view', {
+                page_title: data.view,
+                page_location: location.href,
+                page_path: '/' + data.view
+            });
+        } else {
+            // Standard custom event
+            window.gtag('event', type, data);
         }
     }
 
     /**
-     * Flush queue to server using POST beacon
+     * Flush queue to server when back online
      */
     flush() {
-        if (!navigator.onLine || !ENDPOINT_URL) return;
+        if (!navigator.onLine || !this.isInitialized || !window.gtag) return;
 
         const queue = this._getQueue();
         if (queue.length === 0) return;
 
-        const payload = JSON.stringify(queue);
-
-        // Try Beacon for background send, fallback to fetch
-        if (navigator.sendBeacon) {
-            const success = navigator.sendBeacon(ENDPOINT_URL, payload);
-            if (success) {
-                this._saveQueue([]); // clear queue optimally
-                return;
-            }
-        }
-
-        // Fallback fetch
-        fetch(ENDPOINT_URL, {
-            method: 'POST',
-            body: payload,
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' } // Simple text to avoid CORS preflight problems on Google Apps Script
-        }).then(res => {
-            if (res.ok) {
-                this._saveQueue([]);
-            }
-        }).catch(err => {
-            console.warn('[Analytics] Flush failed, will retry later.', err);
+        // Send queued events
+        queue.forEach(event => {
+            // In GA4, passing timestamp offsets via Measurement Protocol is possible but complex.
+            // Pushing standard events is best-effort.
+            this._sendToGA(event.type, event.data);
         });
+
+        this._saveQueue([]);
     }
 
     /**
-     * Runs once to summarize history into a single event
+     * Summarize historical usage
      */
     retroactiveSync() {
-        if (!ENDPOINT_URL) return;
-        if (localStorage.getItem('beerdex_retro_synced')) return;
+        if (!this.isInitialized || localStorage.getItem('beerdex_ga_retro_synced')) return;
 
         const allUserData = Storage.getAllUserData();
         const customBeers = Storage.getCustomBeers();
@@ -135,27 +129,21 @@ class AnalyticsTracker {
         let totalDrunk = 0;
         let totalFavorites = 0;
         let totalRatings = 0;
-        let earliestDate = null;
 
         Object.values(allUserData).forEach(d => {
             if (d.count > 0) totalDrunk++;
             if (d.favorite) totalFavorites++;
             if (d.score) totalRatings++;
-            if (d.timestamp) {
-                const tsDate = new Date(d.timestamp);
-                if (!earliestDate || tsDate < earliestDate) earliestDate = tsDate;
-            }
         });
 
         this.track('retroactive_sync', {
-            total_unique_beers_drunk: totalDrunk,
-            total_favorites: totalFavorites,
-            total_ratings: totalRatings,
-            total_custom_beers: customBeers.length,
-            earliest_activity_date: earliestDate ? earliestDate.toISOString() : null
+            unique_beers: totalDrunk,
+            favorites: totalFavorites,
+            ratings: totalRatings,
+            custom_beers: customBeers.length
         });
 
-        localStorage.setItem('beerdex_retro_synced', 'true');
+        localStorage.setItem('beerdex_ga_retro_synced', 'true');
     }
 }
 
