@@ -6,6 +6,7 @@ import * as API from './api.js';
 import * as Share from './share.js';
 import { fetchProductByBarcode, searchProducts } from './off-api.js';
 import { Feedback } from './feedback.js';
+import { Analytics } from './analytics.js';
 
 window.Share = Share;
 
@@ -37,6 +38,9 @@ const state = {
 // Initialize Application
 async function init() {
     try {
+        Analytics.track('app_open', { isStandalone: window.matchMedia('(display-mode: standalone)').matches });
+        Analytics.retroactiveSync();
+
         // Load Data
         const staticBeers = await Data.fetchAllBeers();
         const customBeers = Storage.getCustomBeers();
@@ -74,6 +78,9 @@ function loadMoreBeers(container, isAppend = false, isDiscoveryMode = false, sho
     if (batch.length < itemsPerPage) {
         state.pagination.hasMore = false;
     }
+
+    // Don't render empty batch in append mode — all items already displayed
+    if (isAppend && batch.length === 0) return;
 
     // Call UI Render
     // If it's discovery mode and empty, we might need special handling passed to UI
@@ -669,6 +676,8 @@ function renderCurrentView() {
     const mainContent = document.getElementById('main-content');
     const appHeader = document.querySelector('.app-header');
     const fab = document.getElementById('fab-add');
+
+    Analytics.track('view_change', { view: state.view });
 
     // Reset padding for non-beerpedia views
     mainContent.style.padding = '';

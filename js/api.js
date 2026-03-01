@@ -1,6 +1,7 @@
 import * as Storage from './storage.js';
 import * as UI from './ui.js';
 import * as Share from './share.js';
+import { Analytics } from './analytics.js';
 
 /**
  * api.js
@@ -44,10 +45,10 @@ export function start(allBeersCallback) {
         case 'export':
             // ?action=export&scope=[all|custom|ratings]&ids=[1,2,3]&mode=[file|url]
             const scope = params.get('scope') || 'all';
-            const mode = params.get('mode') || 'file'; // 'file' or 'url'
+            const exportMode = params.get('mode') || 'file'; // 'file' or 'url'
             const idsRaw = params.get('ids');
             const ids = idsRaw ? idsRaw.split(',').filter(x => x) : null;
-            handleExport(scope, ids, mode);
+            handleExport(scope, ids, exportMode);
             break;
         case 'share':
             // ?action=share&id=123&score=15&comment=Bravo&fallback=true
@@ -152,6 +153,7 @@ function handleImport(params) {
         } else {
             const success = Storage.importData(jsonStr);
             if (success) {
+                Analytics.track('import_data');
                 UI.showToast("📥 Importation réussie !", "success");
                 cleanURL();
                 // Refresh to show new data
@@ -171,6 +173,7 @@ function handleExport(scope, ids, mode) {
         if (mode === 'file') {
             const count = Storage.triggerExportFile(scope, ids);
             if (count > 0) {
+                Analytics.track('export_data', { scope, mode: 'file', count });
                 UI.showToast(`📤 Export fichier lancé (${count} items)`, "info");
             } else {
                 UI.showToast("⚠️ Aucune donnée à exporter", "warning");

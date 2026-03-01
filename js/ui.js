@@ -6,6 +6,7 @@ import * as API from './api.js';
 import * as Scanner from './scanner.js';
 import { fetchProductByBarcode, searchProducts } from './off-api.js';
 import { Feedback } from './feedback.js'; // Added import for Feedback
+import { Analytics } from './analytics.js';
 
 // We assume global libs: QRCode, Html5QrcodeScanner (handled via CDN)
 const QRCodeLib = window.QRCode;
@@ -964,7 +965,11 @@ export function renderBeerDetail(beer, onSave) {
     const template = Storage.getRatingTemplate();
 
     const wrapper = document.createElement('div');
-    wrapper.className = 'modal-content';
+    const rarityClass = (existingData.count > 0 && beer.rarity && beer.rarity !== 'base') ? `modal-rarity-${beer.rarity}` : 'modal-rarity-base';
+    wrapper.className = `modal-content ${rarityClass}`;
+
+    // Assure that there is an explicit generic border class in CSS, we'll inline a fallback just in case or add it to style.css in next step.
+    wrapper.style.border = '2px solid transparent'; // Will be overridden by CSS classes
 
     let imgPath = beer.image;
     if (!imgPath) imgPath = 'images/beer/FUT.jpg';
@@ -1266,6 +1271,7 @@ export function renderBeerDetail(beer, onSave) {
 
         const vol = wrapper.querySelector('#consumption-volume').value;
         const newData = Storage.addConsumption(beer.id, vol);
+        Analytics.track('beer_consumed', { beerId: beer.id, volume: vol });
 
         // Update local object reference for immediate UI updates relying on it
         existingData.count = newData.count;
@@ -1422,6 +1428,11 @@ export function renderBeerDetail(beer, onSave) {
         }
 
         onSave(data);
+
+        // Track rating optionally filtering out null score
+        if (data.score) {
+            Analytics.track('beer_rated', { beerId: beer.id, score: data.score });
+        }
 
         // If API beer, we must save likely (auto-save on rate?)
         // Similar logic to drink. If user rates, we save the beer.
@@ -1738,6 +1749,7 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
             Storage.saveCustomBeer(newBeer);
         }
 
+        Analytics.track('beer_added', { beerId: newBeer.id, title: newBeer.title, source: editModeBeer ? 'edit' : 'manual' });
         onSave(newBeer);
     };
 
@@ -1784,7 +1796,8 @@ export function setScannerFeedback(message, isError = false) {
     if (el) {
         el.innerHTML = message;
         el.style.color = isError ? '#ff4444' : 'white';
-        // Add shake animation if error?
+        // Allow clicks on interactive elements (buttons) in feedback
+        el.style.pointerEvents = message.includes('<button') ? 'auto' : 'none';
         if (isError) {
             el.style.textShadow = '0 0 5px red';
         } else {
@@ -2113,13 +2126,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     container.querySelector('#btn-manage-import').onclick = () => renderImportModal();
     container.querySelector('#btn-manage-export').onclick = () => renderExportModal();
 
-    // Bind new Reset Buttons (Zone de Danger)
-    container.querySelector('#btn-reset-app').onclick = () => renderResetModal();
-    container.querySelector('#btn-reset-ratings').onclick = () => { if (confirm("Supprimer uniquement vos notes ?\n(Vos bières custom restent)")) { Storage.clearRatings(); showToast("Notes supprimées"); renderSettings(allBeers, userData, container, isDiscovery, discoveryCallback); } };
-    container.querySelector('#btn-reset-custom').onclick = () => { if (confirm("Supprimer vos bières personnalisées ?")) { Storage.clearCustomBeers(); showToast("Bières perso supprimées"); renderSettings(allBeers, userData, container, isDiscovery, discoveryCallback); } };
-    container.querySelector('#btn-reset-history').onclick = () => { if (confirm("Supprimer l'historique de dégustation ?")) { Storage.clearHistory(); showToast("Historique supprimé"); } };
-    container.querySelector('#btn-reset-fav').onclick = () => { if (confirm("Supprimer vos favoris ?")) { Storage.clearFavorites(); showToast("Favoris supprimés"); } };
-
+    // Granular Resets are bound below using confirmReset
     // System
     container.querySelector('#btn-check-update').onclick = async () => {
         if ('serviceWorker' in navigator) {
@@ -2161,6 +2168,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     const confirmReset = (msg, action) => {
         if (confirm(msg)) {
             action();
+            Analytics.track('data_reset', { action: action.name || 'unknown' });
             showToast("Données effacées.");
             setTimeout(() => location.reload(), 1000);
         }

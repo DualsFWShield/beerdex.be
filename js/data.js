@@ -52,9 +52,18 @@ export async function fetchAllBeers() {
         'Saisonnière': 'saisonniere'
     };
 
+    // Simple deterministic string hash for IDs
+    const djb2Hash = (str) => {
+        let hash = 5381;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) + hash) + str.charCodeAt(i);
+        }
+        return Math.abs(hash).toString(36);
+    };
+
     return allBeers.map(beer => ({
         ...beer,
-        id: beer.id || beer.title.replace(/\s+/g, '_').toUpperCase() + '_' + Math.random().toString(36).substr(2, 5),
+        id: beer.id || beer.title.replace(/\s+/g, '_').toUpperCase() + '_' + djb2Hash(beer.title + (beer.brewery || '')),
         rarity: rarityMap[beer.rarity_rank] || beer.rarity || 'commun',
         isSeasonal: beer.rarity_rank === 'Saisonnière' || beer.isSeasonal || false
     }));

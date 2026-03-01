@@ -217,7 +217,29 @@ export function resetCustomBeersOnly() {
 }
 
 export function resetAllData() {
-    localStorage.clear();
+    Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('beerdex_')) {
+            localStorage.removeItem(key);
+        }
+    });
+}
+
+// --- Specific Clears (Used by UI Danger Zone) ---
+
+export function clearRatings() {
+    resetRatingsOnly();
+}
+
+export function clearCustomBeers() {
+    resetCustomBeersOnly();
+}
+
+export function clearHistory() {
+    resetConsumptionHistoryOnly();
+}
+
+export function clearFavorites() {
+    resetFavoritesOnly();
 }
 
 // --- Generic Preferences ---
@@ -301,8 +323,8 @@ export async function exportDataAdvanced(options = { scope: 'all' }) {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        // We don't revoke immediately in case we need it, but here it's fine
-        // URL.revokeObjectURL(url); 
+        // Clean up the URL object to prevent memory leak
+        setTimeout(() => URL.revokeObjectURL(url), 100);
     } catch (e) {
         console.warn("Force download failed", e);
     }
