@@ -166,9 +166,9 @@ function setupEventListeners() {
                     navigator.userAgent.includes('gonative');
 
                 if (isMedian) {
-                    // Open directly in browser, don't change view
+                    // Open in browser AND continue to show interstitial view
+                    // (don't return early so nav bar stays active and accessible)
                     window.open('https://beerpedia.beerdex.be', '_blank');
-                    return; // Don't change active state or view
                 }
             }
 
@@ -675,7 +675,7 @@ function notifyUpdate(worker) {
 function renderCurrentView() {
     const mainContent = document.getElementById('main-content');
     const appHeader = document.querySelector('.app-header');
-    const fab = document.getElementById('fab-add');
+    const fab = document.getElementById('fab-scan');
 
     Analytics.track('view_change', { view: state.view });
 

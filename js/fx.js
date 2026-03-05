@@ -48,36 +48,86 @@ export class FX {
         }
     }
 
-    static achievementUnlock(title, icon = '🏆') {
-        // Wrapper for positioning
+    static achievementUnlock(title, icon = '🏆', rarity = 'commun') {
         const wrapper = document.createElement('div');
         wrapper.className = 'achievement-wrapper';
         wrapper.style.cssText = 'position:fixed; top:20px; left:0; right:0; display:flex; justify-content:center; z-index:2147483647; pointer-events:none;';
 
-        // ToastContent for animation
+        const isHighTier = ['mythique', 'legendaire', 'ultra_legendaire'].includes(rarity);
+
+        // Base classes for the new toast style
+        let toastClass = `achievement-toast toast-enter-anim ach-rarity-${rarity}`;
+
+        // If high tier, trigger screen shake
+        if (isHighTier) {
+            document.body.classList.add('premium-shake');
+            setTimeout(() => document.body.classList.remove('premium-shake'), 600);
+        }
+
         const div = document.createElement('div');
-        div.className = 'achievement-toast toast-enter-anim';
+        div.className = toastClass;
+        // The toast itself inherits the premium TCG foils.
+        // We style it similar to the cards but adapted for a horizontal notification
         div.innerHTML = `
-            <div class="ach-item" style="width:40px; height:40px; border:1px solid #FFC000; margin-right:0; cursor:default; background:#000 !important; box-shadow:none !important;">
-                <div class="ach-icon" style="font-size:1.2rem;">${icon}</div>
+            <div class="ach-item" style="width:40px; height:40px; border:1px solid var(--rarity-${rarity}); margin-right:0; cursor:default; background:#000 !important; box-shadow:none !important; display:flex; align-items:center; justify-content:center; border-radius:8px;">
+                <div class="ach-icon" style="font-size:1.5rem; line-height:1;">${icon}</div>
             </div>
-            <div class="ach-content">
-                <div class="ach-label">Succès Déverrouillé !</div>
+            <div class="ach-content" style="z-index: 10; position:relative;">
+                <div class="ach-label" style="color: var(--rarity-${rarity}); font-weight:bold; text-shadow: 0 0 5px rgba(255,255,255,0.3);">Succès Déverrouillé !</div>
                 <div class="ach-title">${title}</div>
             </div>
         `;
         wrapper.appendChild(div);
         document.body.appendChild(wrapper);
 
-        // Sound
-        import('./feedback.js').then(m => m.Feedback.playUnlock());
-        import('./feedback.js').then(m => m.Feedback.impactMedium());
+        // Add 3D Tilt & Gyroscope support for premium foils
+        if (typeof VanillaTilt !== 'undefined') {
+            VanillaTilt.init(div, {
+                max: 15,
+                speed: 400,
+                glare: true,
+                "max-glare": 0.2,
+                gyroscope: true,
+                gyroscopeMinAngleX: -45,
+                gyroscopeMaxAngleX: 45,
+                gyroscopeMinAngleY: -45,
+                gyroscopeMaxAngleY: 45
+            });
+        }
+
+        // Sound based on rarity
+        import('./feedback.js').then(m => {
+            m.Feedback.playUnlock();
+            if (isHighTier) {
+                setTimeout(() => m.Feedback.impactHeavy(), 100);
+            } else {
+                m.Feedback.impactMedium();
+            }
+        });
+
+        // Particles based on rarity
+        setTimeout(() => {
+            if (rarity === 'mythique') {
+                FX.burst(window.innerWidth / 2, 80, '#e74c3c');
+                FX.burst(window.innerWidth / 2 - 100, 100, '#ff9f43');
+                FX.burst(window.innerWidth / 2 + 100, 100, '#ff9f43');
+            } else if (rarity === 'legendaire' || rarity === 'ultra_legendaire') {
+                FX.confetti(); // Full screen
+                FX.burst(window.innerWidth / 2, 80, '#FFD700');
+            } else if (rarity === 'epique') {
+                FX.burst(window.innerWidth / 2, 80, '#9b59b6');
+            } else {
+                // Commun, Rare, Super Rare get a smaller burst
+                FX.burst(window.innerWidth / 2, 80, '#FFC000');
+            }
+        }, 100);
 
         // Remove after anim
+        const duration = isHighTier ? 6000 : 4000;
         setTimeout(() => {
             div.classList.replace('toast-enter-anim', 'toast-exit-anim');
             setTimeout(() => wrapper.remove(), 1000);
-        }, 4000);
+        }, duration);
     }
     static particleExplosion(canvas, color, count = 100) {
         const ctx = canvas.getContext('2d');

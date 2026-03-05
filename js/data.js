@@ -61,11 +61,19 @@ export async function fetchAllBeers() {
         return Math.abs(hash).toString(36);
     };
 
-    return allBeers.map(beer => ({
+    const mapped = allBeers.map(beer => ({
         ...beer,
         id: beer.id || beer.title.replace(/\s+/g, '_').toUpperCase() + '_' + djb2Hash(beer.title + (beer.brewery || '')),
         rarity: rarityMap[beer.rarity_rank] || beer.rarity || 'commun',
         isSeasonal: beer.rarity_rank === 'Saisonnière' || beer.isSeasonal || false
     }));
+
+    // Deduplicate by ID (same beer can appear in multiple country files)
+    const seen = new Set();
+    return mapped.filter(beer => {
+        if (seen.has(beer.id)) return false;
+        seen.add(beer.id);
+        return true;
+    });
 }
 

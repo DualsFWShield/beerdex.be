@@ -150,6 +150,7 @@ export function checkAndShowConsent(onAccept) {
     overlay.className = 'modal-overlay';
     overlay.style.zIndex = '9999999';
     overlay.style.backdropFilter = 'blur(8px)';
+    overlay.style.alignItems = 'center';
 
     overlay.onclick = (e) => {
         if (e.target === overlay) {
@@ -608,20 +609,16 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
         card.className = `beer-card ${isDrunk ? 'drunk' : ''}`;
         card.dataset.id = beer.id;
 
-        // Apply Rarity Border
+        // Apply Rarity Border via CSS classes
         // Logic: Reveal if Drunk OR if Setting "Reveal Rarity" is ON
         const revealRarity = isDrunk || Storage.getPreference('revealRarity', false);
 
         if (revealRarity && beer.rarity && beer.rarity !== 'base') {
-            // Fallback to CSS variable or hardcoded lookup if var() doesn't work well inline
-            card.style.borderColor = `var(--rarity-${beer.rarity})`;
-
-            // Make border slightly thicker for high rarities?
-            if (beer.rarity === 'super_rare' || beer.rarity === 'epique') card.style.borderWidth = '2px';
-            if (beer.rarity === 'mythique' || beer.rarity === 'legendaire') card.style.borderWidth = '3px';
+            // Apply per-rarity CSS class for border color + animation effects
+            card.classList.add(`card-rarity-${beer.rarity}`);
 
             if (beer.rarity === 'ultra_legendaire') {
-                // Use class for constant animation instead of inline styles
+                // Use class for constant rainbow animation
                 card.classList.add('card-anim-ultra_legendary');
             }
         } else {
@@ -679,6 +676,28 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
 
         grid.appendChild(card);
     });
+
+    // Initialize premium 3D tilt effects on cards if library is loaded (desktop/gyroscope support)
+    // We add a tiny delay to ensure the DOM is painted
+    setTimeout(() => {
+        if (typeof VanillaTilt !== 'undefined') {
+            const cards = grid.querySelectorAll('.beer-card');
+            VanillaTilt.init(cards, {
+                max: 15,
+                speed: 400,
+                glare: true,
+                "max-glare": 0.4,
+                scale: 1.02,
+                perspective: 1000,
+                transition: true,
+                gyroscope: true,
+                gyroscopeMinAngleX: -45,
+                gyroscopeMaxAngleX: 45,
+                gyroscopeMinAngleY: -45,
+                gyroscopeMaxAngleY: 45
+            });
+        }
+    }, 50);
 
     // --- CASE 2: Results exist BUT text search is active -> Propose API search at the bottom ---
     // Make sure we are not already in a callback or empty state that handles it
@@ -1059,7 +1078,7 @@ export function renderBeerDetail(beer, onSave) {
     wrapper.style.border = '2px solid transparent'; // Will be overridden by CSS classes
 
     let imgPath = beer.image;
-    if (!imgPath) imgPath = 'images/beer/FUT.jpg';
+    if (!imgPath) imgPath = 'images/beer/default.png';
 
     // Build Dynamic Form
     let formFields = template.map(field => {
@@ -1372,17 +1391,13 @@ export function renderBeerDetail(beer, onSave) {
 
         showToast(`🍻 Glou Glou ! (+${vol})`);
 
-        // Reveal Sequence if FIRST TIME
+        // Premium Reveal Sequence if FIRST TIME
         if (wasLocked && beer.rarity && beer.rarity !== 'base') {
-            // Create Overlay
+            // Create Premium Overlay
             const overlay = document.createElement('div');
-            overlay.className = 'reveal-overlay';
+            overlay.className = 'reveal-overlay premium-reveal';
 
-            // Create Canvas for Particles
-            const canvas = document.createElement('canvas');
-            canvas.style.cssText = 'position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;';
-
-            // Get Rarity Color
+            // Get Rarity Info
             const rarityColors = {
                 'commun': '#2ecc71',
                 'rare': '#3498db',
@@ -1393,77 +1408,146 @@ export function renderBeerDetail(beer, onSave) {
                 'ultra_legendaire': '#ff00cc'
             };
             const particleColor = rarityColors[beer.rarity] || '#FFC000';
+            const rarityName = beer.rarity.replace('_', ' ').toUpperCase();
+
+            // Construct a clone of the actual card for the reveal
+            const fallbackImage = isKeg(beer.volume) ? 'images/beer/FUT.jpg' : 'images/beer/default.png';
+            let displayImage = beer.image;
+            if (!displayImage || (displayImage.includes('FUT.jpg') && !isKeg(beer.volume))) {
+                displayImage = fallbackImage;
+            }
+
+            // Create Canvas for Particles
+            const canvas = document.createElement('canvas');
+            canvas.style.cssText = 'position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index: 5;';
 
             overlay.innerHTML = `
-                <div class="reveal-card animate__animated animate__jackInTheBox" style="border: 4px solid ${particleColor}; box-shadow: 0 0 50px ${particleColor};">
-                    <span style="font-size: 4rem;">🍺</span>
+                <div class="premium-reveal-container" style="position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%;">
+                    
+                    <!-- Mystery Capsule (Phase 1) -->
+                    <div id="mystery-box" style="width: 140px; height: 140px; background: linear-gradient(135deg, #222, #000); border: 4px solid var(--accent-gold); border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 30px var(--accent-gold); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                        <span style="font-size: 4rem; filter: drop-shadow(0 0 10px var(--accent-gold));">🍺</span>
+                    </div>
+
+                    <!-- Revealed Content (Phase 2) -->
+                    <div id="revealed-content" style="display: none; flex-direction: column; align-items: center; width: 100%; padding: 20px;">
+                        <h2 class="animate__animated animate__fadeInDown" style="color: ${particleColor}; text-shadow: 0 0 20px ${particleColor}; font-size: clamp(1.8rem, 5vw, 2.5rem); margin-bottom: 30px; text-transform: uppercase; font-weight: 900; letter-spacing: 2px; text-align: center;">NOUVELLE BIÈRE DÉBLOQUÉE !</h2>
+                        
+                        <div class="reveal-card-wrapper animate__animated animate__zoomIn" data-tilt data-tilt-glare data-tilt-max-glare="0.8" style="perspective: 1000px; max-width: 90vw;">
+                            <div class="beer-card card-rarity-${beer.rarity} ${beer.rarity === 'ultra_legendaire' ? 'card-anim-ultra_legendary' : ''}" style="width: 260px; height: auto; min-height: 400px; margin: 0; background: var(--bg-card); display: flex; flex-direction: column; cursor: pointer; border-width: 3px;">
+                                
+                                <div style="width:100%; height:200px; display:flex; justify-content:center; align-items:center; margin-bottom: 15px;">
+                                    <img src="${displayImage}" alt="${beer.title}" class="beer-image" style="max-height: 180px; object-fit: contain;">
+                                </div>
+                                <div class="beer-info" style="text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+                                    <h3 class="beer-title" style="font-size: 1.5rem; margin-bottom: 5px;">${beer.title}</h3>
+                                    <p class="beer-brewery" style="font-size: 1.1rem; color: #aaa;">${beer.brewery}</p>
+                                </div>
+                                <div class="reveal-rarity-banner" style="background: ${particleColor}; color: #000; text-align: center; font-weight: bold; padding: 10px; margin-top: 15px; border-radius: 5px; text-shadow: none; font-size: 1.2rem; text-transform: uppercase; box-shadow: 0 0 15px ${particleColor}; margin-bottom: 10px;">
+                                    ${rarityName}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
+
             overlay.appendChild(canvas);
             document.body.appendChild(overlay);
 
-            // Close after delay
-            setTimeout(() => {
-                const card = overlay.querySelector('.reveal-card');
-                card.classList.replace('animate__jackInTheBox', 'animate__zoomOut');
-                overlay.style.transition = 'opacity 0.5s';
-                overlay.style.opacity = '0';
-                setTimeout(() => overlay.remove(), 500);
-            }, 3000);
+            const box = overlay.querySelector('#mystery-box');
+            const content = overlay.querySelector('#revealed-content');
 
-            // FX Trigger
-            import('./fx.js').then(m => {
-                // Burst center
-                m.FX.burst(window.innerWidth / 2, window.innerHeight / 2, particleColor);
-                // Confetti for high rarity
-                if (['epique', 'mythique', 'legendaire', 'ultra_legendaire'].includes(beer.rarity)) {
-                    m.FX.confetti();
-                }
-            });
-            // Rumble Effect before explosion
+            // Sequence Timing
+            // 1. Shake the Mystery Box
             setTimeout(() => {
-                const card = overlay.querySelector('.reveal-card');
-                if (card) card.classList.add('rumble-effect');
-            }, 1000);
+                box.classList.add('rumble-effect');
+                box.style.transform = 'scale(1.2)';
+                box.style.boxShadow = `0 0 100px ${particleColor}`;
+                box.style.borderColor = particleColor;
+            }, 500);
 
-            // Trigger explosion after delay (sync with card animation)
+            // 2. Explode & Reveal 
             setTimeout(() => {
+                box.style.display = 'none';
+                content.style.display = 'flex'; // Trigger display
+
+                // Fireworks
                 import('./fx.js').then(m => {
-                    const count = beer.rarity === 'ultra_legendaire' ? 300 : (beer.rarity === 'legendaire' ? 200 : 100);
-                    m.FX.particleExplosion(canvas, particleColor, count);
-                });
-                // Impact sound on explosion
-                import('./feedback.js').then(m => m.Feedback.impactHeavy());
-            }, 1500);
+                    m.FX.burst(window.innerWidth / 2, window.innerHeight / 2, particleColor);
+                    if (['epique', 'mythique', 'legendaire', 'ultra_legendaire'].includes(beer.rarity)) {
+                        m.FX.confetti();
+                    }
+                    if (['mythique', 'legendaire', 'ultra_legendaire'].includes(beer.rarity)) {
+                        const count = beer.rarity === 'ultra_legendaire' ? 300 : 200;
+                        m.FX.particleExplosion(canvas, particleColor, count);
+                    }
+                }).catch(e => console.log('FX Module issue'));
 
-            // Wait for full animation then reveal
+                import('./feedback.js').then(m => m.Feedback.impactHeavy()).catch(e => { });
+
+                // Initialize Tilt on Reveal
+                setTimeout(() => {
+                    if (typeof VanillaTilt !== 'undefined') {
+                        VanillaTilt.init(overlay.querySelector('.reveal-card-wrapper'), {
+                            max: 15,
+                            speed: 400,
+                            glare: true,
+                            "max-glare": 0.8,
+                            scale: 1.05,
+                            gyroscope: true,
+                            gyroscopeMinAngleX: -45,
+                            gyroscopeMaxAngleX: 45,
+                            gyroscopeMinAngleY: -45,
+                            gyroscopeMaxAngleY: 45
+                        });
+                    }
+                }, 500);
+
+            }, 2000);
+
+            // 3. Close & cleanup after user views it or clicks
+            const cleanup = () => {
+                overlay.style.transition = 'opacity 0.6s';
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.remove();
+                    // Show Rarity Badge inside modal
+                    initRarityLogic(true);
+
+                    // Animate Badge
+                    const badge = wrapper.querySelector(`.rarity-${beer.rarity}`);
+                    if (badge) {
+                        badge.animate([
+                            { transform: 'scale(0) rotate(-180deg)', filter: 'brightness(3)' },
+                            { transform: 'scale(2.5) rotate(10deg)', filter: 'brightness(2)' },
+                            { transform: 'scale(1) rotate(0deg)', filter: 'brightness(1)' }
+                        ], { duration: 1000, easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' });
+                    }
+                }, 600);
+            };
+
+            // Interaction to close
             setTimeout(() => {
-                overlay.remove();
-
-                // Show Rarity Badge
-                initRarityLogic(true); // Force reveal update
-
-                // Animate Badge
-                const badge = wrapper.querySelector(`.rarity-${beer.rarity}`);
-                if (badge) {
-                    badge.animate([
-                        { transform: 'scale(0) rotate(-180deg)', filter: 'brightness(3)' },
-                        { transform: 'scale(2.5) rotate(10deg)', filter: 'brightness(2)' },
-                        { transform: 'scale(1) rotate(0deg)', filter: 'brightness(1)' }
-                    ], { duration: 1000, easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' });
-                }
-
-                // Play Sound
-                Feedback.playRarity(beer.rarity);
-                Feedback.impactHeavy();
-
-            }, 3000); // Sync with CSS animation length
+                overlay.onclick = cleanup;
+                setTimeout(cleanup, 5000);
+            }, 4000);
         } else {
             // Normal update just in case
             initRarityLogic();
         }
 
-        const Achievements = await import('./achievements.js');
+        // Play Sound
+        if (typeof Feedback !== 'undefined') {
+            Feedback.playRarity(beer.rarity);
+            Feedback.impactHeavy();
+        }
+
+        // Async achievements check
+        import('./achievements.js').then(module => {
+            // trigger achievement check if needed
+        }).catch(err => console.error(err));
+
         window.dispatchEvent(new CustomEvent('beerdex-action'));
     };
 
@@ -2644,14 +2728,16 @@ function renderAchievementsList() {
                 desc = 'Mystère... Continuez à explorer !';
             }
 
-            // Escape quotes for function arguments
-            // We need \\' for JS string inside HTML attribute
+            // Safe properties
             const safeTitle = title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
             const safeDesc = desc.replace(/'/g, "\\'").replace(/"/g, '&quot;');
             const safeIcon = ach.icon.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
+            // Foil based on rarity
+            const rarityClass = isUnlocked && ach.rarity ? `ach-rarity-${ach.rarity}` : '';
+
             return `
-        <div class="ach-item" style="opacity:${opacity}; filter:${filter}; position:relative; cursor:pointer;"
+        <div class="ach-item ${rarityClass}" style="opacity:${opacity}; filter:${filter}; position:relative; cursor:pointer;"
     onclick="UI.showAchievementDetails('${safeTitle}', '${safeDesc}', '${safeIcon}', ${isUnlocked})" >
         <div class="ach-icon">${ach.icon}</div>
                     </div>`;
