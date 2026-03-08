@@ -8,13 +8,13 @@ import { fetchProductByBarcode, searchProducts } from './off-api.js';
 import { Feedback } from './feedback.js';
 import { Analytics } from './analytics.js';
 
-window.Share = Share;
-
+import * as WebShare from './share.js';
+import * as BAC from './bac.js';
 import * as Wrapped from './wrapped.js';
 
-// Expose UI for inline HTML event handlers
-window.UI = UI;
+window.Share = WebShare;
 window.Wrapped = Wrapped;
+window.UI = UI;
 window.showToast = UI.showToast;
 
 // App State
@@ -248,8 +248,27 @@ function setupEventListeners() {
                             UI.showToast(`Trouvé en local : ${bestMatch.title}`);
                             UI.closeModal(); // Ensure close
                             UI.renderBeerDetail(bestMatch, (data) => {
+                                const oldRating = Storage.getBeerRating(bestMatch.id);
                                 Storage.saveBeerRating(bestMatch.id, data);
                                 Achievements.checkAchievements(state.beers);
+                                
+                                const oldCount = oldRating ? (parseInt(oldRating.count) || 0) : 0;
+                                const newRating = Storage.getBeerRating(bestMatch.id);
+                                const newCount = newRating ? (parseInt(newRating.count) || 0) : 0;
+                                const diff = newCount - oldCount;
+
+                                if (Storage.getPreference('bac_enabled', false) && !Storage.getPreference('bac_manual_only', false)) {
+                                    if (diff > 0) {
+                                        for (let i = 0; i < diff; i++) {
+                                            BAC.addDrinkToBAC(bestMatch.volume, bestMatch.alcohol);
+                                        }
+                                    } else if (diff < 0) {
+                                        for (let i = 0; i < Math.abs(diff); i++) {
+                                            BAC.removeDrinkFromBAC(bestMatch.volume, bestMatch.alcohol);
+                                        }
+                                    }
+                                }
+                                
                                 UI.showToast("Note mise à jour !");
                             });
                             return true; // STOP SCANNER
@@ -257,6 +276,9 @@ function setupEventListeners() {
 
                         // If no exact match local, proceed with API product
                         UI.renderBeerDetail(product, (data) => {
+                            let beerRef = product;
+                            let oldRating = Storage.getBeerRating(product.id);
+                            
                             if (product.fromAPI) {
                                 const newBeer = { ...product };
                                 newBeer.id = 'CUSTOM_' + Date.now();
@@ -265,10 +287,29 @@ function setupEventListeners() {
                                 Storage.saveBeerRating(newBeer.id, data);
                                 window.dispatchEvent(new CustomEvent('beerdex-action'));
                                 renderCurrentView();
+                                beerRef = newBeer;
                             } else {
                                 Storage.saveBeerRating(product.id, data);
                                 Achievements.checkAchievements(state.beers);
                             }
+                            
+                            const oldCount = oldRating ? (parseInt(oldRating.count) || 0) : 0;
+                            const newRating = Storage.getBeerRating(beerRef.id);
+                            const newCount = newRating ? (parseInt(newRating.count) || 0) : 0;
+                            const diff = newCount - oldCount;
+
+                            if (Storage.getPreference('bac_enabled', false) && !Storage.getPreference('bac_manual_only', false)) {
+                                if (diff > 0) {
+                                    for(let i = 0; i < diff; i++){
+                                        BAC.addDrinkToBAC(beerRef.volume, beerRef.alcohol);
+                                    }
+                                } else if (diff < 0) {
+                                    for(let i = 0; i < Math.abs(diff); i++){
+                                        BAC.removeDrinkFromBAC(beerRef.volume, beerRef.alcohol);
+                                    }
+                                }
+                            }
+                            
                             UI.showToast("Note sauvegardée !");
                         });
 
@@ -436,6 +477,12 @@ function setupEventListeners() {
             UI.closeModal();
             Feedback.playSuccess();
             Feedback.impactMedium();
+            
+            // Note: If adding a beer manually, we only track BAC if they specifically rate it later
+            // The prompt says "with the beers marked as drunk in the app". Adding to the DB isn't necessarily drinking it.
+            // But if they rate it right away? renderAddBeerForm doesn't take rating.
+            // It just adds the beer. Wait, user specifically rates/drinks from details modal.
+            
             UI.showToast("Bière ajoutée avec succès !");
         });
     });
@@ -447,9 +494,27 @@ function setupEventListeners() {
             const beerId = card.dataset.id;
             const beer = state.beers.find(b => b.id === beerId);
             if (beer) {
+                const oldRating = Storage.getBeerRating(beer.id);
                 UI.renderBeerDetail(beer, (ratingData) => {
                     Storage.saveBeerRating(beer.id, ratingData);
                     Achievements.checkAchievements(state.beers);
+                    
+                    const oldCount = oldRating ? (parseInt(oldRating.count) || 0) : 0;
+                    const newRating = Storage.getBeerRating(beer.id);
+                    const newCount = newRating ? (parseInt(newRating.count) || 0) : 0;
+                    const diff = newCount - oldCount;
+
+                    if (Storage.getPreference('bac_enabled', false) && !Storage.getPreference('bac_manual_only', false)) {
+                        if (diff > 0) {
+                            for (let i = 0; i < diff; i++) {
+                                BAC.addDrinkToBAC(beer.volume, beer.alcohol);
+                            }
+                        } else if (diff < 0) {
+                            for (let i = 0; i < Math.abs(diff); i++) {
+                                BAC.removeDrinkFromBAC(beer.volume, beer.alcohol);
+                            }
+                        }
+                    }
 
                     // Optimistic update of the specific card instead of full re-render
                     // Or just re-render view, preserving scroll position?
@@ -721,6 +786,31 @@ function renderCurrentView() {
 
         // Render first batch - PASS NULL for filters to UI because we already filtered!
         loadMoreBeers(mainContent, false, isDiscovery, isDiscovery && state.filter);
+
+        // BAC Widget on Home page (Must be after loadMoreBeers so it doesn't get cleared)
+        if (Storage.getPreference('bac_enabled', false) && Storage.getPreference('bac_show_home', true)) {
+            const bacStatus = BAC.getBACStatus();
+            const bacValue = BAC.getCurrentBAC().toFixed(2);
+            
+            const widgetHtml = `
+                <div class="bac-widget-home" style="background: linear-gradient(135deg, #111, #222); border-left: 5px solid ${bacStatus.color}; padding: 15px; border-radius: 12px; margin: 0 15px 20px 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 8px 16px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid ${bacStatus.color};">
+                    <div>
+                        <div style="font-size: 0.7rem; color: #aaa; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 5px; font-weight: bold;">Alcoolémie Spéculative</div>
+                        <div style="font-size: 1.1rem; font-weight: 700; color: ${bacStatus.color}; text-shadow: 0 0 10px ${bacStatus.color}44;">
+                            ${bacStatus.title} <span style="font-size: 0.9rem; color: #fff; font-weight: normal; margin-left: 5px;">(${bacValue} g/l)</span>
+                        </div>
+                    </div>
+                    <div style="background: ${bacStatus.color}22; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid ${bacStatus.color}44;">
+                         <span style="font-size: 1.2rem;">🩸</span>
+                    </div>
+                </div>
+            `;
+            
+            // Insert after header but before grid
+            mainContent.insertAdjacentHTML('afterbegin', widgetHtml);
+        }
+
+
 
     } else if (state.view === 'drunk') {
         const consumedIds = Storage.getAllConsumedBeerIds();

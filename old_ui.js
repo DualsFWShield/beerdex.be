@@ -6,10 +6,8 @@ import * as API from './api.js';
 import * as Scanner from './scanner.js';
 import { fetchProductByBarcode, searchProducts } from './off-api.js';
 import { Feedback } from './feedback.js'; // Added import for Feedback
-import * as BAC from './bac.js';
 import { Analytics } from './analytics.js';
 
-let editModeBeer = null;
 // We assume global libs: QRCode, Html5QrcodeScanner (handled via CDN)
 const QRCodeLib = window.QRCode;
 const Html5Qrcode = window.Html5Qrcode;
@@ -1379,12 +1377,6 @@ export function renderBeerDetail(beer, onSave) {
 
         const vol = wrapper.querySelector('#consumption-volume').value;
         const newData = Storage.addConsumption(beer.id, vol);
-        
-        // --- BAC INTEGRATION ---
-        if (Storage.getPreference('bac_enabled', false) && !Storage.getPreference('bac_manual_only', false)) {
-            BAC.addDrinkToBAC(vol, beer.alcohol || 5.0);
-        }
-
         Analytics.track('beer_consumed', {
             beer_id: beer.id,
             name: beer.title,
@@ -1560,15 +1552,8 @@ export function renderBeerDetail(beer, onSave) {
     };
 
     wrapper.querySelector('#btn-undrink').onclick = () => {
-        const volInput = wrapper.querySelector('#consumption-volume');
-        const vol = volInput ? volInput.value : beer.volume;
         const newData = Storage.removeConsumption(beer.id);
         if (newData) {
-            // --- BAC INTEGRATION ---
-            if (Storage.getPreference('bac_enabled', false) && !Storage.getPreference('bac_manual_only', false)) {
-                BAC.removeDrinkFromBAC(vol, beer.alcohol || 5.0);
-            }
-
             existingData.count = newData.count; // Update ref
             wrapper.querySelector('#consumption-count').innerText = newData.count;
             showToast("Consommation annulée.");
@@ -2017,55 +2002,34 @@ export function renderStats(allBeers, userData, container) {
 
     const totalDrunkCount = Object.values(userData).reduce((acc, curr) => acc + (curr.count || 0), 0);
 
-    // Compute Rarity ranks
-    let userRank = { name: "Novice", color: "#888", nextRankThresh: 10 };
-    const uniqueCount = Object.keys(userData).length;
-    
-    // Quick rank calculation
-    if (uniqueCount >= 10) userRank = { name: "Amateur", color: "#4CAF50", nextRankThresh: 50 };
-    if (uniqueCount >= 50) userRank = { name: "Connaisseur", color: "#2196F3", nextRankThresh: 100 };
-    if (uniqueCount >= 100) userRank = { name: "Expert", color: "#9C27B0", nextRankThresh: 250 };
-    if (uniqueCount >= 250) userRank = { name: "Maître Brasseur", color: "#E91E63", nextRankThresh: 500 };
-    if (uniqueCount >= 500) userRank = { name: "Légende", color: "var(--accent-gold)", nextRankThresh: 1000 };
-
-    // Stats section (Donut + Text)
     container.innerHTML = `
                 <div class="text-center p-20">
                     <!-- SVG Donut Chart -->
                     <div style="width:160px; height:160px; margin:0 auto; position:relative;">
-                        <svg viewBox="0 0 36 36" style="width:100%; height:100%; transform: rotate(-90deg);">
+                        <svg viewBox="0 0 36 36" class="circular-chart">
                             <path class="circle-bg"
                                 d="M18 2.0845
-                                a 15.9155 15.9155 0 0 1 0 31.831
-                                a 15.9155 15.9155 0 0 1 0 -31.831"
-                                fill="none"
-                                stroke="#333"
-                                stroke-width="3"
-                                stroke-dasharray="100, 100" />
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                            />
                             <path class="circle"
                                 stroke-dasharray="${percentage}, 100"
                                 d="M18 2.0845
-                                a 15.9155 15.9155 0 0 1 0 31.831
-                                a 15.9155 15.9155 0 0 1 0 -31.831"
-                                fill="none"
-                                stroke="${userRank.color}"
-                                stroke-width="3"
-                                style="transition: stroke-dasharray 1s ease-out;" />
+                        a 15.9155 15.9155 0 0 1 0 31.831
+                        a 15.9155 15.9155 0 0 1 0 -31.831"
+                            />
                         </svg>
-                        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center;">
-                            <span style="font-size:2rem; font-family:'Russo One', sans-serif; color:${userRank.color}; text-shadow:0 0 10px ${userRank.color}66;">${uniqueCount}</span>
-                            <span style="display:block; font-size:0.75rem; color:#888; text-transform:uppercase; letter-spacing:1px; margin-top:-5px;">uniques</span>
+                        <div style="position:absolute; top:42%; left:50%; transform:translate(-50%, -50%); font-size:1.8rem; font-weight:bold; color:var(--accent-gold);">
+                            ${percentage}%
                         </div>
                     </div>
-                    <h2 style="color:${userRank.color}; margin-top:15px; font-family:'Russo One', sans-serif; letter-spacing:1px; text-shadow:0 0 10px ${userRank.color}33;">${userRank.name}</h2>
-                    <p style="font-size:0.85rem; color:#888; margin-top:5px;">Rang suivant: ${userRank.nextRankThresh - uniqueCount} bières</p>
-                    
-                    <div style="margin-top: 25px; padding: 15px; background: #222; border-radius: 12px; border: 1px solid #333;">
-                        <span style="font-size: 0.8rem; color: #888; text-transform: uppercase;">Volume Total Bu 🍻</span>
-                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--text-primary); margin-top: 5px;">
-                            ${totalDrunkCount} <span style="font-size: 1rem; color: #666; font-weight: normal;">bières</span>
-                        </div>
-                    </div>
+                    <h2 class="mt-20">Statistiques</h2>
+                    <p style="color: var(--text-secondary); margin-top: 10px;">
+                        Vous avez goûté <strong style="color: #fff;">${drunkCount}</strong> bières uniques sur <strong style="color: #fff;">${totalBeers}</strong>.
+                    </p>
+                     <p style="color: var(--text-secondary); margin-top: 5px; font-size: 0.9rem;">
+                        Total consommé : <strong style="color: var(--accent-gold);">${totalDrunkCount}</strong> verres 🍺
+                    </p>
 
                     ${renderAdvancedStats(allBeers, userData)}
 
@@ -2087,20 +2051,6 @@ export function renderStats(allBeers, userData, container) {
                             ⚔️ Lancer un Duel
                         </button>
                     </div>
-
-                    ${Storage.getPreference('bac_enabled', false) ? `
-                    <!-- BAC Section -->
-                    <div class="stat-card mt-20 text-center" id="bac-stats-container" style="border-top: 2px solid var(--accent-gold);">
-                        <h3 style="margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:8px;">
-                            🩸 Alcoolémie <span style="font-size: 0.8rem; background: #333; padding: 2px 6px; border-radius: 10px; font-weight: normal;">Belgique</span>
-                        </h3>
-                        
-                        <div id="bac-dynamic-content">
-                            <!-- Injected by renderBACStatsContent -->
-                            <div class="spinner"></div> Chargement...
-                        </div>
-                    </div>
-                    ` : ''}
 
                     <div style="background: linear-gradient(135deg, #111, #222); padding: 15px; border-radius: 12px; border: 1px solid var(--accent-gold); margin-bottom: 20px; text-align: center; margin-top: 20px;">
                         <div style="font-size: 2rem; margin-bottom: 5px;">🎬</div>
@@ -2139,215 +2089,6 @@ export function renderStats(allBeers, userData, container) {
         const mapContainer = container.querySelector('#beer-map-container');
         if (mapContainer) Map.renderMapWithData(mapContainer, history);
     }, 100);
-
-    // Render BAC Content
-    if (Storage.getPreference('bac_enabled', false)) {
-        setTimeout(() => renderBACStatsContent(container.querySelector('#bac-dynamic-content')), 50);
-    }
-}
-
-function renderBACStatsContent(container) {
-    if (!container) return;
-    const bacStatus = BAC.getBACStatus();
-    const currentBAC = BAC.getCurrentBAC();
-    const formattedBAC = currentBAC.toFixed(2);
-    
-    // Draw primitive text curve or basic CSS curve representation
-    // A full chart.js is too heavy, let's use a simple CSS bar showing the limit
-    const percentageOfLimit = Math.min(100, (currentBAC / 0.8) * 100);
-    
-    const curveData = BAC.getBACCurveData();
-    let svgGraphHtml = "";
-    
-    if (curveData && curveData.length > 1) {
-        const width = 100;
-        const height = 40;
-        const tMin = curveData[0].time;
-        const tMax = curveData[curveData.length - 1].time;
-        const tRange = tMax - tMin || 1;
-        const bacMax = Math.max(0.8, ...curveData.map(d => d.bac));
-        
-        let polylinePoints = "";
-        let currentX = width; 
-        let currentY = height;
-        const now = new Date().getTime();
-        
-        // CHART.JS INTEGRATION
-        svgGraphHtml = `
-            <div style="margin: 20px 0; background: #1a1a1a; padding: 15px; border-radius: 10px;">
-                <div style="font-size: 0.8rem; color:#888; margin-bottom: 10px; text-align: left;">Évolution estimée (g/l)</div>
-                <div style="position: relative; height: 250px; width: 100%;">
-                    <canvas id="bacChartCanvas"></canvas>
-                </div>
-            </div>
-        `;
-        
-        // Let the DOM update, then initialize Chart.js
-        setTimeout(() => {
-            const ctx = document.getElementById('bacChartCanvas');
-            if (ctx && curveData.length > 0) {
-                if (window.bacChartInstance) {
-                    window.bacChartInstance.destroy();
-                }
-
-                const chartData = curveData.map(d => ({
-                    x: d.time,
-                    y: parseFloat(d.bac.toFixed(3))
-                }));
-
-                const nowTime = new Date().getTime();
-                
-                // Emphasize the current time dot
-                const currentBACPointIndex = chartData.findIndex(d => d.x >= nowTime);
-                const pointColors = chartData.map((d, i) => (i === currentBACPointIndex) ? '#ffffff' : 'transparent');
-                const pointRadii = chartData.map((d, i) => (i === currentBACPointIndex) ? 4 : 0);
-
-                window.bacChartInstance = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        datasets: [{
-                            label: 'Taux (g/l)',
-                            data: chartData,
-                            borderColor: bacStatus.color,
-                            backgroundColor: bacStatus.color + '33',
-                            borderWidth: 2,
-                            fill: true,
-                            tension: 0.4,
-                            pointBackgroundColor: pointColors,
-                            pointBorderColor: pointColors,
-                            pointRadius: pointRadii,
-                            pointHitRadius: 10,
-                            pointHoverRadius: 6
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        interaction: { intersect: false, mode: 'index' },
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    title: function(context) {
-                                        const d = new Date(context[0].parsed.x);
-                                        const now = new Date();
-                                        const isToday = d.toDateString() === now.toDateString();
-                                        const timeStr = d.getHours().toString().padStart(2, '0') + 'h' + d.getMinutes().toString().padStart(2, '0');
-                                        if (isToday) return timeStr;
-                                        
-                                        const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-                                        return `${days[d.getDay()]} ${d.getDate()}/${d.getMonth()+1} - ${timeStr}`;
-                                    },
-                                    label: function(context) { return ` ${context.parsed.y} g/l`; }
-                                },
-                                backgroundColor: 'rgba(0, 0, 0, 0.9)', 
-                                titleColor: '#fff', 
-                                bodyColor: '#fff',
-                                borderColor: bacStatus.color,
-                                borderWidth: 1
-                            },
-                            annotation: {
-                                annotations: {
-                                    limit05: {
-                                        type: 'line', yMin: 0.5, yMax: 0.5, borderColor: '#FF9800', borderWidth: 1, borderDash: [5, 5],
-                                        label: { display: true, content: '0.5 limit', position: 'end', backgroundColor: 'transparent', color: '#FF9800', font: { size: 10 } }
-                                    },
-                                    limit08: {
-                                        type: 'line', yMin: 0.8, yMax: 0.8, borderColor: '#F44336', borderWidth: 1, borderDash: [5, 5],
-                                        label: { display: true, content: '0.8 limit', position: 'end', backgroundColor: 'transparent', color: '#F44336', font: { size: 10 } }
-                                    },
-                                    nowLine: {
-                                        type: 'line', xMin: nowTime, xMax: nowTime, borderColor: '#888', borderWidth: 1, borderDash: [2, 2],
-                                        label: { display: true, content: 'Maintenant', position: 'start', backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', font: { size: 9 } }
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                type: 'linear', min: tMin, max: tMax, grid: { color: '#333', drawBorder: false },
-                                ticks: {
-                                    color: '#888', 
-                                    stepSize: tRange > 12 * 3600 * 1000 ? 6 * 3600 * 1000 : 3600 * 1000,
-                                    callback: function(value) {
-                                        const d = new Date(value);
-                                        const h = d.getHours();
-                                        if (tRange > 24 * 3600 * 1000 && h === 0) {
-                                            const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-                                            return days[d.getDay()] + ' ' + d.getDate();
-                                        }
-                                        return h + 'h';
-                                    }
-                                }
-                            },
-                            y: { min: 0, suggestedMax: Math.max(0.8, bacMax * 1.2), grid: { color: '#333', drawBorder: false }, ticks: { color: '#888', stepSize: 0.2 } }
-                        }
-                    }
-                });
-            }
-        }, 100);
-    }
-
-    container.innerHTML = `
-        <div style="font-size: 3rem; font-family: 'Russo One'; color: ${bacStatus.color}; line-height: 1;">
-            ${formattedBAC} <span style="font-size: 1.2rem; color: #888;">g/l</span>
-        </div>
-        
-        <div style="margin: 20px 0; background: #222; border-radius: 10px; height: 12px; position: relative; overflow: hidden;">
-            <!-- Limit markers -->
-            <div style="position: absolute; left: ${(0.5/0.8)*100}%; top: 0; bottom: 0; width: 2px; background: #FF9800; z-index: 2;"></div>
-            <div style="position: absolute; left: 98%; top: 0; bottom: 0; width: 2px; background: #F44336; z-index: 2;"></div>
-            
-            <!-- Fill -->
-            <div style="position: absolute; left: 0; top: 0; bottom: 0; width: ${percentageOfLimit}%; background: ${bacStatus.color}; z-index: 1; transition: width 1s ease;"></div>
-        </div>
-        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #888; margin-top: -15px; margin-bottom: 20px;">
-            <span>0</span>
-            <span style="position: relative; right: -${((0.5/0.8)*100) - 50}%">0.5</span>
-            <span>0.8+</span>
-        </div>
-
-        ${svgGraphHtml}
-
-        <div style="background: ${bacStatus.color}22; border: 1px solid ${bacStatus.color}; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-            <strong style="display:block; color:${bacStatus.color}; margin-bottom:8px; font-size:1.1rem;">${bacStatus.title}</strong>
-            <span style="color: #eee; font-size: 0.95rem; line-height:1.4;">${bacStatus.message}</span>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <button id="btn-bac-add-drink" class="btn-primary" style="margin: 0; padding: 10px; font-size: 0.9rem; background: #333;">
-                🍺 Ajouter Drink
-            </button>
-            <button id="btn-bac-set-manual" class="btn-primary" style="margin: 0; padding: 10px; font-size: 0.9rem; background: #222; border: 1px solid #444; color: #ccc;">
-                ✏️ Taux Manuel
-            </button>
-        </div>
-    `;
-
-    container.querySelector('#btn-bac-add-drink').onclick = () => {
-        const vol = prompt("Volume en ml (ex: 330) :", "330");
-        if (!vol) return;
-        const abv = prompt("Degré d'alcool % (ex: 8.5) :", "5.0");
-        if (!abv) return;
-        
-        const v = parseFloat(vol);
-        const a = parseFloat(abv.replace(',', '.'));
-        if (!isNaN(v) && !isNaN(a)) {
-            BAC.addDrinkToBAC(v, a);
-            renderBACStatsContent(container); // Refresh
-        }
-    };
-
-    container.querySelector('#btn-bac-set-manual').onclick = () => {
-        const val = prompt("Forcer le taux actuel (g/l) :", "0.0");
-        if (val !== null) {
-            const v = parseFloat(val.replace(',', '.'));
-            if (!isNaN(v) && v >= 0) {
-                BAC.logManualBAC(v);
-                renderBACStatsContent(container); // Refresh
-            }
-        }
-    };
 }
 
 export function renderSettings(allBeers, userData, container, isDiscovery = false, discoveryCallback = null) {
@@ -2429,63 +2170,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                 </div>
             </div>
 
-            <!-- 3. Alcoolémie (BAC) -->
-            <div class="stat-card mt-20">
-                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;">🩸 Alcoolémie (Belgique)</h4>
-                
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Activer le Calculateur</strong>
-                        <span style="font-size:0.8rem; color:#888;">Estimer le taux d\\'alcool</span>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-bac-enabled" ${Storage.getPreference('bac_enabled', false) ? 'checked' : ''}>
-                        <span class="slider round"></span>
-                    </label>
-                </div>
-
-                <div id="bac-settings-group" style="display: ${Storage.getPreference('bac_enabled', false) ? 'block' : 'none'}; border-top: 1px dashed #333; padding-top: 15px; margin-top: 5px;">
-                    
-                    <div style="display:flex; gap:10px; margin-bottom:15px;">
-                        <div style="flex:1; text-align:left;">
-                            <label style="font-size:0.8rem; color:#888; display:block; margin-bottom:5px;">Poids (kg)</label>
-                            <input type="number" id="input-bac-weight" class="form-input" value="${Storage.getPreference('bac_weight', 70)}" min="30" max="200" style="padding:8px;">
-                        </div>
-                        <div style="flex:1; text-align:left;">
-                            <label style="font-size:0.8rem; color:#888; display:block; margin-bottom:5px;">Sexe</label>
-                            <select id="select-bac-gender" class="form-select" style="padding:8px;">
-                                <option value="M" ${Storage.getPreference('bac_gender', 'M') === 'M' ? 'selected' : ''}>Homme</option>
-                                <option value="F" ${Storage.getPreference('bac_gender', 'M') === 'F' ? 'selected' : ''}>Femme</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <div style="text-align:left;">
-                            <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Afficher sur l\\'Accueil</strong>
-                            <span style="font-size:0.8rem; color:#888;">Mini-widget de statut</span>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" id="toggle-bac-home" ${Storage.getPreference('bac_show_home', false) ? 'checked' : ''}>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <div style="text-align:left;">
-                            <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Saisie Manuelle Uniqt.</strong>
-                            <span style="font-size:0.8rem; color:#888;">Ignorer les bières fraîchement notées</span>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" id="toggle-bac-manual" ${Storage.getPreference('bac_manual_only', false) ? 'checked' : ''}>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- 4. Données -->
+            <!-- 3. Données -->
             <div class="stat-card mt-20">
                 <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;">💾 Données</h4>
 
@@ -2623,48 +2308,6 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
             showToast("Paramètre enregistré !");
             // Reload to update cards immediately? Or just toast.
             // Cards won't update until re-render. User likely visits settings then goes back.
-        };
-    }
-
-    // BAC Settings
-    const toggleBac = container.querySelector('#toggle-bac-enabled');
-    if (toggleBac) {
-        toggleBac.onchange = (e) => {
-            const enabled = e.target.checked;
-            Storage.savePreference('bac_enabled', enabled);
-            const group = container.querySelector('#bac-settings-group');
-            if (group) group.style.display = enabled ? 'block' : 'none';
-            showToast(enabled ? "Calculateur activé !" : "Calculateur désactivé");
-        };
-    }
-
-    const inputWeight = container.querySelector('#input-bac-weight');
-    if (inputWeight) {
-        inputWeight.onchange = (e) => {
-            let val = parseInt(e.target.value);
-            if (isNaN(val) || val < 30) val = 30;
-            Storage.savePreference('bac_weight', val);
-        };
-    }
-
-    const selectGender = container.querySelector('#select-bac-gender');
-    if (selectGender) {
-        selectGender.onchange = (e) => {
-            Storage.savePreference('bac_gender', e.target.value);
-        };
-    }
-
-    const toggleBacHome = container.querySelector('#toggle-bac-home');
-    if (toggleBacHome) {
-        toggleBacHome.onchange = (e) => {
-            Storage.savePreference('bac_show_home', e.target.checked);
-        };
-    }
-
-    const toggleBacManual = container.querySelector('#toggle-bac-manual');
-    if (toggleBacManual) {
-        toggleBacManual.onchange = (e) => {
-            Storage.savePreference('bac_manual_only', e.target.checked);
         };
     }
 
