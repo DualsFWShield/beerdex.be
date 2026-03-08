@@ -17,6 +17,18 @@ window.Wrapped = Wrapped;
 window.UI = UI;
 window.showToast = UI.showToast;
 
+// Session-based animation tracking (persists through normal refresh)
+try {
+    const savedAnims = sessionStorage.getItem('beerdex_played_anims');
+    window.__playedAnims = new Set(savedAnims ? JSON.parse(savedAnims) : []);
+} catch (e) {
+    window.__playedAnims = new Set();
+}
+
+window.savePlayedAnims = () => {
+    sessionStorage.setItem('beerdex_played_anims', JSON.stringify([...window.__playedAnims]));
+};
+
 // App State
 
 // Initialize Wrapped

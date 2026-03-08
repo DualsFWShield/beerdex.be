@@ -49,6 +49,15 @@
     --rarity-ultra_legendaire: #ff00cc;
 }
 
+/* Helper to stop all rarity animations */
+.stop-animations, .stop-animations * {
+    animation: none !important;
+    transition: none !important;
+}
+.stop-animations::before, .stop-animations::after {
+    display: none !important;
+}
+
 /* Rarity Badges & Effects */
 .rarity-badge {
     padding: 4px 10px;

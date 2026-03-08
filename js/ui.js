@@ -614,18 +614,37 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
         // Apply Rarity Border via CSS classes
         // Logic: Reveal if Drunk OR if Setting "Reveal Rarity" is ON
         const revealRarity = isDrunk || Storage.getPreference('revealRarity', false);
+        const animOnce = Storage.getPreference('anim_only_once', false);
+        const hasPlayed = window.__playedAnims.has(beer.id);
 
         if (revealRarity && beer.rarity && beer.rarity !== 'base') {
-            // Apply per-rarity CSS class for border color + animation effects
+            // Apply per-rarity CSS class for border color
             card.classList.add(`card-rarity-${beer.rarity}`);
 
-            if (beer.rarity === 'ultra_legendaire') {
-                // Use class for constant rainbow animation
-                card.classList.add('card-anim-ultra_legendary');
+            // Only add ANIMATION classes if:
+            // 1. Beer is unlocked (isDrunk) -- as per user request
+            // 2. Play Once setting is OFF OR it hasn't played yet
+            if (isDrunk && (!animOnce || !hasPlayed)) {
+                if (beer.rarity === 'ultra_legendaire') {
+                    card.classList.add('card-anim-ultra_legendary');
+                }
+                // Mark as played for this session
+                window.__playedAnims.add(beer.id);
+                if (window.savePlayedAnims) window.savePlayedAnims();
+            } else if (animOnce && hasPlayed) {
+                // Force static if played once
+                card.classList.add('stop-animations');
             }
         } else {
             // Locked / Neutral State
             card.style.borderColor = 'var(--border-color)';
+        }
+
+        // --- ANTI AUTO-INIT CLEANUP ---
+        // If not drunk, ensured no VanillaTilt behavior survives
+        if (!isDrunk) {
+            card.removeAttribute('data-tilt');
+            if (card.vanillaTilt) card.vanillaTilt.destroy();
         }
 
         if (beer.isSeasonal) {
@@ -680,10 +699,10 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
     });
 
     // Initialize premium 3D tilt effects on cards if library is loaded (desktop/gyroscope support)
-    // We add a tiny delay to ensure the DOM is painted
+    // Only on UNLOCKED beers as per user request
     setTimeout(() => {
         if (typeof VanillaTilt !== 'undefined') {
-            const cards = grid.querySelectorAll('.beer-card');
+            const cards = grid.querySelectorAll('.beer-card.drunk');
             VanillaTilt.init(cards, {
                 max: 15,
                 speed: 400,
@@ -1185,7 +1204,19 @@ export function renderBeerDetail(beer, onSave) {
             if (beer.rarity && beer.rarity !== 'base') {
                 if (isUnlocked) {
                     const badge = document.createElement('div');
-                    badge.className = `rarity-badge rarity-${beer.rarity} anim-${beer.rarity}`;
+                    const animOnce = Storage.getPreference('anim_only_once', false);
+                    const hasPlayed = window.__playedAnims.has(`${beer.id}_modal`);
+
+                    // Base badge class
+                    badge.className = `rarity-badge rarity-${beer.rarity}`;
+                    
+                    // Only add animation if it hasn't played or setting is OFF
+                    if (!animOnce || !hasPlayed) {
+                        badge.classList.add(`anim-${beer.rarity}`);
+                        window.__playedAnims.add(`${beer.id}_modal`);
+                        if (window.savePlayedAnims) window.savePlayedAnims();
+                    }
+                    
                     badge.innerText = beer.rarity.replace('_', ' ');
                     rarityContainer.appendChild(badge);
                 } else {
@@ -2427,6 +2458,17 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                         <span class="slider round"></span>
                     </label>
                 </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="text-align:left;">
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Animations Limitées</strong>
+                        <span style="font-size:0.8rem; color:#888;">Ne jouer les animations de rareté qu'une fois</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="check-anim-once" ${Storage.getPreference('anim_only_once', false) ? 'checked' : ''}>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
             </div>
 
             <!-- 3. Alcoolémie (BAC) -->
@@ -2621,8 +2663,15 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
         checkRarity.onchange = (e) => {
             Storage.savePreference('revealRarity', e.target.checked);
             showToast("Paramètre enregistré !");
-            // Reload to update cards immediately? Or just toast.
-            // Cards won't update until re-render. User likely visits settings then goes back.
+        };
+    }
+
+    // Play Once
+    const checkAnimOnce = container.querySelector('#check-anim-once');
+    if (checkAnimOnce) {
+        checkAnimOnce.onchange = (e) => {
+            Storage.savePreference('anim_only_once', e.target.checked);
+            showToast("Préférence enregistrée !");
         };
     }
 
