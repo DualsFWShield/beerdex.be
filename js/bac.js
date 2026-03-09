@@ -20,7 +20,7 @@ function parseVolumeToMl(volStr) {
     const match = str.match(/([0-9.]+)/);
     if (!match) return 0;
     let val = parseFloat(match[1]);
-    
+
     // Explicit cases based on standard user patterns
     if (str.includes('ml')) {
         return val;
@@ -29,7 +29,7 @@ function parseVolumeToMl(volStr) {
     } else if (str.includes('l')) {
         return val * 1000;
     }
-    
+
     // Fallbacks if no unit is given
     if (val > 0 && val < 5) return val * 1000;      // e.g. "0.33", "0.5" -> Liters
     if (val >= 5 && val < 100) return val * 10;     // e.g. "25", "33", "50" -> Centiliters
@@ -72,18 +72,18 @@ export function addDrinkToBAC(volumeMl, abv) {
     if (vMl <= 0 || aPct <= 0) return null; // Invalid drink
 
     const history = Storage.getPreference('bac_history', []);
-    
+
     // Clean up history older than 24 hours to save space
     const now = new Date().getTime();
     const filteredHistory = history.filter(d => (now - d.time) < 24 * 60 * 60 * 1000);
-    
+
     filteredHistory.push({
         time: now,
         volume: vMl,
         abv: aPct,
         grams: calculateAlcoholGrams(vMl, aPct)
     });
-    
+
     Storage.savePreference('bac_history', filteredHistory);
     return filteredHistory;
 }
@@ -100,7 +100,7 @@ export function removeDrinkFromBAC(volumeMl, abv) {
     if (vMl <= 0 || aPct <= 0) return null;
 
     const history = Storage.getPreference('bac_history', []);
-    
+
     // Find the newest matching drink
     let foundIndex = -1;
     for (let i = history.length - 1; i >= 0; i--) {
@@ -110,7 +110,7 @@ export function removeDrinkFromBAC(volumeMl, abv) {
             break;
         }
     }
-    
+
     if (foundIndex !== -1) {
         history.splice(foundIndex, 1);
         Storage.savePreference('bac_history', history);
@@ -127,43 +127,43 @@ export function simulateBAC() {
 
     const historyUnsorted = Storage.getPreference('bac_history', []);
     if (historyUnsorted.length === 0) return { currentBAC: 0, curve: [] };
-    
+
     const now = new Date().getTime();
     // Filter history to last 24h just in case and strictly require numeric grams to avoid NaN poisoning
     const recentHistory = historyUnsorted.filter(d => d && !isNaN(d.grams) && (now - d.time) < 24 * 60 * 60 * 1000);
     if (recentHistory.length === 0) return { currentBAC: 0, curve: [] };
 
-    const history = [...recentHistory].sort((a,b) => a.time - b.time);
-    
+    const history = [...recentHistory].sort((a, b) => a.time - b.time);
+
     // Robust parsing for weight to prevent NaN from old saved literal string bugs
     let rawWeight = Storage.getPreference('bac_weight', 70);
     let weightKg = parseFloat(rawWeight);
     if (isNaN(weightKg) || weightKg < 20) weightKg = 70;
-    
+
     const gender = Storage.getPreference('bac_gender', 'M');
     const r = gender === 'M' ? MEN_R : WOMEN_R;
-    const BAC_PER_GRAM = 1 / (weightKg * r); 
+    const BAC_PER_GRAM = 1 / (weightKg * r);
     const ELIMINATION_PER_MIN = ELIMINATION_RATE / 60;
-    
+
     const ABSORPTION_MINS = 45;
-    
-    let simTime = history[0].time; 
-    
+
+    let simTime = history[0].time;
+
     // Dynamically extend simulation window if recovery takes longer than 24h
     // (Rate is ~0.15/h, so roughly 7 hours per 1.0 g/L)
     const estimatedHours = (history.reduce((acc, d) => acc + d.grams, 0) * BAC_PER_GRAM) / ELIMINATION_RATE;
     const durationMs = Math.max(24, Math.min(200, estimatedHours + 12)) * 60 * 60 * 1000;
     const maxEndTime = Math.max(simTime, now) + durationMs;
-    
+
     let currentBac = 0;
     let curve = [];
-    
+
     let absorptionQueue = [];
     let currentActualBAC = 0;
-    
+
     const stepMs = 60 * 1000;
     let nextDrinkIndex = 0;
-    
+
     while (simTime <= maxEndTime) {
         while (nextDrinkIndex < history.length && history[nextDrinkIndex].time <= simTime) {
             const drink = history[nextDrinkIndex];
@@ -173,7 +173,7 @@ export function simulateBAC() {
             });
             nextDrinkIndex++;
         }
-        
+
         let absorbedGramsThisMin = 0;
         for (let i = 0; i < absorptionQueue.length; i++) {
             let chunk = absorptionQueue[i];
@@ -183,33 +183,33 @@ export function simulateBAC() {
                 chunk.remainingGrams -= toAbsorb;
             }
         }
-        
+
         currentBac += (absorbedGramsThisMin * BAC_PER_GRAM);
-        
+
         if (currentBac > 0) {
             currentBac -= ELIMINATION_PER_MIN;
             if (currentBac < 0) currentBac = 0;
         }
-        
+
         // Save curve every 5 minutes
         if (simTime % (5 * 60 * 1000) < stepMs) {
             curve.push({ time: simTime, bac: currentBac });
         }
-        
+
         if (simTime >= now && simTime - stepMs < now) {
             currentActualBAC = currentBac;
         }
-        
+
         if (simTime > now && nextDrinkIndex >= history.length && currentBac === 0 && absorptionQueue.every(q => q.remainingGrams <= 0)) {
             curve.push({ time: simTime, bac: 0 });
             break;
         }
-        
+
         simTime += stepMs;
     }
-    
+
     if (now < history[0].time) currentActualBAC = 0;
-    
+
     return { currentBAC: currentActualBAC, curve };
 }
 
@@ -225,10 +225,10 @@ export function getCurrentBAC() {
  */
 function formatHoursToTimeStr(hoursDecimal) {
     if (hoursDecimal <= 0) return "maintenant";
-    
+
     const h = Math.floor(hoursDecimal);
     const m = Math.round((hoursDecimal - h) * 60);
-    
+
     if (h === 0) {
         return `${m} minutes`;
     } else if (m === 0) {
@@ -243,25 +243,34 @@ function formatHoursToTimeStr(hoursDecimal) {
  */
 export function getHoursToDrive() {
     const sim = simulateBAC();
-    if (sim.currentBAC < 0.5) return 0;
-    
     const now = new Date().getTime();
     const futurePoints = sim.curve.filter(p => p.time >= now);
-    let timeBelowLimit = null;
-    
-    for (let point of futurePoints) {
-        if (point.bac < 0.5) {
-            timeBelowLimit = point.time;
+
+    let recoveryTime = null;
+
+    // We scan backwards to find the last point where BAC was still >= 0.5.
+    // The point right after that will be the moment it drops below the limit safely.
+    for (let i = futurePoints.length - 1; i >= 0; i--) {
+        if (futurePoints[i].bac >= 0.5) {
+            if (i + 1 < futurePoints.length) {
+                recoveryTime = futurePoints[i + 1].time;
+            }
             break;
         }
     }
-    
-    if (timeBelowLimit) {
-        return (timeBelowLimit - now) / (1000 * 60 * 60);
+
+    if (recoveryTime) {
+        return Math.max(0, (recoveryTime - now) / (1000 * 60 * 60));
     }
-    
-    // Fallback if simulation cuts off early
-    const differenceToTarget = sim.currentBAC - 0.49;
+
+    // If it never went above 0.5 in the future prediction
+    if (sim.currentBAC < 0.5 && (!futurePoints.length || futurePoints.every(p => p.bac < 0.5))) {
+        return 0;
+    }
+
+    // Fallback if the simulation somehow cuts off early and never drops below 0.5
+    const peakFuture = futurePoints.length > 0 ? Math.max(...futurePoints.map(p => p.bac)) : sim.currentBAC;
+    const differenceToTarget = peakFuture - 0.49;
     return Math.max(0, differenceToTarget / ELIMINATION_RATE);
 }
 
@@ -274,13 +283,13 @@ export function getHoursToDrive() {
 export function getTimeCanDriveStr() {
     const hours = getHoursToDrive();
     if (hours === 0) return "";
-    
+
     const now = new Date();
     const driveTime = new Date(now.getTime() + (hours * 60 * 60 * 1000));
-    
+
     const hh = String(driveTime.getHours()).padStart(2, '0');
     const mm = String(driveTime.getMinutes()).padStart(2, '0');
-    
+
     // Use a more robust day comparison for "Après-demain"
     const nowStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     const driveStart = new Date(driveTime.getFullYear(), driveTime.getMonth(), driveTime.getDate()).getTime();
@@ -305,12 +314,12 @@ export function getTimeCanDriveStr() {
 export function getBACStatus() {
     const sim = simulateBAC();
     const currentBac = sim.currentBAC;
-    
+
     // Find peak from NOW onwards
     const now = new Date().getTime();
     const futureCurve = sim.curve.filter(p => p.time >= now);
     const peakBac = futureCurve.length > 0 ? Math.max(...futureCurve.map(p => p.bac)) : currentBac;
-    
+
     // Use the higher of current or peak for status
     const statusBac = Math.max(currentBac, peakBac);
 
@@ -385,23 +394,23 @@ export function logManualBAC(bacValue) {
     let rawWeight = Storage.getPreference('bac_weight', 70);
     let weightKg = parseFloat(rawWeight);
     if (isNaN(weightKg) || weightKg < 20) weightKg = 70;
-    
+
     const gender = Storage.getPreference('bac_gender', 'M');
     const r = gender === 'M' ? MEN_R : WOMEN_R;
-    
+
     const gramsNeeded = (bacValue * weightKg * r) || 0;
-    
+
     // Back-date the drink by 45 mins so that it is already fully absorbed "now"
     const ABSORPTION_MINS = 45;
     const pastTime = new Date().getTime() - (ABSORPTION_MINS * 60 * 1000);
-    
+
     const drink = {
         time: pastTime,
         volume: 0,
         abv: 0,
         grams: gramsNeeded
     };
-    
+
     // Reset history to this single reference point for manual override
     Storage.savePreference('bac_history', [drink]);
 }
