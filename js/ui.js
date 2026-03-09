@@ -2100,6 +2100,20 @@ export function renderStats(allBeers, userData, container) {
 
                     ${renderAdvancedStats(allBeers, userData)}
 
+                    ${Storage.getPreference('bac_enabled', false) ? `
+                    <!-- BAC Section -->
+                    <div class="stat-card mt-20 text-center" id="bac-stats-container" style="border-top: 2px solid var(--accent-gold);">
+                        <h3 style="margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                            🩸 Alcoolémie <span style="font-size: 0.8rem; background: #333; padding: 2px 6px; border-radius: 10px; font-weight: normal;">Belgique</span>
+                        </h3>
+                        
+                        <div id="bac-dynamic-content">
+                            <!-- Injected by renderBACStatsContent -->
+                            <div class="spinner"></div> Chargement...
+                        </div>
+                    </div>
+                    ` : ''}
+
                     <div class="stat-card mt-20 text-center">
                         <div id="beer-map-container" style="min-height:200px;">
                             <span class="spinner"></span> Chargement de la carte...
@@ -2119,19 +2133,7 @@ export function renderStats(allBeers, userData, container) {
                         </button>
                     </div>
 
-                    ${Storage.getPreference('bac_enabled', false) ? `
-                    <!-- BAC Section -->
-                    <div class="stat-card mt-20 text-center" id="bac-stats-container" style="border-top: 2px solid var(--accent-gold);">
-                        <h3 style="margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:8px;">
-                            🩸 Alcoolémie <span style="font-size: 0.8rem; background: #333; padding: 2px 6px; border-radius: 10px; font-weight: normal;">Belgique</span>
-                        </h3>
-                        
-                        <div id="bac-dynamic-content">
-                            <!-- Injected by renderBACStatsContent -->
-                            <div class="spinner"></div> Chargement...
-                        </div>
-                    </div>
-                    ` : ''}
+
 
                     <div style="background: linear-gradient(135deg, #111, #222); padding: 15px; border-radius: 12px; border: 1px solid var(--accent-gold); margin-bottom: 20px; text-align: center; margin-top: 20px;">
                         <div style="font-size: 2rem; margin-bottom: 5px;">🎬</div>

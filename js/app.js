@@ -801,23 +801,9 @@ function renderCurrentView() {
 
         // BAC Widget on Home page (Must be after loadMoreBeers so it doesn't get cleared)
         if (Storage.getPreference('bac_enabled', false)) {
-            if (isDiscovery) {
-                // Show FULL BAC widget in discovery mode
-                const widgetHtml = `
-                    <div class="stat-card text-center" id="bac-stats-container" style="border-top: 2px solid var(--accent-gold); margin: 0 15px 20px 15px;">
-                        <h3 style="margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:8px;">
-                            🩸 Alcoolémie <span style="font-size: 0.8rem; background: #333; padding: 2px 6px; border-radius: 10px; font-weight: normal;">Belgique</span>
-                        </h3>
-                        <div id="bac-dynamic-content">
-                            <div class="spinner"></div> Chargement...
-                        </div>
-                    </div>
-                `;
-                mainContent.insertAdjacentHTML('afterbegin', widgetHtml);
-                setTimeout(() => UI.renderBACStatsContent(document.getElementById('bac-dynamic-content')), 50);
 
-            } else if (Storage.getPreference('bac_show_home', true)) {
-                // Show small summary widget in normal mode if enabled
+            if (Storage.getPreference('bac_show_home', true)) {
+
                 const bacStatus = BAC.getBACStatus();
                 const bacValue = BAC.getCurrentBAC().toFixed(2);
                 const breathValue = (BAC.getCurrentBAC() * 0.44).toFixed(2);
