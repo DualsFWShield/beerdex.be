@@ -1209,14 +1209,14 @@ export function renderBeerDetail(beer, onSave) {
 
                     // Base badge class
                     badge.className = `rarity-badge rarity-${beer.rarity}`;
-                    
+
                     // Only add animation if it hasn't played or setting is OFF
                     if (!animOnce || !hasPlayed) {
                         badge.classList.add(`anim-${beer.rarity}`);
                         window.__playedAnims.add(`${beer.id}_modal`);
                         if (window.savePlayedAnims) window.savePlayedAnims();
                     }
-                    
+
                     badge.innerText = beer.rarity.replace('_', ' ');
                     rarityContainer.appendChild(badge);
                 } else {
@@ -1410,7 +1410,7 @@ export function renderBeerDetail(beer, onSave) {
 
         const vol = wrapper.querySelector('#consumption-volume').value;
         const newData = Storage.addConsumption(beer.id, vol);
-        
+
         // --- BAC INTEGRATION ---
         if (Storage.getPreference('bac_enabled', false) && !Storage.getPreference('bac_manual_only', false)) {
             BAC.addDrinkToBAC(vol, beer.alcohol || 5.0);
@@ -2051,7 +2051,7 @@ export function renderStats(allBeers, userData, container) {
     // Compute Rarity ranks
     let userRank = { name: "Novice", color: "#888", nextRankThresh: 10 };
     const uniqueCount = Object.keys(userData).length;
-    
+
     // Quick rank calculation
     if (uniqueCount >= 10) userRank = { name: "Amateur", color: "#4CAF50", nextRankThresh: 50 };
     if (uniqueCount >= 50) userRank = { name: "Connaisseur", color: "#2196F3", nextRankThresh: 100 };
@@ -2177,19 +2177,19 @@ export function renderStats(allBeers, userData, container) {
     }
 }
 
-function renderBACStatsContent(container) {
+export function renderBACStatsContent(container) {
     if (!container) return;
     const bacStatus = BAC.getBACStatus();
     const currentBAC = BAC.getCurrentBAC();
     const formattedBAC = currentBAC.toFixed(2);
-    
+
     // Draw primitive text curve or basic CSS curve representation
     // A full chart.js is too heavy, let's use a simple CSS bar showing the limit
     const percentageOfLimit = Math.min(100, (currentBAC / 0.8) * 100);
-    
+
     const curveData = BAC.getBACCurveData();
     let svgGraphHtml = "";
-    
+
     if (curveData && curveData.length > 1) {
         const width = 100;
         const height = 40;
@@ -2197,12 +2197,12 @@ function renderBACStatsContent(container) {
         const tMax = curveData[curveData.length - 1].time;
         const tRange = tMax - tMin || 1;
         const bacMax = Math.max(0.8, ...curveData.map(d => d.bac));
-        
+
         let polylinePoints = "";
-        let currentX = width; 
+        let currentX = width;
         let currentY = height;
         const now = new Date().getTime();
-        
+
         // CHART.JS INTEGRATION
         svgGraphHtml = `
             <div style="margin: 20px 0; background: #1a1a1a; padding: 15px; border-radius: 10px;">
@@ -2212,7 +2212,7 @@ function renderBACStatsContent(container) {
                 </div>
             </div>
         `;
-        
+
         // Let the DOM update, then initialize Chart.js
         setTimeout(() => {
             const ctx = document.getElementById('bacChartCanvas');
@@ -2227,7 +2227,7 @@ function renderBACStatsContent(container) {
                 }));
 
                 const nowTime = new Date().getTime();
-                
+
                 // Emphasize the current time dot
                 const currentBACPointIndex = chartData.findIndex(d => d.x >= nowTime);
                 const pointColors = chartData.map((d, i) => (i === currentBACPointIndex) ? '#ffffff' : 'transparent');
@@ -2259,20 +2259,20 @@ function renderBACStatsContent(container) {
                             legend: { display: false },
                             tooltip: {
                                 callbacks: {
-                                    title: function(context) {
+                                    title: function (context) {
                                         const d = new Date(context[0].parsed.x);
                                         const now = new Date();
                                         const isToday = d.toDateString() === now.toDateString();
                                         const timeStr = d.getHours().toString().padStart(2, '0') + 'h' + d.getMinutes().toString().padStart(2, '0');
                                         if (isToday) return timeStr;
-                                        
+
                                         const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-                                        return `${days[d.getDay()]} ${d.getDate()}/${d.getMonth()+1} - ${timeStr}`;
+                                        return `${days[d.getDay()]} ${d.getDate()}/${d.getMonth() + 1} - ${timeStr}`;
                                     },
-                                    label: function(context) { return ` ${context.parsed.y} g/l`; }
+                                    label: function (context) { return ` ${context.parsed.y} g/l`; }
                                 },
-                                backgroundColor: 'rgba(0, 0, 0, 0.9)', 
-                                titleColor: '#fff', 
+                                backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                                titleColor: '#fff',
                                 bodyColor: '#fff',
                                 borderColor: bacStatus.color,
                                 borderWidth: 1
@@ -2298,9 +2298,9 @@ function renderBACStatsContent(container) {
                             x: {
                                 type: 'linear', min: tMin, max: tMax, grid: { color: '#333', drawBorder: false },
                                 ticks: {
-                                    color: '#888', 
+                                    color: '#888',
                                     stepSize: tRange > 12 * 3600 * 1000 ? 6 * 3600 * 1000 : 3600 * 1000,
-                                    callback: function(value) {
+                                    callback: function (value) {
                                         const d = new Date(value);
                                         const h = d.getHours();
                                         if (tRange > 24 * 3600 * 1000 && h === 0) {
@@ -2319,14 +2319,19 @@ function renderBACStatsContent(container) {
         }, 100);
     }
 
+    const breathBAC = (currentBAC * 0.44).toFixed(2);
+
     container.innerHTML = `
         <div style="font-size: 3rem; font-family: 'Russo One'; color: ${bacStatus.color}; line-height: 1;">
             ${formattedBAC} <span style="font-size: 1.2rem; color: #888;">g/l</span>
         </div>
+        <div style="font-size: 1rem; color: #888; margin-top: 8px; margin-bottom: 5px;">
+            <i style="color: #666;">Air expiré:</i> <span style="color: ${bacStatus.color}; font-weight: bold;">${breathBAC}</span> mg/l
+        </div>
         
         <div style="margin: 20px 0; background: #222; border-radius: 10px; height: 12px; position: relative; overflow: hidden;">
             <!-- Limit markers -->
-            <div style="position: absolute; left: ${(0.5/0.8)*100}%; top: 0; bottom: 0; width: 2px; background: #FF9800; z-index: 2;"></div>
+            <div style="position: absolute; left: ${(0.5 / 0.8) * 100}%; top: 0; bottom: 0; width: 2px; background: #FF9800; z-index: 2;"></div>
             <div style="position: absolute; left: 98%; top: 0; bottom: 0; width: 2px; background: #F44336; z-index: 2;"></div>
             
             <!-- Fill -->
@@ -2334,7 +2339,7 @@ function renderBACStatsContent(container) {
         </div>
         <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #888; margin-top: -15px; margin-bottom: 20px;">
             <span>0</span>
-            <span style="position: relative; right: -${((0.5/0.8)*100) - 50}%">0.5</span>
+            <span style="position: relative; right: -${((0.5 / 0.8) * 100) - 50}%">0.5</span>
             <span>0.8+</span>
         </div>
 
@@ -2360,7 +2365,7 @@ function renderBACStatsContent(container) {
         if (!vol) return;
         const abv = prompt("Degré d'alcool % (ex: 8.5) :", "5.0");
         if (!abv) return;
-        
+
         const v = parseFloat(vol);
         const a = parseFloat(abv.replace(',', '.'));
         if (!isNaN(v) && !isNaN(a)) {

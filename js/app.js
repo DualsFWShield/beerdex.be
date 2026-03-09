@@ -263,7 +263,7 @@ function setupEventListeners() {
                                 const oldRating = Storage.getBeerRating(bestMatch.id);
                                 Storage.saveBeerRating(bestMatch.id, data);
                                 Achievements.checkAchievements(state.beers);
-                                
+
                                 const oldCount = oldRating ? (parseInt(oldRating.count) || 0) : 0;
                                 const newRating = Storage.getBeerRating(bestMatch.id);
                                 const newCount = newRating ? (parseInt(newRating.count) || 0) : 0;
@@ -280,7 +280,7 @@ function setupEventListeners() {
                                         }
                                     }
                                 }
-                                
+
                                 UI.showToast("Note mise à jour !");
                             });
                             return true; // STOP SCANNER
@@ -290,7 +290,7 @@ function setupEventListeners() {
                         UI.renderBeerDetail(product, (data) => {
                             let beerRef = product;
                             let oldRating = Storage.getBeerRating(product.id);
-                            
+
                             if (product.fromAPI) {
                                 const newBeer = { ...product };
                                 newBeer.id = 'CUSTOM_' + Date.now();
@@ -304,7 +304,7 @@ function setupEventListeners() {
                                 Storage.saveBeerRating(product.id, data);
                                 Achievements.checkAchievements(state.beers);
                             }
-                            
+
                             const oldCount = oldRating ? (parseInt(oldRating.count) || 0) : 0;
                             const newRating = Storage.getBeerRating(beerRef.id);
                             const newCount = newRating ? (parseInt(newRating.count) || 0) : 0;
@@ -312,16 +312,16 @@ function setupEventListeners() {
 
                             if (Storage.getPreference('bac_enabled', false) && !Storage.getPreference('bac_manual_only', false)) {
                                 if (diff > 0) {
-                                    for(let i = 0; i < diff; i++){
+                                    for (let i = 0; i < diff; i++) {
                                         BAC.addDrinkToBAC(beerRef.volume, beerRef.alcohol);
                                     }
                                 } else if (diff < 0) {
-                                    for(let i = 0; i < Math.abs(diff); i++){
+                                    for (let i = 0; i < Math.abs(diff); i++) {
                                         BAC.removeDrinkFromBAC(beerRef.volume, beerRef.alcohol);
                                     }
                                 }
                             }
-                            
+
                             UI.showToast("Note sauvegardée !");
                         });
 
@@ -489,12 +489,12 @@ function setupEventListeners() {
             UI.closeModal();
             Feedback.playSuccess();
             Feedback.impactMedium();
-            
+
             // Note: If adding a beer manually, we only track BAC if they specifically rate it later
             // The prompt says "with the beers marked as drunk in the app". Adding to the DB isn't necessarily drinking it.
             // But if they rate it right away? renderAddBeerForm doesn't take rating.
             // It just adds the beer. Wait, user specifically rates/drinks from details modal.
-            
+
             UI.showToast("Bière ajoutée avec succès !");
         });
     });
@@ -510,7 +510,7 @@ function setupEventListeners() {
                 UI.renderBeerDetail(beer, (ratingData) => {
                     Storage.saveBeerRating(beer.id, ratingData);
                     Achievements.checkAchievements(state.beers);
-                    
+
                     const oldCount = oldRating ? (parseInt(oldRating.count) || 0) : 0;
                     const newRating = Storage.getBeerRating(beer.id);
                     const newCount = newRating ? (parseInt(newRating.count) || 0) : 0;
@@ -800,26 +800,46 @@ function renderCurrentView() {
         loadMoreBeers(mainContent, false, isDiscovery, isDiscovery && state.filter);
 
         // BAC Widget on Home page (Must be after loadMoreBeers so it doesn't get cleared)
-        if (Storage.getPreference('bac_enabled', false) && Storage.getPreference('bac_show_home', true)) {
-            const bacStatus = BAC.getBACStatus();
-            const bacValue = BAC.getCurrentBAC().toFixed(2);
-            
-            const widgetHtml = `
-                <div class="bac-widget-home" style="background: linear-gradient(135deg, #111, #222); border-left: 5px solid ${bacStatus.color}; padding: 15px; border-radius: 12px; margin: 0 15px 20px 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 8px 16px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid ${bacStatus.color};">
-                    <div>
-                        <div style="font-size: 0.7rem; color: #aaa; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 5px; font-weight: bold;">Alcoolémie Spéculative</div>
-                        <div style="font-size: 1.1rem; font-weight: 700; color: ${bacStatus.color}; text-shadow: 0 0 10px ${bacStatus.color}44;">
-                            ${bacStatus.title} <span style="font-size: 0.9rem; color: #fff; font-weight: normal; margin-left: 5px;">(${bacValue} g/l)</span>
+        if (Storage.getPreference('bac_enabled', false)) {
+            if (isDiscovery) {
+                // Show FULL BAC widget in discovery mode
+                const widgetHtml = `
+                    <div class="stat-card text-center" id="bac-stats-container" style="border-top: 2px solid var(--accent-gold); margin: 0 15px 20px 15px;">
+                        <h3 style="margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                            🩸 Alcoolémie <span style="font-size: 0.8rem; background: #333; padding: 2px 6px; border-radius: 10px; font-weight: normal;">Belgique</span>
+                        </h3>
+                        <div id="bac-dynamic-content">
+                            <div class="spinner"></div> Chargement...
                         </div>
                     </div>
-                    <div style="background: ${bacStatus.color}22; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid ${bacStatus.color}44;">
-                         <span style="font-size: 1.2rem;">🩸</span>
+                `;
+                mainContent.insertAdjacentHTML('afterbegin', widgetHtml);
+                setTimeout(() => UI.renderBACStatsContent(document.getElementById('bac-dynamic-content')), 50);
+
+            } else if (Storage.getPreference('bac_show_home', true)) {
+                // Show small summary widget in normal mode if enabled
+                const bacStatus = BAC.getBACStatus();
+                const bacValue = BAC.getCurrentBAC().toFixed(2);
+                const breathValue = (BAC.getCurrentBAC() * 0.44).toFixed(2);
+
+                const widgetHtml = `
+                    <div class="bac-widget-home" style="background: linear-gradient(135deg, #111, #222); border-left: 5px solid ${bacStatus.color}; padding: 15px; border-radius: 12px; margin: 0 15px 20px 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 8px 16px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid ${bacStatus.color};">
+                        <div>
+                            <div style="font-size: 0.7rem; color: #aaa; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 5px; font-weight: bold;">Alcoolémie Spéculative</div>
+                            <div style="font-size: 1.1rem; font-weight: 700; color: ${bacStatus.color}; text-shadow: 0 0 10px ${bacStatus.color}44;">
+                                ${bacStatus.title} <span style="font-size: 0.9rem; color: #fff; font-weight: normal; margin-left: 5px;">(${bacValue} g/l)</span>
+                            </div>
+                            <div style="font-size: 0.75rem; color: #888; margin-top: 5px;">
+                                Air expiré: <span style="color: ${bacStatus.color}; font-weight: bold;">${breathValue}</span> mg/l
+                            </div>
+                        </div>
+                        <div style="background: ${bacStatus.color}22; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid ${bacStatus.color}44;">
+                             <span style="font-size: 1.2rem;">🩸</span>
+                        </div>
                     </div>
-                </div>
-            `;
-            
-            // Insert after header but before grid
-            mainContent.insertAdjacentHTML('afterbegin', widgetHtml);
+                `;
+                mainContent.insertAdjacentHTML('afterbegin', widgetHtml);
+            }
         }
 
 
