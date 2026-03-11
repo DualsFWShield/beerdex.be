@@ -190,7 +190,7 @@ function handleExport(scope, ids, mode) {
                 UI.showToast("🔗 Lien copié dans le presse-papier !", "success");
             }).catch(() => {
                 // Fallback
-                prompt("Copiez ce lien pour partager vos données :", link);
+                UI.showPromptModal("Copiez ce lien pour partager vos données", link);
             });
         }
         cleanURL();

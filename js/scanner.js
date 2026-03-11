@@ -75,12 +75,14 @@ export async function startScanner(elementId, onScanSuccess, onScanFailure) {
             );
         } else {
             console.error("No cameras found.");
-            alert("Aucune caméra trouvée.");
+            if (window.UI && window.UI.showAlertModal) window.UI.showAlertModal("Aucune caméra trouvée.", { icon: '📷' });
+            else console.error("Aucune caméra trouvée.");
         }
 
     } catch (err) {
         console.error("Error starting scanner:", err);
-        alert("Erreur démarrage caméra: " + err);
+        if (window.UI && window.UI.showAlertModal) window.UI.showAlertModal("Erreur démarrage caméra: " + err, { icon: '⚠️' });
+        else console.error("Erreur démarrage caméra: " + err);
     }
 }
 

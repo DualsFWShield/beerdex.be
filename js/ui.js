@@ -95,6 +95,120 @@ function openModal(content) {
     };
 }
 
+// ===== REUSABLE DIALOG MODALS (replaces prompt/confirm/alert) =====
+
+/**
+ * Shows a styled prompt modal. Returns a Promise that resolves with the entered value or null if cancelled.
+ */
+export function showPromptModal(title, defaultValue = '', opts = {}) {
+    return new Promise((resolve) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'modal-dialog';
+        wrapper.innerHTML = `
+            <h3>${title}</h3>
+            <input type="${opts.inputType || 'text'}" id="modal-prompt-input" class="form-input" 
+                   value="${defaultValue}" placeholder="${opts.placeholder || ''}">
+            <div class="modal-dialog-actions">
+                <button id="modal-prompt-cancel" class="btn-cancel">Annuler</button>
+                <button id="modal-prompt-ok" class="btn-confirm">Confirmer</button>
+            </div>
+        `;
+
+        openModal(wrapper);
+
+        const input = wrapper.querySelector('#modal-prompt-input');
+        input.focus();
+        input.select();
+
+        const finish = (val) => {
+            modalContainer.onclick = null;
+            closeModal();
+            resolve(val);
+        };
+
+        wrapper.querySelector('#modal-prompt-ok').onclick = () => finish(input.value);
+        wrapper.querySelector('#modal-prompt-cancel').onclick = () => finish(null);
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') finish(input.value);
+            if (e.key === 'Escape') finish(null);
+        });
+
+        modalContainer.onclick = (e) => {
+            if (e.target === modalContainer) finish(null);
+        };
+    });
+}
+
+/**
+ * Shows a styled confirm modal. Returns a Promise<boolean>.
+ */
+export function showConfirmModal(message, opts = {}) {
+    return new Promise((resolve) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'modal-dialog';
+
+        const isDanger = opts.danger !== false;
+        const icon = isDanger ? '⚠️' : 'ℹ️';
+        const dangerClass = isDanger ? ' danger' : '';
+
+        wrapper.innerHTML = `
+            <div class="dialog-icon">${icon}</div>
+            <p>${message}</p>
+            <div class="modal-dialog-actions">
+                <button id="modal-confirm-cancel" class="btn-cancel">${opts.cancelText || 'Annuler'}</button>
+                <button id="modal-confirm-ok" class="btn-confirm${dangerClass}">${opts.confirmText || 'Confirmer'}</button>
+            </div>
+        `;
+
+        openModal(wrapper);
+
+        const finish = (val) => {
+            modalContainer.onclick = null;
+            closeModal();
+            resolve(val);
+        };
+
+        wrapper.querySelector('#modal-confirm-ok').onclick = () => finish(true);
+        wrapper.querySelector('#modal-confirm-cancel').onclick = () => finish(false);
+        modalContainer.onclick = (e) => {
+            if (e.target === modalContainer) finish(false);
+        };
+    });
+}
+
+/**
+ * Shows a styled alert modal. Returns a Promise that resolves when dismissed.
+ */
+export function showAlertModal(message, opts = {}) {
+    return new Promise((resolve) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'modal-dialog';
+
+        const icon = opts.icon || 'ℹ️';
+        const titleHtml = opts.title ? `<h3>${opts.title}</h3>` : '';
+
+        wrapper.innerHTML = `
+            <div class="dialog-icon">${icon}</div>
+            ${titleHtml}
+            <p>${message}</p>
+            <button id="modal-alert-ok" class="btn-ok">OK</button>
+        `;
+
+        openModal(wrapper);
+
+        const finish = () => {
+            modalContainer.onclick = null;
+            closeModal();
+            resolve();
+        };
+
+        wrapper.querySelector('#modal-alert-ok').onclick = finish;
+        modalContainer.onclick = (e) => {
+            if (e.target === modalContainer) finish();
+        };
+    });
+}
+
 // --- App Welcome & Consent Flow ---
 
 export function checkAndShowWelcome() {
@@ -571,7 +685,7 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
                             }
                         } catch (e) {
                             btn.innerHTML = '⚠️ Erreur (Limite atteinte ?)';
-                            alert(e.message);
+                            showAlertModal(e.message, { icon: '⚠️' });
                         }
                     };
                 }
@@ -768,7 +882,7 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
                         }
                     } catch (e) {
                         btn.innerHTML = '⚠️ Erreur';
-                        alert(e.message);
+                        showAlertModal(e.message, { icon: '⚠️' });
                     }
                 };
             }
@@ -1613,8 +1727,8 @@ export function renderBeerDetail(beer, onSave) {
 
     // Binding for Custom Actions
     if (customActions) {
-        wrapper.querySelector('#btn-delete-beer').onclick = () => {
-            if (confirm("Supprimer définitivement cette bière ?")) {
+        wrapper.querySelector('#btn-delete-beer').onclick = async () => {
+            if (await showConfirmModal("Supprimer définitivement cette bière ?")) {
                 Storage.deleteCustomBeer(beer.id);
                 closeModal();
                 showToast("Bière supprimée.");
@@ -1646,7 +1760,7 @@ export function renderBeerDetail(beer, onSave) {
 
         // Validation for core score if present
         if (template.find(t => t.id === 'score') && !data.score) {
-            alert("Veuillez mettre une note !");
+            showAlertModal("Veuillez mettre une note !", { icon: '⭐' });
             return;
         }
 
@@ -1907,7 +2021,7 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
                 const currentName = titleInput ? titleInput.value : '';
 
                 if (!currentName || currentName.length < 3) {
-                    alert("Entrez au moins 3 lettres du nom dans le champ Titre.");
+                    showAlertModal("Entrez au moins 3 lettres du nom dans le champ Titre.", { icon: '✏️' });
                     return;
                 }
 
@@ -1929,7 +2043,7 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
                         btnName.disabled = false;
                     }
                 } catch (e) {
-                    alert(e.message);
+                    showAlertModal(e.message, { icon: '⚠️' });
                     btnName.innerHTML = originalText;
                     btnName.disabled = false;
                 }
@@ -2362,10 +2476,10 @@ export function renderBACStatsContent(container) {
         </div>
     `;
 
-    container.querySelector('#btn-bac-add-drink').onclick = () => {
-        const vol = prompt("Volume en ml (ex: 330) :", "330");
+    container.querySelector('#btn-bac-add-drink').onclick = async () => {
+        const vol = await showPromptModal("Volume en ml", "330", { placeholder: "ex: 330", inputType: "number" });
         if (!vol) return;
-        const abv = prompt("Degré d'alcool % (ex: 8.5) :", "5.0");
+        const abv = await showPromptModal("Degré d'alcool %", "5.0", { placeholder: "ex: 8.5", inputType: "text" });
         if (!abv) return;
 
         const v = parseFloat(vol);
@@ -2376,8 +2490,8 @@ export function renderBACStatsContent(container) {
         }
     };
 
-    container.querySelector('#btn-bac-set-manual').onclick = () => {
-        const val = prompt("Forcer le taux actuel (g/l) :", "0.0");
+    container.querySelector('#btn-bac-set-manual').onclick = async () => {
+        const val = await showPromptModal("Forcer le taux actuel (g/l)", "0.0", { placeholder: "ex: 0.5", inputType: "text" });
         if (val !== null) {
             const v = parseFloat(val.replace(',', '.'));
             if (!isNaN(v) && v >= 0) {
@@ -2617,26 +2731,26 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     // Config
     container.querySelector('#btn-template').onclick = () => renderTemplateEditor();
 
-    container.querySelector('#btn-preset-default').onclick = () => {
-        if (confirm("Appliquer le modèle Standard (Note + Commentaire) ?")) {
+    container.querySelector('#btn-preset-default').onclick = async () => {
+        if (await showConfirmModal("Appliquer le modèle Standard (Note + Commentaire) ?", { danger: false })) {
             Storage.resetRatingTemplate();
             Storage.savePreference('activePreset', 'default');
             showToast("Modèle Standard appliqué !");
             container.querySelector('#btn-preset-default').style = 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 5px rgba(255,192,0,0.3); padding:8px; font-size:0.8rem;';
-            renderSettings(allBeers, userData, container, isDiscovery, discoveryCallback); // Re-render to update UI state cleanly
+            renderSettings(allBeers, userData, container, isDiscovery, discoveryCallback);
         }
     };
 
-    container.querySelector('#btn-preset-tristan').onclick = () => {
-        if (confirm("Appliquer le modèle 'Tristan' ?\nCela changera les champs de notation.")) {
+    container.querySelector('#btn-preset-tristan').onclick = async () => {
+        if (await showConfirmModal("Appliquer le modèle 'Tristan' ?\nCela changera les champs de notation.", { danger: false })) {
             applyTristanPreset();
             showToast("Modèle Tristan appliqué !");
             renderSettings(allBeers, userData, container, isDiscovery, discoveryCallback);
         }
     };
 
-    container.querySelector('#btn-preset-noah').onclick = () => {
-        if (confirm("Appliquer le modèle 'Noah' ?\nCela changera les champs de notation.")) {
+    container.querySelector('#btn-preset-noah').onclick = async () => {
+        if (await showConfirmModal("Appliquer le modèle 'Noah' ?\nCela changera les champs de notation.", { danger: false })) {
             applyNoahPreset();
             showToast("Modèle Noah appliqué !");
             renderSettings(allBeers, userData, container, isDiscovery, discoveryCallback);
@@ -2766,8 +2880,8 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     };
 
     // Granular Resets
-    const confirmReset = (msg, action) => {
-        if (confirm(msg)) {
+    const confirmReset = async (msg, action) => {
+        if (await showConfirmModal(msg)) {
             action();
             Analytics.track('data_reset', { action: action.name || 'unknown' });
             showToast("Données effacées.");
@@ -2778,7 +2892,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     const btnResetRatings = container.querySelector('#btn-reset-ratings');
     if (btnResetRatings) {
         btnResetRatings.onclick = () => confirmReset(
-            "⚠️ Effacer UNIQUEMENT toutes les notes et commentaires ?",
+            "Effacer UNIQUEMENT toutes les notes et commentaires ?",
             Storage.resetRatingsOnly
         );
     }
@@ -2786,7 +2900,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     const btnResetCustom = container.querySelector('#btn-reset-custom');
     if (btnResetCustom) {
         btnResetCustom.onclick = () => confirmReset(
-            "⚠️ Effacer UNIQUEMENT toutes vos bières personnalisées ?",
+            "Effacer UNIQUEMENT toutes vos bières personnalisées ?",
             Storage.resetCustomBeersOnly
         );
     }
@@ -2794,7 +2908,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     const btnResetHistory = container.querySelector('#btn-reset-history');
     if (btnResetHistory) {
         btnResetHistory.onclick = () => confirmReset(
-            "⚠️ Effacer l'historique de consommation ? (Les notes seront conservées)",
+            "Effacer l'historique de consommation ? (Les notes seront conservées)",
             Storage.resetConsumptionHistoryOnly
         );
     }
@@ -2802,14 +2916,14 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     const btnResetFav = container.querySelector('#btn-reset-fav');
     if (btnResetFav) {
         btnResetFav.onclick = () => confirmReset(
-            "⚠️ Retirer tous les favoris ?",
+            "Retirer tous les favoris ?",
             Storage.resetFavoritesOnly
         );
     }
 
-    container.querySelector('#btn-reset-app').onclick = () => {
-        if (confirm("⚠️ Êtes-vous certain de vouloir TOUT effacer ?\nCette action est irréversible !\n\nToutes vos notes, bières perso et préférences seront perdues.")) {
-            if (confirm("Dernière chance : Confirmez-vous la suppression totale ?")) {
+    container.querySelector('#btn-reset-app').onclick = async () => {
+        if (await showConfirmModal("Êtes-vous certain de vouloir TOUT effacer ?\nCette action est irréversible !\n\nToutes vos notes, bières perso et préférences seront perdues.")) {
+            if (await showConfirmModal("Dernière chance : Confirmez-vous la suppression totale ?", { confirmText: 'Tout supprimer' })) {
                 Storage.resetAllData();
                 location.reload();
             }
@@ -2845,8 +2959,8 @@ function renderTemplateEditor() {
 
         // Attach Handlers
         wrapper.querySelectorAll('.delete-field').forEach(btn => {
-            btn.onclick = (e) => {
-                if (confirm("Supprimer ce champ ?")) {
+            btn.onclick = async (e) => {
+                if (await showConfirmModal("Supprimer ce champ ?")) {
                     template.splice(e.target.dataset.idx, 1);
                     refreshList();
                 }
@@ -2875,25 +2989,16 @@ function renderTemplateEditor() {
         });
 
         wrapper.querySelectorAll('.edit-field').forEach(btn => {
-            btn.onclick = (e) => {
+            btn.onclick = async (e) => {
                 const idx = parseInt(e.target.dataset.idx);
                 const field = template[idx];
 
-                // Simple Prompt-based edit for now to avoid nested complex modals
-                const newLabel = prompt("Nouveau nom :", field.label);
+                const newLabel = await showPromptModal("Nouveau nom", field.label);
                 if (newLabel !== null && newLabel.trim() !== "") {
                     field.label = newLabel.trim();
-                    // Optional: Allow changing type? 
-                    // Switching type might break existing data display if format changes drastically?
-                    // Actually data is stored by ID. ID should theoretically stay same to link to old data.
-                    // But if user repurposes "Amertume" (range) to "Amertume" (text), old value '7' becomes text '7'. 
-                    // It's mostly fine.
-                    // Let's stick to label edit or advanced edit?
-                    // User asked "modifier/supprimer". Modification implies Label fix or Type fix.
-                    const newType = prompt("Nouveau Type (range/checkbox/textarea/number) :", field.type);
+                    const newType = await showPromptModal("Nouveau Type (range/checkbox/textarea/number)", field.type);
                     if (['range', 'checkbox', 'textarea', 'number'].includes(newType)) {
                         field.type = newType;
-                        // Reset defaults if needed
                         if (newType === 'range') { field.min = 0; field.max = 10; field.step = 1; }
                     }
                     refreshList();
@@ -2949,8 +3054,8 @@ function renderTemplateEditor() {
     };
 
     // Reset
-    wrapper.querySelector('#reset-template').onclick = () => {
-        if (confirm("Revenir aux champs par défaut ?")) {
+    wrapper.querySelector('#reset-template').onclick = async () => {
+        if (await showConfirmModal("Revenir aux champs par défaut ?", { danger: false })) {
             Storage.resetRatingTemplate();
             closeModal();
             showToast("Réinitialisé !");
@@ -3853,7 +3958,7 @@ export function renderMatchModal(allBeers) {
     const processMatch = (qrString) => {
         const friendData = Match.parseQRData(qrString);
         if (!friendData) {
-            alert("Code invalide !");
+            showAlertModal("Code invalide !", { icon: '❌' });
             // Restart scanner if valid fail? No, easier to stay stopped.
             return;
         }

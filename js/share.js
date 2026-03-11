@@ -417,7 +417,8 @@ export async function generateWrappedCard(stats, favoriteBeer, year) {
  */
 export async function shareImage(blob, title, apiLink = null) {
     if (!blob) {
-        alert("Erreur: Image non générée (Blob invalide)");
+        if (window.UI && window.UI.showAlertModal) window.UI.showAlertModal("Erreur: Image non générée (Blob invalide)", { icon: '⚠️' });
+        else console.error("Erreur: Image non générée (Blob invalide)");
         return;
     }
 

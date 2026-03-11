@@ -1,4 +1,4 @@
-﻿import { getAllUserData, getCustomBeers } from './storage.js';
+import { getAllUserData, getCustomBeers } from './storage.js';
 
 let _allBeersProvider = null;
 
@@ -314,11 +314,11 @@ async function handleWrappedShare(stats) {
 
             if (shareBtn) shareBtn.textContent = "Partager";
         } else {
-            alert("Impossible de générer l'image (Module Share manquant)");
+            window.UI.showAlertModal("Impossible de générer l'image (Module Share manquant)", { icon: '⚠️' });
         }
     } catch (e) {
         console.error("Wrapped Share Error:", e);
-        alert("Erreur lors du partage : " + e.message);
+        window.UI.showAlertModal("Erreur lors du partage : " + e.message, { icon: '⚠️' });
         if (shareBtn) shareBtn.textContent = "Erreur ⚠️";
     }
 }
