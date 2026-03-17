@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Beerdex-v83'; // Increment to trigger update
+const CACHE_NAME = 'Beerdex-v84'; // Increment to trigger update
 const ASSETS = [
     './index.html',
     './style.css',

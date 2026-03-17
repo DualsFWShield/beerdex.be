@@ -232,7 +232,10 @@ export async function checkAndShowConsent(onAccept) {
     const shouldForce = EventSystem.shouldForceBanner();
     
     // Check if we already showed the special event banner for this event
-    const eventBannerShown = localStorage.getItem(`beerdex_event_banner_shown_${activeEvent?.id}`) === 'true';
+    const bannerShownKey = activeEvent ? `event_banner_shown_${activeEvent.id}` : null;
+    const eventBannerShown = bannerShownKey ? Storage.getPreference(bannerShownKey, false) : false;
+
+    console.log(`[UI] Consent Check - Event: ${activeEvent?.id}, Forced: ${shouldForce}, Shown: ${eventBannerShown}`);
 
     // Normal flow: if no forced event today, or if we already showed it this session,
     // check normal consent.
@@ -313,8 +316,9 @@ export async function checkAndShowConsent(onAccept) {
         localStorage.setItem('beerdex_consent', 'true');
         
         // Ensure the banner doesn't show again for this event
-        if (activeEvent) {
-            localStorage.setItem(`beerdex_event_banner_shown_${activeEvent.id}`, 'true');
+        if (activeEvent && bannerShownKey) {
+            console.log(`[UI] Dismissing banner for event: ${activeEvent.id}`);
+            Storage.savePreference(bannerShownKey, true);
         }
 
         overlay.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
