@@ -11,6 +11,7 @@ import { Analytics } from './analytics.js';
 import * as WebShare from './share.js';
 import * as BAC from './bac.js';
 import * as Wrapped from './wrapped.js';
+import { EventSystem } from './event-system.js';
 
 window.Share = WebShare;
 window.Wrapped = Wrapped;
@@ -53,6 +54,14 @@ async function init() {
         Analytics.track('app_open', { isStandalone: window.matchMedia('(display-mode: standalone)').matches });
         Analytics.retroactiveSync();
 
+        // --- EVENT SYSTEM INIT ---
+        await EventSystem.init();
+
+        // Apply Theme
+        applyTheme();
+
+        // Load Data
+
         // Load Data
         const staticBeers = await Data.fetchAllBeers();
         const customBeers = Storage.getCustomBeers();
@@ -78,6 +87,46 @@ async function init() {
         UI.showToast("Erreur de chargement des données. Vérifiez votre connexion.");
     }
 }
+
+/**
+ * Apply the current theme based on user preferences.
+ * Centralized here to be callable from UI or Event system.
+ */
+export function applyTheme() {
+    const museumThemeEnabled = Storage.getPreference('museumThemeEnabled', false);
+    
+    // Toggle Stylesheet
+    const museumLink = document.getElementById('css-museum');
+    if (museumLink) {
+        museumLink.disabled = !museumThemeEnabled;
+    }
+
+    // Toggle Body Classes
+    if (museumThemeEnabled) {
+        document.body.classList.add('theme-museum');
+    } else {
+        document.body.classList.remove('theme-museum');
+    }
+
+    // Update Meta Theme Color
+    const themeColor = museumThemeEnabled ? '#C9A84C' : '#FFC000';
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
+
+    // Handle Curtain Animation (only if actually playing)
+    const curtainOverlay = document.getElementById('curtain-overlay');
+    if (museumThemeEnabled && curtainOverlay && !window.__curtainPlayed) {
+        window.__curtainPlayed = true;
+        curtainOverlay.style.display = 'flex';
+        setTimeout(() => {
+            if(curtainOverlay) curtainOverlay.style.display = 'none';
+        }, 3500);
+    } else if (curtainOverlay) {
+        curtainOverlay.style.display = 'none';
+    }
+}
+
+// Attach to window for global access from UI components if needed
+window.applyTheme = applyTheme;
 
 function loadMoreBeers(container, isAppend = false, isDiscoveryMode = false, showCreatePrompt = false) {
     const { page, itemsPerPage } = state.pagination;

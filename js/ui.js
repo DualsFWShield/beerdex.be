@@ -1,4 +1,5 @@
 import * as Storage from './storage.js';
+import { EventSystem } from './event-system.js';
 import * as Share from './share.js';
 import Match from './match.js';
 import * as Map from './map.js';
@@ -226,11 +227,23 @@ export function checkAndShowWelcome() {
     }, 1000);
 }
 
-export function checkAndShowConsent(onAccept) {
-    if (localStorage.getItem('beerdex_consent') === 'true') {
-        if (onAccept) onAccept();
-        return;
+export async function checkAndShowConsent(onAccept) {
+    const activeEvent = EventSystem.getActiveEvent();
+    const shouldForce = EventSystem.shouldForceBanner();
+    
+    // Check if we already showed the special event banner in this session
+    const eventBannerShown = sessionStorage.getItem(`beerdex_event_banner_shown_${activeEvent?.id}`) === 'true';
+
+    // Normal flow: if no forced event today, or if we already showed it this session,
+    // check normal consent.
+    if (!shouldForce || eventBannerShown) {
+        if (localStorage.getItem('beerdex_consent') === 'true') {
+            if (onAccept) onAccept();
+            return;
+        }
     }
+
+    const bannerData = activeEvent?.banner;
 
     const wrapper = document.createElement('div');
     wrapper.style.cssText = `
@@ -244,12 +257,19 @@ export function checkAndShowConsent(onAccept) {
         position: relative;
     `;
 
-    wrapper.innerHTML = `
+    const bannerContent = (shouldForce && bannerData) ? `
+        <div style="text-align: center; margin-bottom: 20px;">
+            <div style="font-size: 3rem; margin-bottom: 10px;">🎭🏛️</div>
+            <h2 style="color: var(--accent-gold); font-size: 1.6rem; margin-bottom: 10px;">${bannerData.title || "Exposition Beerdex"}</h2>
+        </div>
+        <div style="color: var(--text-primary); line-height: 1.6; font-size: 1.1rem; margin-bottom: 25px; text-align: center; background: rgba(255,192,0,0.1); padding: 20px; border-radius: 12px; border: 1px solid var(--accent-gold); font-family: 'Playfair Display', serif;">
+            ${(bannerData.message || "").replace(/\n/g, '<br>')}
+        </div>
+    ` : `
         <div style="text-align: center; margin-bottom: 20px;">
             <div style="font-size: 3rem; margin-bottom: 10px;">🍻</div>
             <h2 style="color: var(--accent-gold); font-size: 1.6rem; margin-bottom: 10px;">Bienvenue sur Beerdex</h2>
         </div>
-        
         <div style="color: var(--text-secondary); line-height: 1.5; font-size: 0.95rem; margin-bottom: 25px; text-align: justify; background: var(--bg-dark); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color);">
             <p style="margin-bottom: 15px; font-weight: bold; color: var(--text-primary);">Afin d'utiliser l'application, merci de lire et d'accepter nos conditions :</p>
             <ul style="padding-left: 20px; list-style-type: '👉 ';">
@@ -258,8 +278,15 @@ export function checkAndShowConsent(onAccept) {
                 <li><strong>Statistiques d'Usage :</strong> Nous collectons des données anonymes (via Google Analytics) pour analyser l'utilisation de l'app et améliorer l'expérience. Ces données sont 100% privées et ne sont en aucun cas vendues à des tiers.</li>
             </ul>
         </div>
-        
-        <button id="btn-accept-consent" class="btn-primary" style="font-size: 1.1rem; padding: 16px; width: 100%; box-shadow: 0 4px 15px rgba(255,192,0,0.3);">J'accepte les conditions</button>
+    `;
+
+    wrapper.innerHTML = `
+        ${bannerContent}
+        <div style="display: flex; justify-content: center; width: 100%; margin-top: 20px;">
+            <button id="btn-accept-consent" class="btn-primary" style="font-size: 1.1rem; padding: 16px 40px; width: auto; min-width: 250px; margin-top: 0; box-shadow: 0 4px 15px rgba(255,192,0,0.3);">
+                ${(shouldForce && bannerData && bannerData.button) ? bannerData.button : "J'accepte les conditions"}
+            </button>
+        </div>
     `;
 
     const overlay = document.createElement('div');
@@ -284,6 +311,11 @@ export function checkAndShowConsent(onAccept) {
         if (window.navigator && window.navigator.vibrate) navigator.vibrate(50);
 
         localStorage.setItem('beerdex_consent', 'true');
+        
+        // Ensure the banner doesn't show again in this same session for this event
+        if (activeEvent) {
+            sessionStorage.setItem(`beerdex_event_banner_shown_${activeEvent.id}`, 'true');
+        }
 
         overlay.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
         overlay.style.opacity = '0';
@@ -291,6 +323,7 @@ export function checkAndShowConsent(onAccept) {
 
         setTimeout(() => {
             overlay.remove();
+            if (window.applyTheme) window.applyTheme();
             if (onAccept) onAccept();
             checkAndShowWelcome();
         }, 400);
@@ -2522,6 +2555,17 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                     </label>
                 </div>
 
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <div style="text-align:left;">
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Thème Musée 🎭</strong>
+                        <span style="font-size:0.8rem; color:#888;">Style galerie d'art & cadres dorés</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-museum" ${Storage.getPreference('museumThemeEnabled', false) ? 'checked' : ''}>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                      <button type="button" id="btn-template" class="btn-primary text-white" style="background:#222; border:1px solid #444; width:100%; margin:0;">
                         ⚙️ Configurer Notation
@@ -2760,6 +2804,38 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     if (discoveryCallback) {
         container.querySelector('#toggle-discovery').onchange = (e) => {
             discoveryCallback(e.target.checked);
+        };
+    }
+
+    // Museum Theme Toggle
+    const toggleMuseum = container.querySelector('#toggle-museum');
+    if (toggleMuseum) {
+        toggleMuseum.onchange = (e) => {
+            const enabled = e.target.checked;
+            Storage.savePreference('museumThemeEnabled', enabled);
+            
+            const museumLink = document.getElementById('css-museum');
+            if (museumLink) {
+                museumLink.disabled = !enabled;
+            }
+
+            // Target body for specificity/class-based overrides
+            if (enabled) {
+                document.body.classList.add('theme-museum');
+                // Trigger curtain animation if not already played in this session?
+                // Or maybe always play it on manual toggle for the "wow" effect?
+                const curtainOverlay = document.getElementById('curtain-overlay');
+                if (curtainOverlay) {
+                    curtainOverlay.style.display = 'flex';
+                    setTimeout(() => {
+                        curtainOverlay.style.display = 'none';
+                    }, 3500);
+                }
+            } else {
+                document.body.classList.remove('theme-museum');
+            }
+
+            showToast(enabled ? "Thème Musée activé ! 🏛️" : "Thème Musée désactivé");
         };
     }
 
