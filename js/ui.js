@@ -253,6 +253,9 @@ export async function checkAndShowConsent(onAccept) {
         background: var(--bg-card);
         width: 90%;
         max-width: 500px;
+        max-height: 85vh;
+        display: flex;
+        flex-direction: column;
         border-radius: 20px;
         padding: var(--spacing-lg);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
@@ -261,31 +264,35 @@ export async function checkAndShowConsent(onAccept) {
     `;
 
     const bannerContent = (shouldForce && bannerData) ? `
-        <div style="text-align: center; margin-bottom: 20px;">
+        <div style="text-align: center; margin-bottom: 20px; flex-shrink: 0;">
             <div style="font-size: 3rem; margin-bottom: 10px;">🎭🏛️</div>
             <h2 style="color: var(--accent-gold); font-size: 1.6rem; margin-bottom: 10px;">${bannerData.title || "Exposition Beerdex"}</h2>
         </div>
-        <div style="color: var(--text-primary); line-height: 1.6; font-size: 1.1rem; margin-bottom: 25px; text-align: center; background: rgba(255,192,0,0.1); padding: 20px; border-radius: 12px; border: 1px solid var(--accent-gold); font-family: 'Playfair Display', serif;">
-            ${(bannerData.message || "").replace(/\n/g, '<br>')}
+        <div style="overflow-y: auto; flex: 1; padding-right: 5px; margin-bottom: 10px;">
+            <div style="color: var(--text-primary); line-height: 1.6; font-size: 1.1rem; margin-bottom: 25px; text-align: center; background: rgba(255,192,0,0.1); padding: 20px; border-radius: 12px; border: 1px solid var(--accent-gold); font-family: 'Playfair Display', serif;">
+                ${(bannerData.message || "").replace(/\n/g, '<br>')}
+            </div>
         </div>
     ` : `
-        <div style="text-align: center; margin-bottom: 20px;">
+        <div style="text-align: center; margin-bottom: 20px; flex-shrink: 0;">
             <div style="font-size: 3rem; margin-bottom: 10px;">🍻</div>
             <h2 style="color: var(--accent-gold); font-size: 1.6rem; margin-bottom: 10px;">Bienvenue sur Beerdex</h2>
         </div>
-        <div style="color: var(--text-secondary); line-height: 1.5; font-size: 0.95rem; margin-bottom: 25px; text-align: justify; background: var(--bg-dark); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color);">
-            <p style="margin-bottom: 15px; font-weight: bold; color: var(--text-primary);">Afin d'utiliser l'application, merci de lire et d'accepter nos conditions :</p>
-            <ul style="padding-left: 20px; list-style-type: '👉 ';">
-                <li style="margin-bottom: 10px;"><strong>Âge légal :</strong> Vous reconnaissez avoir l'âge légal pour consommer de l'alcool dans votre pays de résidence.</li>
-                <li style="margin-bottom: 10px;"><strong>Prévention :</strong> L'abus d'alcool est dangereux pour la santé, à consommer avec modération et responsabilité.</li>
-                <li><strong>Statistiques d'Usage :</strong> Nous collectons des données anonymes (via Google Analytics) pour analyser l'utilisation de l'app et améliorer l'expérience. Ces données sont 100% privées et ne sont en aucun cas vendues à des tiers.</li>
-            </ul>
+        <div style="overflow-y: auto; flex: 1; padding-right: 5px; margin-bottom: 10px;">
+            <div style="color: var(--text-secondary); line-height: 1.5; font-size: 0.95rem; margin-bottom: 25px; text-align: justify; background: var(--bg-dark); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color);">
+                <p style="margin-bottom: 15px; font-weight: bold; color: var(--text-primary);">Afin d'utiliser l'application, merci de lire et d'accepter nos conditions :</p>
+                <ul style="padding-left: 20px; list-style-type: '👉 ';">
+                    <li style="margin-bottom: 10px;"><strong>Âge légal :</strong> Vous reconnaissez avoir l'âge légal pour consommer de l'alcool dans votre pays de résidence.</li>
+                    <li style="margin-bottom: 10px;"><strong>Prévention :</strong> L'abus d'alcool est dangereux pour la santé, à consommer avec modération et responsabilité.</li>
+                    <li><strong>Statistiques d'Usage :</strong> Nous collectons des données anonymes (via Google Analytics) pour analyser l'utilisation de l'app et améliorer l'expérience. Ces données sont 100% privées et ne sont en aucun cas vendues à des tiers.</li>
+                </ul>
+            </div>
         </div>
     `;
 
     wrapper.innerHTML = `
         ${bannerContent}
-        <div style="display: flex; justify-content: center; width: 100%; margin-top: 20px;">
+        <div style="display: flex; justify-content: center; width: 100%; margin-top: 10px; flex-shrink: 0;">
             <button id="btn-accept-consent" class="btn-primary" style="font-size: 1.1rem; padding: 16px 40px; width: auto; min-width: 250px; margin-top: 0; box-shadow: 0 4px 15px rgba(255,192,0,0.3);">
                 ${(shouldForce && bannerData && bannerData.button) ? bannerData.button : "J'accepte les conditions"}
             </button>
