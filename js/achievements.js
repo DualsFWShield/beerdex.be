@@ -58,7 +58,7 @@ const ACHIEVEMENTS = [
 
     // --- ALCOOL (ABV Constraints) --- (10)
     ...[
-        { id: 'abv_light', title: 'Eau Aromatisée', desc: 'Boire une bière < 2%', icon: '🥤', condition: (s) => s.minDegree > 0 && s.minDegree < 2, rarity: 'rare' },
+        { id: 'abv_light', title: 'Eau Aromatisée', desc: 'Boire une bière < 2%', icon: '🥤', condition: (s) => s.degrees.some(d => d > 0 && d < 2), rarity: 'rare' },
         { id: 'abv_std', title: 'Standard', desc: 'Boire une bière à 5%', icon: '🖖', condition: (s) => s.hasDegree(5), rarity: 'commun' },
         { id: 'abv_strong', title: 'Costaud', desc: 'Boire une bière > 8%', icon: '💪', condition: (s) => s.maxDegree >= 8, rarity: 'rare' },
         { id: 'abv_heavy', title: 'Assommoir', desc: 'Boire une bière > 10%', icon: '🔨', condition: (s) => s.maxDegree >= 10, rarity: 'super_rare' },
