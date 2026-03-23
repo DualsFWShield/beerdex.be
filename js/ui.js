@@ -2767,7 +2767,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                     <div style="text-align:left;">
                         <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Activer le Calculateur</strong>
-                        <span style="font-size:0.8rem; color:#888;">Estimer le taux d\\'alcool</span>
+                        <span style="font-size:0.8rem; color:#888;">Estimer le taux d\'alcool</span>
                     </div>
                     <label class="switch">
                         <input type="checkbox" id="toggle-bac-enabled" ${Storage.getPreference('bac_enabled', false) ? 'checked' : ''}>
@@ -2793,7 +2793,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
 
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                         <div style="text-align:left;">
-                            <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Afficher sur l\\'Accueil</strong>
+                            <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Afficher sur l\'Accueil</strong>
                             <span style="font-size:0.8rem; color:#888;">Mini-widget de statut</span>
                         </div>
                         <label class="switch">
