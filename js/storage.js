@@ -31,6 +31,7 @@ export function saveBeerRating(id, ratingData) {
     }
 
     localStorage.setItem(STORAGE_KEY_RATINGS, JSON.stringify(data));
+    autoBackup();
 }
 
 // Get list of all IDs that have data (e.g. have been drunk/rated)
@@ -52,6 +53,7 @@ export function toggleFavorite(id) {
 
     data[id].favorite = !data[id].favorite;
     localStorage.setItem(STORAGE_KEY_RATINGS, JSON.stringify(data));
+    autoBackup();
     return data[id].favorite;
 }
 
@@ -79,12 +81,14 @@ export function saveCustomBeer(beer) {
     const beers = getCustomBeers();
     beers.unshift(beer); // Add to top
     localStorage.setItem(STORAGE_KEY_CUSTOM, JSON.stringify(beers));
+    autoBackup();
 }
 
 export function deleteCustomBeer(id) {
     let beers = getCustomBeers();
     beers = beers.filter(b => b.id !== id);
     localStorage.setItem(STORAGE_KEY_CUSTOM, JSON.stringify(beers));
+    autoBackup();
 }
 
 // --- Consumption Logic ---
@@ -131,6 +135,7 @@ export function addConsumption(id, volumeStr) {
     });
 
     localStorage.setItem(STORAGE_KEY_RATINGS, JSON.stringify(data));
+    autoBackup();
     return data[id];
 }
 
@@ -149,6 +154,7 @@ export function removeConsumption(id) {
             data[id].count = 0;
         }
         localStorage.setItem(STORAGE_KEY_RATINGS, JSON.stringify(data));
+        autoBackup();
         return data[id];
     }
 }
@@ -260,6 +266,16 @@ export function savePreference(key, value) {
 // --- Import / Export ---
 
 // --- Advanced Export / Sharing ---
+
+export function autoBackup() {
+    try {
+        const data = getExportDataString(true);
+        localStorage.setItem('beerdex_auto_backup', data);
+        localStorage.setItem('beerdex_auto_backup_date', Date.now().toString());
+    } catch (e) {
+        console.warn("Auto-backup failed:", e);
+    }
+}
 
 // --- Advanced Export / Sharing ---
 

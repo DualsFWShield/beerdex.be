@@ -1,0 +1,25 @@
+{
+  "events": [
+    {
+      "id": "museum-expo-2026",
+      "name": "Museum Exhibition",
+      "debug": false,
+      "date": {
+        "year": 2026,
+        "month": 2,
+        "day": 21
+      },
+      "automation": {
+        "museumTheme": true,
+        "forceBannerId": "museum-consent",
+        "autoActivateBAC": true
+      },
+      "banner": {
+        "id": "museum-consent",
+        "title": "Bienvenue sur l'édition spéciale musée de Beerdex",
+        "message": "Si vous êtes ici aujourd'hui vous faites sûrement parti des chefs-d'oeuvres de Tristan et Yasmina, sentez vous donc les bienvenus dans cette exposition bonus proposée par nos soins, vous êtes ici dans la galerie d'une spécialité belge dont vous pourrez en découvrir certaines facettes dans ce musée. Vous avez ici l'outil idéal pour en profiter pleinement. Nous vous souhaitons un agréable moment dans ce magnifique musée proposé par nos jeunes mariés.\n\nNous sommes ici pour profiter mais n'oublions pas qu'une bière brassée avec savoir se déguste avec sagesse.\n\nL'équipe Beerdex.",
+        "button": "Entrer dans le musée"
+      }
+    }
+  ]
+}

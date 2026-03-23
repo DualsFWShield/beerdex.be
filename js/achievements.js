@@ -202,7 +202,7 @@ export function checkAchievements(allBeers) {
 
     const userIds = Object.keys(userData);
     // Correctly filter unique count for consumed beers only
-    stats.uniqueCount = userIds.filter(id => (userData[id].count || 0) > 0).length;
+    stats.uniqueCount = userIds.filter(id => (userData[id].count || 0) > 0 || userData[id].score !== undefined).length;
 
     userIds.forEach(id => {
         const u = userData[id];
@@ -247,7 +247,7 @@ export function checkAchievements(allBeers) {
             if (beer) {
                 // Alcohol
                 if (beer.alcohol) {
-                    const deg = parseFloat(beer.alcohol.replace(/[^0-9.]/g, ''));
+                    const deg = parseFloat(beer.alcohol.replace(/,/g, '.').replace(/[^0-9.]/g, ''));
                     if (!isNaN(deg)) {
                         stats.degrees.push(deg);
                         if (deg > stats.maxDegree) stats.maxDegree = deg;

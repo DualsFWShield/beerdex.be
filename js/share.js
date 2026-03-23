@@ -239,7 +239,7 @@ export async function generateBeerCard(beer, rating, comment) {
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 40px "Outfit", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText("beerdex.dualsfwshield.be", width / 2, height - 100);
+    ctx.fillText("beerdex.be", width / 2, height - 100);
 
     // Tagline (FR)
     ctx.fillStyle = 'rgba(255,255,255,0.7)';
@@ -269,141 +269,195 @@ export async function generateWrappedCard(stats, favoriteBeer, year) {
 
     const displayYear = year || new Date().getFullYear();
 
-    // --- 1. Background (Premium Dark) ---
-    const grd = ctx.createLinearGradient(0, 0, width, height);
-    grd.addColorStop(0, '#0f0c29');
-    grd.addColorStop(0.5, '#302b63');
-    grd.addColorStop(1, '#24243e');
+    // --- 1. Background (Premium Ambient) ---
+    const grd = ctx.createLinearGradient(0, 0, 0, height);
+    grd.addColorStop(0, '#10061e'); // Deep purple night tone
+    grd.addColorStop(0.5, '#0b1324'); // Deep blue
+    grd.addColorStop(1, '#030205'); // Absolute dark
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, width, height);
 
-    // Noise/Texture
-    ctx.fillStyle = 'rgba(255,255,255,0.03)';
-    for (let i = 0; i < 5000; i++) {
-        ctx.fillRect(Math.random() * width, Math.random() * height, 2, 2);
+    // Decorative ambient glow orbs
+    const drawGlow = (gx, gy, gr, color) => {
+        const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr);
+        g.addColorStop(0, color);
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, width, height);
+    };
+    drawGlow(width * 0.2, 0, 900, 'rgba(138, 43, 226, 0.15)'); // Purple top-left
+    drawGlow(width * 0.8, height, 1000, 'rgba(255, 192, 0, 0.1)'); // Gold bottom-right
+
+    // Starry Noise/Texture
+    ctx.fillStyle = 'rgba(255,255,255,0.025)';
+    for (let i = 0; i < 6000; i++) {
+        const s = Math.random() * 2 + 1;
+        ctx.fillRect(Math.random() * width, Math.random() * height, s, s);
     }
 
     // --- 2. Header ---
+    ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
     ctx.fillStyle = '#FFC000'; // Gold
-    ctx.font = 'bold 120px "Russo One", sans-serif';
-    ctx.fillText("WRAPPED", width / 2, 170); // Moved UP
+    ctx.font = 'bold 130px "Russo One", sans-serif';
+    ctx.fillText("WRAPPED", width / 2, 140);
+    
+    // Decorator line
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.fillRect(width / 2 - 200, 210, 400, 2);
 
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = '300 40px "Outfit", sans-serif';
-    ctx.letterSpacing = "10px";
-    ctx.fillText(`${displayYear} EDITION`, width / 2, 230); // Moved UP
+    ctx.font = '300 36px "Outfit", sans-serif';
+    ctx.letterSpacing = "12px";
+    ctx.fillText(`${displayYear} EDITION`, width / 2, 240);
+    ctx.letterSpacing = "0px"; // Reset
 
-    // --- 3. Stats Grid (Bento Style) ---
-    const statsY = 290; // Moved UP
-    const statsH = 280;
-
-    const drawCard = (x, y, w, h, title, value, sub) => {
-        // Card Bg
-        ctx.fillStyle = 'rgba(255,255,255,0.05)';
-        drawRoundedRect(ctx, x, y, w, h, 30, 'rgba(255,255,255,0.05)');
-        // Border
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    // --- 3. Bento Grid Helper ---
+    const drawCard = (x, y, w, h, title, value, sub, iconFallback = '⭐') => {
+        // Card Background
+        ctx.fillStyle = 'rgba(255,255,255,0.04)';
+        drawRoundedRect(ctx, x, y, w, h, 24, ctx.fillStyle);
+        
+        // Subtle Border
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
         ctx.stroke();
 
-        // Content
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#AAAAAA';
-        ctx.font = 'bold 26px "Outfit", sans-serif';
-        ctx.fillText(title.toUpperCase(), x + w / 2, y + 60);
+        ctx.textBaseline = 'middle';
+
+        // Title Row
+        ctx.fillStyle = 'rgba(255, 192, 0, 0.15)';
+        ctx.beginPath();
+        ctx.arc(x + 45, y + 45, 20, 0, Math.PI * 2);
+        ctx.fill();
 
         ctx.fillStyle = '#FFC000';
-        // Auto-fit text for long style names (e.g. mixed types)
-        fitText(ctx, value, x + w / 2, y + 150, w - 40, 80);
+        ctx.font = '20px "Outfit"';
+        ctx.textAlign = 'center';
+        ctx.fillText(iconFallback, x + 45, y + 47);
 
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#BBBBBB';
+        ctx.font = 'bold 22px "Outfit", sans-serif';
+        ctx.fillText(title.toUpperCase(), x + 75, y + 45);
+
+        // Value (Center aligned within the card)
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#FFC000';
+        // Sub gets drawn at y + h - 40. Midpoint between title line (y+45) and sub (y+h-40) is generally y + h/2.
+        fitText(ctx, value ? String(value) : "?", x + w / 2, y + h / 2 + 10, w - 30, 70);
+
+        // Subtitle
         if (sub) {
             ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'italic 24px "Outfit", sans-serif';
-            ctx.fillText(sub, x + w / 2, y + 210);
+            ctx.font = 'italic 22px "Outfit", sans-serif';
+            ctx.fillText(sub, x + w / 2, y + h - 35);
         }
     };
 
-    // Liters Card
-    drawCard(80, statsY, 440, statsH, "Volume Total", stats.totalLiters + "L", stats.equivalence.label.split(' ')[0] + " Bouteilles d'eau");
+    // --- ROW 1: General Stats ---
+    const r1Y = 320;
+    const cardH = 220;
+    const halfW = 440;
+    
+    // Volume Card
+    let volSub = stats.equivalence && stats.equivalence.label ? stats.equivalence.label.split(' ')[0] + " Bouteilles d'eau" : "Incroyable !";
+    drawCard(80, r1Y, halfW, cardH, "Volume Total", stats.totalLiters + "L", volSub, '🌊');
 
     // Unique Beers Card
-    drawCard(560, statsY, 440, statsH, "Découvertes", stats.uniqueBeers, "Bières Uniques");
+    drawCard(560, r1Y, halfW, cardH, "Découvertes", stats.uniqueBeers, "Bières Uniques", '🧭');
 
-    // --- 4. Favorite Beer Spotlight ---
-    const spotY = 640; // Moved UP
-    const spotH = 550;
+    // --- ROW 2: Spotlight ---
+    const spotY = 570;
+    const spotH = 500;
 
-    // Glow
-    const g = ctx.createRadialGradient(width / 2, spotY + 250, 0, width / 2, spotY + 250, 400);
-    g.addColorStop(0, 'rgba(255, 192, 0, 0.15)');
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g;
+    // Spotlight Backglow
+    const sg = ctx.createRadialGradient(width / 2, spotY + 230, 0, width / 2, spotY + 230, 350);
+    sg.addColorStop(0, 'rgba(255, 192, 0, 0.12)');
+    sg.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = sg;
     ctx.fillRect(0, spotY, width, spotH);
 
+    ctx.textAlign = 'center';
     ctx.fillStyle = '#FFC000';
-    ctx.font = 'bold 36px "Outfit", sans-serif';
-    ctx.fillText("TOP BIÈRE", width / 2, spotY);
+    ctx.font = 'bold 30px "Outfit", sans-serif';
+    ctx.letterSpacing = "6px";
+    ctx.fillText("TOP BIÈRE", width / 2, spotY + 20);
+    ctx.letterSpacing = "0px";
 
-    // Image
+    // Bottle Image
+    let textY = spotY + 440; 
     if (favoriteBeer && favoriteBeer.image) {
         try {
             const img = await loadImage(favoriteBeer.image);
-            const imgH = 460; // Slightly larger
+            const imgH = 350; 
             const imgW = imgH * (img.width / img.height);
 
             ctx.save();
-            ctx.shadowColor = "rgba(0,0,0,0.5)";
-            ctx.shadowBlur = 30;
-            ctx.shadowOffsetY = 20;
-            drawImageProp(ctx, img, 0, 0, img.width, img.height, (width / 2) - (imgW / 2), spotY + 40, imgW, imgH);
+            ctx.shadowColor = "rgba(0,0,0,0.6)";
+            ctx.shadowBlur = 40;
+            ctx.shadowOffsetY = 25;
+            drawImageProp(ctx, img, 0, 0, img.width, img.height, (width / 2) - (imgW / 2), spotY + 60, imgW, imgH);
             ctx.restore();
-        } catch (e) { /* Ignore */ }
+        } catch (e) { /* fallback empty */ }
+    } else {
+        ctx.fillStyle = '#444';
+        ctx.font = '100px "Outfit"';
+        ctx.fillText('🍺', width / 2, spotY + 230);
     }
 
     // Name
-    const textY = spotY + 580; // Moved DOWN to avoid overlap with bottle
-    ctx.textAlign = 'center';
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 55px "Russo One", sans-serif';
-    fitText(ctx, favoriteBeer ? favoriteBeer.title || favoriteBeer.name : "Aucune", width / 2, textY, 900, 55);
+    ctx.font = 'bold 50px "Russo One", sans-serif';
+    fitText(ctx, favoriteBeer ? favoriteBeer.title || favoriteBeer.name : "Aucune", width / 2, textY, 900, 50);
 
     ctx.fillStyle = '#AAAAAA';
-    ctx.font = '28px "Outfit", sans-serif';
-    ctx.fillText(`Bue ${stats.favoriteBeer ? stats.favoriteBeer.count : 0} fois`, width / 2, textY + 70);
+    ctx.font = 'italic 26px "Outfit", sans-serif';
+    ctx.fillText(`Dégustée ${favoriteBeer ? favoriteBeer.count : 0} fois`, width / 2, textY + 50);
+
+    // --- ROW 3: Detailed Stats ---
+    const r3Y = 1110;
+
+    let brewText = stats.favoriteBrewery ? stats.favoriteBrewery[0] : "Inconnue";
+    let brewSub = stats.favoriteBrewery ? `${stats.favoriteBrewery[1]} bières` : "Plus de données requises";
+    drawCard(80, r3Y, halfW, cardH, "Top Brasserie", brewText, brewSub, '🏭');
+
+    let monthText = stats.topMonth ? stats.topMonth.name : "Inconnu";
+    let monthSub = stats.topMonth ? `Mois très festif (${stats.topMonth.count})` : "Plus de données requises";
+    drawCard(560, r3Y, halfW, cardH, "Mois Festif", monthText, monthSub, '📅');
+
+    // --- ROW 4: Style ---
+    const r4Y = 1360;
+    drawCard(80, r4Y, 920, 200, "Style Préféré", stats.favoriteStyle || "Inconnu", "Vous avez du beau goût !", '🏆');
 
 
-    // --- 5. Favorite Style (Bottom Wide Card) ---
-    // Moved up to center better between Top Beer and Footer
-    const styleCardY = 1340;
-    drawCard(80, styleCardY, 920, 220, "Style Préféré", stats.favoriteStyle, "Vous avez du goût !");
-
-    // --- 6. Footer ---
-    const footerY = height - 100;
+    // --- 5. Footer ---
+    const footerY = 1750;
 
     // Logo
     try {
         const logo = await loadImage(LOGO_PATH);
         const logoW = 100;
         const logoH = logoW * (logo.height / logo.width);
-        // Draw logo centered
-        drawImageProp(ctx, logo, 0, 0, logo.width, logo.height, (width / 2) - (logoW / 2), footerY - 200, logoW, logoH);
+        drawImageProp(ctx, logo, 0, 0, logo.width, logo.height, (width / 2) - (logoW / 2), footerY - 100, logoW, logoH);
     } catch (e) {
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 50px "Russo One", sans-serif';
-        ctx.fillText("BEERDEX", width / 2, footerY - 150);
+        ctx.font = 'bold 45px "Russo One", sans-serif';
+        ctx.fillText("BEERDEX", width / 2, footerY - 50);
     }
 
     // URL
     ctx.fillStyle = '#FFC000';
     ctx.font = 'bold 36px "Russo One", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText("beerdex.dualsfwshield.be", width / 2, footerY - 40);
+    ctx.fillText("beerdex.be", width / 2, footerY + 30);
 
     // Tagline
-    ctx.fillStyle = 'rgba(255,255,255,0.7)';
-    ctx.font = 'italic 26px "Outfit", sans-serif';
-    ctx.fillText("Disponible sur Android et iOS", width / 2, footerY + 10);
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.font = 'italic 24px "Outfit", sans-serif';
+    ctx.fillText("Disponible sur Android et iOS", width / 2, footerY + 80);
+
+    // Restore default baseline just to be safe for other generations
+    ctx.textBaseline = 'alphabetic';
 
     return new Promise(resolve => {
         canvas.toBlob(blob => {

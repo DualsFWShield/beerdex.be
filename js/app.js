@@ -79,6 +79,9 @@ async function init() {
         // Check Consent -> which checks Welcome
         UI.checkAndShowConsent();
 
+        // Check Auto Backup
+        UI.checkAutoBackup();
+
         // --- API AUTO-ACTION CHECK ---
         API.start(() => state.beers);
 
@@ -627,7 +630,12 @@ function applyFilters(beers, filters) {
     };
 
     // Type & Brewery
-    if (filters.type && filters.type !== 'All') result = result.filter(b => b.type === filters.type);
+    if (filters.type && filters.type.length > 0 && !filters.type.includes('All')) {
+        result = result.filter(b => filters.type.includes(b.type));
+    } else if (typeof filters.type === 'string' && filters.type !== 'All') {
+        // Fallback if somehow a string gets passed
+        result = result.filter(b => b.type === filters.type);
+    }
     if (filters.brewery && filters.brewery !== 'All') result = result.filter(b => b.brewery === filters.brewery);
 
     // Alcohol
@@ -748,6 +756,14 @@ window.addEventListener('DOMContentLoaded', init);
 
 // Global event listener for actions triggering achievements
 window.addEventListener('beerdex-action', () => {
+    // Re-sync custom beers into state.beers if one was just added
+    const customBeers = Storage.getCustomBeers();
+    customBeers.forEach(cb => {
+        if (!state.beers.find(b => b.id === cb.id)) {
+            state.beers.unshift(cb);
+        }
+    });
+
     Achievements.checkAchievements(state.beers);
 });
 
@@ -760,14 +776,14 @@ if ('serviceWorker' in navigator) {
                 console.log('ServiceWorker registration successful with scope: ', registration.scope);
 
                 if (registration.waiting) {
-                    notifyUpdate(registration.waiting);
+                    registration.waiting.postMessage({ type: 'SKIP_WAITING' });
                 }
 
                 registration.addEventListener('updatefound', () => {
                     const newWorker = registration.installing;
                     newWorker.addEventListener('statechange', () => {
                         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            notifyUpdate(newWorker);
+                            newWorker.postMessage({ type: 'SKIP_WAITING' });
                         }
                     });
                 });

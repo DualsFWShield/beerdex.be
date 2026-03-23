@@ -23,6 +23,42 @@ const toastQueue = [];
 let isToastActive = false;
 let modalCleanup = null;
 
+export function checkAutoBackup() {
+    const lastBackup = parseInt(Storage.getPreference('last_file_backup', '0'), 10);
+    const now = Date.now();
+    const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+    
+    // Only prompt if user has at least some data
+    const userData = Storage.getAllUserData();
+    if (Object.keys(userData).length === 0) return;
+
+    if (now - lastBackup > SEVEN_DAYS) {
+        const toast = document.createElement('div');
+        toast.className = 'update-toast';
+        toast.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#333; color:white; padding:15px; border-radius:8px; z-index:9999; display:flex; gap:10px; align-items:center; box-shadow:0 4px 10px rgba(0,0,0,0.5); border:1px solid var(--accent-gold);';
+        
+        toast.innerHTML = `
+            <span>💾 Pensez à sauvegarder vos données !</span>
+            <button id="btn-auto-backup" class="btn-primary" style="padding:5px 10px; font-size:0.8rem; margin:0;">Télécharger</button>
+            <button id="btn-dismiss-backup" style="background:none; border:none; color:#888; font-size:1.2rem; cursor:pointer;">&times;</button>
+        `;
+        document.body.appendChild(toast);
+
+        toast.querySelector('#btn-auto-backup').onclick = () => {
+            Storage.triggerExportFile('all');
+            Storage.savePreference('last_file_backup', now.toString());
+            toast.remove();
+            showToast("Backup téléchargé !");
+        };
+
+        toast.querySelector('#btn-dismiss-backup').onclick = () => {
+            Storage.savePreference('last_file_backup', now.toString()); // Dismiss for 7 days
+            toast.remove();
+        };
+    }
+}
+
+
 export function showToast(message, type = 'default') {
     toastQueue.push({ message, type });
     processToastQueue();
@@ -1013,153 +1049,179 @@ function createApiBeerCard(beer) {
 
 export function renderFilterModal(allBeers, activeFilters, onApply) {
     const wrapper = document.createElement('div');
-    wrapper.className = 'modal-content';
+    wrapper.className = 'modal-content filter-modal';
+    wrapper.style.padding = '0'; // Handle padding inside for layout
+    wrapper.style.display = 'flex';
+    wrapper.style.flexDirection = 'column';
+    wrapper.style.maxHeight = '85vh';
+    wrapper.style.overflow = 'hidden'; // Essential to prevent modal itself from scrolling, we scroll the form only
 
     // Extract unique values
-    const types = ['All', ...new Set(allBeers.map(b => b.type).filter(Boolean))].sort();
+    const types = [...new Set(allBeers.map(b => b.type).filter(Boolean))].sort();
     const breweries = ['All', ...new Set(allBeers.map(b => b.brewery).filter(Boolean))].sort();
     const prodVolumes = ['All', ...new Set(allBeers.map(b => b.production_volume).filter(Boolean))].sort();
     const distributions = ['All', ...new Set(allBeers.map(b => b.distribution).filter(Boolean))].sort();
 
-    // Helpers
     const createOptions = (list, selected) => list.map(item => `<option value="${item}" ${item === selected ? 'selected' : ''}>${item}</option>`).join('');
 
     wrapper.innerHTML = `
-        <h2 style="margin-bottom:20px;">Filtres & Tris</h2>
-        <form id="filter-form">
-            <!-- Sorting -->
-            <div class="stat-card mb-20">
-                <h4 style="margin-bottom:10px;">Trier par</h4>
-                <div style="display:flex; gap:10px;">
-                    <select name="sortBy" class="form-select" style="flex:2;">
-                        <option value="default" ${activeFilters.sortBy === 'default' ? 'selected' : ''}>Défaut (Favoris > Nom)</option>
-                        <option value="brewery" ${activeFilters.sortBy === 'brewery' ? 'selected' : ''}>Brasserie</option>
-                        <option value="alcohol" ${activeFilters.sortBy === 'alcohol' ? 'selected' : ''}>Alcool (%)</option>
-                        <option value="volume" ${activeFilters.sortBy === 'volume' ? 'selected' : ''}>Volume</option>
-                        <option value="rarity" ${activeFilters.sortBy === 'rarity' ? 'selected' : ''}>Rareté</option>
-                        <option value="community_rating" ${activeFilters.sortBy === 'community_rating' ? 'selected' : ''}>Note Communauté</option>
-                    </select>
-                    <select name="sortOrder" class="form-select" style="flex:1;">
-                        <option value="asc" ${activeFilters.sortOrder === 'asc' ? 'selected' : ''}>⬆️ Croissant</option>
-                        <option value="desc" ${activeFilters.sortOrder === 'desc' ? 'selected' : ''}>⬇️ Décroissant</option>
-                    </select>
+        <!-- HEADER -->
+        <div style="background:var(--bg-card); padding:15px 20px; border-bottom:1px solid rgba(255,255,255,0.1); border-radius:12px 12px 0 0; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+            <h2 style="margin:0; font-size:1.4rem;">Filtres & Tris</h2>
+            <button type="button" id="btn-reset-top" style="background:none; border:none; color:var(--accent-gold); font-size:0.9rem; cursor:pointer; font-weight:bold;">Réinitialiser</button>
+        </div>
+
+        <!-- TABS -->
+        <div class="filter-tabs" style="display:flex; overflow-x:auto; gap:10px; padding:15px 20px; scrollbar-width:none; flex-shrink:0; align-items:center;">
+            <button type="button" class="ftab active" data-tab="tab-gen" style="background:var(--accent-gold); color:#000; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">Général</button>
+            <button type="button" class="ftab" data-tab="tab-tri" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">Tri & Notes</button>
+            <button type="button" class="ftab" data-tab="tab-attr" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">Attributs</button>
+        </div>
+
+        <!-- SCROLLING FORM -->
+        <form id="filter-form" style="padding:5px 20px 20px 20px; overflow-y:auto; flex-grow:1; display:flex; flex-direction:column; gap:20px;">
+            
+            <!-- TAB: GENERAL -->
+            <div id="tab-gen" class="tab-pane">
+                <div class="stat-card mb-20" style="margin-bottom:15px;">
+                    <h4 style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                        Type de bière 
+                        <span style="font-size:0.8rem; color:#888; font-weight:normal;">(Plusieurs)</span>
+                    </h4>
+                    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                        ${types.map(t => {
+                            const isChecked = activeFilters.type && activeFilters.type.includes(t);
+                            return `
+                                <label style="display:flex; align-items:center; gap:6px; background:${isChecked ? 'rgba(255,192,0,0.2)' : 'rgba(255,255,255,0.05)'}; padding:6px 12px; border-radius:15px; cursor:pointer; border:1px solid ${isChecked ? 'var(--accent-gold)' : 'transparent'}; transition:all 0.2s;">
+                                    <input type="checkbox" class="cb-type" value="${t}" ${isChecked ? 'checked' : ''} style="display:none;">
+                                    <span style="font-size:0.85rem; color:${isChecked ? 'var(--accent-gold)' : '#fff'};">${t}</span>
+                                </label>
+                            `;
+                        }).join('')}
+                    </div>
                 </div>
-                
-                <div style="margin-top:10px; display:flex; flex-direction:column; gap:8px;">
-                     <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:8px;">
-                        <label for="onlyFavorites" style="font-size:0.9rem; margin:0;">⭐ Favoris Uniquement</label>
-                        <input type="checkbox" name="onlyFavorites" id="onlyFavorites" ${activeFilters.onlyFavorites ? 'checked' : ''} style="width:20px; height:20px;">
+                <!-- Rareté -->
+                <div class="stat-card mb-20" style="margin-bottom:15px;">
+                    <h4 style="margin-bottom:10px;">Rareté</h4>
+                    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                        ${['base', 'commun', 'rare', 'super_rare', 'epique', 'mythique', 'legendaire', 'ultra_legendaire'].map(r => `
+                            <label style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.05); padding:6px 12px; border-radius:15px; cursor:pointer; border:1px solid var(--rarity-${r});">
+                                <input type="checkbox" class="cb-rarity" value="${r}" ${activeFilters.rarity && activeFilters.rarity.includes(r) ? 'checked' : ''} style="display:none;">
+                                <span style="font-size:0.8rem; text-transform:capitalize; color:#fff;">${r.replace(/_/g, ' ')}</span>
+                            </label>
+                        `).join('')}
                     </div>
-                     <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:8px;">
-                        <label for="ignoreFavorites" style="font-size:0.9rem; margin:0; color:#aaa;">🚫 Ignorer le tri favoris</label>
-                        <input type="checkbox" name="ignoreFavorites" id="ignoreFavorites" ${activeFilters.ignoreFavorites ? 'checked' : ''} style="width:20px; height:20px;">
-                    </div>
+                </div>
+                <div class="form-group stat-card mb-20">
+                    <h4 style="margin-bottom:10px;">Brasserie</h4>
+                    <select name="brewery" class="form-select">${createOptions(breweries, activeFilters.brewery || 'All')}</select>
+                </div>
+                <div class="form-group stat-card mb-20">
+                     <label class="form-group" style="display:flex; align-items:center; gap:10px; cursor:pointer; margin:0;">
+                        <input type="checkbox" name="onlyCustom" ${activeFilters.onlyCustom ? 'checked' : ''} style="width:20px; height:20px;">
+                        <span style="font-weight:bold; color:var(--accent-gold);">Mes Créations Uniquement</span>
+                    </label>
                 </div>
             </div>
 
-            <!-- Rarity Filter -->
-            <div class="stat-card mb-20">
-                <h4 style="margin-bottom:10px;">Rareté</h4>
-                <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                    ${['base', 'commun', 'rare', 'super_rare', 'epique', 'mythique', 'legendaire', 'ultra_legendaire'].map(r => `
-                        <label style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.05); padding:5px 10px; border-radius:15px; cursor:pointer; border:1px solid var(--rarity-${r});">
-                            <input type="checkbox" class="cb-rarity" value="${r}" ${activeFilters.rarity && activeFilters.rarity.includes(r) ? 'checked' : ''}>
-                            <span style="font-size:0.8rem; text-transform:capitalize; color:#fff;">${r.replace(/_/g, ' ')}</span>
+            <!-- TAB: TRI ET NOTES -->
+            <div id="tab-tri" class="tab-pane" style="display:none;">
+                <div class="stat-card mb-20" style="margin-bottom:15px;">
+                    <h4 style="margin-bottom:10px;">Trier par</h4>
+                    <div style="display:flex; gap:10px;">
+                        <select name="sortBy" class="form-select" style="flex:2;">
+                            <option value="default" ${activeFilters.sortBy === 'default' ? 'selected' : ''}>Défaut (Favoris > Nom)</option>
+                            <option value="brewery" ${activeFilters.sortBy === 'brewery' ? 'selected' : ''}>Brasserie</option>
+                            <option value="alcohol" ${activeFilters.sortBy === 'alcohol' ? 'selected' : ''}>Alcool (%)</option>
+                            <option value="volume" ${activeFilters.sortBy === 'volume' ? 'selected' : ''}>Volume</option>
+                            <option value="rarity" ${activeFilters.sortBy === 'rarity' ? 'selected' : ''}>Rareté</option>
+                            <option value="community_rating" ${activeFilters.sortBy === 'community_rating' ? 'selected' : ''}>Note Communauté</option>
+                        </select>
+                        <select name="sortOrder" class="form-select" style="flex:1;">
+                            <option value="asc" ${activeFilters.sortOrder === 'asc' ? 'selected' : ''}>⬆️ Croiss.</option>
+                            <option value="desc" ${activeFilters.sortOrder === 'desc' ? 'selected' : ''}>⬇️ Décroiss.</option>
+                        </select>
+                    </div>
+                    
+                    <div style="margin-top:15px; display:flex; flex-direction:column; gap:8px;">
+                         <label style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:10px 12px; border-radius:8px; cursor:pointer;">
+                            <span style="font-size:0.95rem;">⭐ Favoris Uniquement</span>
+                            <input type="checkbox" name="onlyFavorites" id="onlyFavorites" ${activeFilters.onlyFavorites ? 'checked' : ''} style="width:20px; height:20px;">
                         </label>
-                    `).join('')}
+                         <label style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:10px 12px; border-radius:8px; cursor:pointer;">
+                            <span style="font-size:0.95rem; color:#aaa;">🚫 Ignorer le tri favoris</span>
+                            <input type="checkbox" name="ignoreFavorites" id="ignoreFavorites" ${activeFilters.ignoreFavorites ? 'checked' : ''} style="width:20px; height:20px;">
+                        </label>
+                    </div>
+                </div>
+
+                <div class="stat-card mb-20">
+                    <h4 style="margin-bottom:10px;">Notes Minimales</h4>
+                    <div class="form-group" style="margin-bottom:15px;">
+                        <label class="form-label" style="display:flex; justify-content:space-between;">Note Perso <span><span id="rate-val">${activeFilters.minRating || 0}</span>/20</span></label>
+                        <input type="range" name="minRating" class="form-input" min="0" max="20" step="1" value="${activeFilters.minRating || 0}" 
+                            oninput="document.getElementById('rate-val').innerText = this.value" style="padding:0; height:30px;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="display:flex; justify-content:space-between;">Note Communauté <span><span id="comm-rate-val">${activeFilters.community_rating || 0}</span>/5</span></label>
+                        <input type="range" name="community_rating" class="form-input" min="0" max="5" step="0.1" value="${activeFilters.community_rating || 0}" 
+                            oninput="document.getElementById('comm-rate-val').innerText = this.value" style="padding:0; height:30px;">
+                    </div>
                 </div>
             </div>
 
-            <!-- New Filters: Attributes -->
-            <div class="stat-card mb-20">
-                <h4 style="margin-bottom:10px;">Attributs</h4>
-                
-                <div class="form-group">
-                    <label class="form-label">Volume Production</label>
-                    <select name="production_volume" class="form-select">${createOptions(prodVolumes, activeFilters.production_volume || 'All')}</select>
+            <!-- TAB: ATTRIBUTS -->
+            <div id="tab-attr" class="tab-pane" style="display:none;">
+                <div class="stat-card mb-20" style="margin-bottom:15px;">
+                    <h4 style="margin-bottom:10px;">Alcool & Volume</h4>
+                    <div class="form-group" style="margin-bottom:15px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;">
+                        <label class="form-label">Degré Alcool</label>
+                        <select id="alc-mode" name="alcMode" class="form-select" style="margin-bottom:10px;">
+                            <option value="max" ${activeFilters.alcMode === 'max' ? 'selected' : ''}>Maximum</option>
+                            <option value="range" ${activeFilters.alcMode === 'range' ? 'selected' : ''}>Plage (Min-Max)</option>
+                            <option value="exact" ${activeFilters.alcMode === 'exact' ? 'selected' : ''}>Exact</option>
+                        </select>
+                        <div id="alc-inputs"></div>
+                    </div>
+                    
+                    <div class="form-group" style="padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;">
+                        <label class="form-label">Volume (ml)</label>
+                        <select id="vol-mode" name="volMode" class="form-select" style="margin-bottom:10px;">
+                            <option value="any" ${!activeFilters.volMode || activeFilters.volMode === 'any' ? 'selected' : ''}>Peu importe</option>
+                            <option value="range" ${activeFilters.volMode === 'range' ? 'selected' : ''}>Plage</option>
+                            <option value="exact" ${activeFilters.volMode === 'exact' ? 'selected' : ''}>Exact</option>
+                        </select>
+                        <div id="vol-inputs"></div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Distribution</label>
-                    <select name="distribution" class="form-select">${createOptions(distributions, activeFilters.distribution || 'All')}</select>
-                </div>
-
-                <div class="form-group" style="padding:10px; background:rgba(255,255,255,0.05); border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
-                    <label for="barrel_aged" style="font-size:0.9rem; margin:0;">🪵 Vieillie en fût</label>
-                    <input type="checkbox" name="barrel_aged" id="barrel_aged" ${activeFilters.barrel_aged ? 'checked' : ''} style="width:20px; height:20px;">
-                </div>
-
-                <div class="form-group" style="margin-top:10px;">
-                    <label class="form-label">Ingrédients (Recherche)</label>
-                    <input type="text" name="ingredients" class="form-input" placeholder="Ex: Coriandre, Cerise..." value="${activeFilters.ingredients || ''}">
+                <div class="stat-card mb-20">
+                    <h4 style="margin-bottom:10px;">Production</h4>
+                    <div class="form-group" style="margin-bottom:10px;">
+                        <label class="form-label">Volume Production</label>
+                        <select name="production_volume" class="form-select">${createOptions(prodVolumes, activeFilters.production_volume || 'All')}</select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:15px;">
+                        <label class="form-label">Distribution</label>
+                        <select name="distribution" class="form-select">${createOptions(distributions, activeFilters.distribution || 'All')}</select>
+                    </div>
+                    <label style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:10px 12px; border-radius:8px; cursor:pointer;">
+                        <span style="font-size:0.95rem;">🪵 Vieillie en fût</span>
+                        <input type="checkbox" name="barrel_aged" id="barrel_aged" ${activeFilters.barrel_aged ? 'checked' : ''} style="width:20px; height:20px;">
+                    </label>
+                    <div class="form-group" style="margin-top:15px;">
+                        <label class="form-label">Ingrédients</label>
+                        <input type="text" name="ingredients" class="form-input" placeholder="Ex: Coriandre, Cerise..." value="${activeFilters.ingredients || ''}">
+                    </div>
                 </div>
             </div>
 
-            <!-- New Filters: Ratings -->
-             <div class="stat-card mb-20">
-                <h4 style="margin-bottom:10px;">Notes</h4>
-                
-                 <div class="form-group">
-                    <label class="form-label">Note Perso Min (<span id="rate-val">${activeFilters.minRating || 0}</span>/20)</label>
-                    <input type="range" name="minRating" class="form-input" min="0" max="20" step="1" value="${activeFilters.minRating || 0}" 
-                        oninput="document.getElementById('rate-val').innerText = this.value">
-                </div>
-
-                 <div class="form-group">
-                    <label class="form-label">Note Communauté Min (<span id="comm-rate-val">${activeFilters.community_rating || 0}</span>/5)</label>
-                    <input type="range" name="community_rating" class="form-input" min="0" max="5" step="0.1" value="${activeFilters.community_rating || 0}" 
-                        oninput="document.getElementById('comm-rate-val').innerText = this.value">
-                </div>
-            </div>
-
-            <!-- Basic Filters -->
-            <div class="form-group">
-                <label class="form-label">Type</label>
-                <select name="type" class="form-select">${createOptions(types, activeFilters.type || 'All')}</select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Brasserie</label>
-                <select name="brewery" class="form-select">${createOptions(breweries, activeFilters.brewery || 'All')}</select>
-            </div>
-
-            <!-- Advanced Alcohol -->
-            <div class="form-group" style="padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;">
-                <label class="form-label">Degré Alcool</label>
-                <div style="display:flex; gap:10px; margin-bottom:10px;">
-                    <select id="alc-mode" name="alcMode" class="form-select">
-                        <option value="max" ${activeFilters.alcMode === 'max' ? 'selected' : ''}>Maximum</option>
-                        <option value="range" ${activeFilters.alcMode === 'range' ? 'selected' : ''}>Plage (Min-Max)</option>
-                        <option value="exact" ${activeFilters.alcMode === 'exact' ? 'selected' : ''}>Exact</option>
-                    </select>
-                </div>
-                <div id="alc-inputs"></div>
-            </div>
-
-            <!-- Advanced Volume -->
-            <div class="form-group" style="padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;">
-                <label class="form-label">Volume (ml)</label>
-                <div style="display:flex; gap:10px; margin-bottom:10px;">
-                    <select id="vol-mode" name="volMode" class="form-select">
-                        <option value="any" ${!activeFilters.volMode || activeFilters.volMode === 'any' ? 'selected' : ''}>Peu importe</option>
-                        <option value="range" ${activeFilters.volMode === 'range' ? 'selected' : ''}>Plage</option>
-                        <option value="exact" ${activeFilters.volMode === 'exact' ? 'selected' : ''}>Exact</option>
-                    </select>
-                </div>
-                <div id="vol-inputs"></div>
-            </div>
-
-            <div class="form-group" style="padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;">
-                 <label class="form-group" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-                    <input type="checkbox" name="onlyCustom" ${activeFilters.onlyCustom ? 'checked' : ''} style="width:20px; height:20px;">
-                    <span style="font-weight:bold; color:var(--accent-gold);">Mes Créations Uniquement</span>
-                </label>
-            </div>
-
-            <div style="display:flex; gap:10px; margin-top:20px;">
-                <button type="button" id="btn-reset-filters" class="form-input" style="flex:1; color:#aaa;">Réinitialiser</button>
-                <button type="submit" class="btn-primary" style="flex:2;">Appliquer</button>
-            </div>
         </form>
+
+        <!-- FOOTER -->
+        <div style="background:var(--bg-card); padding:15px 20px; border-top:1px solid rgba(255,255,255,0.1); border-radius:0 0 12px 12px; flex-shrink:0;">
+            <button type="submit" form="filter-form" class="btn-primary" style="margin:0; width:100%; font-size:1.1rem; box-shadow:0 -5px 20px rgba(0,0,0,0.5);">Appliquer les filtres</button>
+        </div>
     `;
 
     // Dynamic Alcohol Input logic
@@ -1171,16 +1233,16 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
             alcContainer.innerHTML = `
                 <div style="display:flex; align-items:center; gap:10px;">
                     <input type="range" name="alcMax" class="form-input" min="0" max="15" step="0.5" value="${activeFilters.alcMax || 15}" 
-                        oninput="document.getElementById('alc-display-max').innerText = this.value">
-                    <span style="min-width:40px;"><span id="alc-display-max">${activeFilters.alcMax || 15}</span>%</span>
+                        oninput="document.getElementById('alc-display-max').innerText = this.value" style="padding:0; height:30px; flex:1;">
+                    <span style="min-width:45px; text-align:right;"><span id="alc-display-max">${activeFilters.alcMax || 15}</span>%</span>
                 </div>
             `;
         } else if (mode === 'range') {
             alcContainer.innerHTML = `
-                <div style="display:flex; gap:5px;">
-                    <input type="number" name="alcMin" class="form-input" placeholder="Min" step="0.1" value="${activeFilters.alcMin || ''}">
-                    <span style="align-self:center;">à</span>
-                    <input type="number" name="alcMax" class="form-input" placeholder="Max" step="0.1" value="${activeFilters.alcMax || ''}">
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <input type="number" name="alcMin" class="form-input" placeholder="Min" step="0.1" value="${activeFilters.alcMin || ''}" style="flex:1;">
+                    <span>à</span>
+                    <input type="number" name="alcMax" class="form-input" placeholder="Max" step="0.1" value="${activeFilters.alcMax || ''}" style="flex:1;">
                 </div>
             `;
         } else if (mode === 'exact') {
@@ -1199,13 +1261,13 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
 
     const renderVolInputs = (mode) => {
         if (mode === 'any') {
-            volContainer.innerHTML = '<div style="color:#aaa; font-style:italic;">Tous les volumes</div>';
+            volContainer.innerHTML = '<div style="color:#aaa; font-style:italic; font-size:0.9rem;">Tous les volumes</div>';
         } else if (mode === 'range') {
             volContainer.innerHTML = `
-                 <div style="display:flex; gap:5px;">
-                    <input type="number" name="volMin" class="form-input" placeholder="Min (ml)" step="10" value="${activeFilters.volMin || ''}">
-                    <span style="align-self:center;">à</span>
-                    <input type="number" name="volMax" class="form-input" placeholder="Max (ml)" step="10" value="${activeFilters.volMax || ''}">
+                 <div style="display:flex; gap:10px; align-items:center;">
+                    <input type="number" name="volMin" class="form-input" placeholder="Min (ml)" step="10" value="${activeFilters.volMin || ''}" style="flex:1;">
+                    <span>à</span>
+                    <input type="number" name="volMax" class="form-input" placeholder="Max (ml)" step="10" value="${activeFilters.volMax || ''}" style="flex:1;">
                 </div>
             `;
         } else if (mode === 'exact') {
@@ -1218,18 +1280,54 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
     volModeSelect.onchange = (e) => renderVolInputs(e.target.value);
     renderVolInputs(activeFilters.volMode || 'any');
 
-    wrapper.querySelector('#btn-reset-filters').onclick = () => {
+    // Reset Button
+    wrapper.querySelector('#btn-reset-top').onclick = () => {
         onApply({});
         closeModal();
     };
+
+    // Tabs functionality
+    const tabs = wrapper.querySelectorAll('.ftab');
+    const panes = wrapper.querySelectorAll('.tab-pane');
+    tabs.forEach(tab => {
+        tab.onclick = () => {
+            tabs.forEach(t => { t.style.background = '#333'; t.style.color = '#fff'; });
+            tab.style.background = 'var(--accent-gold)';
+            tab.style.color = '#000';
+            const targetId = tab.getAttribute('data-tab');
+            panes.forEach(pane => {
+                pane.style.display = pane.id === targetId ? 'block' : 'none';
+            });
+        };
+    });
+
+    // Checkbox styling toggle on click (Type and Rarity)
+    wrapper.querySelectorAll('label > .cb-type').forEach(cb => {
+        cb.onchange = (e) => {
+            const label = e.target.closest('label');
+            const span = label.querySelector('span');
+            if (e.target.checked) {
+                label.style.background = 'rgba(255,192,0,0.2)';
+                label.style.borderColor = 'var(--accent-gold)';
+                span.style.color = 'var(--accent-gold)';
+            } else {
+                label.style.background = 'rgba(255,255,255,0.05)';
+                label.style.borderColor = 'transparent';
+                span.style.color = '#fff';
+            }
+        };
+    });
 
     wrapper.querySelector('form').onsubmit = (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
 
-        // Collect Rarity Checkboxes manually
+        // Collect Rarity & Type Checkboxes manually
         const rarity = [];
         wrapper.querySelectorAll('.cb-rarity:checked').forEach(cb => rarity.push(cb.value));
+        
+        const typeSelected = [];
+        wrapper.querySelectorAll('.cb-type:checked').forEach(cb => typeSelected.push(cb.value));
 
         const filters = Object.fromEntries(formData.entries());
         filters.onlyFavorites = formData.get('onlyFavorites') === 'on';
@@ -1237,6 +1335,7 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
         filters.onlyCustom = formData.get('onlyCustom') === 'on';
         filters.barrel_aged = formData.get('barrel_aged') === 'on';
         filters.rarity = rarity;
+        filters.type = typeSelected;
 
         onApply(filters);
         closeModal();
@@ -2200,6 +2299,10 @@ export function setScannerFeedback(message, isError = false) {
 
 export function renderStats(allBeers, userData, container) {
     const totalBeers = allBeers.length;
+    const customBeersCount = allBeers.filter(b => String(b.id).startsWith('CUSTOM_')).length;
+    const apiBeersCount = allBeers.filter(b => String(b.id).startsWith('API_') || String(b.id).startsWith('OFF_')).length;
+    const jsonBeersCount = Math.max(0, totalBeers - customBeersCount - apiBeersCount);
+    
     // Fix: Filter keys where count > 0
     const drunkCount = Object.values(userData).filter(u => (u.count || 0) > 0).length;
     const percentage = Math.round((drunkCount / totalBeers) * 100) || 0;
@@ -2247,8 +2350,18 @@ export function renderStats(allBeers, userData, container) {
                         </div>
                     </div>
                     <h2 style="color:${userRank.color}; margin-top:15px; font-family:'Russo One', sans-serif; letter-spacing:1px; text-shadow:0 0 10px ${userRank.color}33;">${userRank.name}</h2>
-                    <p style="font-size:0.85rem; color:#888; margin-top:5px;">Rang suivant: ${userRank.nextRankThresh - uniqueCount} bières</p>
+                    <p style="font-size:0.85rem; color:#888; margin-top:5px;">Rang suivant: ${Math.max(0, userRank.nextRankThresh - uniqueCount)} bières</p>
                     
+                    <div style="margin-top:20px; text-align:center; padding:15px; background:var(--bg-card); border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+                        <div style="font-size:0.85rem; color:#aaa; margin-bottom:5px; text-transform:uppercase; font-weight:bold;">Bières dans l'application</div>
+                        <div style="font-size:1.5rem; font-weight:bold; color:#FFF;">${totalBeers}</div>
+                        <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:10px; font-size:0.75rem;">
+                             <div style="color:#888; background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:10px;"><span style="font-weight:bold; color:#fff;">${jsonBeersCount}</span> JSON</div>
+                             <div style="color:#2196F3; background:rgba(33, 150, 243, 0.1); padding:2px 8px; border-radius:10px;"><span style="font-weight:bold;">${apiBeersCount}</span> API</div>
+                             <div style="color:var(--accent-gold); background:rgba(255, 192, 0, 0.1); padding:2px 8px; border-radius:10px;"><span style="font-weight:bold;">${customBeersCount}</span> Custom</div>
+                        </div>
+                    </div>
+
                     <div style="margin-top: 25px; padding: 15px; background: #222; border-radius: 12px; border: 1px solid #333;">
                         <span style="font-size: 0.8rem; color: #888; text-transform: uppercase;">Volume Total Bu 🍻</span>
                         <div style="font-size: 1.5rem; font-weight: bold; color: var(--text-primary); margin-top: 5px;">
@@ -4067,46 +4180,75 @@ export function renderMatchModal(allBeers) {
         tabQr.style.display = 'none';
         tabScan.style.display = 'none';
 
+        const getStrokeColor = (score) => {
+            if (score >= 60) return "#E91E63"; // High Match
+            if (score >= 30) return "#4CAF50"; // Green Match
+            if (score >= 10) return "#FF9800"; // Orange
+            return "#f44336"; // Low
+        };
+        const circleColor = getStrokeColor(results.score);
+
         viewResult.innerHTML = `
             <div style="text-align:center; margin-bottom:20px;">
-                <h3 style="color:var(--accent-gold); margin:0;">Match avec ${results.userName}</h3>
-                <div style="font-size:3rem; font-weight:bold; color:#FFF; margin:10px 0;">
-                    ${results.score}%
+                <h3 style="color:var(--accent-gold); margin:0; font-family:'Russo One', sans-serif;">Match avec ${results.userName}</h3>
+                
+                <div style="width:160px; height:160px; margin:20px auto; position:relative;">
+                    <svg viewBox="0 0 36 36" style="width:100%; height:100%; transform: rotate(-90deg);">
+                        <path class="circle-bg"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none" stroke="#222" stroke-width="3" />
+                        <path class="circle"
+                            stroke-dasharray="${results.score}, 100"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none" stroke="${circleColor}" stroke-width="3"
+                            style="transition: stroke-dasharray 1s ease-out;" />
+                    </svg>
+                    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center;">
+                        <span style="font-size:2.5rem; font-family:'Russo One', sans-serif; color:${circleColor}; text-shadow:0 0 15px ${circleColor}66;">${results.score}%</span>
+                        <span style="display:block; font-size:0.75rem; color:#888; text-transform:uppercase; letter-spacing:1px; margin-top:-5px;">Compatibilité</span>
+                    </div>
                 </div>
-                <div style="color:#aaa; font-size:0.9rem;">de compatibilité</div>
             </div>
 
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
-                <div style="background:#222; padding:10px; border-radius:8px;">
-                    <div style="font-size:1.5rem; font-weight:bold; color:#FFF;">${results.commonCount}</div>
-                    <div style="font-size:0.8rem; color:#888; white-space:nowrap;">En commun</div>
+                <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:15px; border-radius:12px; text-align:center;">
+                    <div style="font-size:2rem; font-weight:bold; color:#FFF;">${results.commonCount}</div>
+                    <div style="font-size:0.8rem; color:#aaa; text-transform:uppercase;">En commun</div>
                 </div>
-                 <div style="background:#222; padding:10px; border-radius:8px;">
-                    <div style="font-size:1.5rem; font-weight:bold; color:var(--accent-gold);">${results.friendTotal}</div>
-                    <div style="font-size:0.8rem; color:#888; white-space:nowrap;">Total Ami</div>
+                 <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:15px; border-radius:12px; text-align:center;">
+                    <div style="font-size:2rem; font-weight:bold; color:var(--accent-gold);">${results.friendTotal}</div>
+                    <div style="font-size:0.8rem; color:#aaa; text-transform:uppercase;">Total Ami</div>
                 </div>
             </div>
 
             ${results.commonCount > 0 ? `
             <div style="text-align:left; margin-bottom:20px;">
-                <strong style="color:#aaa; display:block; margin-bottom:5px;">Bières en commun (Top 5)</strong>
-                <div style="background:#111; padding:10px; border-radius:8px; font-size:0.9rem;">
-                    ${results.common.slice(0, 5).map(b => `<div style="margin-bottom:2px;">🍺 ${b.title}</div>`).join('')}
-                    ${results.common.length > 5 ? `<div style="color:#666; font-style:italic;">...et ${results.common.length - 5} autres</div>` : ''}
+                <strong style="color:var(--accent-gold); display:block; margin-bottom:10px; font-size:0.9rem; text-transform:uppercase; font-weight:bold;">Bières en commun (Top 5)</strong>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    ${results.common.slice(0, 5).map(b => `
+                        <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.05); padding:10px; border-radius:8px; display:flex; align-items:center; gap:12px;">
+                            ${b.image ? `<img src="${b.image}" style="height:35px; width:20px; object-fit:contain;">` : '<span style="font-size:1.2rem">🍻</span>'}
+                            <span style="font-weight:bold; font-size:0.95rem; color:#fff;">${b.title}</span>
+                        </div>`).join('')}
+                    ${results.common.length > 5 ? `<div style="color:#666; font-style:italic; text-align:center; font-size:0.85rem; margin-top:5px;">...et ${results.common.length - 5} autres partagées</div>` : ''}
                 </div>
             </div>
             ` : ''}
 
             ${results.discovery.length > 0 ? `
-            <div style="text-align:left;">
-                <strong style="color:var(--accent-gold); display:block; margin-bottom:5px;">À découvrir (Top 3)</strong>
-                <div style="background:#111; padding:10px; border-radius:8px; font-size:0.9rem;">
-                     ${results.discovery.slice(0, 3).map(b => `<div style="margin-bottom:2px;">⭐ ${b.title}</div>`).join('')}
+            <div style="text-align:left; margin-bottom:10px;">
+                <strong style="color:#2196F3; display:block; margin-bottom:10px; font-size:0.9rem; text-transform:uppercase; font-weight:bold;">Vos futures découvertes (Top 3)</strong>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                     ${results.discovery.slice(0, 3).map(b => `
+                        <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.05); padding:10px; border-radius:8px; display:flex; align-items:center; gap:12px;">
+                            ${b.image ? `<img src="${b.image}" style="height:35px; width:20px; object-fit:contain; filter:grayscale(1) opacity(0.6);">` : '<span style="font-size:1.2rem; filter:grayscale(1) opacity(0.6);">⭐</span>'}
+                            <span style="font-weight:bold; color:#ccc; font-size:0.95rem;">${b.title}</span>
+                        </div>`).join('')}
                 </div>
             </div>
             ` : ''}
             
-            <button id="btn-restart" class="form-input text-center mt-20" style="background:#333; margin-top:20px;">Nouveau Scan</button>
+            <button id="btn-restart" class="form-input text-center mt-20" style="background:#333; margin-top:25px; padding:15px; border-radius:12px; font-weight:bold; cursor:pointer;">Nouveau Match</button>
         `;
 
         wrapper.querySelector('#btn-restart').onclick = () => {

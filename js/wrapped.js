@@ -16,6 +16,10 @@ function calculateStats() {
     let topBeers = [];
     let styles = {};
     let months = {};
+    let breweries = {};
+    const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+
+    let uniqueCount = 0;
 
     Object.keys(userData).forEach(key => {
         const entry = userData[key];
@@ -37,6 +41,10 @@ function calculateStats() {
             console.warn(`[Wrapped] Beer not found for ID: ${beerId}`);
         }
 
+        if (entry.count > 0 || entry.rating || entry.favorite) {
+            uniqueCount++; // A unique beer interacted with
+        }
+
         if (entry.count > 0) {
             totalBeers += entry.count;
             if (beer) {
@@ -46,6 +54,11 @@ function calculateStats() {
                     image: beer.image,
                     id: beer.id
                 });
+                
+                if (beer.brewery) {
+                    const bname = beer.brewery.trim();
+                    breweries[bname] = (breweries[bname] || 0) + entry.count;
+                }
             }
 
             if (entry.history) {
@@ -84,6 +97,20 @@ function calculateStats() {
         favoriteStyle = winners.join(' & ');
     }
 
+    // Top Brewery
+    const sortedBreweries = Object.entries(breweries).sort((a, b) => b[1] - a[1]);
+    const favoriteBrewery = sortedBreweries.length > 0 ? sortedBreweries[0] : null;
+
+    // Top Month
+    const sortedMonths = Object.entries(months).sort((a, b) => b[1] - a[1]);
+    let topMonth = null;
+    if (sortedMonths.length > 0) {
+        topMonth = {
+            name: monthNames[parseInt(sortedMonths[0][0])],
+            count: sortedMonths[0][1]
+        };
+    }
+
     const totalLiters = Math.round(totalVolumeMl / 1000);
     const nbBottles = Math.round(totalVolumeMl / 500);
     let equivalence = { label: nbBottles + " bouteilles d'eau de 500ml", val: totalLiters };
@@ -105,8 +132,10 @@ function calculateStats() {
         totalLiters,
         favoriteBeer,
         favoriteStyle,
-        equivalence,
-        uniqueBeers: Object.keys(userData).length
+        favoriteBrewery,
+        topMonth,
+        uniqueBeers: uniqueCount,
+        equivalence
     };
 }
 
@@ -126,41 +155,93 @@ function renderStory(stats) {
             content: `
                 <div class="story-title animate-pop-in">BEERDEX<br>WRAPPED</div>
                 <div class="story-subtitle animate-slide-up" style="animation-delay:0.5s">Votre année en bières</div>
-                <div style="font-size:4rem; margin-top:20px;" class="animate-bounce"></div>
+                <div style="font-size:4rem; margin-top:20px;" class="animate-bounce">🎇</div>
             `
         },
         {
             bg: 'linear-gradient(135deg, #2c3e50 0%, #000000 100%)',
             content: `
                 <div class="story-stat-label animate-fade-in">Vous avez bu</div>
-                <div class="story-big-number animate-scale-up">${stats.totalLiters} <span style="font-size:2rem">Litres</span></div>
-                <div class="story-stat-sub animate-slide-up" style="animation-delay:0.3s">Soit environ</div>
-                <div class="story-fun-fact animate-pop-in" style="animation-delay:0.6s">${stats.equivalence.label}</div>
+                <div class="story-bento-card animate-scale-up" style="animation-delay:0.2s">
+                    <div class="story-big-number">${stats.totalLiters} <span style="font-size:2rem">L</span></div>
+                    <div class="story-stat-sub">Soit environ</div>
+                    <div class="story-fun-fact" style="font-size:1.1rem; color:var(--accent-gold); margin-top:10px;">🌊 ${stats.equivalence.label}</div>
+                </div>
             `
         },
+        {
+            bg: 'linear-gradient(135deg, #1b5e20 0%, #000000 100%)',
+            content: `
+                <div class="story-stat-label animate-fade-in">L'Aventurier</div>
+                <div class="story-bento-card animate-scale-up" style="animation-delay:0.2s">
+                    <div class="story-big-number" style="color:#a5d6a7;">${stats.totalBeers}</div>
+                    <div class="story-stat-sub" style="margin-bottom:15px;">Bières décapsulées</div>
+                    <div style="border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
+                        <span style="color:#fff;font-weight:bold;font-size:1.4rem;">🧭 ${stats.uniqueBeers}</span>
+                        <div style="font-size:0.9rem; color:#aaa;">Bières uniques</div>
+                    </div>
+                </div>
+            `
+        },
+        stats.topMonth ? {
+            bg: 'linear-gradient(135deg, #e65100 0%, #3e2723 100%)',
+            content: `
+                <div class="story-stat-label animate-fade-in">Mois Festif</div>
+                <div class="story-bento-card animate-scale-up" style="animation-delay:0.2s">
+                    <div style="font-size:3rem; margin-bottom:10px;">📅</div>
+                    <div class="story-big-text" style="color:#ffcc80;">${stats.topMonth.name}</div>
+                    <div class="story-stat-sub">${stats.topMonth.count} dégustations</div>
+                </div>
+            `
+        } : null,
+        stats.favoriteBrewery ? {
+            bg: 'linear-gradient(135deg, #311b92 0%, #000000 100%)',
+            content: `
+                <div class="story-stat-label animate-fade-in">Top Brasserie</div>
+                <div class="story-bento-card animate-scale-up" style="animation-delay:0.2s">
+                    <div style="font-size:3rem; margin-bottom:10px;">🏭</div>
+                    <div class="story-big-text" style="font-size:2.5rem; color:#b39ddb; margin:10px 0;">${stats.favoriteBrewery[0]}</div>
+                    <div class="story-stat-sub">Vous leur avez fait honneur ${stats.favoriteBrewery[1]} fois.</div>
+                </div>
+            `
+        } : null,
         stats.favoriteBeer ? {
             bg: 'linear-gradient(135deg, #4b1d1d 0%, #1a0505 100%)',
             content: `
                 <div class="story-stat-label animate-fade-in">Votre coup de ❤️</div>
-                ${stats.favoriteBeer.image ? `<img src="${stats.favoriteBeer.image}" class="story-beer-img animate-rotate-in">` : '<div style="font-size:5rem"></div>'}
-                <div class="story-beer-name animate-slide-up">${stats.favoriteBeer.name}</div>
-                <div class="story-stat-sub">Bue ${stats.favoriteBeer.count} fois</div>
+                <div style="position:relative; display:inline-block;" class="animate-rotate-in">
+                    <div class="story-glow-bg"></div>
+                    ${stats.favoriteBeer.image ? `<img src="${stats.favoriteBeer.image}" class="story-hero-img">` : '<div style="font-size:5rem; line-height:300px;">🍻</div>'}
+                </div>
+                <div class="story-bento-card animate-slide-up" style="animation-delay:0.4s; padding:15px; margin-top:0;">
+                    <div class="story-beer-name" style="font-size:1.6rem;">${stats.favoriteBeer.name}</div>
+                    <div class="story-stat-sub">Bue ${stats.favoriteBeer.count} fois</div>
+                </div>
             `
         } : null,
         {
             bg: 'linear-gradient(135deg, #5D4037 0%, #3E2723 100%)',
             content: `
-                <div class="story-stat-label animate-fade-in">Votre type préféré</div>
-                <div class="story-big-text animate-pop-in" style="color:var(--accent-gold);">${stats.favoriteStyle}</div>
-                <div class="story-stat-sub animate-slide-up">Vous avez du goût !</div>
+                <div class="story-stat-label animate-fade-in">Style Préféré</div>
+                <div class="story-bento-card animate-scale-up" style="animation-delay:0.2s">
+                    <div style="font-size:3rem; margin-bottom:10px;">🏆</div>
+                    <div class="story-big-text" style="color:var(--accent-gold);">${stats.favoriteStyle}</div>
+                    <div class="story-stat-sub">Vous avez du goût !</div>
+                </div>
             `
         },
         {
             bg: 'linear-gradient(135deg, #000000 0%, #111 100%)',
             content: `
-                <div class="story-title animate-pop-in">Merci !</div>
-                <div class="story-stat-sub" style="margin-top:20px;">Et rappelez-vous, une bonne bière se déguste avec sagesse.</div>
-                <button id="btn-share-wrapped" class="btn-primary animate-slide-up" style="margin-top:40px; background:var(--accent-gold); color:black;">Partager</button>
+                <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                    <div class="story-title animate-pop-in" style="margin-bottom:0.5rem;">Merci !</div>
+                    <div class="story-stat-sub animate-slide-up" style="animation-delay:0.3s; margin-bottom:2rem; font-size:1.1rem; max-width:280px;">Et rappelez-vous, une bonne bière se déguste avec sagesse.</div>
+                    
+                    <button id="btn-share-wrapped" class="btn-primary animate-scale-up" style="animation-delay:0.6s; background:var(--accent-gold); color:black; padding:18px 32px; font-size:1.2rem; display:flex; align-items:center; gap:12px; border-radius:16px; font-weight:bold; box-shadow:0 10px 20px rgba(255, 192, 0, 0.2);">
+                        <span>Partager ce bilan</span>
+                        <span>📸</span>
+                    </button>
+                </div>
             `
         }
     ].filter(s => s !== null);
