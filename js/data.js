@@ -6,7 +6,8 @@ const DATA_FILES = [
     'data/frenchbeer.json',
     'data/nlbeer.json',
     'data/usbeer.json',
-    'data/newbeer.json'
+    'data/newbeer.json',
+    'data/cobeer.json'
 ];
 
 export async function fetchAllBeers() {
