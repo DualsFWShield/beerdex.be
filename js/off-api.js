@@ -246,6 +246,26 @@ export async function searchProducts(query, page = 1) {
 }
 
 /**
+ * Fetches the total number of products in the 'beers' category from OFF.
+ * @returns {Promise<number>}
+ */
+export async function getTotalBeerCount() {
+    try {
+        const url = `https://world.openfoodfacts.org/category/beers.json?page_size=1`;
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: { 'User-Agent': 'Beerdex/1.0' }
+        });
+        if (!response.ok) return 0;
+        const data = await response.json();
+        return data.count || 0;
+    } catch (e) {
+        console.error("OFF Count API Error", e);
+        return 0;
+    }
+}
+
+/**
  * Simple heuristic to determine beer type from categories.
  */
 function detectType(text) {

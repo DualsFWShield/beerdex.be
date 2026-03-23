@@ -41,7 +41,7 @@ function calculateStats() {
             console.warn(`[Wrapped] Beer not found for ID: ${beerId}`);
         }
 
-        if (entry.count > 0 || entry.rating || entry.favorite) {
+        if (entry.count > 0 || entry.score || entry.favorite) {
             uniqueCount++; // A unique beer interacted with
         }
 

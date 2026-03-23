@@ -413,7 +413,7 @@ export async function generateWrappedCard(stats, favoriteBeer, year) {
 
     ctx.fillStyle = '#AAAAAA';
     ctx.font = 'italic 26px "Outfit", sans-serif';
-    ctx.fillText(`Dégustée ${favoriteBeer ? favoriteBeer.count : 0} fois`, width / 2, textY + 50);
+    ctx.fillText(`Dégustée ${stats.favoriteBeer ? stats.favoriteBeer.count : 0} fois`, width / 2, textY + 50);
 
     // --- ROW 3: Detailed Stats ---
     const r3Y = 1110;

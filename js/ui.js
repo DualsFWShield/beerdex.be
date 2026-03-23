@@ -2298,14 +2298,21 @@ export function setScannerFeedback(message, isError = false) {
 }
 
 export function renderStats(allBeers, userData, container) {
-    const totalBeers = allBeers.length;
-    const customBeersCount = allBeers.filter(b => String(b.id).startsWith('CUSTOM_')).length;
-    const apiBeersCount = allBeers.filter(b => String(b.id).startsWith('API_') || String(b.id).startsWith('OFF_')).length;
-    const jsonBeersCount = Math.max(0, totalBeers - customBeersCount - apiBeersCount);
+    const allBeerIds = new Set(allBeers.map(b => String(b.id)));
+    const apiBeersCountFixed = 197452; // Static count retrieved from OFF (approx. March 2026)
+    const historyApiIds = Object.keys(userData).filter(id => (id.startsWith('API_') || id.startsWith('OFF_')) && !allBeerIds.has(id));
     
-    // Fix: Filter keys where count > 0
+    // The "Total" for summary purposes (Static API + Scanned history)
+    const apiBeersCount = apiBeersCountFixed + historyApiIds.length;
+    const jsonBeersCount = Math.max(0, allBeers.length - allBeers.filter(b => String(b.id).startsWith('CUSTOM_')).length - allBeers.filter(b => String(b.id).startsWith('API_') || String(b.id).startsWith('OFF_')).length);
+    const customBeersCount = allBeers.filter(b => String(b.id).startsWith('CUSTOM_')).length;
+
+    const totalBeers = jsonBeersCount + apiBeersCount + customBeersCount;
     const drunkCount = Object.values(userData).filter(u => (u.count || 0) > 0).length;
-    const percentage = Math.round((drunkCount / totalBeers) * 100) || 0;
+    
+    // Progress is based on local collection (JSON + Custom), as the API is "infinite"
+    const totalLocalBeers = jsonBeersCount + customBeersCount;
+    const percentage = Math.round((drunkCount / totalLocalBeers) * 100) || 0;
 
     const totalDrunkCount = Object.values(userData).reduce((acc, curr) => acc + (curr.count || 0), 0);
 
@@ -2354,7 +2361,7 @@ export function renderStats(allBeers, userData, container) {
                     
                     <div style="margin-top:20px; text-align:center; padding:15px; background:var(--bg-card); border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
                         <div style="font-size:0.85rem; color:#aaa; margin-bottom:5px; text-transform:uppercase; font-weight:bold;">Bières dans l'application</div>
-                        <div style="font-size:1.5rem; font-weight:bold; color:#FFF;">${totalBeers}</div>
+                        <div class="stats-total-app-count" style="font-size:1.5rem; font-weight:bold; color:#FFF;">${totalBeers.toLocaleString()}</div>
                         <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:10px; font-size:0.75rem;">
                              <div class="stat-badge stat-badge-json"><span style="font-weight:bold;">${jsonBeersCount}</span> JSON</div>
                              <div class="stat-badge stat-badge-api"><span style="font-weight:bold;">${apiBeersCount}</span> API</div>
