@@ -2341,6 +2341,29 @@ body.modal-open {
     margin-top: 15px;
 }
 
+/* Stat Breakdown Badges */
+.stat-badge {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: normal;
+}
+
+.stat-badge-json {
+    color: #888;
+    background: rgba(255,255,255,0.05);
+}
+.stat-badge-json span { color: #fff; }
+
+.stat-badge-api {
+    color: #2196F3;
+    background: rgba(33, 150, 243, 0.1);
+}
+
+.stat-badge-custom {
+    color: var(--accent-gold);
+    background: rgba(255, 192, 0, 0.1);
+}
+
 /* --- Chart Styles --- */
 .chart-container {
     width: 160px;

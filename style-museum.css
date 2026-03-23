@@ -3018,3 +3018,79 @@ body.modal-open {
 #curtain-overlay.curtain-done {
     display: none !important;
 }
+
+/* ======================================= */
+/* 🏛️ Museum Theme - Recent UI Enhancements */
+/* ======================================= */
+
+/* 1. Wrapped Story Museum Overrides */
+.theme-museum .story-overlay {
+    background: radial-gradient(circle at center, #2a2015 0%, #1a1510 100%) !important;
+}
+
+.theme-museum .story-bento-card {
+    background: var(--parchment) !important;
+    border: 5px solid var(--frame-gold-dark) !important;
+    border-radius: 4px !important;
+    color: var(--mahogany) !important;
+    box-shadow: 
+        inset 0 0 10px rgba(0,0,0,0.2),
+        4px 4px 0 var(--frame-gold-dark),
+        8px 8px 15px rgba(0,0,0,0.4) !important;
+    position: relative;
+    max-width: 340px;
+}
+
+.theme-museum .story-bento-card::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border: 1px solid var(--frame-gold);
+    pointer-events: none;
+}
+
+.theme-museum .story-title {
+    font-family: 'Playfair Display', serif !important;
+    color: var(--frame-gold-light) !important;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8) !important;
+    letter-spacing: 2px;
+}
+
+.theme-museum .story-stat-number {
+    font-family: 'Playfair Display', serif !important;
+    color: var(--velvet-red) !important;
+}
+
+.theme-museum .story-stat-sub {
+    color: #5d4a37 !important;
+    font-style: italic;
+}
+
+/* 2. Stats Breakdown Museum Badges */
+.theme-museum .stat-badge {
+    border: 1px solid var(--frame-gold-dark);
+    border-radius: 4px;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    background: var(--mahogany) !important;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+}
+
+.theme-museum .stat-badge-json {
+    color: var(--parchment) !important;
+}
+.theme-museum .stat-badge-json span { color: var(--frame-gold-light) !important; }
+
+.theme-museum .stat-badge-api {
+    color: var(--accent-gold) !important;
+}
+
+.theme-museum .stat-badge-custom {
+    color: var(--frame-gold-light) !important;
+    border-color: var(--frame-gold);
+}
+
+/* 3. Match Score Ring Overrides */
+.theme-museum .circle-bg {
+    stroke: rgba(0,0,0,0.5) !important;
+}

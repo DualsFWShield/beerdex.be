@@ -92,7 +92,7 @@ const ACHIEVEMENTS = [
         { id: 'type_files', title: 'Gueuze', desc: 'Boire 3 Lambics/Gueuzes', icon: '🍋', condition: (s) => s.countByType('Lambic') >= 3 || s.countByType('Gueuze') >= 3, rarity: 'super_rare' },
         { id: 'type_white', title: 'Blanche Neige', desc: 'Boire 5 Blanches', icon: '❄️', condition: (s) => s.countByType('Blanche') >= 5 || s.countByType('Witbier') >= 5, rarity: 'rare' },
         { id: 'type_abbey', title: 'Moine', desc: 'Boire 5 Bières d\'Abbaye', icon: '⛪', condition: (s) => s.countByType('Abbaye') >= 5 || s.countByType('Abbey') >= 5, rarity: 'rare' },
-        { id: 'type_fruit', title: '5 Fruits et Légumes', desc: 'Boire 5 Fruitées', icon: '🍎', condition: (s) => s.countByType('Fruit') >= 5 || s.countByType('Fruité') >= 5, rarity: 'rare' },
+        { id: 'type_fruit', title: '5 Fruits et Légumes', desc: 'Boire 5 Fruitées', icon: '🍎', condition: (s) => s.fruitCount >= 5, rarity: 'rare' },
         { id: 'brew_trappiste', title: 'Trappiste', desc: 'Boire 3 Trappistes différentes', icon: '✝️', condition: (s) => s.countByType('Trappiste') >= 3, rarity: 'rare' },
     ].map(a => ({ ...a, category: 'Styles 🍺' })),
 
@@ -175,6 +175,7 @@ export function checkAchievements(allBeers) {
         // Types/Breweries
         drunkTypes: [],
         countByType: (type) => stats.drunkTypes.filter(t => t.toLowerCase().includes(type.toLowerCase())).length,
+        fruitCount: 0, 
 
         // Breweries
         drunkBreweries: new Set(),
@@ -206,7 +207,7 @@ export function checkAchievements(allBeers) {
 
     userIds.forEach(id => {
         const u = userData[id];
-        const isConsumed = (u.count || 0) > 0;
+        const isConsumed = (u.count || 0) > 0 || (u.score !== undefined && u.score !== '');
 
         stats.totalCount += (u.count || 0);
 
@@ -247,12 +248,15 @@ export function checkAchievements(allBeers) {
             if (beer) {
                 // Alcohol
                 if (beer.alcohol) {
-                    const deg = parseFloat(beer.alcohol.replace(/,/g, '.').replace(/[^0-9.]/g, ''));
-                    if (!isNaN(deg)) {
-                        stats.degrees.push(deg);
-                        if (deg > stats.maxDegree) stats.maxDegree = deg;
-                        if (deg < stats.minDegree) stats.minDegree = deg;
-                        if (deg > 8) stats.strongCount++;
+                    const match = beer.alcohol.toString().match(/(\d+([.,]\d+)?)/);
+                    if (match) {
+                        const deg = parseFloat(match[1].replace(',', '.'));
+                        if (!isNaN(deg)) {
+                            stats.degrees.push(deg);
+                            if (deg > stats.maxDegree) stats.maxDegree = deg;
+                            if (deg < stats.minDegree) stats.minDegree = deg;
+                            if (deg > 8) stats.strongCount++;
+                        }
                     }
                 } else {
                     stats.hasGlitch = true;
@@ -273,6 +277,10 @@ export function checkAchievements(allBeers) {
             }
         }
     });
+
+    // Post-process fruit count 
+    const fruitRegex = /fruit|rouge|rubis|kriek|framboise|pêche|radler|rosée|cerise|myrtille|fraise/i;
+    stats.fruitCount = stats.drunkTypes.filter(t => fruitRegex.test(t)).length;
 
     stats.alphabetCount = stats.firstLetters.size;
     stats.hasVolume = (v) => stats.volumes.has(v);

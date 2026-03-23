@@ -2356,9 +2356,9 @@ export function renderStats(allBeers, userData, container) {
                         <div style="font-size:0.85rem; color:#aaa; margin-bottom:5px; text-transform:uppercase; font-weight:bold;">Bières dans l'application</div>
                         <div style="font-size:1.5rem; font-weight:bold; color:#FFF;">${totalBeers}</div>
                         <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:10px; font-size:0.75rem;">
-                             <div style="color:#888; background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:10px;"><span style="font-weight:bold; color:#fff;">${jsonBeersCount}</span> JSON</div>
-                             <div style="color:#2196F3; background:rgba(33, 150, 243, 0.1); padding:2px 8px; border-radius:10px;"><span style="font-weight:bold;">${apiBeersCount}</span> API</div>
-                             <div style="color:var(--accent-gold); background:rgba(255, 192, 0, 0.1); padding:2px 8px; border-radius:10px;"><span style="font-weight:bold;">${customBeersCount}</span> Custom</div>
+                             <div class="stat-badge stat-badge-json"><span style="font-weight:bold;">${jsonBeersCount}</span> JSON</div>
+                             <div class="stat-badge stat-badge-api"><span style="font-weight:bold;">${apiBeersCount}</span> API</div>
+                             <div class="stat-badge stat-badge-custom"><span style="font-weight:bold;">${customBeersCount}</span> Custom</div>
                         </div>
                     </div>
 
@@ -4181,10 +4181,10 @@ export function renderMatchModal(allBeers) {
         tabScan.style.display = 'none';
 
         const getStrokeColor = (score) => {
-            if (score >= 60) return "#E91E63"; // High Match
-            if (score >= 30) return "#4CAF50"; // Green Match
-            if (score >= 10) return "#FF9800"; // Orange
-            return "#f44336"; // Low
+            if (score >= 80) return "var(--accent-gold)"; // Very High
+            if (score >= 50) return "var(--success)"; // High
+            if (score >= 20) return "var(--accent-amber, #FF9800)"; // Medium
+            return "var(--danger)"; // Low
         };
         const circleColor = getStrokeColor(results.score);
 
