@@ -4,6 +4,10 @@ const STORAGE_KEY_CUSTOM = 'beerdex_custom_beers';
 // Get all ratings/notes
 export function getAllUserData() {
     const data = localStorage.getItem(STORAGE_KEY_RATINGS);
+    if (!data) {
+        console.warn("Storage: beerdex_ratings is empty. Checking keys...");
+        console.log("Storage keys:", Object.keys(localStorage));
+    }
     return data ? JSON.parse(data) : {};
 }
 
@@ -320,6 +324,7 @@ export async function exportDataAdvanced(options = { scope: 'all' }) {
     // Check if we have anything
     if ((!exportObj.ratings || Object.keys(exportObj.ratings).length === 0) &&
         (!exportObj.customBeers || exportObj.customBeers.length === 0)) {
+        console.error("Export: No data found in ratings or customBeers.");
         return 0; // Return count implies empty
     }
 
@@ -343,6 +348,18 @@ export async function exportDataAdvanced(options = { scope: 'all' }) {
         setTimeout(() => URL.revokeObjectURL(url), 100);
     } catch (e) {
         console.warn("Force download failed", e);
+    }
+
+    // --- CAPACITOR NATIVE BRIDGE ---
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        try {
+            // We use the Capacitor global if available, or just fallback.
+            // Note: Plugins might not be on window.Capacitor.Plugins yet, but we'll try standard navigator.share first anyway
+            // because Capacitor polyfills it!
+            console.log("Native platform detected, trying share...");
+        } catch (e) {
+            console.warn("Native bridge error", e);
+        }
     }
 
     // File System Access API (Desktop specific, optional now)
@@ -442,7 +459,36 @@ export async function shareBeer(beer) {
     const jsonString = JSON.stringify(exportObj, null, 2);
     const filename = `beer_${beer.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.json`;
 
-    // --- MEDIAN / GONATIVE BRIDGE ---
+    // 1. NATIVE TEXT SHARE (MOST RELIABLE)
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: `Beerdex: ${beer.title}`,
+                text: `Découvre cette bière : ${beer.title} ! 🍺\nNote: ${rating ? rating.score + '/20' : 'Pas de note'}\n\n${rating ? rating.comment : ''}`
+            });
+            return true;
+        } catch (e) {
+            console.warn("Native text share failed, trying file share", e);
+        }
+    }
+
+    // --- CAPACITOR NATIVE BRIDGE ---
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        const canShare = navigator.canShare && navigator.canShare({ title: 'test', text: 'test' });
+        if (canShare) {
+            try {
+                await navigator.share({
+                    title: `Partage: ${beer.title}`,
+                    text: `Découvre cette bière : ${beer.title} ! 🍺 \n\n${jsonString}`
+                });
+                return true;
+            } catch (e) {
+                console.warn("Capacitor navigator.share failed", e);
+            }
+        }
+    }
+
+    // --- MEDIAN / GONATIVE BRIDGE (Legacy) ---
     if (window.median) {
         try {
             window.median.share.sharePage({
