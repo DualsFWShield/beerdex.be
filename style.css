@@ -1205,6 +1205,12 @@ h3 {
     z-index: 10;
 }
 
+/* Hide bottom nav and fab when keyboard is open (any input focused) */
+body:has(input:focus, textarea:focus) .bottom-nav,
+body:has(input:focus, textarea:focus) .fab {
+    display: none !important;
+}
+
 .nav-item {
     background: none;
     border: none;
