@@ -1058,7 +1058,7 @@ h3 {
     flex: 1;
     overflow-y: auto;
     padding: var(--spacing-md);
-    padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 120px);
+    padding-bottom: calc(var(--nav-height) + min(env(safe-area-inset-bottom), 40px) + 120px);
     /* Safe area for inputs & FAB */
     scroll-behavior: smooth;
 }
@@ -1150,7 +1150,7 @@ h3 {
 /* Floating Action Button */
 .fab {
     position: absolute;
-    bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 20px);
+    bottom: calc(var(--nav-height) + min(env(safe-area-inset-bottom), 40px) + 20px);
     right: 20px;
     width: 56px;
     height: 56px;
@@ -1193,8 +1193,8 @@ h3 {
 
 /* Navigation */
 .bottom-nav {
-    height: calc(var(--nav-height) + env(safe-area-inset-bottom));
-    padding-bottom: env(safe-area-inset-bottom);
+    height: calc(var(--nav-height) + min(env(safe-area-inset-bottom), 40px));
+    padding-bottom: min(env(safe-area-inset-bottom), 40px);
     box-sizing: border-box;
     background: var(--glass-bg);
     backdrop-filter: blur(10px);
@@ -1267,7 +1267,7 @@ h3 {
     max-height: 90vh;
     border-radius: 20px 20px 0 0;
     padding: var(--spacing-lg);
-    padding-bottom: calc(var(--spacing-lg) + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--spacing-lg) + min(env(safe-area-inset-bottom), 40px));
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     /* Momentum scroll on iOS */
