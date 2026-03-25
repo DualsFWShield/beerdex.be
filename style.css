@@ -1015,8 +1015,8 @@ h3 {
 
 /* Header */
 .app-header {
-    height: var(--header-height);
-    padding: 0 var(--spacing-md);
+    min-height: var(--header-height);
+    padding: env(safe-area-inset-top) var(--spacing-md) 0 var(--spacing-md);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1054,7 +1054,7 @@ h3 {
     flex: 1;
     overflow-y: auto;
     padding: var(--spacing-md);
-    padding-bottom: calc(var(--nav-height) + 120px);
+    padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 120px);
     /* Safe area for inputs & FAB */
     scroll-behavior: smooth;
 }
