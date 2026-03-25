@@ -48,6 +48,10 @@
     --rarity-legendaire: #f39c12;
     --rarity-ultra_legendaire: #ff00cc;
 }
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
 
 /* Helper to stop all rarity animations */
 .stop-animations, .stop-animations * {
@@ -1015,7 +1019,7 @@ h3 {
 
 /* Header */
 .app-header {
-    min-height: var(--header-height);
+    min-height: calc(var(--header-height) + env(safe-area-inset-top));
     padding: env(safe-area-inset-top) var(--spacing-md) 0 var(--spacing-md);
     display: flex;
     align-items: center;
@@ -1025,7 +1029,7 @@ h3 {
     border-bottom: var(--glass-border);
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: 100; /* Higher z-index */
 }
 
 .logo {
@@ -1146,7 +1150,7 @@ h3 {
 /* Floating Action Button */
 .fab {
     position: absolute;
-    bottom: calc(var(--nav-height) + 20px);
+    bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 20px);
     right: 20px;
     width: 56px;
     height: 56px;
@@ -1189,14 +1193,15 @@ h3 {
 
 /* Navigation */
 .bottom-nav {
-    height: var(--nav-height);
+    height: calc(var(--nav-height) + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    box-sizing: border-box;
     background: var(--glass-bg);
     backdrop-filter: blur(10px);
     border-top: var(--glass-border);
     display: flex;
     justify-content: space-around;
     align-items: center;
-    padding-bottom: env(safe-area-inset-bottom);
     z-index: 10;
 }
 
@@ -1262,6 +1267,7 @@ h3 {
     max-height: 90vh;
     border-radius: 20px 20px 0 0;
     padding: var(--spacing-lg);
+    padding-bottom: calc(var(--spacing-lg) + env(safe-area-inset-bottom));
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     /* Momentum scroll on iOS */
@@ -1360,7 +1366,7 @@ h3 {
 /* Search Bar */
 .search-bar {
     position: fixed;
-    top: var(--header-height);
+    top: calc(var(--header-height) + env(safe-area-inset-top));
     left: 0;
     right: 0;
     background: var(--bg-card);
@@ -1369,8 +1375,8 @@ h3 {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
-    z-index: 9;
-    animation: slideDown 0.2s ease-out;
+    z-index: 90;
+    animation: slideDown 0.3s ease-out;
 }
 
 .search-bar.hidden {
@@ -1408,7 +1414,7 @@ h3 {
 /* Achievement Toast */
 .achievement-toast {
     position: fixed;
-    top: 20px;
+    top: calc(20px + env(safe-area-inset-top));
     left: 0;
     right: 0;
     margin: 0 auto;
