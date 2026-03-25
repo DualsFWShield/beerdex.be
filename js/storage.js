@@ -350,15 +350,25 @@ export async function exportDataAdvanced(options = { scope: 'all' }) {
         console.warn("Force download failed", e);
     }
 
-    // --- CAPACITOR NATIVE BRIDGE ---
+    // --- CAPACITOR NATIVE BRIDGE (Base64 approach) ---
     if (window.Capacitor && window.Capacitor.isNativePlatform()) {
         try {
-            // We use the Capacitor global if available, or just fallback.
-            // Note: Plugins might not be on window.Capacitor.Plugins yet, but we'll try standard navigator.share first anyway
-            // because Capacitor polyfills it!
-            console.log("Native platform detected, trying share...");
+            const Plugins = window.Capacitor.Plugins;
+            if (Plugins && Plugins.Filesystem && Plugins.Share) {
+                const base64Data = btoa(unescape(encodeURIComponent(jsonString)));
+                const writeResult = await Plugins.Filesystem.writeFile({
+                    path: filename,
+                    data: base64Data,
+                    directory: 'CACHE'
+                });
+                await Plugins.Share.share({
+                    title: 'Export Beerdex',
+                    url: writeResult.uri
+                });
+                return (exportObj.ratings ? Object.keys(exportObj.ratings).length : 0) + (exportObj.customBeers ? exportObj.customBeers.length : 0);
+            }
         } catch (e) {
-            console.warn("Native bridge error", e);
+            console.warn("Native bridge (Filesystem/Share) failed", e);
         }
     }
 
@@ -472,19 +482,26 @@ export async function shareBeer(beer) {
         }
     }
 
-    // --- CAPACITOR NATIVE BRIDGE ---
+    // --- CAPACITOR NATIVE BRIDGE (Base64 approach) ---
     if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-        const canShare = navigator.canShare && navigator.canShare({ title: 'test', text: 'test' });
-        if (canShare) {
-            try {
-                await navigator.share({
-                    title: `Partage: ${beer.title}`,
-                    text: `Découvre cette bière : ${beer.title} ! 🍺 \n\n${jsonString}`
+        try {
+            const Plugins = window.Capacitor.Plugins;
+            if (Plugins && Plugins.Filesystem && Plugins.Share) {
+                const base64Data = btoa(unescape(encodeURIComponent(jsonString)));
+                const writeResult = await Plugins.Filesystem.writeFile({
+                    path: filename,
+                    data: base64Data,
+                    directory: 'CACHE'
+                });
+                await Plugins.Share.share({
+                    title: `Beerdex: ${beer.title}`,
+                    text: `Découvre cette bière : ${beer.title} ! 🍺`,
+                    url: writeResult.uri
                 });
                 return true;
-            } catch (e) {
-                console.warn("Capacitor navigator.share failed", e);
             }
+        } catch (e) {
+            console.warn("Capacitor Native Share failed", e);
         }
     }
 
