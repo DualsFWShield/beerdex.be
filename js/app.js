@@ -82,6 +82,16 @@ async function init() {
         // Check Auto Backup
         UI.checkAutoBackup();
 
+        // Setup Keyboard safe area fixes natively for edge-to-edge
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Keyboard) {
+            window.Capacitor.Plugins.Keyboard.addListener('keyboardWillShow', () => {
+                document.body.classList.add('keyboard-open');
+            });
+            window.Capacitor.Plugins.Keyboard.addListener('keyboardWillHide', () => {
+                document.body.classList.remove('keyboard-open');
+            });
+        }
+
         // --- API AUTO-ACTION CHECK ---
         API.start(() => state.beers);
 
