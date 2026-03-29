@@ -1205,16 +1205,13 @@ h3 {
     z-index: 10;
 }
 
-/* Hide bottom nav and fab when keyboard is open (any input focused) */
-body:has(input:focus, textarea:focus) .bottom-nav,
-body:has(input:focus, textarea:focus) .fab,
+/* Hide bottom nav and fab when keyboard is open (Capacitor triggered) */
 body.keyboard-open .bottom-nav,
 body.keyboard-open .fab {
     display: none !important;
 }
 
 /* Collapse bottom padding when keyboard is open so no grey gap appears */
-body:has(input:focus, textarea:focus) #main-content,
 body.keyboard-open #main-content {
     padding-bottom: var(--spacing-md) !important;
 }
