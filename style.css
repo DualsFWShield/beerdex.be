@@ -955,22 +955,38 @@
 }
 
 
-/* Scrollbar Styling */
-::-webkit-scrollbar {
+/* Scrollbar Styling (Avoid generic inheritance to prevent select clipping) */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+div::-webkit-scrollbar,
+form::-webkit-scrollbar,
+ul::-webkit-scrollbar {
     width: 6px;
     height: 6px;
 }
 
-::-webkit-scrollbar-track {
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+div::-webkit-scrollbar-track,
+form::-webkit-scrollbar-track,
+ul::-webkit-scrollbar-track {
     background: rgba(0, 0, 0, 0.2);
 }
 
-::-webkit-scrollbar-thumb {
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+div::-webkit-scrollbar-thumb,
+form::-webkit-scrollbar-thumb,
+ul::-webkit-scrollbar-thumb {
     background: #444;
     border-radius: 3px;
 }
 
-::-webkit-scrollbar-thumb:hover {
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+div::-webkit-scrollbar-thumb:hover,
+form::-webkit-scrollbar-thumb:hover,
+ul::-webkit-scrollbar-thumb:hover {
     background: var(--accent-gold);
 }
 
@@ -1075,9 +1091,7 @@ h3 {
     border: var(--glass-border);
     border-radius: 16px;
     padding: var(--spacing-md) var(--spacing-sm);
-    /* More vertical padding */
     padding-top: 25px;
-    /* Specific fix for top cut-off */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1086,6 +1100,9 @@ h3 {
     transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
     position: relative;
     overflow: hidden;
+    /* GPU optimization: skip rendering for off-screen cards */
+    content-visibility: auto;
+    contain-intrinsic-size: auto 280px;
 }
 
 .beer-card:active {
@@ -2831,4 +2848,231 @@ body.modal-open {
 
 .toast-exit-anim {
     animation: toastExit 0.5s ease-in forwards;
+}
+
+/* ======================================= */
+/* Skeleton Loading (Shimmer Cards)         */
+/* ======================================= */
+
+@keyframes skeleton-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.skeleton-card {
+    background: var(--bg-card);
+    border: var(--glass-border);
+    border-radius: 16px;
+    padding: var(--spacing-md) var(--spacing-sm);
+    padding-top: 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    overflow: hidden;
+}
+
+.skeleton-card .skeleton-img {
+    width: 80px;
+    height: 120px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-card .skeleton-title {
+    width: 80%;
+    height: 14px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+    animation-delay: 0.1s;
+}
+
+.skeleton-card .skeleton-subtitle {
+    width: 60%;
+    height: 10px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+    animation-delay: 0.2s;
+}
+
+.skeleton-card .skeleton-badges {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+}
+
+.skeleton-card .skeleton-badge {
+    width: 40px;
+    height: 16px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+    animation-delay: 0.3s;
+}
+
+/* ======================================= */
+/* List View Layout                         */
+/* ======================================= */
+
+.beer-grid.view-list {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+    padding: 0 10px;
+}
+
+@media (min-width: 768px) {
+    .beer-grid.view-list {
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)) !important;
+    }
+}
+
+.beer-grid.view-list .beer-card {
+    flex-direction: row;
+    padding: 16px;
+    gap: 16px;
+    align-items: center;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    contain-intrinsic-size: auto 90px;
+}
+
+.beer-grid.view-list .beer-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+}
+
+.beer-grid.view-list .beer-card .beer-image-container {
+    width: 60px !important;
+    height: 80px !important;
+    min-width: 60px;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    padding: 5px;
+}
+
+.beer-grid.view-list .beer-image {
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.5));
+}
+
+.beer-grid.view-list .beer-info {
+    text-align: left;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.beer-grid.view-list .beer-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: var(--font-header, 'Russo One'), sans-serif;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.beer-grid.view-list .beer-brewery {
+    font-size: 0.85rem;
+    color: #bbb;
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.beer-grid.view-list .beer-card .check-icon {
+    position: static;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    background: rgba(0,0,0,0.4);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.beer-grid.view-list .beer-card.drunk .check-icon {
+    opacity: 1;
+    transform: scale(1);
+    background: var(--accent-gold);
+    color: #000;
+    border: none;
+    box-shadow: 0 0 10px rgba(255, 192, 0, 0.4);
+}
+
+/* Skeleton in list mode */
+.beer-grid.view-list .skeleton-card {
+    flex-direction: row;
+    padding: 10px 14px;
+    gap: 12px;
+    align-items: center;
+}
+
+.beer-grid.view-list .skeleton-card .skeleton-img {
+    width: 40px;
+    height: 55px;
+    min-width: 40px;
+}
+
+.beer-grid.view-list .skeleton-card .skeleton-title {
+    width: 60%;
+}
+
+.beer-grid.view-list .skeleton-card .skeleton-subtitle {
+    width: 40%;
+}
+
+/* ======================================= */
+/* View Toggle Button                       */
+/* ======================================= */
+
+.view-toggle-btn {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.view-toggle-btn:hover,
+.view-toggle-btn.active {
+    color: var(--accent-gold);
+    border-color: var(--accent-gold);
+}
+
+.view-toggle-btn svg {
+    width: 16px;
+    height: 16px;
 }

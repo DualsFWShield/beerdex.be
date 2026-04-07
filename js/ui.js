@@ -6,9 +6,10 @@ import * as Map from './map.js';
 import * as API from './api.js';
 import * as Scanner from './scanner.js';
 import { fetchProductByBarcode, searchProducts } from './off-api.js';
-import { Feedback } from './feedback.js'; // Added import for Feedback
+import { Feedback } from './feedback.js';
 import * as BAC from './bac.js';
 import { Analytics } from './analytics.js';
+import * as Achievements from './achievements.js';
 
 let editModeBeer = null;
 // We assume global libs: QRCode, Html5QrcodeScanner (handled via CDN)
@@ -379,10 +380,18 @@ export async function checkAndShowConsent(onAccept) {
 
 // --- Renders ---
 
-// Helper to remove white background from images using flood fill from corners
-// Helper to remove white background from images using flood fill from corners with edge feathering
 // Helper to remove background using 'Magic Wand' style flood fill (color distance)
+// Wrapped in requestIdleCallback for performance on low-end devices
 window.removeImageBackground = function (img) {
+    const doWork = () => _removeImageBackgroundSync(img);
+    if (window.requestIdleCallback) {
+        requestIdleCallback(doWork, { timeout: 500 });
+    } else {
+        setTimeout(doWork, 0);
+    }
+};
+
+function _removeImageBackgroundSync(img) {
     if (img.dataset.processed) return;
 
     try {
@@ -520,168 +529,9 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
     if (!isAppend) container.innerHTML = '';
     const userData = Storage.getAllUserData();
 
-    // Filtering Logic
+    // NOTE: Filtering & sorting is now handled upstream in app.js (applyFilters).
+    // The beers array passed here is already filtered and sorted.
     let filteredBeers = beers;
-    if (filters) {
-        // --- Advanced Filtering ---
-
-        // Type & Brewery
-        if (filters.type && filters.type !== 'All') {
-            filteredBeers = filteredBeers.filter(b => b.type === filters.type);
-        }
-        if (filters.brewery && filters.brewery !== 'All') {
-            filteredBeers = filteredBeers.filter(b => b.brewery === filters.brewery);
-        }
-
-        // Helpers for parsing
-        const getAlc = (b) => parseFloat((b.alcohol || '0').replace('%', '').replace('°', '')) || 0;
-        const getVol = (b) => {
-            const str = (b.volume || '').toLowerCase();
-            if (str.includes('l') && !str.includes('ml') && !str.includes('cl')) {
-                return parseFloat(str) * 1000; // Liters to ml
-            }
-            if (str.includes('cl')) return parseFloat(str) * 10;
-            return parseFloat(str) || 330; // Default or raw
-        };
-
-        // Alcohol Filter
-        if (filters.alcMode) {
-            const max = parseFloat(filters.alcMax);
-            const min = parseFloat(filters.alcMin);
-            const exact = parseFloat(filters.alcExact);
-
-            if (filters.alcMode === 'max' && !isNaN(max)) {
-                filteredBeers = filteredBeers.filter(b => getAlc(b) <= max);
-            } else if (filters.alcMode === 'range') {
-                if (!isNaN(min)) filteredBeers = filteredBeers.filter(b => getAlc(b) >= min);
-                if (!isNaN(max)) filteredBeers = filteredBeers.filter(b => getAlc(b) <= max);
-            } else if (filters.alcMode === 'exact' && !isNaN(exact)) {
-                // allow small epsilon for float comparison?
-                filteredBeers = filteredBeers.filter(b => Math.abs(getAlc(b) - exact) < 0.1);
-            }
-        } else {
-            // Backward compat / Default logic
-            if (filters.maxAlcohol) {
-                filteredBeers = filteredBeers.filter(b => getAlc(b) <= parseFloat(filters.maxAlcohol));
-            }
-        }
-
-        // Volume Filter
-        if (filters.volMode && filters.volMode !== 'any') {
-            const min = parseFloat(filters.volMin);
-            const max = parseFloat(filters.volMax);
-            const exact = parseFloat(filters.volExact);
-
-            if (filters.volMode === 'range') {
-                if (!isNaN(min)) filteredBeers = filteredBeers.filter(b => getVol(b) >= min);
-                if (!isNaN(max)) filteredBeers = filteredBeers.filter(b => getVol(b) <= max);
-            } else if (filters.volMode === 'exact' && !isNaN(exact)) {
-                // Approximate check for volumes (e.g. 330ml vs 33cl)
-                filteredBeers = filteredBeers.filter(b => Math.abs(getVol(b) - exact) < 5);
-            }
-        }
-
-        // Minimum Rating
-        if (filters.minRating && parseInt(filters.minRating) > 0) {
-            const minR = parseInt(filters.minRating);
-            filteredBeers = filteredBeers.filter(b => {
-                const r = Storage.getBeerRating(b.id);
-                return r && r.score >= minR;
-            });
-        }
-
-        // --- NEW FILTERS ---
-        // Production Volume
-        if (filters.production_volume && filters.production_volume !== 'All') {
-            filteredBeers = filteredBeers.filter(b => b.production_volume === filters.production_volume);
-        }
-
-        // Distribution
-        if (filters.distribution && filters.distribution !== 'All') {
-            filteredBeers = filteredBeers.filter(b => b.distribution === filters.distribution);
-        }
-
-        // Barrel Aged
-        if (filters.barrel_aged) {
-            filteredBeers = filteredBeers.filter(b => b.barrel_aged === true);
-        }
-
-        // Community Rating
-        if (filters.community_rating !== undefined && filters.community_rating !== '') {
-            const minCommR = parseFloat(filters.community_rating);
-            filteredBeers = filteredBeers.filter(b => (b.community_rating || 0) >= minCommR);
-        }
-
-        // Ingredients
-        if (filters.ingredients) {
-            const kw = filters.ingredients.toLowerCase();
-            filteredBeers = filteredBeers.filter(b => (b.ingredients || '').toLowerCase().includes(kw));
-        }
-
-        // --- Sorting ---
-        // Create unified sort function
-        const sortFunc = (a, b) => {
-            // 1. Favorites First (unless ignored)
-            if (!filters.ignoreFavorites) {
-                const favA = Storage.isFavorite(a.id) ? 1 : 0;
-                const favB = Storage.isFavorite(b.id) ? 1 : 0;
-                if (favA !== favB) return favB - favA;
-            }
-
-            // 2. Secondary Sort
-            let valA, valB;
-            if (filters.sortBy === 'brewery') {
-                valA = a.brewery.toLowerCase();
-                valB = b.brewery.toLowerCase();
-            } else if (filters.sortBy === 'alcohol') {
-                valA = parseFloat((a.alcohol || '0').replace('%', '').replace('°', '')) || 0;
-                valB = parseFloat((b.alcohol || '0').replace('%', '').replace('°', '')) || 0;
-            } else if (filters.sortBy === 'volume') {
-                // Helper for volume (copied from logic elsewhere or simplified)
-                const getV = (bb) => {
-                    const str = (bb.volume || '').toLowerCase();
-                    if (str.includes('l') && !str.includes('ml') && !str.includes('cl')) return parseFloat(str) * 1000;
-                    if (str.includes('cl')) return parseFloat(str) * 10;
-                    return parseFloat(str) || 330;
-                };
-                valA = getV(a);
-                valB = getV(b);
-            } else if (filters.sortBy === 'rarity') {
-                const ranks = { 'base': 0, 'commun': 1, 'rare': 2, 'super_rare': 3, 'epique': 4, 'mythique': 5, 'legendaire': 6, 'ultra_legendaire': 7 };
-                valA = ranks[a.rarity || 'base'] || 0;
-                valB = ranks[b.rarity || 'base'] || 0;
-            } else if (filters.sortBy === 'community_rating') {
-                valA = a.community_rating || 0;
-                valB = b.community_rating || 0;
-            } else {
-                valA = a.title.toLowerCase();
-                valB = b.title.toLowerCase();
-            }
-
-            if (valA < valB) return filters.sortOrder === 'desc' ? 1 : -1;
-            if (valA > valB) return filters.sortOrder === 'desc' ? -1 : 1;
-            return 0;
-        };
-
-        filteredBeers.sort(sortFunc);
-
-        // Custom Beer Filter
-        if (filters.onlyCustom) {
-            filteredBeers = filteredBeers.filter(b => String(b.id).startsWith('CUSTOM_'));
-        }
-        if (filters.onlyFavorites) {
-            filteredBeers = filteredBeers.filter(b => Storage.isFavorite(b.id));
-        }
-
-        // Rarity Filter
-        if (filters.rarity && filters.rarity.length > 0) {
-            // If user checked "Unknown/Base", handle it
-            filteredBeers = filteredBeers.filter(b => {
-                const r = b.rarity || 'base';
-                return filters.rarity.includes(r);
-            });
-        }
-    }
 
     if (filteredBeers.length === 0) {
         if (showCreatePrompt && isDiscoveryCallback) {
@@ -782,11 +632,17 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
         grid = container.querySelector('.beer-grid');
     }
 
+    const viewMode = Storage.getPreference('viewMode', 'grid');
+    const gridClasses = viewMode === 'list' ? 'beer-grid view-list' : 'beer-grid';
+
     if (!grid) {
         if (!isAppend) container.innerHTML = '';
         grid = document.createElement('div');
-        grid.className = 'beer-grid';
+        grid.className = gridClasses;
         container.appendChild(grid);
+    } else if (!isAppend) {
+        // Update grid class in case viewMode changed
+        grid.className = gridClasses;
     }
 
     filteredBeers.forEach((beer, index) => {
@@ -875,7 +731,7 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
             <svg class="check-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                 <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
-            <div style="width:100%; height:120px; display:flex; justify-content:center; align-items:center;">
+            <div class="beer-image-container" style="width:100%; height:120px; display:flex; justify-content:center; align-items:center;">
                 <img src="${displayImage}" alt="${beer.title}" class="beer-image" loading="${index < 10 ? 'eager' : 'lazy'}" 
                      ${beer.removeBackground ? 'onload="removeImageBackground(this)"' : ''}
                      onerror="if(this.src.includes('${fallbackImage}')) return; this.src='${fallbackImage}';">
@@ -892,27 +748,28 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
         grid.appendChild(card);
     });
 
-    // Initialize premium 3D tilt effects on cards if library is loaded (desktop/gyroscope support)
-    // Only on UNLOCKED beers as per user request
-    setTimeout(() => {
-        if (typeof VanillaTilt !== 'undefined') {
+    // Initialize premium 3D tilt effects — lazy, only on non-touch desktop
+    // On mobile/low-end, VanillaTilt adds expensive touch/gyro listeners to every card.
+    // Only init on desktop with hover support.
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (!isTouchDevice && typeof VanillaTilt !== 'undefined') {
+        setTimeout(() => {
             const cards = grid.querySelectorAll('.beer-card.drunk');
             VanillaTilt.init(cards, {
-                max: 15,
+                max: 12,
                 speed: 400,
                 glare: true,
-                "max-glare": 0.4,
+                "max-glare": 0.3,
                 scale: 1.02,
                 perspective: 1000,
                 transition: true,
-                gyroscope: true,
-                gyroscopeMinAngleX: -45,
-                gyroscopeMaxAngleX: 45,
-                gyroscopeMinAngleY: -45,
-                gyroscopeMaxAngleY: 45
+                gyroscope: false
             });
-        }
-    }, 50);
+        }, 100);
+    }
+
+    // Apply rarity animations directly (replaces MutationObserver)
+    applyRarityAnimations(grid);
 
     // --- CASE 2: Results exist BUT text search is active -> Propose API search at the bottom ---
     // Make sure we are not already in a callback or empty state that handles it
@@ -1056,9 +913,28 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
     wrapper.style.maxHeight = '85vh';
     wrapper.style.overflow = 'hidden'; // Essential to prevent modal itself from scrolling, we scroll the form only
 
-    // Extract unique values
     const types = [...new Set(allBeers.map(b => b.type).filter(Boolean))].sort();
     const breweries = ['All', ...new Set(allBeers.map(b => b.brewery).filter(Boolean))].sort();
+    const countries = ['All', ...new Set(allBeers.map(b => b.searchCountry).filter(Boolean))].sort();
+    
+    // Group regions by Country for a cleaner dropdown
+    const regionByCountry = {};
+    allBeers.forEach(b => {
+        if (b.searchRegion && b.searchCountry) {
+            if (!regionByCountry[b.searchCountry]) regionByCountry[b.searchCountry] = new Set();
+            regionByCountry[b.searchCountry].add(b.searchRegion);
+        }
+    });
+
+    let regionOptionsHtml = `<option value="All" ${activeFilters.region === 'All' || !activeFilters.region ? 'selected' : ''}>All</option>`;
+    Object.keys(regionByCountry).sort().forEach(country => {
+        regionOptionsHtml += `<optgroup label="${country}">`;
+        [...regionByCountry[country]].sort().forEach(reg => {
+            regionOptionsHtml += `<option value="${reg}" ${activeFilters.region === reg ? 'selected' : ''}>${reg}</option>`;
+        });
+        regionOptionsHtml += `</optgroup>`;
+    });
+
     const prodVolumes = ['All', ...new Set(allBeers.map(b => b.production_volume).filter(Boolean))].sort();
     const distributions = ['All', ...new Set(allBeers.map(b => b.distribution).filter(Boolean))].sort();
 
@@ -1079,7 +955,7 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
         </div>
 
         <!-- SCROLLING FORM -->
-        <form id="filter-form" style="padding:5px 20px 20px 20px; overflow-y:auto; flex-grow:1; display:flex; flex-direction:column; gap:20px;">
+        <form id="filter-form" style="padding:5px 20px 80px 20px; overflow-y:auto; flex-grow:1; display:flex; flex-direction:column; gap:20px;">
             
             <!-- TAB: GENERAL -->
             <div id="tab-gen" class="tab-pane">
@@ -1111,6 +987,14 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
                             </label>
                         `).join('')}
                     </div>
+                </div>
+                <div class="form-group stat-card mb-20">
+                    <h4 style="margin-bottom:10px;">Pays</h4>
+                    <select name="country" class="form-select">${createOptions(countries, activeFilters.country || 'All')}</select>
+                </div>
+                <div class="form-group stat-card mb-20">
+                    <h4 style="margin-bottom:10px;">Région</h4>
+                    <select name="region" class="form-select">${regionOptionsHtml}</select>
                 </div>
                 <div class="form-group stat-card mb-20">
                     <h4 style="margin-bottom:10px;">Brasserie</h4>
@@ -2713,6 +2597,31 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                 </div>
             </div>
 
+            <!-- 1.2 Carte (Map) -->
+            <div class="stat-card mt-20">
+                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;">🗺️ Carte de la Soif</h4>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <div style="text-align:left;">
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Carte par Défaut</strong>
+                        <span style="font-size:0.8rem; color:#888;">La carte affichée au lancement (Auto via Fuseau Horaire par défaut)</span>
+                    </div>
+                </div>
+                <div>
+                   <select id="select-default-map" class="form-input" style="width:100%; padding:8px; font-size:0.9rem; background:#111;">
+                       <option value="" ${!localStorage.getItem('defaultMapScope') ? 'selected' : ''}>🌍 Auto-détection</option>
+                       <option value="be" ${localStorage.getItem('defaultMapScope') === 'be' ? 'selected' : ''}>🇧🇪 Belgique</option>
+                       <option value="fr" ${localStorage.getItem('defaultMapScope') === 'fr' ? 'selected' : ''}>🇫🇷 France</option>
+                       <option value="de" ${localStorage.getItem('defaultMapScope') === 'de' ? 'selected' : ''}>🇩🇪 Allemagne</option>
+                       <option value="nl" ${localStorage.getItem('defaultMapScope') === 'nl' ? 'selected' : ''}>🇳🇱 Pays-Bas</option>
+                       <option value="us" ${localStorage.getItem('defaultMapScope') === 'us' ? 'selected' : ''}>🇺🇸 États-Unis</option>
+                       <option value="co" ${localStorage.getItem('defaultMapScope') === 'co' ? 'selected' : ''}>🇨🇴 Colombie</option>
+                       <option value="eu" ${localStorage.getItem('defaultMapScope') === 'eu' ? 'selected' : ''}>🇪🇺 Europe</option>
+                       <option value="wo" ${localStorage.getItem('defaultMapScope') === 'wo' ? 'selected' : ''}>🌍 Monde</option>
+                   </select>
+                </div>
+            </div>
+
             <!-- 1.5 Immersion (Audio/Haptics) -->
             <div class="stat-card mt-20">
                 <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;">🔊 Immersion</h4>
@@ -2902,6 +2811,20 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     `;
 
     // --- Handlers ---
+    
+    // Map Setting
+    const mapSelect = container.querySelector('#select-default-map');
+    if (mapSelect) {
+        mapSelect.onchange = (e) => {
+            const val = e.target.value;
+            if (val) {
+                localStorage.setItem('defaultMapScope', val);
+            } else {
+                localStorage.removeItem('defaultMapScope');
+            }
+            showToast("Carte par défaut mise à jour");
+        };
+    }
 
     // Config
     container.querySelector('#btn-template').onclick = () => renderTemplateEditor();
@@ -3414,12 +3337,6 @@ function renderAdvancedStats(allBeers, userData) {
 }
 
 // --- Achievements Helper ---
-// We import dynamically or rely on global scope if needed, 
-// but since we are in a module we can just import at top or here if supported.
-// For simplicity in this file-based module structure, let's assume we import at top.
-// Wait, we need to add the import statement at the top of the file too.
-
-import * as Achievements from './achievements.js';
 
 function renderAchievementsList() {
     const all = Achievements.getAllAchievements();
@@ -4648,55 +4565,35 @@ export function renderShareLink(link) {
     openModal(wrapper);
 }
 
-// --- Auto-Animation Injector for Rarities ---
-const rarityObserver = new MutationObserver((mutations) => {
-    mutations.forEach(m => {
-        m.addedNodes.forEach(node => {
-            // Check direct element
-            if (node.nodeType === 1) {
-                if (node.classList && node.classList.contains('rarity-badge')) {
-                    addAnimClasses(node);
-                }
-                // Check children
-                node.querySelectorAll && node.querySelectorAll('.rarity-badge').forEach(addAnimClasses);
-            }
-        });
-    });
-});
+// --- Rarity Animation Helper (replaces global MutationObserver) ---
+// Called directly after rendering cards instead of watching the entire DOM tree.
+export function applyRarityAnimations(container) {
+    if (!container) return;
+    const badges = container.querySelectorAll('.rarity-badge');
+    badges.forEach(badge => {
+        if (badge.dataset.animInit) return;
+        badge.dataset.animInit = 'true';
 
-function addAnimClasses(badge) {
-    // Avoid double add
-    if (badge.dataset.animInit) return;
-    badge.dataset.animInit = 'true';
-
-    if (badge.classList.contains('rarity-mythique')) {
-        badge.classList.add('anim-mythique', 'rarity-frame-mythique');
-    }
-    if (badge.classList.contains('rarity-legendaire')) {
-        badge.classList.add('anim-legendaire');
-    }
-    if (badge.classList.contains('rarity-ultra_legendary')) {
-        badge.classList.add('card-anim-ultra_legendary', 'rarity-frame-ultra_legendary');
-    }
-    if (badge.classList.contains('rarity-epique')) {
-        badge.classList.add('anim-epique');
-    }
-    if (badge.classList.contains('rarity-rare')) {
-        badge.classList.add('anim-rare');
-    }
-    if (badge.classList.contains('rarity-commun')) {
-        badge.classList.add('anim-commun');
-    }
-    if (badge.classList.contains('rarity-super_rare')) {
-        badge.classList.add('anim-super_rare');
-    }
-}
-
-// Start watching
-if (document.body) {
-    rarityObserver.observe(document.body, { childList: true, subtree: true });
-} else {
-    window.addEventListener('DOMContentLoaded', () => {
-        rarityObserver.observe(document.body, { childList: true, subtree: true });
+        if (badge.classList.contains('rarity-mythique')) {
+            badge.classList.add('anim-mythique', 'rarity-frame-mythique');
+        }
+        if (badge.classList.contains('rarity-legendaire')) {
+            badge.classList.add('anim-legendaire');
+        }
+        if (badge.classList.contains('rarity-ultra_legendary')) {
+            badge.classList.add('card-anim-ultra_legendary', 'rarity-frame-ultra_legendary');
+        }
+        if (badge.classList.contains('rarity-epique')) {
+            badge.classList.add('anim-epique');
+        }
+        if (badge.classList.contains('rarity-rare')) {
+            badge.classList.add('anim-rare');
+        }
+        if (badge.classList.contains('rarity-commun')) {
+            badge.classList.add('anim-commun');
+        }
+        if (badge.classList.contains('rarity-super_rare')) {
+            badge.classList.add('anim-super_rare');
+        }
     });
 }

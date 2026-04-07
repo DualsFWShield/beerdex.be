@@ -3094,4 +3094,150 @@ body.modal-open {
 /* 3. Match Score Ring Overrides */
 .theme-museum .circle-bg {
     stroke: rgba(0,0,0,0.5) !important;
+}
+
+/* ======================================= */
+/* Museum Theme — Optimizations & New Views */
+/* ======================================= */
+
+/* content-visibility for GPU optimization */
+.beer-card {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 300px;
+}
+
+/* Skeleton Loading — Museum Gold Shimmer */
+.skeleton-card {
+    background: linear-gradient(145deg, #2c2418, #241e14);
+    border: 4px solid var(--frame-gold-dark);
+    border-radius: 4px;
+}
+
+.skeleton-card .skeleton-img,
+.skeleton-card .skeleton-title,
+.skeleton-card .skeleton-subtitle,
+.skeleton-card .skeleton-badge {
+    background: linear-gradient(90deg, #241e14 25%, #3a3020 50%, #241e14 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* List View — Museum */
+.beer-grid.view-list {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+    padding: 0 10px;
+}
+
+@media (min-width: 768px) {
+    .beer-grid.view-list {
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)) !important;
+    }
+}
+
+.beer-grid.view-list .beer-card {
+    flex-direction: row;
+    padding: 16px;
+    gap: 16px;
+    align-items: center;
+    border-radius: 4px;
+    background: var(--bg-card);
+    contain-intrinsic-size: auto 90px;
+    box-shadow:
+        inset 0 0 0 1px var(--frame-gold),
+        2px 2px 0 var(--frame-gold-dark),
+        4px 6px 12px rgba(0,0,0,0.4);
+}
+
+.beer-grid.view-list .beer-card:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        inset 0 0 0 1px var(--frame-gold-light),
+        4px 4px 0 var(--frame-gold-dark),
+        6px 10px 20px rgba(0,0,0,0.6);
+}
+
+.beer-grid.view-list .beer-card .beer-image-container {
+    width: 60px !important;
+    height: 80px !important;
+    min-width: 60px;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0,0,0,0.3);
+    border-radius: 2px;
+    padding: 5px;
+    border: 1px solid rgba(200, 160, 80, 0.2);
+}
+
+.beer-grid.view-list .beer-image {
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.5));
+}
+
+.beer-grid.view-list .beer-info {
+    text-align: left;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.beer-grid.view-list .beer-title {
+    font-size: 1.1rem;
+    font-family: var(--font-header, 'Russo One'), sans-serif;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+.beer-grid.view-list .beer-brewery {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.beer-grid.view-list .beer-card .check-icon {
+    position: static;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    background: rgba(0,0,0,0.4);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed var(--frame-gold-dark);
+}
+
+.beer-grid.view-list .beer-card.drunk .check-icon {
+    opacity: 1;
+    transform: scale(1);
+    background: var(--frame-gold);
+    color: #000;
+    border: none;
+    box-shadow: 0 0 10px rgba(200, 160, 80, 0.4);
+}
+
+/* View Toggle — Museum Gold */
+.view-toggle-btn {
+    border-color: var(--frame-gold-dark);
+    color: var(--text-secondary);
+}
+
+.view-toggle-btn:hover,
+.view-toggle-btn.active {
+    color: var(--frame-gold-light);
+    border-color: var(--frame-gold);
 }

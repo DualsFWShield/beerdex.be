@@ -1,4 +1,5 @@
 import { calculateRarity } from './autoRarity.js';
+import { MAPS } from './map.js';
 
 const DATA_FILES = [
     'data/belgiumbeer.json',
@@ -31,7 +32,18 @@ export async function fetchAllBeers() {
             })
     );
 
+    // We also fetch breweries.json to attach country/region metadata for searching
+    promises.push(
+        fetch('data/breweries.json')
+            .then(res => res.ok ? res.json() : {})
+            .catch(() => ({}))
+    );
+
     const results = await Promise.all(promises);
+    const breweryDataArr = results.pop() || []; // last promise is breweries.json
+    const breweryData = Array.isArray(breweryDataArr) 
+        ? Object.fromEntries(breweryDataArr.map(b => [b.name, b])) 
+        : breweryDataArr;
 
     results.forEach(data => {
         if (Array.isArray(data)) {
@@ -62,12 +74,34 @@ export async function fetchAllBeers() {
         return Math.abs(hash).toString(36);
     };
 
-    const mapped = allBeers.map(beer => ({
-        ...beer,
-        id: beer.id || beer.title.replace(/\s+/g, '_').toUpperCase() + '_' + djb2Hash(beer.title + (beer.brewery || '')),
-        rarity: rarityMap[beer.rarity_rank] || beer.rarity || 'commun',
-        isSeasonal: beer.rarity_rank === 'Saisonnière' || beer.isSeasonal || false
-    }));
+    const mapped = allBeers.map(beer => {
+        // Find region data for search features
+        let searchRegion = '';
+        let searchCountry = '';
+        const brewInfo = breweryData[beer.brewery];
+        if (brewInfo) {
+            let countryCode = brewInfo.country || 'BE'; // default BE
+            let provinceCode = brewInfo.province;
+            
+            // Map the codes to human readable names from MAPS
+            const mapObj = MAPS[countryCode.toLowerCase()];
+            if (mapObj) {
+                searchCountry = mapObj.title; // e.g. "🇧🇪 Belgique"
+                if (mapObj.names && provinceCode) {
+                    searchRegion = mapObj.names[provinceCode] || provinceCode;
+                }
+            }
+        }
+
+        return {
+            ...beer,
+            id: beer.id || beer.title.replace(/\s+/g, '_').toUpperCase() + '_' + djb2Hash(beer.title + (beer.brewery || '')),
+            rarity: rarityMap[beer.rarity_rank] || beer.rarity || 'commun',
+            isSeasonal: beer.rarity_rank === 'Saisonnière' || beer.isSeasonal || false,
+            searchRegion: searchRegion,
+            searchCountry: searchCountry
+        };
+    });
 
     // Deduplicate by ID (same beer can appear in multiple country files)
     const seen = new Set();

@@ -3,17 +3,15 @@ import * as UI from './ui.js';
 import * as Storage from './storage.js';
 import * as Achievements from './achievements.js';
 import * as API from './api.js';
-import * as Share from './share.js';
 import { fetchProductByBarcode, searchProducts } from './off-api.js';
 import { Feedback } from './feedback.js';
 import { Analytics } from './analytics.js';
-
-import * as WebShare from './share.js';
+import * as Share from './share.js';
 import * as BAC from './bac.js';
 import * as Wrapped from './wrapped.js';
 import { EventSystem } from './event-system.js';
 
-window.Share = WebShare;
+window.Share = Share;
 window.Wrapped = Wrapped;
 window.UI = UI;
 window.showToast = UI.showToast;
@@ -40,6 +38,7 @@ const state = {
     filter: '',
     activeFilters: {},
     view: 'home', // home, drunk, stats
+    viewMode: Storage.getPreference('viewMode', 'grid'), // grid or list
     pagination: {
         page: 1,
         itemsPerPage: 24,
@@ -60,7 +59,8 @@ async function init() {
         // Apply Theme
         applyTheme();
 
-        // Load Data
+        // Show skeleton loading immediately
+        showSkeletonLoading(document.getElementById('main-content'));
 
         // Load Data
         const staticBeers = await Data.fetchAllBeers();
@@ -211,7 +211,7 @@ function setupInfiniteScroll(container) {
                     state.isLoadingMore = false;
                 }, 100);
             }
-        }, { rootMargin: '400px' }); // Pre-load earlier
+        }, { rootMargin: '200px' });
     }
 
     state.observer.observe(sentinel);
@@ -222,8 +222,53 @@ function searchBeers(beers, query) {
     const lowerQuery = query.toLowerCase();
     return beers.filter(b =>
         b.title.toLowerCase().includes(lowerQuery) ||
-        b.brewery.toLowerCase().includes(lowerQuery)
+        b.brewery.toLowerCase().includes(lowerQuery) ||
+        (b.searchRegion && b.searchRegion.toLowerCase().includes(lowerQuery)) ||
+        (b.searchCountry && b.searchCountry.toLowerCase().includes(lowerQuery))
     );
+}
+function showSkeletonLoading(container) {
+    const isListView = state.viewMode === 'list';
+    const gridClass = isListView ? 'beer-grid view-list' : 'beer-grid';
+    const count = isListView ? 8 : 6;
+
+    let skeletons = '';
+    for (let i = 0; i < count; i++) {
+        skeletons += `
+            <div class="skeleton-card">
+                <div class="skeleton-img"></div>
+                <div class="skeleton-title"></div>
+                <div class="skeleton-subtitle"></div>
+                <div class="skeleton-badges">
+                    <div class="skeleton-badge"></div>
+                    <div class="skeleton-badge"></div>
+                </div>
+            </div>`;
+    }
+    container.innerHTML = `<div class="${gridClass}" style="padding: var(--spacing-md);">${skeletons}</div>`;
+}
+
+function updateViewToggleIcon() {
+    const icon = document.getElementById('view-toggle-icon');
+    if (!icon) return;
+
+    if (state.viewMode === 'list') {
+        // Show grid icon (to switch back to grid)
+        icon.innerHTML = `
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>`;
+    } else {
+        // Show list icon (to switch to list)
+        icon.innerHTML = `
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+            <line x1="3" y1="18" x2="3.01" y2="18"></line>`;
+    }
 }
 
 function setupEventListeners() {
@@ -514,9 +559,11 @@ function setupEventListeners() {
         renderCurrentView();
     });
 
+    let searchDebounceTimer = null;
     searchInput.addEventListener('input', (e) => {
         state.filter = e.target.value;
-        renderCurrentView(); // This resets pagination to page 1
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => renderCurrentView(), 200);
     });
 
     // Filter Toggle
@@ -540,6 +587,18 @@ function setupEventListeners() {
             if (hasFilters) UI.showToast("Filtres appliqués !");
         });
     });
+
+    // View Toggle (Grid / List)
+    document.getElementById('view-toggle')?.addEventListener('click', () => {
+        state.viewMode = state.viewMode === 'grid' ? 'list' : 'grid';
+        Storage.savePreference('viewMode', state.viewMode);
+        updateViewToggleIcon();
+        Feedback.impactLight?.() || Feedback.impactMedium?.();
+        renderCurrentView();
+    });
+
+    // Set initial icon state
+    updateViewToggleIcon();
 
     // Add Manually Toggle (New ID: btn-add-header)
     document.getElementById('btn-add-header')?.addEventListener('click', () => {
@@ -647,6 +706,8 @@ function applyFilters(beers, filters) {
         result = result.filter(b => b.type === filters.type);
     }
     if (filters.brewery && filters.brewery !== 'All') result = result.filter(b => b.brewery === filters.brewery);
+    if (filters.country && filters.country !== 'All') result = result.filter(b => b.searchCountry === filters.country);
+    if (filters.region && filters.region !== 'All') result = result.filter(b => b.searchRegion === filters.region);
 
     // Alcohol
     if (filters.alcMode) {
@@ -808,19 +869,7 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-function notifyUpdate(worker) {
-    const toast = document.createElement('div');
-    toast.className = 'update-toast';
-    toast.innerHTML = `
-        <span>Nouvelle version disponible !</span>
-        <button id="reload-btn">Mettre à jour</button>
-    `;
-    document.body.appendChild(toast);
 
-    document.getElementById('reload-btn').addEventListener('click', () => {
-        worker.postMessage({ type: 'SKIP_WAITING' });
-    });
-}
 
 // Redefine renderCurrentView correctly to include applyFilters
 // This overwrites the previous definition in this file content block

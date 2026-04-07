@@ -155,6 +155,10 @@ export function checkAchievements(allBeers) {
     const previouslyUnlocked = getUnlockedAchievements();
     let currentUnlocked = [...previouslyUnlocked];
 
+    // O(1) lookup map instead of O(n) find() per beer
+    const beerMap = new Map();
+    allBeers.forEach(b => beerMap.set(b.id, b));
+
     // 1. Compute Stats State
     const stats = {
         totalCount: 0,
@@ -230,7 +234,7 @@ export function checkAchievements(allBeers) {
         if (isConsumed && id.startsWith('CUSTOM_')) {
             stats.hasCustomBeer = true;
             stats.customCount++;
-            const cBeer = allBeers.find(b => b.id === id);
+            const cBeer = beerMap.get(id);
             if (cBeer && cBeer.image && !cBeer.image.includes('FUT.jpg')) stats.hasCustomPhoto = true;
         }
 
@@ -245,7 +249,7 @@ export function checkAchievements(allBeers) {
 
         // Beer Data Stats - REQUIRE CONSUMPTION
         if (isConsumed) {
-            const beer = allBeers.find(b => b.id === id);
+            const beer = beerMap.get(id);
             if (beer) {
                 // Alcohol
                 if (beer.alcohol) {
@@ -302,7 +306,7 @@ export function checkAchievements(allBeers) {
     userIds.forEach(id => {
         const u = userData[id];
         if ((u.count || 0) > 0) {
-            const beer = allBeers.find(b => b.id === id);
+            const beer = beerMap.get(id);
             if (beer && beer.rarity) {
                 // Normalize rarity string just in case
                 const r = beer.rarity.toLowerCase();
