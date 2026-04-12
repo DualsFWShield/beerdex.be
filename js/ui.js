@@ -2352,7 +2352,7 @@ export function renderStats(allBeers, userData, container) {
 
     // Compute Rarity ranks
     let userRank = { name: i18n.t('stats_rank_novice'), color: "#888", nextRankThresh: 10 };
-    const uniqueCount = Object.keys(userData).length;
+    const uniqueCount = Object.values(userData).filter(u => (u.count || 0) > 0).length;
 
     // Quick rank calculation
     if (uniqueCount >= 10) userRank = { name: i18n.t('stats_rank_amateur'), color: "#4CAF50", nextRankThresh: 50 };
