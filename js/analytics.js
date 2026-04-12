@@ -21,6 +21,11 @@ class AnalyticsTracker {
     }
 
     _injectGA() {
+        if (!navigator.onLine) {
+            console.log('[Analytics] Offline: Skipping GA injection for now.');
+            return;
+        }
+
         if (!GA_MEASUREMENT_ID || GA_MEASUREMENT_ID.includes('XXXXX')) {
             console.warn('[Analytics] Google Analytics non configuré. Ajoute ton G-ID dans analytics.js');
             return;
@@ -102,7 +107,11 @@ class AnalyticsTracker {
      * Flush queue to server when back online
      */
     flush() {
-        if (!navigator.onLine || !this.isInitialized || !window.gtag) return;
+        if (!navigator.onLine || !window.gtag) {
+            // If offline but GA not yet injected, try to inject now
+            if (!this.isInitialized && navigator.onLine) this._injectGA();
+            return;
+        }
 
         const queue = this._getQueue();
         if (queue.length === 0) return;

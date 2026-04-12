@@ -1,5 +1,7 @@
 import * as Storage from './storage.js';
 
+import { i18n } from './i18n.js';
+
 let breweryData = null;
 let mapCaches = {}; // cache for svg contents
 
@@ -25,14 +27,14 @@ if (currentMapScope === 'wo' && Intl.DateTimeFormat().resolvedOptions().timeZone
 }
 
 export const MAPS = {
-    'be': { title: '🇧🇪 Belgique', svg: 'images/belgium.svg', countryCode: 'BE', names: { 'ANT': 'Antwerpen', 'LIM': 'Limburg', 'VBR': 'Vlaams-Brabant', 'BRU': 'Bruxelles', 'WBR': 'Brabant Wallon', 'HAI': 'Hainaut', 'NAM': 'Namur', 'LIE': 'Liège', 'LUX': 'Luxembourg', 'WVL': 'West-Vlaanderen', 'OVL': 'Oost-Vlaanderen' }},
-    'fr': { title: '🇫🇷 France', svg: 'images/fr.svg', countryCode: 'FR', names: { 'FRHDF': 'Hauts-de-France', 'FRGES': 'Grand Est', 'FRPAC': "Provence-Alpes-Côte d'Azur", 'FRARA': 'Auvergne-Rhône-Alpes', 'FRBFC': 'Bourgogne-Franche-Comté', 'FROCC': 'Occitanie', 'FRPDL': 'Pays de la Loire', 'FRBRE': 'Bretagne', 'FRNOR': 'Normandie', 'FR20R': 'Corse', 'FRNAQ': 'Nouvelle-Aquitaine', 'FRCVL': 'Centre-Val de Loire', 'FRIDF': 'Île-de-France' } },
-    'de': { title: '🇩🇪 Allemagne', svg: 'images/de.svg', countryCode: 'DE', names: { 'DESN': 'Sachsen', 'DEBY': 'Bayern', 'DERP': 'Rheinland-Pfalz', 'DESL': 'Saarland', 'DESH': 'Schleswig-Holstein', 'DENI': 'Niedersachsen', 'DENW': 'Nordrhein-Westfalen', 'DEBW': 'Baden-Württemberg', 'DEBB': 'Brandenburg', 'DEMV': 'Mecklenburg-Vorpommern', 'DEHB': 'Bremen', 'DEHH': 'Hamburg', 'DEHE': 'Hessen', 'DETH': 'Thüringen', 'DEST': 'Sachsen-Anhalt', 'DEBE': 'Berlin' } },
-    'nl': { title: '🇳🇱 Pays-Bas', svg: 'images/nl.svg', countryCode: 'NL', names: { 'NLGR': 'Groningen', 'NLDR': 'Drenthe', 'NLOV': 'Overijssel', 'NLGE': 'Gelderland', 'NLLI': 'Limburg', 'NLZE': 'Zeeland', 'NLNB': 'Noord-Brabant', 'NLZH': 'Zuid-Holland', 'NLNH': 'Noord-Holland', 'NLFR': 'Friesland', 'NLFL': 'Flevoland', 'NLUT': 'Utrecht' } },
-    'us': { title: '🇺🇸 États-Unis', svg: 'images/us.svg', countryCode: 'US', names: { 'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'Californie','CO':'Colorado','CT':'Connecticut','DE':'Delaware','FL':'Floride','GA':'Géorgie','HI':'Hawaï','ID':'Idaho','IL':'Illinois','IN':'Indiana','IA':'Iowa','KS':'Kansas','KY':'Kentucky','LA':'Louisiane','ME':'Maine','MD':'Maryland','MA':'Massachusetts','MI':'Michigan','MN':'Minnesota','MS':'Mississippi','MO':'Missouri','MT':'Montana','NE':'Nebraska','NV':'Nevada','NH':'New Hampshire','NJ':'New Jersey','NM':'Nouveau-Mexique','NY':'New York','NC':'Caroline du Nord','ND':'Dakota du Nord','OH':'Ohio','OK':'Oklahoma','OR':'Oregon','PA':'Pennsylvanie','RI':'Rhode Island','SC':'Caroline du Sud','SD':'Dakota du Sud','TN':'Tennessee','TX':'Texas','UT':'Utah','VT':'Vermont','VA':'Virginie','WA':'État de Washington','WV':'Virginie-Occidentale','WI':'Wisconsin','WY':'Wyoming' } },
-    'co': { title: '🇨🇴 Colombie', svg: 'images/co.svg', countryCode: 'CO', names: { 'COCUN': 'Cundinamarca', 'COANT': 'Antioquia', 'COVAL': 'Valle del Cauca', 'COATL': 'Atlántico', 'COBOL': 'Bolívar', 'COSAN': 'Santander', 'COMB': 'Bogotá D.C.' } },
-    'eu': { title: '🇪🇺 Europe', svg: 'images/europe.svg', isContinental: true, names: { 'BE': 'Belgique', 'FR': 'France', 'DE': 'Allemagne', 'NL': 'Pays-Bas', 'ES': 'Espagne', 'IE': 'Irlande', 'GB': 'Grande-Bretagne', 'DK': 'Danemark' } },
-    'wo': { title: '🌍 Monde', svg: 'images/world.svg', isContinental: true, names: { 'BE': 'Belgique', 'FR': 'France', 'DE': 'Allemagne', 'NL': 'Pays-Bas', 'US': 'États-Unis', 'CO': 'Colombie', 'AU': 'Australie', 'ES': 'Espagne', 'IE': 'Irlande', 'GB': 'Grande-Bretagne', 'DK': 'Danemark' } }
+    'be': { titleKey: 'country_be', icon: '🇧🇪', svg: 'images/belgium.svg', countryCode: 'BE', names: { 'ANT': 'Antwerpen', 'LIM': 'Limburg', 'VBR': 'Vlaams-Brabant', 'BRU': 'Bruxelles', 'WBR': 'Brabant Wallon', 'HAI': 'Hainaut', 'NAM': 'Namur', 'LIE': 'Liège', 'LUX': 'Luxembourg', 'WVL': 'West-Vlaanderen', 'OVL': 'Oost-Vlaanderen' }},
+    'fr': { titleKey: 'country_fr', icon: '🇫🇷', svg: 'images/fr.svg', countryCode: 'FR', names: { 'FRHDF': 'Hauts-de-France', 'FRGES': 'Grand Est', 'FRPAC': "Provence-Alpes-Côte d'Azur", 'FRARA': 'Auvergne-Rhône-Alpes', 'FRBFC': 'Bourgogne-Franche-Comté', 'FROCC': 'Occitanie', 'FRPDL': 'Pays de la Loire', 'FRBRE': 'Bretagne', 'FRNOR': 'Normandie', 'FR20R': 'Corse', 'FRNAQ': 'Nouvelle-Aquitaine', 'FRCVL': 'Centre-Val de Loire', 'FRIDF': 'Île-de-France' } },
+    'de': { titleKey: 'country_de', icon: '🇩🇪', svg: 'images/de.svg', countryCode: 'DE', names: { 'DESN': 'Sachsen', 'DEBY': 'Bayern', 'DERP': 'Rheinland-Pfalz', 'DESL': 'Saarland', 'DESH': 'Schleswig-Holstein', 'DENI': 'Niedersachsen', 'DENW': 'Nordrhein-Westfalen', 'DEBW': 'Baden-Württemberg', 'DEBB': 'Brandenburg', 'DEMV': 'Mecklenburg-Vorpommern', 'DEHB': 'Bremen', 'DEHH': 'Hamburg', 'DEHE': 'Hessen', 'DETH': 'Thüringen', 'DEST': 'Sachsen-Anhalt', 'DEBE': 'Berlin' } },
+    'nl': { titleKey: 'country_nl', icon: '🇳🇱', svg: 'images/nl.svg', countryCode: 'NL', names: { 'NLGR': 'Groningen', 'NLDR': 'Drenthe', 'NLOV': 'Overijssel', 'NLGE': 'Gelderland', 'NLLI': 'Limburg', 'NLZE': 'Zeeland', 'NLNB': 'Noord-Brabant', 'NLZH': 'Zuid-Holland', 'NLNH': 'Noord-Holland', 'NLFR': 'Friesland', 'NLFL': 'Flevoland', 'NLUT': 'Utrecht' } },
+    'us': { titleKey: 'country_us', icon: '🇺🇸', svg: 'images/us.svg', countryCode: 'US', names: { 'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'Californie','CO':'Colorado','CT':'Connecticut','DE':'Delaware','FL':'Floride','GA':'Géorgie','HI':'Hawaï','ID':'Idaho','IL':'Illinois','IN':'Indiana','IA':'Iowa','KS':'Kansas','KY':'Kentucky','LA':'Louisiane','ME':'Maine','MD':'Maryland','MA':'Massachusetts','MI':'Michigan','MN':'Minnesota','MS':'Mississippi','MO':'Missouri','MT':'Montana','NE':'Nebraska','NV':'Nevada','NH':'New Hampshire','NJ':'New Jersey','NM':'Nouveau-Mexique','NY':'New York','NC':'Caroline du Nord','ND':'Dakota du Nord','OH':'Ohio','OK':'Oklahoma','OR':'Oregon','PA':'Pennsylvanie','RI':'Rhode Island','SC':'Caroline du Sud','SD':'Dakota du Sud','TN':'Tennessee','TX':'Texas','UT':'Utah','VT':'Vermont','VA':'Virginie','WA':'État de Washington','WV':'Virginie-Occidentale','WI':'Wisconsin','WY':'Wyoming' } },
+    'co': { titleKey: 'country_co', icon: '🇨🇴', svg: 'images/co.svg', countryCode: 'CO', names: { 'COCUN': 'Cundinamarca', 'COANT': 'Antioquia', 'COVAL': 'Valle del Cauca', 'COATL': 'Atlántico', 'COBOL': 'Bolívar', 'COSAN': 'Santander', 'COMB': 'Bogotá D.C.' } },
+    'eu': { titleKey: 'map_scope_eu', icon: '🇪🇺', svg: 'images/europe.svg', isContinental: true, names: { 'BE': 'Belgique', 'FR': 'France', 'DE': 'Allemagne', 'NL': 'Pays-Bas', 'ES': 'Espagne', 'IE': 'Irlande', 'GB': 'Grande-Bretagne', 'DK': 'Danemark' } },
+    'wo': { titleKey: 'map_scope_wo', icon: '🌍', svg: 'images/world.svg', isContinental: true, names: { 'BE': 'Belgique', 'FR': 'France', 'DE': 'Allemagne', 'NL': 'Pays-Bas', 'US': 'États-Unis', 'CO': 'Colombie', 'AU': 'Australie', 'ES': 'Espagne', 'IE': 'Irlande', 'GB': 'Grande-Bretagne', 'DK': 'Danemark' } }
 };
 
 export async function renderMapWithData(container, historyWithBreweries) {
@@ -121,7 +123,7 @@ export async function renderMapWithData(container, historyWithBreweries) {
                            color: ${scope === currentMapScope ? '#000' : '#fff'};
                            border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 20px; font-family:'Russo One'; 
                            font-size:0.9rem; flex-shrink:0; cursor:pointer; transition:0.3s; white-space:nowrap;">
-                    ${MAPS[scope].title}
+                    ${MAPS[scope].icon} ${i18n.t(MAPS[scope].titleKey)}
                 </button>
             `).join('')}
         </div>

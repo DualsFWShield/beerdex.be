@@ -3,6 +3,8 @@
  * Logic for generating "Insta-ready" images via Canvas
  */
 
+import { i18n } from './i18n.js';
+
 // Load branding assets
 const LOGO_PATH = "icons/logo-bnr.png";
 const FOAM_PATH = "images/foam.png";
@@ -147,14 +149,14 @@ export async function generateBeerCard(beer, rating, comment) {
     ctx.textAlign = 'center';
 
     // Beer Name (Use beer.title !!)
-    let displayTitle = beer.title || beer.name || "Bière Inconnue";
+    let displayTitle = beer.title || beer.name || i18n.t('share_beer_unknown');
     ctx.font = 'bold 70px "Russo One", sans-serif';
     fitText(ctx, displayTitle, width / 2, cardY + 720, cardWidth - 60, 70);
 
     // Brewery
     ctx.font = 'italic 35px "Outfit", sans-serif';
     ctx.fillStyle = '#AAAAAA';
-    ctx.fillText((beer.brewery || "Brasserie Inconnue").toUpperCase(), width / 2, cardY + 770);
+    ctx.fillText((beer.brewery || i18n.t('share_brewery_unknown')).toUpperCase(), width / 2, cardY + 770);
 
     // --- BADGES (Type, Alc, Vol) ---
     const badgesY = cardY + 850;
@@ -244,7 +246,7 @@ export async function generateBeerCard(beer, rating, comment) {
     // Tagline (FR)
     ctx.fillStyle = 'rgba(255,255,255,0.7)';
     ctx.font = 'italic 30px "Outfit", sans-serif';
-    ctx.fillText("Disponible sur Android et iOS", width / 2, height - 50);
+    ctx.fillText(i18n.t('share_tagline'), width / 2, height - 50);
 
 
     // --- Export ---
@@ -361,11 +363,11 @@ export async function generateWrappedCard(stats, favoriteBeer, year) {
     const halfW = 440;
     
     // Volume Card
-    let volSub = stats.equivalence && stats.equivalence.label ? stats.equivalence.label.split(' ')[0] + " Bouteilles d'eau" : "Incroyable !";
-    drawCard(80, r1Y, halfW, cardH, "Volume Total", stats.totalLiters + "L", volSub, '🌊');
+    let volSub = stats.equivalence && stats.equivalence.label ? stats.equivalence.label.split(' ')[0] + " " + i18n.t('eq_bottles') : i18n.t('wrapped_approx_default');
+    drawCard(80, r1Y, halfW, cardH, i18n.t('wrapped_you_drank'), stats.totalLiters + i18n.t('wrapped_liters'), volSub, '🌊');
 
     // Unique Beers Card
-    drawCard(560, r1Y, halfW, cardH, "Découvertes", stats.uniqueBeers, "Bières Uniques", '🧭');
+    drawCard(560, r1Y, halfW, cardH, i18n.t('wrapped_unique_beers'), stats.uniqueBeers, i18n.t('stats_label_uniques'), '🧭');
 
     // --- ROW 2: Spotlight ---
     const spotY = 570;
@@ -382,7 +384,7 @@ export async function generateWrappedCard(stats, favoriteBeer, year) {
     ctx.fillStyle = '#FFC000';
     ctx.font = 'bold 30px "Outfit", sans-serif';
     ctx.letterSpacing = "6px";
-    ctx.fillText("TOP BIÈRE", width / 2, spotY + 20);
+    ctx.fillText(i18n.t('wrapped_fav_beer').toUpperCase(), width / 2, spotY + 20);
     ctx.letterSpacing = "0px";
 
     // Bottle Image
@@ -409,26 +411,26 @@ export async function generateWrappedCard(stats, favoriteBeer, year) {
     // Name
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 50px "Russo One", sans-serif';
-    fitText(ctx, favoriteBeer ? favoriteBeer.title || favoriteBeer.name : "Aucune", width / 2, textY, 900, 50);
+    fitText(ctx, favoriteBeer ? favoriteBeer.title || favoriteBeer.name : i18n.t('none'), width / 2, textY, 900, 50);
 
     ctx.fillStyle = '#AAAAAA';
     ctx.font = 'italic 26px "Outfit", sans-serif';
-    ctx.fillText(`Dégustée ${stats.favoriteBeer ? stats.favoriteBeer.count : 0} fois`, width / 2, textY + 50);
+    ctx.fillText(i18n.t('wrapped_times_drunk', { count: stats.favoriteBeer ? stats.favoriteBeer.count : 0 }), width / 2, textY + 50);
 
     // --- ROW 3: Detailed Stats ---
     const r3Y = 1110;
 
-    let brewText = stats.favoriteBrewery ? stats.favoriteBrewery[0] : "Inconnue";
-    let brewSub = stats.favoriteBrewery ? `${stats.favoriteBrewery[1]} bières` : "Plus de données requises";
-    drawCard(80, r3Y, halfW, cardH, "Top Brasserie", brewText, brewSub, '🏭');
+    let brewText = stats.favoriteBrewery ? stats.favoriteBrewery[0] : i18n.t('label_unknown');
+    let brewSub = stats.favoriteBrewery ? i18n.t('wrapped_brewery_honor', { count: stats.favoriteBrewery[1] }) : i18n.t('stats_no_data');
+    drawCard(80, r3Y, halfW, cardH, i18n.t('wrapped_top_brewery'), brewText, brewSub, '🏭');
 
-    let monthText = stats.topMonth ? stats.topMonth.name : "Inconnu";
-    let monthSub = stats.topMonth ? `Mois très festif (${stats.topMonth.count})` : "Plus de données requises";
-    drawCard(560, r3Y, halfW, cardH, "Mois Festif", monthText, monthSub, '📅');
+    let monthText = stats.topMonth ? stats.topMonth.name : i18n.t('label_unknown');
+    let monthSub = stats.topMonth ? i18n.t('wrapped_tastings', { count: stats.topMonth.count }) : i18n.t('stats_no_data');
+    drawCard(560, r3Y, halfW, cardH, i18n.t('wrapped_festive_month'), monthText, monthSub, '📅');
 
     // --- ROW 4: Style ---
     const r4Y = 1360;
-    drawCard(80, r4Y, 920, 200, "Style Préféré", stats.favoriteStyle || "Inconnu", "Vous avez du beau goût !", '🏆');
+    drawCard(80, r4Y, 920, 200, i18n.t('wrapped_favorite_style'), stats.favoriteStyle || i18n.t('label_unknown'), i18n.t('wrapped_good_taste'), '🏆');
 
 
     // --- 5. Footer ---
@@ -454,7 +456,7 @@ export async function generateWrappedCard(stats, favoriteBeer, year) {
     // Tagline
     ctx.fillStyle = 'rgba(255,255,255,0.6)';
     ctx.font = 'italic 24px "Outfit", sans-serif';
-    ctx.fillText("Disponible sur Android et iOS", width / 2, footerY + 80);
+    ctx.fillText(i18n.t('share_tagline'), width / 2, footerY + 80);
 
     // Restore default baseline just to be safe for other generations
     ctx.textBaseline = 'alphabetic';
@@ -528,7 +530,7 @@ export function createFullscreenPreview(blob, apiLink) {
         linkContainer.style.textAlign = 'left';
 
         const label = document.createElement('div');
-        label.innerHTML = '🔗 <strong>API Link</strong> (Generation)';
+        label.innerHTML = i18n.t('share_api_link');
         label.style.color = '#FFC000';
         label.style.marginBottom = '5px';
         label.style.fontSize = '0.9rem';
@@ -553,7 +555,7 @@ export function createFullscreenPreview(blob, apiLink) {
 
     // Close Hint
     const hint = document.createElement('div');
-    hint.innerHTML = '<div style="font-size:2rem; margin-bottom:10px;">✖️</div>Fermer';
+    hint.innerHTML = `<div style="font-size:2rem; margin-bottom:10px;">✖️</div>${i18n.t('btn_close')}`;
     hint.style.color = '#fff';
     hint.style.marginTop = '20px';
     hint.style.cursor = 'pointer';

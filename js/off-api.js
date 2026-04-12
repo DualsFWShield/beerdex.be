@@ -31,6 +31,11 @@ function checkRateLimit(type) {
  * @returns {Promise<Object|null>} - Beerdex-formatted beer object or null if not found.
  */
 export async function fetchProductByBarcode(barcode) {
+    if (!navigator.onLine) {
+        console.warn('OFF API: Browser is offline');
+        return { status: 'offline' };
+    }
+
     if (!checkRateLimit('product')) {
         console.warn('OFF API Key Limit Reached (Product)');
         return { status: 'rate_limit' };
@@ -213,6 +218,11 @@ function toTitleCase(str) {
  * @param {number} page 
  */
 export async function searchProducts(query, page = 1) {
+    if (!navigator.onLine) {
+        console.warn('OFF API: Browser is offline');
+        return { products: [], count: 0, status: 'offline' };
+    }
+
     if (!checkRateLimit('search')) {
         console.warn('OFF API Key Limit Reached (Search)');
         throw new Error("Limite de recherche atteinte. Attendez un peu.");
@@ -250,6 +260,7 @@ export async function searchProducts(query, page = 1) {
  * @returns {Promise<number>}
  */
 export async function getTotalBeerCount() {
+    if (!navigator.onLine) return 0;
     try {
         const url = `https://world.openfoodfacts.org/category/beers.json?page_size=1`;
         const response = await fetch(url, {

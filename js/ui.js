@@ -1,3 +1,6 @@
+import { i18n } from './i18n.js';
+import * as Env from './env.js';
+import { Analytics } from './analytics.js';
 import * as Storage from './storage.js';
 import { EventSystem } from './event-system.js';
 import * as Share from './share.js';
@@ -8,7 +11,6 @@ import * as Scanner from './scanner.js';
 import { fetchProductByBarcode, searchProducts } from './off-api.js';
 import { Feedback } from './feedback.js';
 import * as BAC from './bac.js';
-import { Analytics } from './analytics.js';
 import * as Achievements from './achievements.js';
 
 let editModeBeer = null;
@@ -28,7 +30,7 @@ export function checkAutoBackup() {
     const lastBackup = parseInt(Storage.getPreference('last_file_backup', '0'), 10);
     const now = Date.now();
     const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
-    
+
     // Only prompt if user has at least some data
     const userData = Storage.getAllUserData();
     if (Object.keys(userData).length === 0) return;
@@ -37,7 +39,7 @@ export function checkAutoBackup() {
         const toast = document.createElement('div');
         toast.className = 'update-toast';
         toast.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#333; color:white; padding:15px; border-radius:8px; z-index:9999; display:flex; gap:10px; align-items:center; box-shadow:0 4px 10px rgba(0,0,0,0.5); border:1px solid var(--accent-gold);';
-        
+
         toast.innerHTML = `
             <span>💾 Pensez à sauvegarder vos données !</span>
             <button id="btn-auto-backup" class="btn-primary" style="padding:5px 10px; font-size:0.8rem; margin:0;">Télécharger</button>
@@ -49,7 +51,7 @@ export function checkAutoBackup() {
             Storage.triggerExportFile('all');
             Storage.savePreference('last_file_backup', now.toString());
             toast.remove();
-            showToast("Backup téléchargé !");
+            showToast(i18n.t('toast_backup_downloaded'));
         };
 
         toast.querySelector('#btn-dismiss-backup').onclick = () => {
@@ -59,6 +61,38 @@ export function checkAutoBackup() {
     }
 }
 
+
+/**
+ * Update UI state based on network connectivity
+ * @param {boolean} isOnline 
+ */
+export function updateNetworkStatus(isOnline) {
+    // Target all API-related buttons
+    const apiButtons = [
+        document.getElementById('btn-search-api-bar'),
+        document.getElementById('btn-search-api'),
+        document.getElementById('btn-search-api-footer')
+    ];
+
+    apiButtons.forEach(btn => {
+        if (!btn) return;
+        if (isOnline) {
+            btn.style.opacity = '1';
+            btn.style.filter = 'none';
+        } else {
+            btn.style.opacity = '0.5';
+            btn.style.filter = 'grayscale(1)';
+        }
+    });
+
+    // Check for offline edition
+    Env.getEdition().then(edition => {
+        if (edition === 'preview_offline') {
+            const scanBtn = document.getElementById('fab-scan');
+            if (scanBtn) scanBtn.style.display = 'none';
+        }
+    });
+}
 
 export function showToast(message, type = 'default') {
     toastQueue.push({ message, type });
@@ -147,8 +181,8 @@ export function showPromptModal(title, defaultValue = '', opts = {}) {
             <input type="${opts.inputType || 'text'}" id="modal-prompt-input" class="form-input" 
                    value="${defaultValue}" placeholder="${opts.placeholder || ''}">
             <div class="modal-dialog-actions">
-                <button id="modal-prompt-cancel" class="btn-cancel">Annuler</button>
-                <button id="modal-prompt-ok" class="btn-confirm">Confirmer</button>
+                <button id="modal-prompt-cancel" class="btn-cancel" data-i18n="btn_cancel">Annuler</button>
+                <button id="modal-prompt-ok" class="btn-confirm" data-i18n="btn_confirm">Confirmer</button>
             </div>
         `;
 
@@ -193,8 +227,8 @@ export function showConfirmModal(message, opts = {}) {
             <div class="dialog-icon">${icon}</div>
             <p>${message}</p>
             <div class="modal-dialog-actions">
-                <button id="modal-confirm-cancel" class="btn-cancel">${opts.cancelText || 'Annuler'}</button>
-                <button id="modal-confirm-ok" class="btn-confirm${dangerClass}">${opts.confirmText || 'Confirmer'}</button>
+                <button id="modal-confirm-cancel" class="btn-cancel">${opts.cancelText || i18n.t('btn_cancel')}</button>
+                <button id="modal-confirm-ok" class="btn-confirm${dangerClass}">${opts.confirmText || i18n.t('btn_confirm')}</button>
             </div>
         `;
 
@@ -267,12 +301,10 @@ export function checkAndShowWelcome() {
 export async function checkAndShowConsent(onAccept) {
     const activeEvent = EventSystem.getActiveEvent();
     const shouldForce = EventSystem.shouldForceBanner();
-    
+
     // Check if we already showed the special event banner for this event
     const bannerShownKey = activeEvent ? `event_banner_shown_${activeEvent.id}` : null;
     const eventBannerShown = bannerShownKey ? Storage.getPreference(bannerShownKey, false) : false;
-
-    console.log(`[UI] Consent Check - Event: ${activeEvent?.id}, Forced: ${shouldForce}, Shown: ${eventBannerShown}`);
 
     // Normal flow: if no forced event today, or if we already showed it this session,
     // check normal consent.
@@ -313,15 +345,15 @@ export async function checkAndShowConsent(onAccept) {
     ` : `
         <div style="text-align: center; margin-bottom: 20px; flex-shrink: 0;">
             <div style="font-size: 3rem; margin-bottom: 10px;">🍻</div>
-            <h2 style="color: var(--accent-gold); font-size: 1.6rem; margin-bottom: 10px;">Bienvenue sur Beerdex</h2>
+            <h2 style="color: var(--accent-gold); font-size: 1.6rem; margin-bottom: 10px;">${i18n.t('filter_welcome')}</h2>
         </div>
         <div style="overflow-y: auto; flex: 1; padding-right: 5px; margin-bottom: 10px;">
             <div style="color: var(--text-secondary); line-height: 1.5; font-size: 0.95rem; margin-bottom: 25px; text-align: justify; background: var(--bg-dark); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color);">
-                <p style="margin-bottom: 15px; font-weight: bold; color: var(--text-primary);">Afin d'utiliser l'application, merci de lire et d'accepter nos conditions :</p>
+                <p style="margin-bottom: 15px; font-weight: bold; color: var(--text-primary);">${i18n.t('consent_intro')}</p>
                 <ul style="padding-left: 20px; list-style-type: '👉 ';">
-                    <li style="margin-bottom: 10px;"><strong>Âge légal :</strong> Vous reconnaissez avoir l'âge légal pour consommer de l'alcool dans votre pays de résidence.</li>
-                    <li style="margin-bottom: 10px;"><strong>Prévention :</strong> L'abus d'alcool est dangereux pour la santé, à consommer avec modération et responsabilité.</li>
-                    <li><strong>Statistiques d'Usage :</strong> Nous collectons des données anonymes (via Google Analytics) pour analyser l'utilisation de l'app et améliorer l'expérience. Ces données sont 100% privées et ne sont en aucun cas vendues à des tiers.</li>
+                    <li style="margin-bottom: 10px;"><strong>${i18n.t('consent_age_label')} :</strong> ${i18n.t('consent_age_text')}</li>
+                    <li style="margin-bottom: 10px;"><strong>${i18n.t('consent_prevention_label')} :</strong> ${i18n.t('consent_prevention_text')}</li>
+                    <li><strong>${i18n.t('consent_stats_label')} :</strong> ${i18n.t('consent_stats_text')}</li>
                 </ul>
             </div>
         </div>
@@ -331,7 +363,7 @@ export async function checkAndShowConsent(onAccept) {
         ${bannerContent}
         <div style="display: flex; justify-content: center; width: 100%; margin-top: 10px; flex-shrink: 0;">
             <button id="btn-accept-consent" class="btn-primary" style="font-size: 1.1rem; padding: 16px 40px; width: auto; min-width: 250px; margin-top: 0; box-shadow: 0 4px 15px rgba(255,192,0,0.3);">
-                ${(shouldForce && bannerData && bannerData.button) ? bannerData.button : "J'accepte les conditions"}
+                ${(shouldForce && bannerData && bannerData.button) ? bannerData.button : i18n.t('consent_btn_accept')}
             </button>
         </div>
     `;
@@ -358,7 +390,7 @@ export async function checkAndShowConsent(onAccept) {
         if (window.navigator && window.navigator.vibrate) navigator.vibrate(50);
 
         localStorage.setItem('beerdex_consent', 'true');
-        
+
         // Ensure the banner doesn't show again for this event
         if (activeEvent && bannerShownKey) {
             console.log(`[UI] Dismissing banner for event: ${activeEvent.id}`);
@@ -537,9 +569,9 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
         if (showCreatePrompt && isDiscoveryCallback) {
             container.innerHTML = `
                 <div style="text-align:center; padding: 40px 20px;">
-                    <p style="color: #888; margin-bottom: 20px;">La bière n'existe pas encore...</p>
+                    <p style="color: #888; margin-bottom: 20px;">${i18n.t('list_beer_not_exist')}</p>
                     <button id="btn-create-discovery" class="btn-primary" style="background:var(--accent-gold); color:var(--bg-dark);">
-                        ➕ Créer cette bière
+                        ${i18n.t('list_btn_create')}
                     </button>
                 </div>`;
             document.getElementById('btn-create-discovery').onclick = isDiscoveryCallback;
@@ -551,9 +583,9 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
             container.innerHTML = `
                 <div style="text-align:center; padding: 50px 20px; color: #888;">
                     <div style="font-size: 3rem; margin-bottom: 20px;">🕵️‍♂️</div>
-                    <h3>Mode Découverte</h3>
-                    <p style="margin-top: 10px;">Votre collection est vide.</p>
-                    <p style="font-size: 0.8rem; margin-top: 5px;">Utilisez la recherche 🔍 pour trouver et ajouter des bières.</p>
+                    <h3>${i18n.t('list_discovery_mode')}</h3>
+                    <p style="margin-top: 10px;">${i18n.t('list_empty_collection')}</p>
+                    <p style="font-size: 0.8rem; margin-top: 5px;">${i18n.t('list_use_search_desc')}</p>
                 </div>`;
             return;
         }
@@ -562,10 +594,10 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
         if (!isDiscoveryCallback && filters.query && filters.query.length > 2) {
             container.innerHTML = `
                 <div style="text-align:center; padding: 30px 20px; color: #666;">
-                    <h3 style="margin-bottom:10px;">Aucun résultat local 😢</h3>
-                    <p style="font-size:0.9rem;">On cherche plus loin ?</p>
+                    <h3 style="margin-bottom:10px;">${i18n.t('list_no_local_results')}</h3>
+                    <p style="font-size:0.9rem;">${i18n.t('list_search_further')}</p>
                     <button id="btn-search-api" class="btn-primary" style="margin-top:15px; background:var(--accent-gold); color:black;">
-                        🌍 Recherche Approfondie (OFF API)
+                        ${i18n.t('list_btn_search_api')}
                     </button>
                     <div id="api-results-area" style="margin-top:20px;"></div>
                 </div>`;
@@ -575,14 +607,24 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
                 const btn = document.getElementById('btn-search-api');
                 if (btn) {
                     btn.onclick = async () => {
+                        if (!navigator.onLine) {
+                            showToast(i18n.t('error_offline_api'), "error");
+                            return;
+                        }
                         btn.disabled = true;
-                        btn.innerHTML = '<span class="spinner"></span> Recherche...';
+                        btn.innerHTML = `<span class="spinner"></span> ${i18n.t('list_searching')}`;
                         try {
-                            const { products, count } = await searchProducts(filters.query);
+                            const { products, count, status } = await searchProducts(filters.query);
                             const area = document.getElementById('api-results-area');
 
+                            if (status === 'offline') {
+                                showToast(i18n.t('error_offline_api'), "error");
+                                btn.disabled = false;
+                                return;
+                            }
+
                             if (products.length === 0) {
-                                btn.innerHTML = '❌ Rien trouvé...';
+                                btn.innerHTML = i18n.t('list_nothing_found');
                             } else {
                                 btn.style.display = 'none'; // Hide button
                                 // Render API Results
@@ -600,8 +642,8 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
                                 // Show manual add button at bottom if still not found
                                 const manualDiv = document.createElement('div');
                                 manualDiv.innerHTML = `
-                                    <p style="margin-top:30px; color:#666;">Toujours pas ?</p>
-                                    <button id="btn-create-manual" class="form-input">➕ Créer manuellement</button>
+                                    <p style="margin-top:30px; color:#666;">${i18n.t('search_not_found')}</p>
+                                    <button id="btn-create-manual" class="form-input">➕ ${i18n.t('search_btn_create_manual')}</button>
                                 `;
                                 area.appendChild(manualDiv);
                                 manualDiv.querySelector('#btn-create-manual').onclick = () => {
@@ -614,7 +656,7 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
                                 };
                             }
                         } catch (e) {
-                            btn.innerHTML = '⚠️ Erreur (Limite atteinte ?)';
+                            btn.innerHTML = i18n.t('search_error_limit');
                             showAlertModal(e.message, { icon: '⚠️' });
                         }
                     };
@@ -623,7 +665,7 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
             return;
         }
 
-        container.innerHTML = '<div style="text-align:center; padding: 20px; color: #666;">Aucune bière ne correspond aux critères...</div>';
+        container.innerHTML = `<div style="text-align:center; padding: 20px; color: #666;">${i18n.t('search_no_results')}</div>`;
         return;
     }
 
@@ -726,6 +768,19 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
 
         const isFavorite = Storage.isFavorite(beer.id);
 
+        // Speculative BAC badge (if enabled)
+        let bacBadgeHtml = '';
+        if (Storage.getPreference('bac_enabled', true)) {
+            const driveInfo = BAC.getSpeculativeDriveInfo(beer.volume, beer.alcohol);
+            if (driveInfo) {
+                const timeHtml = driveInfo.timeStr ? `<span class="bac-time"> · ${driveInfo.timeStr}</span>` : '';
+                bacBadgeHtml = `<div class="bac-speculative-badge" style="color:${driveInfo.color}; border-color:${driveInfo.color}33;">
+                    <span class="bac-icon">${driveInfo.icon}</span>
+                    <span>+${driveInfo.delta.toFixed(2)}</span>${timeHtml}
+                </div>`;
+            }
+        }
+
         card.innerHTML = `
             ${isFavorite ? '<div style="position:absolute; top:5px; left:5px; z-index:2; font-size:1.2rem; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));">⭐</div>' : ''}
             <svg class="check-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
@@ -743,6 +798,7 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
                     ${abv} ${vol} ${typeBadge}
                 </div>
             </div>
+            ${bacBadgeHtml}
         `;
 
         grid.appendChild(card);
@@ -876,7 +932,7 @@ function createApiBeerCard(beer) {
             <div style="display:flex; gap:5px; justify-content:center; margin-top:5px; color:#aaa; flex-wrap:wrap;">
                 <span>${beer.alcohol}</span> <span>${beer.volume}</span>
             </div>
-            <button class="btn-add-api" style="width:100%; margin-top:10px; font-size:0.8rem; padding:5px; background:#333; color:#fff; border:1px solid #555;">➕ Ajouter</button>
+            <button class="btn-add-api" style="width:100%; margin-top:10px; font-size:0.8rem; padding:5px; background:#333; color:#fff; border:1px solid #555;">${i18n.t('btn_add_api')}</button>
         </div>
     `;
 
@@ -889,7 +945,7 @@ function createApiBeerCard(beer) {
             renderAddBeerForm((newBeer) => {
                 Storage.saveCustomBeer(newBeer);
                 window.dispatchEvent(new CustomEvent('beerdex-action'));
-                showToast("Bière importée !");
+                showToast(i18n.t('toast_beer_imported'));
                 // Optional: Refresh triggers 
                 setTimeout(() => location.reload(), 500);
             }, null, beer); // Autofill with API data
@@ -916,7 +972,7 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
     const types = [...new Set(allBeers.map(b => b.type).filter(Boolean))].sort();
     const breweries = ['All', ...new Set(allBeers.map(b => b.brewery).filter(Boolean))].sort();
     const countries = ['All', ...new Set(allBeers.map(b => b.searchCountry).filter(Boolean))].sort();
-    
+
     // Group regions by Country for a cleaner dropdown
     const regionByCountry = {};
     allBeers.forEach(b => {
@@ -943,15 +999,15 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
     wrapper.innerHTML = `
         <!-- HEADER -->
         <div style="background:var(--bg-card); padding:15px 20px; border-bottom:1px solid rgba(255,255,255,0.1); border-radius:12px 12px 0 0; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
-            <h2 style="margin:0; font-size:1.4rem;">Filtres & Tris</h2>
-            <button type="button" id="btn-reset-top" style="background:none; border:none; color:var(--accent-gold); font-size:0.9rem; cursor:pointer; font-weight:bold;">Réinitialiser</button>
+            <h2 style="margin:0; font-size:1.4rem;">${i18n.t('filter_title')}</h2>
+            <button type="button" id="btn-reset-top" style="background:none; border:none; color:var(--accent-gold); font-size:0.9rem; cursor:pointer; font-weight:bold;">${i18n.t('btn_reset')}</button>
         </div>
 
         <!-- TABS -->
         <div class="filter-tabs" style="display:flex; overflow-x:auto; gap:10px; padding:15px 20px; scrollbar-width:none; flex-shrink:0; align-items:center;">
-            <button type="button" class="ftab active" data-tab="tab-gen" style="background:var(--accent-gold); color:#000; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">Général</button>
-            <button type="button" class="ftab" data-tab="tab-tri" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">Tri & Notes</button>
-            <button type="button" class="ftab" data-tab="tab-attr" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">Attributs</button>
+            <button type="button" class="ftab active" data-tab="tab-gen" style="background:var(--accent-gold); color:#000; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">${i18n.t('tab_general')}</button>
+            <button type="button" class="ftab" data-tab="tab-tri" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">${i18n.t('tab_sort_notes')}</button>
+            <button type="button" class="ftab" data-tab="tab-attr" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">${i18n.t('tab_attributes')}</button>
         </div>
 
         <!-- SCROLLING FORM -->
@@ -961,49 +1017,49 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
             <div id="tab-gen" class="tab-pane">
                 <div class="stat-card mb-20" style="margin-bottom:15px;">
                     <h4 style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-                        Type de bière 
-                        <span style="font-size:0.8rem; color:#888; font-weight:normal;">(Plusieurs)</span>
+                        ${i18n.t('filter_type_label')} 
+                        <span style="font-size:0.8rem; color:#888; font-weight:normal;">${i18n.t('filter_plural_suffix')}</span>
                     </h4>
                     <div style="display:flex; flex-wrap:wrap; gap:8px;">
                         ${types.map(t => {
-                            const isChecked = activeFilters.type && activeFilters.type.includes(t);
-                            return `
+        const isChecked = activeFilters.type && activeFilters.type.includes(t);
+        return `
                                 <label style="display:flex; align-items:center; gap:6px; background:${isChecked ? 'rgba(255,192,0,0.2)' : 'rgba(255,255,255,0.05)'}; padding:6px 12px; border-radius:15px; cursor:pointer; border:1px solid ${isChecked ? 'var(--accent-gold)' : 'transparent'}; transition:all 0.2s;">
                                     <input type="checkbox" class="cb-type" value="${t}" ${isChecked ? 'checked' : ''} style="display:none;">
                                     <span style="font-size:0.85rem; color:${isChecked ? 'var(--accent-gold)' : '#fff'};">${t}</span>
                                 </label>
                             `;
-                        }).join('')}
+    }).join('')}
                     </div>
                 </div>
                 <!-- Rareté -->
                 <div class="stat-card mb-20" style="margin-bottom:15px;">
-                    <h4 style="margin-bottom:10px;">Rareté</h4>
+                    <h4 style="margin-bottom:10px;">${i18n.t('filter_rarity_label')}</h4>
                     <div style="display:flex; flex-wrap:wrap; gap:8px;">
                         ${['base', 'commun', 'rare', 'super_rare', 'epique', 'mythique', 'legendaire', 'ultra_legendaire'].map(r => `
                             <label style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.05); padding:6px 12px; border-radius:15px; cursor:pointer; border:1px solid var(--rarity-${r});">
                                 <input type="checkbox" class="cb-rarity" value="${r}" ${activeFilters.rarity && activeFilters.rarity.includes(r) ? 'checked' : ''} style="display:none;">
-                                <span style="font-size:0.8rem; text-transform:capitalize; color:#fff;">${r.replace(/_/g, ' ')}</span>
+                                <span style="font-size:0.8rem; text-transform:capitalize; color:#fff;">${i18n.t('rarity_' + r)}</span>
                             </label>
                         `).join('')}
                     </div>
                 </div>
                 <div class="form-group stat-card mb-20">
-                    <h4 style="margin-bottom:10px;">Pays</h4>
+                    <h4 style="margin-bottom:10px;">${i18n.t('filter_country')}</h4>
                     <select name="country" class="form-select">${createOptions(countries, activeFilters.country || 'All')}</select>
                 </div>
                 <div class="form-group stat-card mb-20">
-                    <h4 style="margin-bottom:10px;">Région</h4>
+                    <h4 style="margin-bottom:10px;">${i18n.t('filter_region')}</h4>
                     <select name="region" class="form-select">${regionOptionsHtml}</select>
                 </div>
                 <div class="form-group stat-card mb-20">
-                    <h4 style="margin-bottom:10px;">Brasserie</h4>
+                    <h4 style="margin-bottom:10px;">${i18n.t('filter_brewery')}</h4>
                     <select name="brewery" class="form-select">${createOptions(breweries, activeFilters.brewery || 'All')}</select>
                 </div>
                 <div class="form-group stat-card mb-20">
                      <label class="form-group" style="display:flex; align-items:center; gap:10px; cursor:pointer; margin:0;">
                         <input type="checkbox" name="onlyCustom" ${activeFilters.onlyCustom ? 'checked' : ''} style="width:20px; height:20px;">
-                        <span style="font-weight:bold; color:var(--accent-gold);">Mes Créations Uniquement</span>
+                        <span style="font-weight:bold; color:var(--accent-gold);">${i18n.t('filter_my_creations')}</span>
                     </label>
                 </div>
             </div>
@@ -1011,43 +1067,43 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
             <!-- TAB: TRI ET NOTES -->
             <div id="tab-tri" class="tab-pane" style="display:none;">
                 <div class="stat-card mb-20" style="margin-bottom:15px;">
-                    <h4 style="margin-bottom:10px;">Trier par</h4>
+                    <h4 style="margin-bottom:10px;">${i18n.t('filter_sort_by')}</h4>
                     <div style="display:flex; gap:10px;">
                         <select name="sortBy" class="form-select" style="flex:2;">
-                            <option value="default" ${activeFilters.sortBy === 'default' ? 'selected' : ''}>Défaut (Favoris > Nom)</option>
-                            <option value="brewery" ${activeFilters.sortBy === 'brewery' ? 'selected' : ''}>Brasserie</option>
-                            <option value="alcohol" ${activeFilters.sortBy === 'alcohol' ? 'selected' : ''}>Alcool (%)</option>
+                            <option value="default" ${activeFilters.sortBy === 'default' ? 'selected' : ''}>${i18n.t('filter_sort_default')}</option>
+                            <option value="brewery" ${activeFilters.sortBy === 'brewery' ? 'selected' : ''}>${i18n.t('filter_brewery')}</option>
+                            <option value="alcohol" ${activeFilters.sortBy === 'alcohol' ? 'selected' : ''}>${i18n.t('filter_label_degree')} (%)</option>
                             <option value="volume" ${activeFilters.sortBy === 'volume' ? 'selected' : ''}>Volume</option>
-                            <option value="rarity" ${activeFilters.sortBy === 'rarity' ? 'selected' : ''}>Rareté</option>
-                            <option value="community_rating" ${activeFilters.sortBy === 'community_rating' ? 'selected' : ''}>Note Communauté</option>
+                            <option value="rarity" ${activeFilters.sortBy === 'rarity' ? 'selected' : ''}>${i18n.t('filter_rarity_label')}</option>
+                            <option value="community_rating" ${activeFilters.sortBy === 'community_rating' ? 'selected' : ''}>${i18n.t('filter_community_note')}</option>
                         </select>
                         <select name="sortOrder" class="form-select" style="flex:1;">
-                            <option value="asc" ${activeFilters.sortOrder === 'asc' ? 'selected' : ''}>⬆️ Croiss.</option>
-                            <option value="desc" ${activeFilters.sortOrder === 'desc' ? 'selected' : ''}>⬇️ Décroiss.</option>
+                            <option value="asc" ${activeFilters.sortOrder === 'asc' ? 'selected' : ''}>${i18n.t('filter_sort_asc')}</option>
+                            <option value="desc" ${activeFilters.sortOrder === 'desc' ? 'selected' : ''}>${i18n.t('filter_sort_desc')}</option>
                         </select>
                     </div>
                     
                     <div style="margin-top:15px; display:flex; flex-direction:column; gap:8px;">
                          <label style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:10px 12px; border-radius:8px; cursor:pointer;">
-                            <span style="font-size:0.95rem;">⭐ Favoris Uniquement</span>
+                            <span style="font-size:0.95rem;">${i18n.t('filter_only_favs')}</span>
                             <input type="checkbox" name="onlyFavorites" id="onlyFavorites" ${activeFilters.onlyFavorites ? 'checked' : ''} style="width:20px; height:20px;">
                         </label>
                          <label style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:10px 12px; border-radius:8px; cursor:pointer;">
-                            <span style="font-size:0.95rem; color:#aaa;">🚫 Ignorer le tri favoris</span>
+                            <span style="font-size:0.95rem; color:#aaa;">${i18n.t('filter_ignore_favs')}</span>
                             <input type="checkbox" name="ignoreFavorites" id="ignoreFavorites" ${activeFilters.ignoreFavorites ? 'checked' : ''} style="width:20px; height:20px;">
                         </label>
                     </div>
                 </div>
 
                 <div class="stat-card mb-20">
-                    <h4 style="margin-bottom:10px;">Notes Minimales</h4>
+                    <h4 style="margin-bottom:10px;">${i18n.t('filter_min_ratings')}</h4>
                     <div class="form-group" style="margin-bottom:15px;">
-                        <label class="form-label" style="display:flex; justify-content:space-between;">Note Perso <span><span id="rate-val">${activeFilters.minRating || 0}</span>/20</span></label>
+                        <label class="form-label" style="display:flex; justify-content:space-between;">${i18n.t('filter_personal_note')} <span><span id="rate-val">${activeFilters.minRating || 0}</span>/20</span></label>
                         <input type="range" name="minRating" class="form-input" min="0" max="20" step="1" value="${activeFilters.minRating || 0}" 
                             oninput="document.getElementById('rate-val').innerText = this.value" style="padding:0; height:30px;">
                     </div>
                     <div class="form-group">
-                        <label class="form-label" style="display:flex; justify-content:space-between;">Note Communauté <span><span id="comm-rate-val">${activeFilters.community_rating || 0}</span>/5</span></label>
+                        <label class="form-label" style="display:flex; justify-content:space-between;">${i18n.t('filter_community_note')} <span><span id="comm-rate-val">${activeFilters.community_rating || 0}</span>/5</span></label>
                         <input type="range" name="community_rating" class="form-input" min="0" max="5" step="0.1" value="${activeFilters.community_rating || 0}" 
                             oninput="document.getElementById('comm-rate-val').innerText = this.value" style="padding:0; height:30px;">
                     </div>
@@ -1057,13 +1113,13 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
             <!-- TAB: ATTRIBUTS -->
             <div id="tab-attr" class="tab-pane" style="display:none;">
                 <div class="stat-card mb-20" style="margin-bottom:15px;">
-                    <h4 style="margin-bottom:10px;">Alcool & Volume</h4>
+                    <h4 style="margin-bottom:10px;">${i18n.t('filter_alc_vol')}</h4>
                     <div class="form-group" style="margin-bottom:15px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;">
-                        <label class="form-label">Degré Alcool</label>
+                        <label class="form-label">${i18n.t('filter_label_degree')}</label>
                         <select id="alc-mode" name="alcMode" class="form-select" style="margin-bottom:10px;">
-                            <option value="max" ${activeFilters.alcMode === 'max' ? 'selected' : ''}>Maximum</option>
-                            <option value="range" ${activeFilters.alcMode === 'range' ? 'selected' : ''}>Plage (Min-Max)</option>
-                            <option value="exact" ${activeFilters.alcMode === 'exact' ? 'selected' : ''}>Exact</option>
+                            <option value="max" ${activeFilters.alcMode === 'max' ? 'selected' : ''}>${i18n.t('filter_alc_max')}</option>
+                            <option value="range" ${activeFilters.alcMode === 'range' ? 'selected' : ''}>${i18n.t('filter_alc_range')}</option>
+                            <option value="exact" ${activeFilters.alcMode === 'exact' ? 'selected' : ''}>${i18n.t('filter_alc_exact')}</option>
                         </select>
                         <div id="alc-inputs"></div>
                     </div>
@@ -1071,31 +1127,31 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
                     <div class="form-group" style="padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;">
                         <label class="form-label">Volume (ml)</label>
                         <select id="vol-mode" name="volMode" class="form-select" style="margin-bottom:10px;">
-                            <option value="any" ${!activeFilters.volMode || activeFilters.volMode === 'any' ? 'selected' : ''}>Peu importe</option>
-                            <option value="range" ${activeFilters.volMode === 'range' ? 'selected' : ''}>Plage</option>
-                            <option value="exact" ${activeFilters.volMode === 'exact' ? 'selected' : ''}>Exact</option>
+                            <option value="any" ${!activeFilters.volMode || activeFilters.volMode === 'any' ? 'selected' : ''}>${i18n.t('filter_any')}</option>
+                            <option value="range" ${activeFilters.volMode === 'range' ? 'selected' : ''}>${i18n.t('filter_alc_range')}</option>
+                            <option value="exact" ${activeFilters.volMode === 'exact' ? 'selected' : ''}>${i18n.t('filter_alc_exact')}</option>
                         </select>
                         <div id="vol-inputs"></div>
                     </div>
                 </div>
 
                 <div class="stat-card mb-20">
-                    <h4 style="margin-bottom:10px;">Production</h4>
+                    <h4 style="margin-bottom:10px;">${i18n.t('filter_production')}</h4>
                     <div class="form-group" style="margin-bottom:10px;">
-                        <label class="form-label">Volume Production</label>
+                        <label class="form-label">${i18n.t('filter_production_label')}</label>
                         <select name="production_volume" class="form-select">${createOptions(prodVolumes, activeFilters.production_volume || 'All')}</select>
                     </div>
                     <div class="form-group" style="margin-bottom:15px;">
-                        <label class="form-label">Distribution</label>
+                        <label class="form-label">${i18n.t('detail_distribution')}</label>
                         <select name="distribution" class="form-select">${createOptions(distributions, activeFilters.distribution || 'All')}</select>
                     </div>
                     <label style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:10px 12px; border-radius:8px; cursor:pointer;">
-                        <span style="font-size:0.95rem;">🪵 Vieillie en fût</span>
+                        <span style="font-size:0.95rem;">${i18n.t('detail_barrel_aged')}</span>
                         <input type="checkbox" name="barrel_aged" id="barrel_aged" ${activeFilters.barrel_aged ? 'checked' : ''} style="width:20px; height:20px;">
                     </label>
                     <div class="form-group" style="margin-top:15px;">
-                        <label class="form-label">Ingrédients</label>
-                        <input type="text" name="ingredients" class="form-input" placeholder="Ex: Coriandre, Cerise..." value="${activeFilters.ingredients || ''}">
+                        <label class="form-label">${i18n.t('detail_ingredients')}</label>
+                        <input type="text" name="ingredients" class="form-input" placeholder="${i18n.t('detail_ingredients_placeholder')}" value="${activeFilters.ingredients || ''}">
                     </div>
                 </div>
             </div>
@@ -1104,7 +1160,7 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
 
         <!-- FOOTER -->
         <div style="background:var(--bg-card); padding:15px 20px; border-top:1px solid rgba(255,255,255,0.1); border-radius:0 0 12px 12px; flex-shrink:0;">
-            <button type="submit" form="filter-form" class="btn-primary" style="margin:0; width:100%; font-size:1.1rem; box-shadow:0 -5px 20px rgba(0,0,0,0.5);">Appliquer les filtres</button>
+            <button type="submit" form="filter-form" class="btn-primary" style="margin:0; width:100%; font-size:1.1rem; box-shadow:0 -5px 20px rgba(0,0,0,0.5);">${i18n.t('detail_btn_apply_filters')}</button>
         </div>
     `;
 
@@ -1125,7 +1181,7 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
             alcContainer.innerHTML = `
                 <div style="display:flex; gap:10px; align-items:center;">
                     <input type="number" name="alcMin" class="form-input" placeholder="Min" step="0.1" value="${activeFilters.alcMin || ''}" style="flex:1;">
-                    <span>à</span>
+                    <span>${i18n.t('detail_range_separator')}</span>
                     <input type="number" name="alcMax" class="form-input" placeholder="Max" step="0.1" value="${activeFilters.alcMax || ''}" style="flex:1;">
                 </div>
             `;
@@ -1145,12 +1201,12 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
 
     const renderVolInputs = (mode) => {
         if (mode === 'any') {
-            volContainer.innerHTML = '<div style="color:#aaa; font-style:italic; font-size:0.9rem;">Tous les volumes</div>';
+            volContainer.innerHTML = `<div style="color:#aaa; font-style:italic; font-size:0.9rem;">${i18n.t('detail_all_volumes')}</div>`;
         } else if (mode === 'range') {
             volContainer.innerHTML = `
                  <div style="display:flex; gap:10px; align-items:center;">
                     <input type="number" name="volMin" class="form-input" placeholder="Min (ml)" step="10" value="${activeFilters.volMin || ''}" style="flex:1;">
-                    <span>à</span>
+                    <span>${i18n.t('detail_range_separator')}</span>
                     <input type="number" name="volMax" class="form-input" placeholder="Max (ml)" step="10" value="${activeFilters.volMax || ''}" style="flex:1;">
                 </div>
             `;
@@ -1209,7 +1265,7 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
         // Collect Rarity & Type Checkboxes manually
         const rarity = [];
         wrapper.querySelectorAll('.cb-rarity:checked').forEach(cb => rarity.push(cb.value));
-        
+
         const typeSelected = [];
         wrapper.querySelectorAll('.cb-type:checked').forEach(cb => typeSelected.push(cb.value));
 
@@ -1245,17 +1301,18 @@ export function renderBeerDetail(beer, onSave) {
     // Build Dynamic Form
     let formFields = template.map(field => {
         const value = existingData[field.id] !== undefined ? existingData[field.id] : '';
+        const label = i18n.t(field.label);
 
         if (field.type === 'number') {
             return `
                 <div class="form-group">
-                    <label class="form-label">${field.label}</label>
-                    <input type="number" class="form-input" name="${field.id}" min="${field.min}" max="${field.max}" step="${field.step}" value="${value}" placeholder="Note... (0-20)">
+                    <label class="form-label">${label}</label>
+                    <input type="number" class="form-input" name="${field.id}" min="${field.min}" max="${field.max}" step="${field.step}" value="${value}" placeholder="${i18n.t('detail_note_placeholder')}">
                 </div>`;
         } else if (field.type === 'textarea') {
             return `
                 <div class="form-group">
-                    <label class="form-label">${field.label}</label>
+                    <label class="form-label">${label}</label>
                     <textarea class="form-textarea" name="${field.id}" rows="3">${value}</textarea>
                 </div>`;
         } else if (field.type === 'range') {
@@ -1267,7 +1324,7 @@ export function renderBeerDetail(beer, onSave) {
             return `
                 <div class="form-group">
                     <label class="form-label" style="display:flex; justify-content:space-between;">
-                        <span>${field.label}</span>
+                        <span>${label}</span>
                         <span id="val-${field.id}">${displayVal}/${max}</span>
                     </label>
                     <input type="range" class="form-input" name="${field.id}" min="${min}" max="${max}" step="${step}" value="${displayVal}"
@@ -1278,7 +1335,7 @@ export function renderBeerDetail(beer, onSave) {
             return `
                 <div class="form-group" style="display:flex; align-items:center; gap:10px; background:var(--bg-card); padding:10px; border-radius:8px;">
                     <input type="checkbox" name="${field.id}" ${value ? 'checked' : ''} style="width:20px; height:20px;">
-                        <label class="form-label" style="margin:0;">${field.label}</label>
+                        <label class="form-label" style="margin:0;">${label}</label>
                 </div>`;
         }
         return '';
@@ -1294,18 +1351,18 @@ export function renderBeerDetail(beer, onSave) {
     defaultVol = defaultVol.replace('.', ',');
 
     consumptionWrapper.innerHTML = `
-                <h3 style="margin-bottom:10px; font-size:1rem;">Consommation</h3>
+                <h3 style="margin-bottom:10px; font-size:1rem;">${i18n.t('detail_consumption_title')}</h3>
                 <div style="font-size:2rem; font-weight:bold; color:var(--accent-gold); margin-bottom:10px;">
-                    <span id="consumption-count">${existingData.count || 0}</span> <span style="font-size:1rem; color:#666;">fois</span>
+                    <span id="consumption-count">${existingData.count || 0}</span> <span style="font-size:1rem; color:#666;">${i18n.t('detail_times')}</span>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Volume bu</label>
+                    <label class="form-label">${i18n.t('detail_volume_drunk')}</label>
                     <select id="consumption-volume" class="form-select" style="text-align:center;">
-                        <option value="${defaultVol}" selected>${defaultVol} (Défaut)</option>
+                        <option value="${defaultVol}" selected>${defaultVol} ${i18n.t('detail_default')}</option>
                         <option value="25cl">25cl</option>
                         <option value="33cl">33cl</option>
-                        <option value="50cl">50cl (Pinte)</option>
+                        <option value="50cl">50cl ${i18n.t('detail_pint')}</option>
                         <option value="1L">1L</option>
                         <option value="1.5L">1.5L</option>
                         <option value="2L">2L</option>
@@ -1313,10 +1370,10 @@ export function renderBeerDetail(beer, onSave) {
                 </div>
 
                 <div style="display:flex; gap:10px; justify-content:center;">
-                    <button id="btn-drink" class="btn-primary" style="margin:0; background:var(--success);">+ Boire</button>
-                    <button id="btn-undrink" class="btn-primary" style="margin:0; background:var(--bg-card); border:1px solid #444; color:#aaa; width:auto;">- Annuler</button>
+                    <button id="btn-drink" class="btn-primary" style="margin:0; background:var(--success);">${i18n.t('detail_btn_drink')}</button>
+                    <button id="btn-undrink" class="btn-primary" style="margin:0; background:var(--bg-card); border:1px solid #444; color:#aaa; width:auto;">${i18n.t('detail_btn_undrink')}</button>
                 </div>
-                <p style="font-size:0.75rem; color:#666; margin-top:10px;">Ajoute une consommation à l'historique.</p>
+                <p style="font-size:0.75rem; color:#666; margin-top:10px;">${i18n.t('detail_drink_desc')}</p>
                 `;
 
     // --- Custom Beer Actions ---
@@ -1324,8 +1381,8 @@ export function renderBeerDetail(beer, onSave) {
     if (beer.id.startsWith('CUSTOM_')) {
         customActions = `
             <div style="margin-top:20px; border-top:1px solid #333; padding-top:20px; display:flex; gap:10px;">
-                <button id="btn-edit-beer" class="form-input" style="flex:1;">✏️ Modifier</button>
-                <button id="btn-delete-beer" class="form-input" style="flex:1; color:var(--danger); border-color:var(--danger);">🗑️ Supprimer</button>
+                <button id="btn-edit-beer" class="form-input" style="flex:1;">${i18n.t('detail_btn_edit')}</button>
+                <button id="btn-delete-beer" class="form-input" style="flex:1; color:var(--danger); border-color:var(--danger);">${i18n.t('detail_btn_delete')}</button>
             </div>
         `;
     }
@@ -1358,7 +1415,7 @@ export function renderBeerDetail(beer, onSave) {
                         if (window.savePlayedAnims) window.savePlayedAnims();
                     }
 
-                    badge.innerText = beer.rarity.replace('_', ' ');
+                    badge.innerText = i18n.t('rarity_' + beer.rarity);
                     rarityContainer.appendChild(badge);
                 } else {
                     const hiddenBadge = document.createElement('div');
@@ -1372,7 +1429,7 @@ export function renderBeerDetail(beer, onSave) {
             if (beer.isSeasonal) {
                 const seasonBadge = document.createElement('div');
                 seasonBadge.className = 'rarity-badge rarity-saisonniere';
-                seasonBadge.innerHTML = '🍂 Saisonnière';
+                seasonBadge.innerHTML = i18n.t('detail_seasonal');
                 rarityContainer.appendChild(seasonBadge);
             }
         };
@@ -1418,33 +1475,120 @@ export function renderBeerDetail(beer, onSave) {
                         </div>
                 </div>
 
-                <details style="background:var(--bg-card); padding:10px; border-radius:12px; margin-bottom:15px;">
-                    <summary style="font-weight:bold; cursor:pointer; list-style:none;">📊 Infos détaillées</summary>
-                    <div style="margin-top:10px; display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:0.85rem;">
-                        ${beer.production_volume ? `<div><span style="color:#888;">Production:</span> ${beer.production_volume}</div>` : ''}
-                        ${beer.distribution ? `<div><span style="color:#888;">Distribution:</span> ${beer.distribution}</div>` : ''}
-                        ${beer.barrel_aged !== undefined ? `<div><span style="color:#888;">Barrel Aged:</span> ${beer.barrel_aged ? '✅ Oui' : '❌ Non'}</div>` : ''}
-                        ${beer.community_rating ? `<div><span style="color:#888;">Note Communauté:</span> ⭐ ${beer.community_rating}/5</div>` : ''}
-                        ${beer.ingredients ? `<div style="grid-column:span 2;"><span style="color:#888;">Ingrédients:</span> ${beer.ingredients}</div>` : ''}
-                    </div>
-                </details>
-
                 ${consumptionWrapper.outerHTML}
 
+                <div class="info-panel">
+                    <h4>${i18n.t('info_title')}</h4>
+                    <div class="info-stats-grid">
+                        ${(() => {
+            const abvVal = parseFloat((beer.alcohol || '0').replace('%', '').replace('°', '').replace(',', '.')) || 0;
+            const volMl = (() => {
+                const s = (beer.volume || '').toLowerCase();
+                if (s.includes('ml')) return parseFloat(s) || 330;
+                if (s.includes('cl')) return (parseFloat(s) || 33) * 10;
+                if (s.includes('l')) return (parseFloat(s) || 0.33) * 1000;
+                const v = parseFloat(s) || 33;
+                return v < 5 ? v * 1000 : (v < 100 ? v * 10 : v);
+            })();
+            const gramsAlc = volMl * (abvVal / 100) * 0.8;
+            const mlAlc = volMl * (abvVal / 100);
+            const calories = Math.round(gramsAlc * 7 + (volMl * 0.03)); // ~7kcal/g alcohol + carbs approx
+
+            // Speculative BAC
+            let bacHtml = '';
+            if (Storage.getPreference('bac_enabled', true)) {
+                const driveInfo = BAC.getSpeculativeDriveInfo(beer.volume, beer.alcohol);
+                if (driveInfo) {
+                    const waitText = driveInfo.timeStr ? i18n.t('info_wait_drive', { time: driveInfo.timeStr }) : i18n.t('info_ok_drive');
+                    bacHtml = `
+                                        <div class="info-stat-card info-stat-wide bac-status-card" style="--bac-color:${driveInfo.color};">
+                                            <span class="stat-icon">${driveInfo.icon}</span>
+                                            <span class="stat-value" style="color:${driveInfo.color};">+${driveInfo.delta.toFixed(2)} g/l</span>
+                                            <span class="stat-label">${waitText}</span>
+                                        </div>
+                                    `;
+                }
+            }
+
+            return `
+                                <div class="info-stat-card">
+                                    <span class="stat-icon">🧪</span>
+                                    <span class="stat-value">${gramsAlc.toFixed(1)}g</span>
+                                    <span class="stat-label">${i18n.t('info_label_pure_alcohol')}</span>
+                                </div>
+                                <div class="info-stat-card">
+                                    <span class="stat-icon">💧</span>
+                                    <span class="stat-value">${mlAlc.toFixed(1)}ml</span>
+                                    <span class="stat-label">${i18n.t('info_label_vol_alcohol')}</span>
+                                </div>
+                                <div class="info-stat-card">
+                                    <span class="stat-icon">🔥</span>
+                                    <span class="stat-value">${calories}</span>
+                                    <span class="stat-label">${i18n.t('info_label_calories')}</span>
+                                </div>
+                                <div class="info-stat-card">
+                                    <span class="stat-icon">🍺</span>
+                                    <span class="stat-value">${abvVal}°</span>
+                                    <span class="stat-label">${i18n.t('info_label_degree')}</span>
+                                </div>
+                                ${bacHtml}
+                            `;
+        })()}
+                    </div>
+                    ${(beer.production_volume || beer.distribution || beer.barrel_aged !== undefined || beer.community_rating || beer.ingredients) ? `
+                    <div style="margin-top:12px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.06);">
+                        <div class="info-stats-grid">
+                            ${beer.production_volume ? `
+                                <div class="info-stat-card">
+                                    <span class="stat-icon">🏭</span>
+                                    <span class="stat-value" style="font-size:0.9rem;">${beer.production_volume}</span>
+                                    <span class="stat-label">${i18n.t('info_label_production')}</span>
+                                </div>` : ''}
+                            ${beer.distribution ? `
+                                <div class="info-stat-card">
+                                    <span class="stat-icon">🚚</span>
+                                    <span class="stat-value" style="font-size:0.9rem;">${beer.distribution}</span>
+                                    <span class="stat-label">${i18n.t('info_label_distribution')}</span>
+                                </div>` : ''}
+                            ${beer.barrel_aged !== undefined ? `
+                                <div class="info-stat-card">
+                                    <span class="stat-icon">🪵</span>
+                                    <span class="stat-value" style="font-size:0.9rem;">${beer.barrel_aged ? i18n.t('yes') : i18n.t('no')}</span>
+                                    <span class="stat-label">${i18n.t('info_label_barrel_aged')}</span>
+                                </div>` : ''}
+                            ${beer.community_rating ? `
+                                <div class="info-stat-card">
+                                    <span class="stat-icon">⭐</span>
+                                    <span class="stat-value" style="font-size:0.9rem;">${beer.community_rating}/5</span>
+                                    <span class="stat-label">${i18n.t('info_label_community')}</span>
+                                </div>` : ''}
+                            ${beer.ingredients ? `
+                                <div class="info-stat-card info-stat-wide" style="display:flex; flex-direction:row; align-items:center; gap:10px; padding:10px; justify-content: flex-start;">
+                                    <span class="stat-icon" style="margin:0;">🌿</span>
+                                    <div style="text-align:left;">
+                                        <span class="stat-label" style="display:block; margin:0; text-align:left;">${i18n.t('info_label_ingredients')}</span>
+                                        <span class="stat-value" style="font-size:0.85rem; line-height:1.2; white-space:normal; display:block; margin-top:2px; text-transform:none;">${beer.ingredients}</span>
+                                    </div>
+                                </div>` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+
                 <details style="background:var(--bg-card); padding:10px; border-radius:12px; margin-bottom:20px;">
-                    <summary style="font-weight:bold; cursor:pointer; list-style:none;">📝 Note de dégustation ${existingData.score ? '✅' : ''}</summary>
+                    <summary style="font-weight:bold; cursor:pointer; list-style:none;">📝 ${i18n.t('info_label_tasting_note')} ${existingData.score ? '✅' : ''}</summary>
                     <form id="rating-form" style="margin-top:15px;">
                         ${formFields}
-                        <button type="submit" class="btn-primary">Enregistrer la note</button>
+                        <button type="submit" class="btn-primary">${i18n.t('info_btn_save_note')}</button>
                     </form>
                 </details>
 
                 <div style="display:flex; gap:10px; margin-bottom:10px;">
-                    <button id="btn-share-beer" class="form-input" style="flex:1;">📤 Lien</button>
-                    <button id="btn-share-insta" class="form-input" style="flex:1;">📸 Story Rapide</button>
+                    <button id="btn-share-beer" class="form-input" style="flex:1;">📤 ${i18n.t('info_btn_link')}</button>
+                    <button id="btn-share-insta" class="form-input" style="flex:1;">📸 ${i18n.t('info_btn_fast_story')}</button>
                 </div>
                 <button id="btn-share-advanced" class="btn-primary" style="margin-top:0; border:1px solid var(--accent-gold); color:var(--accent-gold); background:transparent;">
-                    ✨ Story Personnalisée
+                    ✨ ${i18n.t('info_btn_custom_story')}
                 </button>
 
                 ${customActions}
@@ -1472,14 +1616,14 @@ export function renderBeerDetail(beer, onSave) {
 
     // Share Link Handler
     wrapper.querySelector('#btn-share-beer').onclick = async () => {
-        showToast("Préparation du partage...");
+        showToast(i18n.t('toast_preparing_share'));
         await Storage.shareBeer(beer);
     };
 
     // Share Image Handler (Insta-Beer)
     wrapper.querySelector('#btn-share-insta').onclick = async () => {
         // Default behavior: uses existing score/comment
-        showToast("Génération image...");
+        showToast(i18n.t('toast_generating_image'));
         // API.handleShare or Share.shareImage directly?
         // Let's use the API trigger to be safe or Share module directly if available
         // We need 'api.js' handleShare logic but without params overrides
@@ -1495,7 +1639,7 @@ export function renderBeerDetail(beer, onSave) {
     wrapper.querySelector('#btn-share-insta').onclick = async () => {
         const btn = wrapper.querySelector('#btn-share-insta');
         const originalText = btn.innerHTML;
-        btn.innerHTML = '⏳ Création...';
+        btn.innerHTML = i18n.t('reveal_creating');
 
         try {
             // Get user data
@@ -1504,12 +1648,12 @@ export function renderBeerDetail(beer, onSave) {
             const userComment = existingData.comment || "";
 
             const blob = await Share.generateBeerCard(beer, userRating, userComment);
-            await Share.shareImage(blob, `Check-in: ${beer.title}`);
+            await Share.shareImage(blob, i18n.t('share_title_checkin', { title: beer.title }));
             btn.innerHTML = originalText;
         } catch (err) {
             console.error(err);
             btn.innerHTML = originalText;
-            showToast(err.message === 'Web Share API not supported' ? 'Partage fichier non supporté' : 'Erreur de partage');
+            showToast(err.message === 'Web Share API not supported' ? i18n.t('toast_share_unsupported') : i18n.t('toast_share_error'));
         }
     };
 
@@ -1532,7 +1676,7 @@ export function renderBeerDetail(beer, onSave) {
             // But existingData is fetched by ID.
 
             // 1. Show Toast
-            showToast("Bière sauvegardée dans votre Dex !");
+            showToast(i18n.t('toast_beer_saved_dex'));
 
             // 2. Mock the switch
             const oldId = beer.id;
@@ -1553,15 +1697,15 @@ export function renderBeerDetail(beer, onSave) {
         const newData = Storage.addConsumption(beer.id, vol);
 
         // --- BAC INTEGRATION ---
-        if (Storage.getPreference('bac_enabled', false) && !Storage.getPreference('bac_manual_only', false)) {
+        if (Storage.getPreference('bac_enabled', true) && !Storage.getPreference('bac_manual_only', false)) {
             BAC.addDrinkToBAC(vol, beer.alcohol || 5.0);
         }
 
         Analytics.track('beer_consumed', {
             beer_id: beer.id,
             name: beer.title,
-            brewery: beer.brewery || 'Inconnu',
-            type: beer.type || 'Inconnu',
+            brewery: beer.brewery || i18n.t('label_unknown'),
+            type: beer.type || i18n.t('label_unknown'),
             volume: vol
         });
 
@@ -1569,7 +1713,7 @@ export function renderBeerDetail(beer, onSave) {
         existingData.count = newData.count;
         wrapper.querySelector('#consumption-count').innerText = newData.count;
 
-        showToast(`🍻 Glou Glou ! (+${vol})`);
+        showToast(i18n.t('toast_glou_glou', { vol: vol }));
 
         // Premium Reveal Sequence if FIRST TIME
         if (wasLocked && beer.rarity && beer.rarity !== 'base') {
@@ -1588,7 +1732,7 @@ export function renderBeerDetail(beer, onSave) {
                 'ultra_legendaire': '#ff00cc'
             };
             const particleColor = rarityColors[beer.rarity] || '#FFC000';
-            const rarityName = beer.rarity.replace('_', ' ').toUpperCase();
+            const rarityName = i18n.t('rarity_' + beer.rarity).toUpperCase();
 
             // Construct a clone of the actual card for the reveal
             const fallbackImage = isKeg(beer.volume) ? 'images/beer/FUT.jpg' : 'images/beer/default.png';
@@ -1611,7 +1755,7 @@ export function renderBeerDetail(beer, onSave) {
 
                     <!-- Revealed Content (Phase 2) -->
                     <div id="revealed-content" style="display: none; flex-direction: column; align-items: center; width: 100%; padding: 20px;">
-                        <h2 class="animate__animated animate__fadeInDown" style="color: ${particleColor}; text-shadow: 0 0 20px ${particleColor}; font-size: clamp(1.8rem, 5vw, 2.5rem); margin-bottom: 30px; text-transform: uppercase; font-weight: 900; letter-spacing: 2px; text-align: center;">NOUVELLE BIÈRE DÉBLOQUÉE !</h2>
+                        <h2 class="animate__animated animate__fadeInDown" style="color: ${particleColor}; text-shadow: 0 0 20px ${particleColor}; font-size: clamp(1.8rem, 5vw, 2.5rem); margin-bottom: 30px; text-transform: uppercase; font-weight: 900; letter-spacing: 2px; text-align: center;">${i18n.t('reveal_new_beer')}</h2>
                         
                         <div class="reveal-card-wrapper animate__animated animate__zoomIn" data-tilt data-tilt-glare data-tilt-max-glare="0.8" style="perspective: 1000px; max-width: 90vw;">
                             <div class="beer-card card-rarity-${beer.rarity} ${beer.rarity === 'ultra_legendaire' ? 'card-anim-ultra_legendary' : ''}" style="width: 260px; height: auto; min-height: 400px; margin: 0; background: var(--bg-card); display: flex; flex-direction: column; cursor: pointer; border-width: 3px;">
@@ -1737,13 +1881,13 @@ export function renderBeerDetail(beer, onSave) {
         const newData = Storage.removeConsumption(beer.id);
         if (newData) {
             // --- BAC INTEGRATION ---
-            if (Storage.getPreference('bac_enabled', false) && !Storage.getPreference('bac_manual_only', false)) {
+            if (Storage.getPreference('bac_enabled', true) && !Storage.getPreference('bac_manual_only', false)) {
                 BAC.removeDrinkFromBAC(vol, beer.alcohol || 5.0);
             }
 
             existingData.count = newData.count; // Update ref
             wrapper.querySelector('#consumption-count').innerText = newData.count;
-            showToast("Consommation annulée.");
+            showToast(i18n.t('toast_drink_cancelled'));
 
             // Re-lock if count back to 0
             if (newData.count === 0) {
@@ -1755,10 +1899,10 @@ export function renderBeerDetail(beer, onSave) {
     // Binding for Custom Actions
     if (customActions) {
         wrapper.querySelector('#btn-delete-beer').onclick = async () => {
-            if (await showConfirmModal("Supprimer définitivement cette bière ?")) {
+            if (await showConfirmModal(i18n.t('modal_confirm_delete_beer'))) {
                 Storage.deleteCustomBeer(beer.id);
                 closeModal();
-                showToast("Bière supprimée.");
+                showToast(i18n.t('toast_beer_deleted'));
                 setTimeout(() => location.reload(), 500);
             }
         };
@@ -1766,7 +1910,7 @@ export function renderBeerDetail(beer, onSave) {
         wrapper.querySelector('#btn-edit-beer').onclick = () => {
             closeModal();
             renderAddBeerForm((updatedBeer) => {
-                showToast("Bière modifiée !");
+                showToast(i18n.t('toast_beer_modified'));
                 setTimeout(() => location.reload(), 500);
             }, beer);
         };
@@ -1815,9 +1959,9 @@ export function renderBeerDetail(beer, onSave) {
             Storage.saveBeerRating(newBeer.id, data);
 
             window.dispatchEvent(new CustomEvent('beerdex-action'));
-            showToast("Bière & Note sauvegardées !");
+            showToast(i18n.t('toast_beer_note_saved'));
         } else {
-            showToast("Note sauvegardée !");
+            showToast(i18n.t('toast_rating_saved'));
         }
 
         wrapper.querySelector('details').open = false;
@@ -1831,8 +1975,8 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
     const wrapper = document.createElement('div');
     wrapper.className = 'modal-content';
 
-    const title = editModeBeer ? "Modifier la bière" : "Ajouter une bière";
-    const btnText = editModeBeer ? "Sauvegarder les modifications" : "Ajouter";
+    const title = editModeBeer ? i18n.t('modal_title_edit') : i18n.t('modal_title_add');
+    const btnText = editModeBeer ? i18n.t('btn_save_changes') : i18n.t('btn_add');
 
     // Fill values: Priority -> editModeBeer -> prefillData -> ''
     const v = (key) => {
@@ -1854,7 +1998,7 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
                 </div>
                 <form id="add-beer-form">
                     <div class="form-group">
-                        <label class="form-label">Nom de la bière</label>
+                        <label class="form-label">${i18n.t('label_beer_name')}</label>
                         <input type="text" class="form-input" name="title" value="${v('title')}" required>
                     </div>
 
@@ -1864,109 +2008,109 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Province / Région</label>
+                        <label class="form-label">${i18n.t('form_label_province')}</label>
                         <select class="form-select" name="province">
-                            <option value="">-- Non spécifié --</option>
-                            <optgroup label="🇧🇪 Belgique - Flandre">
-                                <option value="ANT" ${v('province') === 'ANT' ? 'selected' : ''}>Anvers (ANT)</option>
-                                <option value="OVL" ${v('province') === 'OVL' ? 'selected' : ''}>Flandre Orientale (OVL)</option>
-                                <option value="WVL" ${v('province') === 'WVL' ? 'selected' : ''}>Flandre Occidentale (WVL)</option>
-                                <option value="VBR" ${v('province') === 'VBR' ? 'selected' : ''}>Brabant Flamand (VBR)</option>
-                                <option value="LIM" ${v('province') === 'LIM' ? 'selected' : ''}>Limbourg (LIM)</option>
+                            <option value="">${i18n.t('form_option_unspecified')}</option>
+                            <optgroup label="${i18n.t('region_be_flanders')}">
+                                <option value="ANT" ${v('province') === 'ANT' ? 'selected' : ''}>${i18n.t('province_ant')}</option>
+                                <option value="OVL" ${v('province') === 'OVL' ? 'selected' : ''}>${i18n.t('province_ovl')}</option>
+                                <option value="WVL" ${v('province') === 'WVL' ? 'selected' : ''}>${i18n.t('province_wvl')}</option>
+                                <option value="VBR" ${v('province') === 'VBR' ? 'selected' : ''}>${i18n.t('province_vbr')}</option>
+                                <option value="LIM" ${v('province') === 'LIM' ? 'selected' : ''}>${i18n.t('province_lim')}</option>
                             </optgroup>
-                            <optgroup label="🇧🇪 Belgique - Wallonie">
-                                <option value="HAI" ${v('province') === 'HAI' ? 'selected' : ''}>Hainaut (HAI)</option>
-                                <option value="NAM" ${v('province') === 'NAM' ? 'selected' : ''}>Namur (NAM)</option>
-                                <option value="LIE" ${v('province') === 'LIE' ? 'selected' : ''}>Liège (LIE)</option>
-                                <option value="LUX" ${v('province') === 'LUX' ? 'selected' : ''}>Luxembourg (LUX)</option>
-                                <option value="WBR" ${v('province') === 'WBR' ? 'selected' : ''}>Brabant Wallon (WBR)</option>
+                            <optgroup label="${i18n.t('region_be_wallonia')}">
+                                <option value="HAI" ${v('province') === 'HAI' ? 'selected' : ''}>${i18n.t('province_hai')}</option>
+                                <option value="NAM" ${v('province') === 'NAM' ? 'selected' : ''}>${i18n.t('province_nam')}</option>
+                                <option value="LIE" ${v('province') === 'LIE' ? 'selected' : ''}>${i18n.t('province_lie')}</option>
+                                <option value="LUX" ${v('province') === 'LUX' ? 'selected' : ''}>${i18n.t('province_lux')}</option>
+                                <option value="WBR" ${v('province') === 'WBR' ? 'selected' : ''}>${i18n.t('province_wbr')}</option>
                             </optgroup>
-                            <optgroup label="🇧🇪 Belgique - Bruxelles">
-                                <option value="BRU" ${v('province') === 'BRU' ? 'selected' : ''}>Bruxelles (BRU)</option>
+                            <optgroup label="${i18n.t('region_be_brussels')}">
+                                <option value="BRU" ${v('province') === 'BRU' ? 'selected' : ''}>${i18n.t('province_bru')}</option>
                             </optgroup>
-                            <optgroup label="🌍 Autres">
-                                <option value="FR" ${v('province') === 'FR' ? 'selected' : ''}>France (FR)</option>
-                                <option value="NL" ${v('province') === 'NL' ? 'selected' : ''}>Pays-Bas (NL)</option>
-                                <option value="DE" ${v('province') === 'DE' ? 'selected' : ''}>Allemagne (DE)</option>
-                                <option value="US" ${v('province') === 'US' ? 'selected' : ''}>États-Unis (US)</option>
-                                <option value="OTHER" ${v('province') === 'OTHER' ? 'selected' : ''}>Autre</option>
+                            <optgroup label="${i18n.t('region_others')}">
+                                <option value="FR" ${v('province') === 'FR' ? 'selected' : ''}>${i18n.t('province_fr')}</option>
+                                <option value="NL" ${v('province') === 'NL' ? 'selected' : ''}>${i18n.t('province_nl')}</option>
+                                <option value="DE" ${v('province') === 'DE' ? 'selected' : ''}>${i18n.t('province_de')}</option>
+                                <option value="US" ${v('province') === 'US' ? 'selected' : ''}>${i18n.t('province_us')}</option>
+                                <option value="OTHER" ${v('province') === 'OTHER' ? 'selected' : ''}>${i18n.t('province_other')}</option>
                             </optgroup>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Type (Blonde, Brune...)</label>
+                        <label class="form-label">${i18n.t('form_label_type')}</label>
                         <input type="text" class="form-input" name="type" value="${v('type')}">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Alcool (ex: 5°)</label>
+                        <label class="form-label">${i18n.t('form_label_alcohol')}</label>
                         <input type="text" class="form-input" name="alcohol" value="${v('alcohol')}">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Volume (ex: 33cl)</label>
+                        <label class="form-label">${i18n.t('form_label_volume')}</label>
                         <input type="text" class="form-input" name="volume" value="${v('volume')}">
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Distribution</label>
+                        <label class="form-label">${i18n.t('form_label_distribution')}</label>
                         <select class="form-select" name="distribution">
-                            <option value="1" ${v('distribution') === 'Partout' ? 'selected' : ''}>Partout (1 pt)</option>
-                            <option value="2" ${v('distribution') === 'Supermarché' ? 'selected' : ''}>Supermarché (2 pts)</option>
-                            <option value="3" ${v('distribution') === 'Cavistes' ? 'selected' : ''}>Cavistes (3 pts)</option>
-                            <option value="4" ${v('distribution') === 'Cavistes spécialisés' ? 'selected' : ''}>Cavistes spécialisés (4 pts)</option>
-                            <option value="5" ${v('distribution') === 'À la brasserie' ? 'selected' : ''}>À la brasserie uniquement (5 pts)</option>
+                            <option value="1" ${v('distribution') === 'Partout' ? 'selected' : ''}>${i18n.t('form_dist_partout')} (1 pt)</option>
+                            <option value="2" ${v('distribution') === 'Supermarché' ? 'selected' : ''}>${i18n.t('form_dist_supermarket')} (2 pts)</option>
+                            <option value="3" ${v('distribution') === 'Cavistes' ? 'selected' : ''}>${i18n.t('form_dist_cavistes')} (3 pts)</option>
+                            <option value="4" ${v('distribution') === 'Cavistes spécialisés' ? 'selected' : ''}>${i18n.t('form_dist_cavistes_spec')} (4 pts)</option>
+                            <option value="5" ${v('distribution') === 'À la brasserie' ? 'selected' : ''}>${i18n.t('form_dist_brewery')} (5 pts)</option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Disponibilité</label>
+                        <label class="form-label">${i18n.t('form_label_availability')}</label>
                         <select class="form-select" name="availability">
-                            <option value="1">Permanente (1 pt)</option>
-                            <option value="2">Saisonnière (2 pts)</option>
-                            <option value="3">Édition limitée (3 pts)</option>
-                            <option value="4">Batch unique (4 pts)</option>
-                            <option value="5">Unique à vie (5 pts)</option>
+                            <option value="1">${i18n.t('form_avail_perm')} (1 pt)</option>
+                            <option value="2">${i18n.t('form_avail_seasonal')} (2 pts)</option>
+                            <option value="3">${i18n.t('form_avail_limited')} (3 pts)</option>
+                            <option value="4">${i18n.t('form_avail_batch')} (4 pts)</option>
+                            <option value="5">${i18n.t('form_avail_unique')} (5 pts)</option>
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Ingrédients / Notes</label>
-                        <input type="text" class="form-input" name="ingredients" value="${v('ingredients') || ''}" placeholder="ex: Barrel Aged, Houblons Citra...">
+                        <label class="form-label">${i18n.t('form_label_ingr_notes')}</label>
+                        <input type="text" class="form-input" name="ingredients" value="${v('ingredients') || ''}" placeholder="${i18n.t('detail_ingredients_placeholder')}">
                     </div>
 
                     <div class="form-group" style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
                         <input type="checkbox" name="barrel_aged" id="barrel_aged" ${v('barrel_aged') ? 'checked' : ''} style="width:20px; height:20px;">
-                        <label for="barrel_aged" style="font-size:0.9rem; margin:0;">Vieillie en fût (Barrel Aged)</label>
+                        <label for="barrel_aged" style="font-size:0.9rem; margin:0;">${i18n.t('form_label_barrel_aged')}</label>
                     </div>
 
-                        <label class="form-label">Rareté</label>
+                        <label class="form-label">${i18n.t('form_label_rarity')}</label>
                         <div style="display:flex; gap:10px; margin-bottom:10px;">
                             <select class="form-select" name="rarity" style="flex:1;">
-                                <option value="" selected>-- Auto --</option>
-                                <option value="base" ${v('rarity') === 'base' ? 'selected' : ''}>Base (Gris)</option>
-                                <option value="commun" ${v('rarity') === 'commun' ? 'selected' : ''}>Commun (Vert)</option>
-                                <option value="rare" ${v('rarity') === 'rare' ? 'selected' : ''}>Rare (Bleu)</option>
-                                <option value="super_rare" ${v('rarity') === 'super_rare' ? 'selected' : ''}>Super Rare (Cyan)</option>
-                                <option value="epique" ${v('rarity') === 'epique' ? 'selected' : ''}>Épique (Violet)</option>
-                                <option value="mythique" ${v('rarity') === 'mythique' ? 'selected' : ''}>Mythique (Rouge)</option>
-                                <option value="legendaire" ${v('rarity') === 'legendaire' ? 'selected' : ''}>Légendaire (Orange)</option>
-                                <option value="ultra_legendaire" ${v('rarity') === 'ultra_legendaire' ? 'selected' : ''}>Ultra Légendaire (Gradient)</option>
+                                <option value="" selected>${i18n.t('form_rarity_auto')}</option>
+                                <option value="base" ${v('rarity') === 'base' ? 'selected' : ''}>${i18n.t('form_rarity_base')}</option>
+                                <option value="commun" ${v('rarity') === 'commun' ? 'selected' : ''}>${i18n.t('form_rarity_comm')}</option>
+                                <option value="rare" ${v('rarity') === 'rare' ? 'selected' : ''}>${i18n.t('form_rarity_rare')}</option>
+                                <option value="super_rare" ${v('rarity') === 'super_rare' ? 'selected' : ''}>${i18n.t('form_rarity_super')}</option>
+                                <option value="epique" ${v('rarity') === 'epique' ? 'selected' : ''}>${i18n.t('form_rarity_epic')}</option>
+                                <option value="mythique" ${v('rarity') === 'mythique' ? 'selected' : ''}>${i18n.t('form_rarity_myth')}</option>
+                                <option value="legendaire" ${v('rarity') === 'legendaire' ? 'selected' : ''}>${i18n.t('form_rarity_legend')}</option>
+                                <option value="ultra_legendaire" ${v('rarity') === 'ultra_legendaire' ? 'selected' : ''}>${i18n.t('form_rarity_ultra')}</option>
                             </select>
                         </div>
                         <div style="display:flex; align-items:center; gap:10px;">
                             <input type="checkbox" name="isSeasonal" id="isSeasonal" ${v('isSeasonal') ? 'checked' : ''} style="width:20px; height:20px;">
-                            <label for="isSeasonal" style="font-size:0.9rem; margin:0;">Saisonnière / Évènementielle</label>
+                            <label for="isSeasonal" style="font-size:0.9rem; margin:0;">${i18n.t('form_label_event')}</label>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Image</label>
+                        <label class="form-label">${i18n.t('form_label_image')}</label>
                         <div style="display: flex; gap: 10px; align-items: center;">
                             <input type="file" id="image-file-input" accept="image/*" style="display: none;">
-                                <button type="button" class="form-input" style="width: auto;" onclick="document.getElementById('image-file-input').click()">Choisir une photo</button>
-                                <span id="file-name" style="font-size: 0.8rem; color: #888;">${editModeBeer ? 'Image actuelle conservée' : 'Par défaut: Fût'}</span>
+                                <button type="button" class="form-input" style="width: auto;" onclick="document.getElementById('image-file-input').click()">${i18n.t('form_btn_choose_photo')}</button>
+                                <span id="file-name" style="font-size: 0.8rem; color: #888;">${editModeBeer ? i18n.t('form_status_img_keep') : i18n.t('form_status_img_default')}</span>
                         </div>
                     </div>
 
@@ -2027,15 +2171,15 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
                     // Actually renderScannerModal uses openModal, so it overwrites current modal content.
                     // The callback is executed. 
 
-                    showToast("Analyse...");
+                    showToast(i18n.t('toast_analyzing'));
                     const product = await fetchProductByBarcode(barcode);
                     if (product) {
                         renderAddBeerForm(onSave, editModeBeer, product);
-                        showToast("Données trouvées !");
+                        showToast(i18n.t('toast_found_data'));
                         Feedback.playScan(); // Play sound on successful scan
                         Feedback.impactLight(); // Haptic feedback
                     } else {
-                        showToast("Produit inconnu.");
+                        showToast(i18n.t('toast_unknown_product'));
                         renderAddBeerForm(onSave, editModeBeer, prefillData);
                     }
                 });
@@ -2048,7 +2192,7 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
                 const currentName = titleInput ? titleInput.value : '';
 
                 if (!currentName || currentName.length < 3) {
-                    showAlertModal("Entrez au moins 3 lettres du nom dans le champ Titre.", { icon: '✏️' });
+                    showAlertModal(`${i18n.t('toast_enter_at_least')} 3 ${i18n.t('letters_of_name')}`, { icon: '✏️' });
                     return;
                 }
 
@@ -2063,9 +2207,9 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
                         // Merge image if exists in product, otherwise keep current? 
                         // Logic of renderAddBeerForm prefers passed prefillData.
                         renderAddBeerForm(onSave, editModeBeer, product);
-                        showToast("Meilleure correspondance appliquée.");
+                        showToast(i18n.t('toast_match_applied'));
                     } else {
-                        showToast("Rien trouvé.");
+                        showToast(i18n.t('toast_nothing_found'));
                         btnName.innerHTML = originalText;
                         btnName.disabled = false;
                     }
@@ -2088,7 +2232,13 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
         const typePts = getTypePts(formData.get('type'));
 
         // Distribution label mapping
-        const distLabels = { '1': 'Partout', '2': 'Supermarché', '3': 'Cavistes', '4': 'Cavistes spécialisés', '5': 'À la brasserie' };
+        const distLabels = {
+            '1': i18n.t('dist_everywhere'),
+            '2': i18n.t('dist_supermarket'),
+            '3': i18n.t('dist_bottleshop'),
+            '4': i18n.t('dist_specialized'),
+            '5': i18n.t('dist_brewery')
+        };
 
         // Auto-calculate rarity if not manually selected
         let selectedRarity = formData.get('rarity');
@@ -2101,10 +2251,10 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
             title: formData.get('title'),
             brewery: formData.get('brewery'),
             province: formData.get('province') || '',
-            type: formData.get('type') || 'Inconnu',
+            type: formData.get('type') || i18n.t('label_unknown'),
             alcohol: formData.get('alcohol'),
             volume: formData.get('volume'),
-            distribution: distLabels[distributionPts] || 'Inconnu',
+            distribution: distLabels[distributionPts] || i18n.t('label_unknown'),
             barrel_aged: barrelAged,
             ingredients: formData.get('ingredients'),
             rarity: selectedRarity,
@@ -2120,8 +2270,8 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
         Analytics.track('beer_added', {
             beer_id: newBeer.id,
             name: newBeer.title,
-            brewery: newBeer.brewery || 'Inconnu',
-            type: newBeer.type || 'Inconnu',
+            brewery: newBeer.brewery || i18n.t('label_unknown'),
+            type: newBeer.type || i18n.t('label_unknown'),
             source: editModeBeer ? 'edit' : 'manual'
         });
 
@@ -2135,15 +2285,15 @@ export function renderScannerModal(onScan) {
     const wrapper = document.createElement('div');
     wrapper.className = 'modal-content';
     wrapper.innerHTML = `
-        <h2 style="margin-bottom: 20px;">Scanner un Code-Barres</h2>
+        <h2 style="margin-bottom: 20px;">${i18n.t('scan_title')}</h2>
         <div style="position:relative; margin-bottom: 15px;">
             <div id="reader" style="width: 100%; min-height: 250px; background: #000; border-radius: 8px; overflow: hidden;"></div>
             <div id="scanner-feedback" style="position:absolute; bottom:10px; left:0; width:100%; text-align:center; color:white; font-weight:bold; text-shadow:0 1px 3px rgba(0,0,0,0.8); pointer-events:none; z-index:10; font-size:1.2rem; transition:opacity 0.3s;"></div>
         </div>
         <p style="text-align: center; color: #888; font-size: 0.9rem;">
-            Placez le code-barres de la bière devant la caméra.
+            ${i18n.t('scan_desc')}
         </p>
-        <button id="btn-close-scanner" class="btn-primary" style="background:#333; margin-top:15px;">Fermer</button>
+        <button id="btn-close-scanner" class="btn-primary" style="background:#333; margin-top:15px;">${i18n.t('scan_btn_close')}</button>
     `;
 
     openModal(wrapper);
@@ -2185,7 +2335,7 @@ export function renderStats(allBeers, userData, container) {
     const allBeerIds = new Set(allBeers.map(b => String(b.id)));
     const apiBeersCountFixed = 197452; // Static count retrieved from OFF (approx. March 2026)
     const historyApiIds = Object.keys(userData).filter(id => (id.startsWith('API_') || id.startsWith('OFF_')) && !allBeerIds.has(id));
-    
+
     // The "Total" for summary purposes (Static API + Scanned history)
     const apiBeersCount = apiBeersCountFixed + historyApiIds.length;
     const jsonBeersCount = Math.max(0, allBeers.length - allBeers.filter(b => String(b.id).startsWith('CUSTOM_')).length - allBeers.filter(b => String(b.id).startsWith('API_') || String(b.id).startsWith('OFF_')).length);
@@ -2193,7 +2343,7 @@ export function renderStats(allBeers, userData, container) {
 
     const totalBeers = jsonBeersCount + apiBeersCount + customBeersCount;
     const drunkCount = Object.values(userData).filter(u => (u.count || 0) > 0).length;
-    
+
     // Progress is based on local collection (JSON + Custom), as the API is "infinite"
     const totalLocalBeers = jsonBeersCount + customBeersCount;
     const percentage = Math.round((drunkCount / totalLocalBeers) * 100) || 0;
@@ -2201,18 +2351,19 @@ export function renderStats(allBeers, userData, container) {
     const totalDrunkCount = Object.values(userData).reduce((acc, curr) => acc + (curr.count || 0), 0);
 
     // Compute Rarity ranks
-    let userRank = { name: "Novice", color: "#888", nextRankThresh: 10 };
+    let userRank = { name: i18n.t('stats_rank_novice'), color: "#888", nextRankThresh: 10 };
     const uniqueCount = Object.keys(userData).length;
 
     // Quick rank calculation
-    if (uniqueCount >= 10) userRank = { name: "Amateur", color: "#4CAF50", nextRankThresh: 50 };
-    if (uniqueCount >= 50) userRank = { name: "Connaisseur", color: "#2196F3", nextRankThresh: 100 };
-    if (uniqueCount >= 100) userRank = { name: "Expert", color: "#9C27B0", nextRankThresh: 250 };
-    if (uniqueCount >= 250) userRank = { name: "Maître Brasseur", color: "#E91E63", nextRankThresh: 500 };
-    if (uniqueCount >= 500) userRank = { name: "Légende", color: "var(--accent-gold)", nextRankThresh: 1000 };
+    if (uniqueCount >= 10) userRank = { name: i18n.t('stats_rank_amateur'), color: "#4CAF50", nextRankThresh: 50 };
+    if (uniqueCount >= 50) userRank = { name: i18n.t('stats_rank_connaisseur'), color: "#2196F3", nextRankThresh: 100 };
+    if (uniqueCount >= 100) userRank = { name: i18n.t('stats_rank_expert'), color: "#9C27B0", nextRankThresh: 250 };
+    if (uniqueCount >= 250) userRank = { name: i18n.t('stats_rank_master'), color: "#E91E63", nextRankThresh: 500 };
+    if (uniqueCount >= 500) userRank = { name: i18n.t('stats_rank_legend'), color: "var(--accent-gold)", nextRankThresh: 1000 };
 
     // Stats section (Donut + Text)
     container.innerHTML = `
+        <div class="stats-view-wrapper" style="max-width: 600px; margin: 0 auto; width: 100%;">
                 <div class="text-center p-20">
                     <!-- SVG Donut Chart -->
                     <div style="width:160px; height:160px; margin:0 auto; position:relative;">
@@ -2237,14 +2388,14 @@ export function renderStats(allBeers, userData, container) {
                         </svg>
                         <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center;">
                             <span style="font-size:2rem; font-family:'Russo One', sans-serif; color:${userRank.color}; text-shadow:0 0 10px ${userRank.color}66;">${uniqueCount}</span>
-                            <span style="display:block; font-size:0.75rem; color:#888; text-transform:uppercase; letter-spacing:1px; margin-top:-5px;">uniques</span>
+                            <span style="display:block; font-size:0.75rem; color:#888; text-transform:uppercase; letter-spacing:1px; margin-top:-5px;">${i18n.t('stats_label_uniques')}</span>
                         </div>
                     </div>
                     <h2 style="color:${userRank.color}; margin-top:15px; font-family:'Russo One', sans-serif; letter-spacing:1px; text-shadow:0 0 10px ${userRank.color}33;">${userRank.name}</h2>
-                    <p style="font-size:0.85rem; color:#888; margin-top:5px;">Rang suivant: ${Math.max(0, userRank.nextRankThresh - uniqueCount)} bières</p>
+                    <p style="font-size:0.85rem; color:#888; margin-top:5px;">${i18n.t('stats_next_rank_desc', { count: Math.max(0, userRank.nextRankThresh - uniqueCount) })}</p>
                     
                     <div style="margin-top:20px; text-align:center; padding:15px; background:var(--bg-card); border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
-                        <div style="font-size:0.85rem; color:#aaa; margin-bottom:5px; text-transform:uppercase; font-weight:bold;">Bières dans l'application</div>
+                        <div style="font-size:0.85rem; color:#aaa; margin-bottom:5px; text-transform:uppercase; font-weight:bold;">${i18n.t('stats_app_count_label')}</div>
                         <div class="stats-total-app-count" style="font-size:1.5rem; font-weight:bold; color:#FFF;">${totalBeers.toLocaleString()}</div>
                         <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:10px; font-size:0.75rem;">
                              <div class="stat-badge stat-badge-json"><span style="font-weight:bold;">${jsonBeersCount}</span> JSON</div>
@@ -2254,44 +2405,44 @@ export function renderStats(allBeers, userData, container) {
                     </div>
 
                     <div style="margin-top: 25px; padding: 15px; background: #222; border-radius: 12px; border: 1px solid #333;">
-                        <span style="font-size: 0.8rem; color: #888; text-transform: uppercase;">Volume Total Bu 🍻</span>
+                        <span style="font-size: 0.8rem; color: #888; text-transform: uppercase;">${i18n.t('stats_volume_total')}</span>
                         <div style="font-size: 1.5rem; font-weight: bold; color: var(--text-primary); margin-top: 5px;">
-                            ${totalDrunkCount} <span style="font-size: 1rem; color: #666; font-weight: normal;">bières</span>
+                            ${totalDrunkCount} <span style="font-size: 1rem; color: #666; font-weight: normal;">${i18n.t('stats_beers_count')}</span>
                         </div>
                     </div>
 
                     ${renderAdvancedStats(allBeers, userData)}
 
-                    ${Storage.getPreference('bac_enabled', false) ? `
+                    ${Storage.getPreference('bac_enabled', true) ? `
                     <!-- BAC Section -->
                     <div class="stat-card mt-20 text-center" id="bac-stats-container" style="border-top: 2px solid var(--accent-gold);">
                         <h3 style="margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:8px;">
-                            🩸 Alcoolémie <span style="font-size: 0.8rem; background: #333; padding: 2px 6px; border-radius: 10px; font-weight: normal;">Belgique</span>
+                            ${i18n.t('settings_bac_title')} <span style="font-size: 0.8rem; background: #333; padding: 2px 6px; border-radius: 10px; font-weight: normal;">${Storage.getPreference('bac_country', 'BE')}</span>
                         </h3>
                         
                         <div id="bac-dynamic-content">
                             <!-- Injected by renderBACStatsContent -->
-                            <div class="spinner"></div> Chargement...
+                            <div class="spinner"></div> ${i18n.t('loading_app')}
                         </div>
                     </div>
                     ` : ''}
 
                     <div class="stat-card mt-20 text-center">
                         <div id="beer-map-container" style="min-height:200px;">
-                            <span class="spinner"></span> Chargement de la carte...
+                            <span class="spinner"></span> ${i18n.t('stats_loading_map')}
                         </div>
                     </div>
 
                     <div id="card-achievements" class="stat-card mt-20 text-center">
-                        <h3 style="margin-bottom:15px;">Succès 🏆</h3>
+                        <h3 style="margin-bottom:15px;">${i18n.t('stats_achievements_title')}</h3>
                         ${renderAchievementsList()}
                     </div>
 
                     <div class="stat-card mt-20 text-center">
-                        <h3 style="margin-bottom:10px;">Beer Match ⚔️</h3>
-                        <p style="font-size:0.8rem; color:#888; margin-bottom:15px;">Compare tes goûts avec un ami !</p>
+                        <h3 style="margin-bottom:10px;">${i18n.t('stats_match_title')}</h3>
+                        <p style="font-size:0.8rem; color:#888; margin-bottom:15px;" data-i18n="stats_match_desc">${i18n.t('stats_match_desc')}</p>
                         <button type="button" id="btn-match" class="btn-primary" style="background:#222; border:1px solid var(--accent-gold); color:var(--accent-gold);">
-                            ⚔️ Lancer un Duel
+                            ${i18n.t('stats_match_btn')}
                         </button>
                     </div>
 
@@ -2300,12 +2451,13 @@ export function renderStats(allBeers, userData, container) {
                     <div style="background: linear-gradient(135deg, #111, #222); padding: 15px; border-radius: 12px; border: 1px solid var(--accent-gold); margin-bottom: 20px; text-align: center; margin-top: 20px;">
                         <div style="font-size: 2rem; margin-bottom: 5px;">🎬</div>
                         <h3 style="margin: 0 0 10px 0; color: var(--accent-gold); font-family: 'Russo One', sans-serif;">Beerdex Wrapped</h3>
-                        <p style="font-size: 0.85rem; color: #ccc; margin-bottom: 15px;">Revivez vos moments forts de l'année !</p>
+                        <p style="font-size: 0.85rem; color: #ccc; margin-bottom: 15px;">${i18n.t('wrapped_subtitle')}</p>
                         <button id="btn-open-wrapped" class="btn-primary" style="background: var(--accent-gold); color: black; font-weight: bold; width: 100%;">
-                            ▶️ Lancer la Story
+                            ${i18n.t('wrapped_btn_start')}
                         </button>
                     </div>
                 </div>
+            </div>
                 `;
 
     // Match
@@ -2336,20 +2488,21 @@ export function renderStats(allBeers, userData, container) {
     }, 100);
 
     // Render BAC Content
-    if (Storage.getPreference('bac_enabled', false)) {
+    if (Storage.getPreference('bac_enabled', true)) {
         setTimeout(() => renderBACStatsContent(container.querySelector('#bac-dynamic-content')), 50);
     }
 }
 
 export function renderBACStatsContent(container) {
     if (!container) return;
+    const rules = BAC.getCurrentRules() || { sanctionThreshold: 0.5, withdrawThreshold: 0.8 };
     const bacStatus = BAC.getBACStatus();
     const currentBAC = BAC.getCurrentBAC();
     const formattedBAC = currentBAC.toFixed(2);
 
-    // Draw primitive text curve or basic CSS curve representation
-    // A full chart.js is too heavy, let's use a simple CSS bar showing the limit
-    const percentageOfLimit = Math.min(100, (currentBAC / 0.8) * 100);
+    // Dynamic visualization range: always at least 1.0 g/l, or 1.5x the withdraw threshold, or 1.1x current
+    const visualMax = Math.max(1.0, rules.withdrawThreshold * 1.5, currentBAC * 1.1);
+    const percentageOfLimit = Math.min(100, (currentBAC / visualMax) * 100);
 
     const curveData = BAC.getBACCurveData();
     let svgGraphHtml = "";
@@ -2360,7 +2513,7 @@ export function renderBACStatsContent(container) {
         const tMin = curveData[0].time;
         const tMax = curveData[curveData.length - 1].time;
         const tRange = tMax - tMin || 1;
-        const bacMax = Math.max(0.8, ...curveData.map(d => d.bac));
+        const bacMax = Math.max(rules.withdrawThreshold, ...curveData.map(d => d.bac));
 
         let polylinePoints = "";
         let currentX = width;
@@ -2370,7 +2523,7 @@ export function renderBACStatsContent(container) {
         // CHART.JS INTEGRATION
         svgGraphHtml = `
             <div style="margin: 20px 0; background: #1a1a1a; padding: 15px; border-radius: 10px;">
-                <div style="font-size: 0.8rem; color:#888; margin-bottom: 10px; text-align: left;">Évolution estimée (g/l)</div>
+                <div style="font-size: 0.8rem; color:#888; margin-bottom: 10px; text-align: left;">${i18n.t('bac_evolution_title')}</div>
                 <div style="position: relative; height: 250px; width: 100%;">
                     <canvas id="bacChartCanvas"></canvas>
                 </div>
@@ -2401,7 +2554,7 @@ export function renderBACStatsContent(container) {
                     type: 'line',
                     data: {
                         datasets: [{
-                            label: 'Taux (g/l)',
+                            label: i18n.t('bac_label'),
                             data: chartData,
                             borderColor: bacStatus.color,
                             backgroundColor: bacStatus.color + '33',
@@ -2430,7 +2583,10 @@ export function renderBACStatsContent(container) {
                                         const timeStr = d.getHours().toString().padStart(2, '0') + 'h' + d.getMinutes().toString().padStart(2, '0');
                                         if (isToday) return timeStr;
 
-                                        const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+                                        const days = [
+                                            i18n.t('day_sun'), i18n.t('day_mon'), i18n.t('day_tue'),
+                                            i18n.t('day_wed'), i18n.t('day_thu'), i18n.t('day_fri'), i18n.t('day_sat')
+                                        ];
                                         return `${days[d.getDay()]} ${d.getDate()}/${d.getMonth() + 1} - ${timeStr}`;
                                     },
                                     label: function (context) { return ` ${context.parsed.y} g/l`; }
@@ -2442,20 +2598,34 @@ export function renderBACStatsContent(container) {
                                 borderWidth: 1
                             },
                             annotation: {
-                                annotations: {
-                                    limit05: {
-                                        type: 'line', yMin: 0.5, yMax: 0.5, borderColor: '#FF9800', borderWidth: 1, borderDash: [5, 5],
-                                        label: { display: true, content: '0.5 limit', position: 'end', backgroundColor: 'transparent', color: '#FF9800', font: { size: 10 } }
-                                    },
-                                    limit08: {
-                                        type: 'line', yMin: 0.8, yMax: 0.8, borderColor: '#F44336', borderWidth: 1, borderDash: [5, 5],
-                                        label: { display: true, content: '0.8 limit', position: 'end', backgroundColor: 'transparent', color: '#F44336', font: { size: 10 } }
-                                    },
-                                    nowLine: {
-                                        type: 'line', xMin: nowTime, xMax: nowTime, borderColor: '#888', borderWidth: 1, borderDash: [2, 2],
-                                        label: { display: true, content: 'Maintenant', position: 'start', backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', font: { size: 9 } }
+                                annotations: (() => {
+                                    const rules = BAC.getCurrentRules() || { sanctionThreshold: 0.5, withdrawThreshold: 0.8 };
+                                    const l1 = rules.sanctionThreshold;
+                                    const l2 = rules.withdrawThreshold;
+
+                                    const limitLabel = i18n.t('bac_chart_limit');
+
+                                    let annots = {};
+                                    if (l1 > 0) {
+                                        annots.limitSanction = {
+                                            type: 'line', yMin: l1, yMax: l1, borderColor: '#FF9800', borderWidth: 1, borderDash: [5, 5],
+                                            label: { display: true, content: `${l1} ${limitLabel}`, position: 'end', backgroundColor: 'transparent', color: '#FF9800', font: { size: 10 } }
+                                        };
                                     }
-                                }
+                                    if (l2 > 0 && l2 !== l1) {
+                                        annots.limitWithdraw = {
+                                            type: 'line', yMin: l2, yMax: l2, borderColor: '#F44336', borderWidth: 1, borderDash: [5, 5],
+                                            label: { display: true, content: `${l2} ${limitLabel}`, position: 'end', backgroundColor: 'transparent', color: '#F44336', font: { size: 10 } }
+                                        };
+                                    }
+
+                                    annots.nowLine = {
+                                        type: 'line', xMin: nowTime, xMax: nowTime, borderColor: '#888', borderWidth: 1, borderDash: [2, 2],
+                                        label: { display: true, content: i18n.t('bac_now'), position: 'start', backgroundColor: 'rgba(0,0,0,0.5)', color: '#fff', font: { size: 9 } }
+                                    };
+
+                                    return annots;
+                                })()
                             }
                         },
                         scales: {
@@ -2467,8 +2637,11 @@ export function renderBACStatsContent(container) {
                                     callback: function (value) {
                                         const d = new Date(value);
                                         const h = d.getHours();
-                                        if (tRange > 24 * 3600 * 1000 && h === 0) {
-                                            const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+                                        if (h === 0 || tRange > 24 * 3600 * 1000) {
+                                            const days = [
+                                                i18n.t('day_sun'), i18n.t('day_mon'), i18n.t('day_tue'),
+                                                i18n.t('day_wed'), i18n.t('day_thu'), i18n.t('day_fri'), i18n.t('day_sat')
+                                            ];
                                             return days[d.getDay()] + ' ' + d.getDate();
                                         }
                                         return h + 'h';
@@ -2490,44 +2663,60 @@ export function renderBACStatsContent(container) {
             ${formattedBAC} <span style="font-size: 1.2rem; color: #888;">g/l</span>
         </div>
         <div style="font-size: 1rem; color: #888; margin-top: 8px; margin-bottom: 5px;">
-            <i style="color: #666;">Air expiré:</i> <span style="color: ${bacStatus.color}; font-weight: bold;">${breathBAC}</span> mg/l
+            <i style="color: #666;">${i18n.t('bac_air_expired')}:</i> <span style="color: ${bacStatus.color}; font-weight: bold;">${breathBAC}</span> mg/l
         </div>
         
-        <div style="margin: 20px 0; background: #222; border-radius: 10px; height: 12px; position: relative; overflow: hidden;">
+        <div style="margin: 25px 0 35px 0; background: #222; border-radius: 10px; height: 12px; position: relative; overflow: visible;">
             <!-- Limit markers -->
-            <div style="position: absolute; left: ${(0.5 / 0.8) * 100}%; top: 0; bottom: 0; width: 2px; background: #FF9800; z-index: 2;"></div>
-            <div style="position: absolute; left: 98%; top: 0; bottom: 0; width: 2px; background: #F44336; z-index: 2;"></div>
+            ${rules.sanctionThreshold > 0 ? `
+            <div style="position: absolute; left: ${(rules.sanctionThreshold / visualMax) * 100}%; top: -5px; bottom: -5px; width: 2px; background: #FF9800; z-index: 2;">
+                <span style="position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 0.7rem; color: #FF9800;">${rules.sanctionThreshold}</span>
+            </div>
+            ` : ''}
             
+            ${rules.withdrawThreshold > rules.sanctionThreshold ? `
+            <div style="position: absolute; left: ${(rules.withdrawThreshold / visualMax) * 100}%; top: -5px; bottom: -5px; width: 2px; background: #F44336; z-index: 2;">
+                <span style="position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 0.7rem; color: #F44336;">${rules.withdrawThreshold}</span>
+            </div>
+            ` : (rules.withdrawThreshold === rules.sanctionThreshold ? `
+                <script>/* Withdrawal and Sanction are same, handled by one orange mark */</script>
+            ` : `
+            <div style="position: absolute; left: ${(rules.withdrawThreshold / visualMax) * 100}%; top: -5px; bottom: -5px; width: 2px; background: #F44336; z-index: 2;">
+                 <span style="position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 0.7rem; color: #F44336;">${rules.withdrawThreshold}</span>
+            </div>
+            `)}
+
             <!-- Fill -->
-            <div style="position: absolute; left: 0; top: 0; bottom: 0; width: ${percentageOfLimit}%; background: ${bacStatus.color}; z-index: 1; transition: width 1s ease;"></div>
-        </div>
-        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #888; margin-top: -15px; margin-bottom: 20px;">
-            <span>0</span>
-            <span style="position: relative; right: -${((0.5 / 0.8) * 100) - 50}%">0.5</span>
-            <span>0.8+</span>
+            <div style="position: absolute; left: 0; top: 0; bottom: 0; width: ${percentageOfLimit}%; background: ${bacStatus.color}; z-index: 1; transition: width 1s ease; border-radius: 10px;"></div>
+            
+            <!-- Scale Labels -->
+            <span style="position: absolute; left: 0; bottom: -18px; font-size: 0.7rem; color: #666;">0</span>
+            <span style="position: absolute; right: 0; bottom: -18px; font-size: 0.7rem; color: #666;">${visualMax.toFixed(1)}+</span>
         </div>
 
         ${svgGraphHtml}
 
-        <div style="background: ${bacStatus.color}22; border: 1px solid ${bacStatus.color}; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-            <strong style="display:block; color:${bacStatus.color}; margin-bottom:8px; font-size:1.1rem;">${bacStatus.title}</strong>
-            <span style="color: #eee; font-size: 0.95rem; line-height:1.4;">${bacStatus.message}</span>
+        <div class="bac-status-enhanced" style="background: ${bacStatus.color}11; border: 1px solid ${bacStatus.color}44;">
+            <h2 style="color:${bacStatus.color};">${bacStatus.title}</h2>
+            ${bacStatus.subtitle ? `<div class="bac-subtitle" style="background:${bacStatus.color}22; color:${bacStatus.color};">${bacStatus.subtitle}</div>` : ''}
+            <span style="color: #eee; font-size: 0.9rem; line-height:1.4; display:block;">${bacStatus.message}</span>
+            ${bacStatus.symptoms ? `<div class="bac-symptoms">⚠️ ${bacStatus.symptoms}</div>` : ''}
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <button id="btn-bac-add-drink" class="btn-primary" style="margin: 0; padding: 10px; font-size: 0.9rem; background: #333;">
-                🍺 Ajouter Drink
+                ${i18n.t('bac_btn_add')}
             </button>
             <button id="btn-bac-set-manual" class="btn-primary" style="margin: 0; padding: 10px; font-size: 0.9rem; background: #222; border: 1px solid #444; color: #ccc;">
-                ✏️ Taux Manuel
+                ${i18n.t('bac_btn_manual')}
             </button>
         </div>
     `;
 
     container.querySelector('#btn-bac-add-drink').onclick = async () => {
-        const vol = await showPromptModal("Volume en ml", "330", { placeholder: "ex: 330", inputType: "number" });
+        const vol = await showPromptModal(i18n.t('bac_prompt_vol'), "330", { placeholder: "ex: 330", inputType: "number" });
         if (!vol) return;
-        const abv = await showPromptModal("Degré d'alcool %", "5.0", { placeholder: "ex: 8.5", inputType: "text" });
+        const abv = await showPromptModal(i18n.t('bac_prompt_abv'), "5.0", { placeholder: "ex: 8.5", inputType: "text" });
         if (!abv) return;
 
         const v = parseFloat(vol);
@@ -2551,18 +2740,131 @@ export function renderBACStatsContent(container) {
 }
 
 export function renderSettings(allBeers, userData, container, isDiscovery = false, discoveryCallback = null) {
+    const rules = BAC.getCurrentRules();
     container.innerHTML = `
         <div class="text-center p-20">
-            <h2 class="mb-20" style="font-family:'Russo One'; color:var(--accent-gold);">Paramètres & Données</h2>
+            <h2 class="mb-20" style="font-family:'Russo One'; color:var(--accent-gold);" data-i18n="settings_main_title">Paramètres & Données</h2>
 
-            <!-- 1. Interface -->
-            <div class="stat-card">
-                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;">🎨 Interface</h4>
+            <!-- 1. Alcoolémie (BAC) (Moved to TOP) -->
+            <div class="stat-card" style="${Storage.getPreference('bac_weight', '') !== '' ? '' : 'border: 2px solid var(--accent-gold);'}">
+                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left; ${Storage.getPreference('bac_weight', '') !== '' ? '' : 'color: var(--accent-gold);'}" data-i18n="settings_bac_title">${i18n.t('settings_bac_title')}</h4>
                 
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                     <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Mode Découverte</strong>
-                        <span style="font-size:0.8rem; color:#888;">Masquer les bières non trouvées</span>
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_bac_enable_title">${i18n.t('settings_bac_enable_title')}</strong>
+                        <span style="font-size:0.8rem; color:#888;" data-i18n="settings_bac_enable_desc">${i18n.t('settings_bac_enable_desc')}</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-bac-enabled" ${Storage.getPreference('bac_enabled', true) ? 'checked' : ''}>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <div id="bac-settings-group" style="display: ${Storage.getPreference('bac_enabled', true) ? 'block' : 'none'}; border-top: 1px dashed #333; padding-top: 15px; margin-top: 5px;">
+                    
+                    <div style="background: rgba(255,152,0,0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: left; display: ${Storage.getPreference('bac_weight', '') !== '' ? 'none' : 'block'};">
+                        <span style="font-size:0.8rem; color: #ff9800; display:block; margin-bottom:5px;">${i18n.t('settings_bac_config_req')}</span>
+                        <span style="font-size:0.75rem; color: #ccc;">${i18n.t('settings_bac_config_desc', { country: i18n.t('country_' + (Storage.getPreference('bac_country', 'BE').toLowerCase())), limit: rules.sanctionThreshold })}</span>
+                    </div>
+
+                    <div style="display:flex; gap:10px; margin-bottom:15px;">
+                        <div style="flex:1; text-align:left;">
+                            <label style="font-size:0.8rem; color:#888; display:block; margin-bottom:5px;" data-i18n="settings_weight_label">${i18n.t('settings_weight_label')}</label>
+                            <input type="number" id="input-bac-weight" class="form-input" value="${Storage.getPreference('bac_weight', '')}" placeholder="ex: 70" min="30" max="200" style="padding:8px;">
+                        </div>
+                        <div style="flex:1; text-align:left;">
+                            <label style="font-size:0.8rem; color:#888; display:block; margin-bottom:5px;" data-i18n="settings_gender_label">${i18n.t('settings_gender_label')}</label>
+                            <select id="select-bac-gender" class="form-select" style="padding:8px;">
+                                <option value="" ${!Storage.getPreference('bac_gender', null) ? 'selected' : ''}>${i18n.t('settings_gender_none')}</option>
+                                <option value="M" ${Storage.getPreference('bac_gender', null) === 'M' ? 'selected' : ''}>${i18n.t('gender_male')}</option>
+                                <option value="F" ${Storage.getPreference('bac_gender', null) === 'F' ? 'selected' : ''}>${i18n.t('gender_female')}</option>
+                                <option value="X" ${Storage.getPreference('bac_gender', null) === 'X' ? 'selected' : ''}>${i18n.t('gender_other')}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <div style="text-align:left;">
+                            <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_show_home_title">${i18n.t('settings_show_home_title')}</strong>
+                            <span style="font-size:0.8rem; color:#888;" data-i18n="settings_show_home_desc">${i18n.t('settings_show_home_desc')}</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-bac-home" ${Storage.getPreference('bac_show_home', true) ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <div style="text-align:left;">
+                            <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_manual_only_title">${i18n.t('settings_manual_only_title')}</strong>
+                            <span style="font-size:0.8rem; color:#888;" data-i18n="settings_manual_only_desc">${i18n.t('settings_manual_only_desc')}</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-bac-manual" ${Storage.getPreference('bac_manual_only', false) ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div style="border-top:1px dashed #333; padding-top:15px; margin-top:5px;">
+                        <div style="display:flex; gap:10px; margin-bottom:15px;">
+                            <div style="flex:1; text-align:left;">
+                                <label style="font-size:0.8rem; color:#888; display:block; margin-bottom:5px;" data-i18n="settings_bac_duration">${i18n.t('settings_bac_duration')}</label>
+                                <select id="select-bac-duration" class="form-select" style="padding:8px;">
+                                    <option value="0" ${Storage.getPreference('bac_drink_duration', '0') === '0' ? 'selected' : ''}>${i18n.t('settings_bac_instant')}</option>
+                                    <option value="15" ${Storage.getPreference('bac_drink_duration', '0') === '15' ? 'selected' : ''}>15 min</option>
+                                    <option value="30" ${Storage.getPreference('bac_drink_duration', '0') === '30' ? 'selected' : ''}>30 min</option>
+                                    <option value="45" ${Storage.getPreference('bac_drink_duration', '0') === '45' ? 'selected' : ''}>45 min</option>
+                                    <option value="60" ${Storage.getPreference('bac_drink_duration', '0') === '60' ? 'selected' : ''}>1 ${i18n.t('wrapped_time_unit_hours')}</option>
+                                </select>
+                            </div>
+                            <div style="flex:1; text-align:left;">
+                                <label style="font-size:0.8rem; color:#888; display:block; margin-bottom:5px;" data-i18n="settings_bac_vehicle">${i18n.t('settings_bac_vehicle')}</label>
+                                <select id="select-bac-vehicle" class="form-select" style="padding:8px;">
+                                    <option value="voiture" ${Storage.getPreference('bac_vehicle', 'voiture') === 'voiture' ? 'selected' : ''}>${i18n.t('settings_bac_car')}</option>
+                                    <option value="moto" ${Storage.getPreference('bac_vehicle', 'voiture') === 'moto' ? 'selected' : ''}>${i18n.t('settings_bac_moto')}</option>
+                                    <option value="pieton" ${Storage.getPreference('bac_vehicle', 'voiture') === 'pieton' ? 'selected' : ''}>${i18n.t('settings_bac_pedestrian')}</option>
+                                    <option value="ne_conduit_pas" ${Storage.getPreference('bac_vehicle', 'voiture') === 'ne_conduit_pas' ? 'selected' : ''}>${i18n.t('settings_bac_none')}</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="border-top:1px dashed #333; padding-top:15px; margin-top:5px;">
+                        <div style="text-align:left; margin-bottom:10px;">
+                            <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_bac_country">${i18n.t('settings_bac_country')}</strong>
+                            <span style="font-size:0.8rem; color:#888;" data-i18n="settings_bac_country_desc">${i18n.t('settings_bac_country_desc')}</span>
+                        </div>
+                        <select id="select-bac-country" class="form-input" style="width:100%; padding:8px; font-size:0.9rem; background:#111;">
+                            <option value="BE" ${Storage.getPreference('bac_country', 'BE') === 'BE' ? 'selected' : ''}>🇧🇪 ${i18n.t('country_be')}</option>
+                            <option value="FR" ${Storage.getPreference('bac_country', 'BE') === 'FR' ? 'selected' : ''}>🇫🇷 ${i18n.t('country_fr')}</option>
+                            <option value="DE" ${Storage.getPreference('bac_country', 'BE') === 'DE' ? 'selected' : ''}>🇩🇪 ${i18n.t('country_de')}</option>
+                            <option value="NL" ${Storage.getPreference('bac_country', 'BE') === 'NL' ? 'selected' : ''}>🇳🇱 ${i18n.t('country_nl')}</option>
+                            <option value="CO" ${Storage.getPreference('bac_country', 'BE') === 'CO' ? 'selected' : ''}>🇨🇴 ${i18n.t('country_co')}</option>
+                            <option value="US" ${Storage.getPreference('bac_country', 'BE') === 'US' ? 'selected' : ''}>🇺🇸 ${i18n.t('country_us')}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Interface -->
+            <div class="stat-card mt-20">
+                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;" data-i18n="settings_interface_title">🎨 Interface</h4>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <div style="text-align:left;">
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_language">Langue</strong>
+                        <span style="font-size:0.8rem; color:#888;" data-i18n="settings_language_desc">Choisir la langue d'affichage</span>
+                    </div>
+                    <select id="select-language" class="form-select" style="padding:8px; width:120px;">
+                        <option value="fr" ${Storage.getPreference('app_language', 'fr') === 'fr' ? 'selected' : ''}>Français</option>
+                        <option value="en" ${Storage.getPreference('app_language', 'fr') === 'en' ? 'selected' : ''}>English</option>
+                    </select>
+                </div>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <div style="text-align:left;">
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_discovery_title">${i18n.t('settings_discovery_title')}</strong>
+                        <span style="font-size:0.8rem; color:#888;" data-i18n="settings_discovery_desc">${i18n.t('settings_discovery_desc')}</span>
                     </div>
                     <label class="switch">
                         <input type="checkbox" id="toggle-discovery" ${isDiscovery ? 'checked' : ''}>
@@ -2572,8 +2874,8 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
 
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                     <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Thème Musée 🎭</strong>
-                        <span style="font-size:0.8rem; color:#888;">Style galerie d'art & cadres dorés</span>
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_museum_title">${i18n.t('settings_museum_title')}</strong>
+                        <span style="font-size:0.8rem; color:#888;" data-i18n="settings_museum_desc">${i18n.t('settings_museum_desc')}</span>
                     </div>
                     <label class="switch">
                         <input type="checkbox" id="toggle-museum" ${Storage.getPreference('museumThemeEnabled', false) ? 'checked' : ''}>
@@ -2583,53 +2885,53 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
 
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                      <button type="button" id="btn-template" class="btn-primary text-white" style="background:#222; border:1px solid #444; width:100%; margin:0;">
-                        ⚙️ Configurer Notation
+                        ${i18n.t('settings_btn_configure_rating')}
                     </button>
                 </div>
                 
                 <div style="margin-top:15px; border-top:1px solid #333; padding-top:15px;">
-                     <h5 style="color:#aaa; font-size:0.8rem; margin-bottom:10px; text-align:left;">Modèles de Notation</h5>
+                     <h5 style="color:#aaa; font-size:0.8rem; margin-bottom:10px; text-align:left;">${i18n.t('settings_rating_presets')}</h5>
                      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-                        <button id="btn-preset-default" class="form-input" style="font-size:0.8rem; padding:8px; ${Storage.getPreference('activePreset') === 'default' ? 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 5px rgba(255,192,0,0.3);' : ''}">Standard</button>
-                        <button id="btn-preset-tristan" class="form-input" style="font-size:0.8rem; padding:8px; ${Storage.getPreference('activePreset') === 'tristan' ? 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 5px rgba(255,192,0,0.3);' : ''}">Tristan</button>
-                        <button id="btn-preset-noah" class="form-input" style="font-size:0.8rem; padding:8px; grid-column:span 2; ${Storage.getPreference('activePreset') === 'noah' ? 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 5px rgba(255,192,0,0.3);' : ''}">Noah</button>
+                        <button id="btn-preset-default" class="form-input" style="font-size:0.8rem; padding:8px; ${Storage.getPreference('activePreset') === 'default' ? 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 5px rgba(255,192,0,0.3);' : ''}">${i18n.t('preset_default')}</button>
+                        <button id="btn-preset-tristan" class="form-input" style="font-size:0.8rem; padding:8px; ${Storage.getPreference('activePreset') === 'tristan' ? 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 5px rgba(255,192,0,0.3);' : ''}">${i18n.t('preset_tristan')}</button>
+                        <button id="btn-preset-noah" class="form-input" style="font-size:0.8rem; padding:8px; grid-column:span 2; ${Storage.getPreference('activePreset') === 'noah' ? 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 5px rgba(255,192,0,0.3);' : ''}">${i18n.t('preset_noah')}</button>
                      </div>
                 </div>
             </div>
 
             <!-- 1.2 Carte (Map) -->
             <div class="stat-card mt-20">
-                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;">🗺️ Carte de la Soif</h4>
+                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;">${i18n.t('settings_map_thirst')}</h4>
                 
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                     <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Carte par Défaut</strong>
-                        <span style="font-size:0.8rem; color:#888;">La carte affichée au lancement (Auto via Fuseau Horaire par défaut)</span>
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">${i18n.t('settings_map_default')}</strong>
+                        <span style="font-size:0.8rem; color:#888;">${i18n.t('settings_map_default_desc')}</span>
                     </div>
                 </div>
                 <div>
                    <select id="select-default-map" class="form-input" style="width:100%; padding:8px; font-size:0.9rem; background:#111;">
-                       <option value="" ${!localStorage.getItem('defaultMapScope') ? 'selected' : ''}>🌍 Auto-détection</option>
-                       <option value="be" ${localStorage.getItem('defaultMapScope') === 'be' ? 'selected' : ''}>🇧🇪 Belgique</option>
-                       <option value="fr" ${localStorage.getItem('defaultMapScope') === 'fr' ? 'selected' : ''}>🇫🇷 France</option>
-                       <option value="de" ${localStorage.getItem('defaultMapScope') === 'de' ? 'selected' : ''}>🇩🇪 Allemagne</option>
-                       <option value="nl" ${localStorage.getItem('defaultMapScope') === 'nl' ? 'selected' : ''}>🇳🇱 Pays-Bas</option>
-                       <option value="us" ${localStorage.getItem('defaultMapScope') === 'us' ? 'selected' : ''}>🇺🇸 États-Unis</option>
-                       <option value="co" ${localStorage.getItem('defaultMapScope') === 'co' ? 'selected' : ''}>🇨🇴 Colombie</option>
-                       <option value="eu" ${localStorage.getItem('defaultMapScope') === 'eu' ? 'selected' : ''}>🇪🇺 Europe</option>
-                       <option value="wo" ${localStorage.getItem('defaultMapScope') === 'wo' ? 'selected' : ''}>🌍 Monde</option>
+                       <option value="" ${!localStorage.getItem('defaultMapScope') ? 'selected' : ''}>${i18n.t('settings_map_auto')}</option>
+                       <option value="be" ${localStorage.getItem('defaultMapScope') === 'be' ? 'selected' : ''}>🇧🇪 ${i18n.t('country_be')}</option>
+                       <option value="fr" ${localStorage.getItem('defaultMapScope') === 'fr' ? 'selected' : ''}>🇫🇷 ${i18n.t('country_fr')}</option>
+                       <option value="de" ${localStorage.getItem('defaultMapScope') === 'de' ? 'selected' : ''}>🇩🇪 ${i18n.t('country_de')}</option>
+                       <option value="nl" ${localStorage.getItem('defaultMapScope') === 'nl' ? 'selected' : ''}>🇳🇱 ${i18n.t('country_nl')}</option>
+                       <option value="us" ${localStorage.getItem('defaultMapScope') === 'us' ? 'selected' : ''}>🇺🇸 ${i18n.t('country_us')}</option>
+                       <option value="co" ${localStorage.getItem('defaultMapScope') === 'co' ? 'selected' : ''}>🇨🇴 ${i18n.t('country_co')}</option>
+                       <option value="eu" ${localStorage.getItem('defaultMapScope') === 'eu' ? 'selected' : ''}>🇪🇺 ${i18n.t('map_scope_eu')}</option>
+                       <option value="wo" ${localStorage.getItem('defaultMapScope') === 'wo' ? 'selected' : ''}>🌍 ${i18n.t('map_scope_wo')}</option>
                    </select>
                 </div>
             </div>
 
             <!-- 1.5 Immersion (Audio/Haptics) -->
             <div class="stat-card mt-20">
-                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;">🔊 Immersion</h4>
+                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;" data-i18n="settings_group_immersion">${i18n.t('settings_group_immersion')}</h4>
                 
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                     <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Effets Sonores</strong>
-                        <span style="font-size:0.8rem; color:#888;">Bips et fanfares 8-bit</span>
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_sound_title">${i18n.t('settings_sound_title')}</strong>
+                        <span style="font-size:0.8rem; color:#888;" data-i18n="settings_sound_desc">${i18n.t('settings_sound_desc')}</span>
                     </div>
                     <label class="switch">
                         <input type="checkbox" id="toggle-sound" ${Storage.getPreference('soundEnabled', true) ? 'checked' : ''}>
@@ -2639,8 +2941,8 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
 
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Vibrations</strong>
-                        <span style="font-size:0.8rem; color:#888;">Retours haptiques (Mobile)</span>
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_haptics_title">${i18n.t('settings_haptics_title')}</strong>
+                        <span style="font-size:0.8rem; color:#888;" data-i18n="settings_haptics_desc">${i18n.t('settings_haptics_desc')}</span>
                     </div>
                     <label class="switch">
                         <input type="checkbox" id="toggle-haptics" ${Storage.getPreference('hapticsEnabled', true) ? 'checked' : ''}>
@@ -2651,12 +2953,12 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
 
             <!-- 2. Rareté (New) -->
             <div class="stat-card mt-20">
-                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;">💎 Rareté</h4>
+                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;" data-i18n="settings_group_rarity">${i18n.t('settings_group_rarity')}</h4>
                 
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                     <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Révéler les Raretés</strong>
-                        <span style="font-size:0.8rem; color:#888;">Voir la rareté même si la bière n'est pas bue (Spoil !)</span>
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_reveal_rarity_title">${i18n.t('settings_reveal_rarity_title')}</strong>
+                        <span style="font-size:0.8rem; color:#888;" data-i18n="settings_reveal_rarity_desc">${i18n.t('settings_reveal_rarity_desc')}</span>
                     </div>
                     <label class="switch">
                         <input type="checkbox" id="check-reveal-rarity" ${Storage.getPreference('revealRarity', false) ? 'checked' : ''}>
@@ -2666,8 +2968,8 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
 
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Animations Limitées</strong>
-                        <span style="font-size:0.8rem; color:#888;">Ne jouer les animations de rareté qu'une fois</span>
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_anim_once_title">${i18n.t('settings_anim_once_title')}</strong>
+                        <span style="font-size:0.8rem; color:#888;" data-i18n="settings_anim_once_desc">${i18n.t('settings_anim_once_desc')}</span>
                     </div>
                     <label class="switch">
                         <input type="checkbox" id="check-anim-once" ${Storage.getPreference('anim_only_once', false) ? 'checked' : ''}>
@@ -2676,142 +2978,102 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                 </div>
             </div>
 
-            <!-- 3. Alcoolémie (BAC) -->
-            <div class="stat-card mt-20">
-                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;">🩸 Alcoolémie (Belgique)</h4>
-                
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Activer le Calculateur</strong>
-                        <span style="font-size:0.8rem; color:#888;">Estimer le taux d\'alcool</span>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-bac-enabled" ${Storage.getPreference('bac_enabled', false) ? 'checked' : ''}>
-                        <span class="slider round"></span>
-                    </label>
-                </div>
-
-                <div id="bac-settings-group" style="display: ${Storage.getPreference('bac_enabled', false) ? 'block' : 'none'}; border-top: 1px dashed #333; padding-top: 15px; margin-top: 5px;">
-                    
-                    <div style="display:flex; gap:10px; margin-bottom:15px;">
-                        <div style="flex:1; text-align:left;">
-                            <label style="font-size:0.8rem; color:#888; display:block; margin-bottom:5px;">Poids (kg)</label>
-                            <input type="number" id="input-bac-weight" class="form-input" value="${Storage.getPreference('bac_weight', 70)}" min="30" max="200" style="padding:8px;">
-                        </div>
-                        <div style="flex:1; text-align:left;">
-                            <label style="font-size:0.8rem; color:#888; display:block; margin-bottom:5px;">Sexe</label>
-                            <select id="select-bac-gender" class="form-select" style="padding:8px;">
-                                <option value="M" ${Storage.getPreference('bac_gender', 'M') === 'M' ? 'selected' : ''}>Homme</option>
-                                <option value="F" ${Storage.getPreference('bac_gender', 'M') === 'F' ? 'selected' : ''}>Femme</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <div style="text-align:left;">
-                            <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Afficher sur l\'Accueil</strong>
-                            <span style="font-size:0.8rem; color:#888;">Mini-widget de statut</span>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" id="toggle-bac-home" ${Storage.getPreference('bac_show_home', false) ? 'checked' : ''}>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <div style="text-align:left;">
-                            <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">Saisie Manuelle Uniqt.</strong>
-                            <span style="font-size:0.8rem; color:#888;">Ignorer les bières fraîchement notées</span>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" id="toggle-bac-manual" ${Storage.getPreference('bac_manual_only', false) ? 'checked' : ''}>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                </div>
-            </div>
+            <!-- 3. Alcoolémie section moved to top -->
 
             <!-- 4. Données -->
             <div class="stat-card mt-20">
-                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;">💾 Données</h4>
+                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;" data-i18n="settings_group_data">${i18n.t('settings_group_data')}</h4>
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
                     <button id="btn-manage-export" class="btn-primary" style="background:var(--accent-gold); color:black; margin:0;">
-                         ☁️ Sauvegarder
+                         ${i18n.t('export_btn_submit')}
                     </button>
                     <button id="btn-manage-import" class="btn-primary" style="background:#222; border:1px solid var(--accent-gold); color:var(--accent-gold); margin:0;">
-                         📥 Restaurer
+                         ${i18n.t('import_title')}
                     </button>
                 </div>
-                <p style="font-size:0.75rem; color:#666; text-align:center;">
-                    Gérez vos exports fichiers ou liens de partage.
+                <p style="font-size:0.75rem; color:#666; text-align:center;" data-i18n="settings_data_desc">
+                    ${i18n.t('settings_data_desc')}
                 </p>
             </div>
 
             <!-- 3. System -->
             <div class="stat-card mt-20">
-                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;">🛠️ Système</h4>
+                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;" data-i18n="settings_group_system">${i18n.t('settings_group_system')}</h4>
 
                 <button id="btn-check-update" class="btn-primary text-white" style="background:#222; border:1px solid #444; width:100%; margin-bottom:15px;">
-                    🔄 Vérifier les Mises à jour
+                    ${i18n.t('settings_check_update')}
                 </button>
 
                 <button id="btn-restart-tuto" class="btn-primary text-white" style="background:#222; border:1px solid #444; width:100%; margin-bottom:15px;">
-                    🎓 Refaire le Tutoriel
+                    ${i18n.t('settings_restart_tuto')}
                 </button>
                 
                 <details style="border-top:1px solid #333; padding-top:10px;">
-                    <summary style="cursor:pointer; color:#888; font-size:0.8rem; text-align:left;">Zone de Danger</summary>
+                    <summary style="cursor:pointer; color:#888; font-size:0.8rem; text-align:left;" data-i18n="settings_danger_zone">${i18n.t('settings_danger_zone')}</summary>
                     <div style="margin-top:15px;">
-                        <h5 style="color:#aaa; font-size:0.75rem; margin-bottom:5px; text-align:left;">Réinitialisation Partielle</h5>
+                        <h5 style="color:#aaa; font-size:0.75rem; margin-bottom:5px; text-align:left;" data-i18n="settings_reset_partial">${i18n.t('settings_reset_partial')}</h5>
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:15px;">
                             <button id="btn-reset-ratings" class="btn-primary" style="background:#331; color:#fa0; border:1px solid #540; font-size:0.7rem; padding:8px;">
-                                Note Uniqt.
+                                ${i18n.t('settings_reset_ratings')}
                             </button>
                             <button id="btn-reset-custom" class="btn-primary" style="background:#331; color:#fa0; border:1px solid #540; font-size:0.7rem; padding:8px;">
-                                Bières Perso
+                                ${i18n.t('settings_reset_custom')}
                             </button>
                             <button id="btn-reset-history" class="btn-primary" style="background:#331; color:#fa0; border:1px solid #540; font-size:0.7rem; padding:8px;">
-                                Historique
+                                ${i18n.t('settings_reset_history')}
                             </button>
                              <button id="btn-reset-fav" class="btn-primary" style="background:#331; color:#fa0; border:1px solid #540; font-size:0.7rem; padding:8px;">
-                                Favoris
+                                ${i18n.t('settings_reset_favs')}
                             </button>
                         </div>
 
-                        <h5 style="color:red; font-size:0.75rem; margin-bottom:5px; text-align:left;">Réinitialisation Totale</h5>
+                        <h5 style="color:red; font-size:0.75rem; margin-bottom:5px; text-align:left;" data-i18n="settings_reset_total">${i18n.t('settings_reset_total')}</h5>
                         <button id="btn-reset-app" class="btn-primary" style="background:rgba(255,0,0,0.1); color:red; border:1px solid red; width:100%;">
-                            ☠️ RESET APPLICATION
+                            ${i18n.t('settings_reset_app')}
                         </button>
                     </div>
                 </details>
             </div>
            
+            <div class="mt-40 text-center">
+                <h3 style="color:var(--text-secondary); font-size:0.8rem; text-transform:uppercase; letter-spacing:2px; margin-bottom:25px;" data-i18n="settings_whats_new">${i18n.t('settings_whats_new')}</h3>
+                ${renderPatchnotesSection()}
+            </div>
+
             <div class="mt-40 text-center" style="margin-bottom: 60px;">
-                <h3 style="color:var(--text-secondary); font-size:0.8rem; text-transform:uppercase; letter-spacing:2px; margin-bottom:25px;">Crédits</h3>
+                <h3 style="color:var(--text-secondary); font-size:0.8rem; text-transform:uppercase; letter-spacing:2px; margin-bottom:25px;" data-i18n="settings_credits">${i18n.t('settings_credits')}</h3>
                 
                 <div style="display:flex; flex-direction:column; gap:20px;">
                     <div>
-                        <p style="color:var(--accent-gold); font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Co-Fondateurs</p>
+                        <p style="color:var(--accent-gold); font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;" data-i18n="settings_founders">${i18n.t('settings_founders')}</p>
                         <p style="font-size:0.9rem; color:#eee;">Dorian Storms, Noah Bruijninckx, Tristan Storms & Maxance Veulemans</p>
                     </div>
                     
                     <div>
-                        <p style="color:var(--accent-gold); font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">Design & Code</p>
+                        <p style="color:var(--accent-gold); font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;" data-i18n="settings_design_code">${i18n.t('settings_design_code')}</p>
                         <p style="font-size:0.9rem; color:#eee;">Noah Bruijninckx</p>
                     </div>
                 </div>
                 
                 <div style="margin-top:30px; font-size:0.7rem; color:#444; border-top:1px solid #222; padding-top:15px; width:50%; margin-left:auto; margin-right:auto;">
-                    Beerdex v2.0 &copy; 2026
+                    Beerdex v2.5 &copy; 2026
+                    <!-- Légal -->
+                    <div style="border-top:1px dashed #333; padding-top:20px; margin-top:20px;">
+                        <h4 style="color:#888; margin-bottom:12px; font-size:0.85rem; text-transform:uppercase; letter-spacing:1px;" data-i18n="settings_legal_section">${i18n.t('settings_legal_section')}</h4>
+                        <div style="display:flex; flex-direction:column; gap:10px;">
+                            <button id="btn-legal-tos" class="form-input" style="background:none; border:1px solid #333; color:#aaa; text-align:left; font-size:0.85rem; padding:10px;">📄 ${i18n.t('legal_tos_title')}</button>
+                            <button id="btn-legal-privacy" class="form-input" style="background:none; border:1px solid #333; color:#aaa; text-align:left; font-size:0.85rem; padding:10px;">🛡️ ${i18n.t('legal_privacy_title')}</button>
+                            <button id="btn-legal-copyright" class="form-input" style="background:none; border:1px solid #333; color:#aaa; text-align:left; font-size:0.85rem; padding:10px;">⚖️ ${i18n.t('legal_copyright_title')}</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     `;
 
     // --- Handlers ---
-    
+
     // Map Setting
     const mapSelect = container.querySelector('#select-default-map');
     if (mapSelect) {
@@ -2822,7 +3084,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
             } else {
                 localStorage.removeItem('defaultMapScope');
             }
-            showToast("Carte par défaut mise à jour");
+            showToast(i18n.t('toast_map_updated'));
         };
     }
 
@@ -2830,27 +3092,27 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     container.querySelector('#btn-template').onclick = () => renderTemplateEditor();
 
     container.querySelector('#btn-preset-default').onclick = async () => {
-        if (await showConfirmModal("Appliquer le modèle Standard (Note + Commentaire) ?", { danger: false })) {
+        if (await showConfirmModal(i18n.t('modal_confirm_std_preset'), { danger: false })) {
             Storage.resetRatingTemplate();
             Storage.savePreference('activePreset', 'default');
-            showToast("Modèle Standard appliqué !");
+            showToast(i18n.t('toast_preset_std_applied'));
             container.querySelector('#btn-preset-default').style = 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 5px rgba(255,192,0,0.3); padding:8px; font-size:0.8rem;';
             renderSettings(allBeers, userData, container, isDiscovery, discoveryCallback);
         }
     };
 
     container.querySelector('#btn-preset-tristan').onclick = async () => {
-        if (await showConfirmModal("Appliquer le modèle 'Tristan' ?\nCela changera les champs de notation.", { danger: false })) {
+        if (await showConfirmModal(i18n.t('modal_confirm_tristan_preset'), { danger: false })) {
             applyTristanPreset();
-            showToast("Modèle Tristan appliqué !");
+            showToast(i18n.t('toast_preset_tristan_applied'));
             renderSettings(allBeers, userData, container, isDiscovery, discoveryCallback);
         }
     };
 
     container.querySelector('#btn-preset-noah').onclick = async () => {
-        if (await showConfirmModal("Appliquer le modèle 'Noah' ?\nCela changera les champs de notation.", { danger: false })) {
+        if (await showConfirmModal(i18n.t('modal_confirm_noah_preset'), { danger: false })) {
             applyNoahPreset();
-            showToast("Modèle Noah appliqué !");
+            showToast(i18n.t('toast_preset_noah_applied'));
             renderSettings(allBeers, userData, container, isDiscovery, discoveryCallback);
         }
     };
@@ -2867,7 +3129,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
         toggleMuseum.onchange = (e) => {
             const enabled = e.target.checked;
             Storage.savePreference('museumThemeEnabled', enabled);
-            
+
             const museumLink = document.getElementById('css-museum');
             if (museumLink) {
                 museumLink.disabled = !enabled;
@@ -2889,7 +3151,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                 document.body.classList.remove('theme-museum');
             }
 
-            showToast(enabled ? "Thème Musée activé ! 🏛️" : "Thème Musée désactivé");
+            showToast(enabled ? i18n.t('toast_museum_on') : i18n.t('toast_museum_off'));
         };
     }
 
@@ -2913,7 +3175,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     if (checkRarity) {
         checkRarity.onchange = (e) => {
             Storage.savePreference('revealRarity', e.target.checked);
-            showToast("Paramètre enregistré !");
+            showToast(i18n.t('toast_preference_saved'));
         };
     }
 
@@ -2922,7 +3184,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     if (checkAnimOnce) {
         checkAnimOnce.onchange = (e) => {
             Storage.savePreference('anim_only_once', e.target.checked);
-            showToast("Préférence enregistrée !");
+            showToast(i18n.t('toast_preference_saved'));
         };
     }
 
@@ -2934,7 +3196,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
             Storage.savePreference('bac_enabled', enabled);
             const group = container.querySelector('#bac-settings-group');
             if (group) group.style.display = enabled ? 'block' : 'none';
-            showToast(enabled ? "Calculateur activé !" : "Calculateur désactivé");
+            showToast(enabled ? i18n.t('toast_bac_on') : i18n.t('toast_bac_off'));
         };
     }
 
@@ -2968,6 +3230,59 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
         };
     }
 
+    const selectBacDuration = container.querySelector('#select-bac-duration');
+    if (selectBacDuration) {
+        selectBacDuration.onchange = (e) => {
+            Storage.savePreference('bac_drink_duration', e.target.value);
+            showToast(i18n.t('toast_bac_duration_updated'));
+        };
+    }
+
+    const selectBacVehicle = container.querySelector('#select-bac-vehicle');
+    if (selectBacVehicle) {
+        selectBacVehicle.onchange = (e) => {
+            Storage.savePreference('bac_vehicle', e.target.value);
+            showToast(i18n.t('toast_bac_vehicle_updated'));
+        };
+    }
+
+    const selectBacCountry = container.querySelector('#select-bac-country');
+    if (selectBacCountry) {
+        selectBacCountry.onchange = (e) => {
+            Storage.savePreference('bac_country', e.target.value);
+            showToast(i18n.t('toast_bac_rule_updated'));
+        };
+    }
+
+    container.querySelector('#btn-legal-tos').onclick = () => renderLegalPage('tos');
+    container.querySelector('#btn-legal-privacy').onclick = () => renderLegalPage('privacy');
+    container.querySelector('#btn-legal-copyright').onclick = () => renderLegalPage('copyright');
+
+    const selectLanguage = container.querySelector('#select-language');
+    if (selectLanguage) {
+        selectLanguage.onchange = async (e) => {
+            const { i18n } = await import('./i18n.js');
+            await i18n.setLanguage(e.target.value);
+            showToast(i18n.t('toast_lang_updated'));
+            // Re-render settings to refresh all dynamic templates
+            renderSettings(allBeers, userData, container, isDiscovery, discoveryCallback);
+        };
+    }
+
+    // Patchnote visibility tracking — mark as seen when scrolled to
+    const patchnoteEl = container.querySelector('.patchnote-section[data-new="true"]');
+    if (patchnoteEl) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    markPatchnotesSeen();
+                    observer.disconnect();
+                }
+            });
+        }, { threshold: 0.3 });
+        observer.observe(patchnoteEl);
+    }
+
     container.querySelector('#btn-manage-import').onclick = () => renderImportModal();
     container.querySelector('#btn-manage-export').onclick = () => renderExportModal();
 
@@ -2975,7 +3290,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     // System
     container.querySelector('#btn-check-update').onclick = async () => {
         if ('serviceWorker' in navigator) {
-            showToast("Forçage de la mise à jour...", "info");
+            showToast(i18n.t('toast_forcing_update'), "info");
 
             try {
                 const registrations = await navigator.serviceWorker.getRegistrations();
@@ -2984,17 +3299,17 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                 }
                 const cacheKeys = await caches.keys();
                 await Promise.all(cacheKeys.map(key => caches.delete(key)));
-                showToast("Caches vidés. Redémarrage...", "success");
+                showToast(i18n.t('toast_caches_cleared'), "success");
                 setTimeout(() => {
                     window.location.reload(true);
                 }, 1500);
 
             } catch (e) {
                 console.error("Update failed", e);
-                showToast("Erreur mise à jour: " + e.message);
+                showToast(i18n.t('toast_update_error', { err: e.message }));
             }
         } else {
-            showToast("Service Worker non supporté.");
+            showToast(i18n.t('toast_sw_unsupported'));
         }
     };
 
@@ -3014,7 +3329,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
         if (await showConfirmModal(msg)) {
             action();
             Analytics.track('data_reset', { action: action.name || 'unknown' });
-            showToast("Données effacées.");
+            showToast(i18n.t('toast_data_clear_success'));
             setTimeout(() => location.reload(), 1000);
         }
     };
@@ -3022,7 +3337,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     const btnResetRatings = container.querySelector('#btn-reset-ratings');
     if (btnResetRatings) {
         btnResetRatings.onclick = () => confirmReset(
-            "Effacer UNIQUEMENT toutes les notes et commentaires ?",
+            i18n.t('modal_confirm_delete_ratings'),
             Storage.resetRatingsOnly
         );
     }
@@ -3030,7 +3345,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     const btnResetCustom = container.querySelector('#btn-reset-custom');
     if (btnResetCustom) {
         btnResetCustom.onclick = () => confirmReset(
-            "Effacer UNIQUEMENT toutes vos bières personnalisées ?",
+            i18n.t('modal_confirm_delete_custom'),
             Storage.resetCustomBeersOnly
         );
     }
@@ -3038,7 +3353,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     const btnResetHistory = container.querySelector('#btn-reset-history');
     if (btnResetHistory) {
         btnResetHistory.onclick = () => confirmReset(
-            "Effacer l'historique de consommation ? (Les notes seront conservées)",
+            i18n.t('modal_confirm_delete_history'),
             Storage.resetConsumptionHistoryOnly
         );
     }
@@ -3046,19 +3361,21 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     const btnResetFav = container.querySelector('#btn-reset-fav');
     if (btnResetFav) {
         btnResetFav.onclick = () => confirmReset(
-            "Retirer tous les favoris ?",
+            i18n.t('modal_confirm_delete_favs'),
             Storage.resetFavoritesOnly
         );
     }
 
     container.querySelector('#btn-reset-app').onclick = async () => {
-        if (await showConfirmModal("Êtes-vous certain de vouloir TOUT effacer ?\nCette action est irréversible !\n\nToutes vos notes, bières perso et préférences seront perdues.")) {
-            if (await showConfirmModal("Dernière chance : Confirmez-vous la suppression totale ?", { confirmText: 'Tout supprimer' })) {
+        if (await showConfirmModal(i18n.t('modal_confirm_reset_app'))) {
+            if (await showConfirmModal(i18n.t('modal_confirm_reset_app_final'), { confirmText: i18n.t('btn_reset') })) {
                 Storage.resetAllData();
                 location.reload();
             }
         }
     };
+
+    i18n.translateDOM(container);
 }
 
 function renderTemplateEditor() {
@@ -3090,7 +3407,7 @@ function renderTemplateEditor() {
         // Attach Handlers
         wrapper.querySelectorAll('.delete-field').forEach(btn => {
             btn.onclick = async (e) => {
-                if (await showConfirmModal("Supprimer ce champ ?")) {
+                if (await showConfirmModal(i18n.t('modal_confirm_delete_field'))) {
                     template.splice(e.target.dataset.idx, 1);
                     refreshList();
                 }
@@ -3123,10 +3440,10 @@ function renderTemplateEditor() {
                 const idx = parseInt(e.target.dataset.idx);
                 const field = template[idx];
 
-                const newLabel = await showPromptModal("Nouveau nom", field.label);
+                const newLabel = await showPromptModal(i18n.t('prompt_new_name'), field.label);
                 if (newLabel !== null && newLabel.trim() !== "") {
                     field.label = newLabel.trim();
-                    const newType = await showPromptModal("Nouveau Type (range/checkbox/textarea/number)", field.type);
+                    const newType = await showPromptModal(i18n.t('prompt_new_type'), field.type);
                     if (['range', 'checkbox', 'textarea', 'number'].includes(newType)) {
                         field.type = newType;
                         if (newType === 'range') { field.min = 0; field.max = 10; field.step = 1; }
@@ -3138,26 +3455,26 @@ function renderTemplateEditor() {
     };
 
     wrapper.innerHTML = `
-        <h2>Configuration Notation</h2>
+        <h2>${i18n.t('settings_btn_configure_rating')}</h2>
                 <div id="field-list" style="margin: 20px 0;"></div>
 
                 <div style="border-top:1px solid #333; padding-top:20px;">
-                    <h3>Ajouter un champ</h3>
+                    <h3>${i18n.t('settings_add_field')}</h3>
                     <div class="form-group">
-                        <input type="text" id="new-label" class="form-input" placeholder="Nom (ex: Amertume)">
+                        <input type="text" id="new-label" class="form-input" placeholder="${i18n.t('settings_field_name')}">
                     </div>
                     <div class="form-group">
                         <select id="new-type" class="form-select">
-                            <option value="range">Curseur (Slider 0-10)</option>
-                            <option value="checkbox">Case à cocher (Oui/Non)</option>
-                            <option value="textarea">Texte long</option>
+                            <option value="range">${i18n.t('settings_type_range')}</option>
+                            <option value="checkbox">${i18n.t('settings_type_checkbox')}</option>
+                            <option value="textarea">${i18n.t('settings_type_textarea')}</option>
                         </select>
                     </div>
-                    <button id="add-field" class="btn-primary" style="background:var(--bg-card); border:1px solid var(--accent-gold); color:var(--accent-gold);">+ Ajouter le champ</button>
+                    <button id="add-field" class="btn-primary" style="background:var(--bg-card); border:1px solid var(--accent-gold); color:var(--accent-gold);">+ ${i18n.t('settings_btn_add')}</button>
                 </div>
 
-                <button id="save-template" class="btn-primary" style="margin-top:20px;">Enregistrer la configuration</button>
-                <button id="reset-template" class="form-input" style="margin-top:10px; background:none; border:none; color:red;">Réinitialiser par défaut</button>
+                <button id="save-template" class="btn-primary" style="margin-top:20px;">${i18n.t('btn_save')}</button>
+                <button id="reset-template" class="form-input" style="margin-top:10px; background:none; border:none; color:red;">${i18n.t('btn_reset_default')}</button>
     `;
 
     setTimeout(refreshList, 0);
@@ -3180,17 +3497,42 @@ function renderTemplateEditor() {
     wrapper.querySelector('#save-template').onclick = () => {
         Storage.saveRatingTemplate(template);
         closeModal();
-        showToast("Configuration sauvegardée !");
+        showToast(i18n.t('toast_config_saved'));
     };
 
     // Reset
     wrapper.querySelector('#reset-template').onclick = async () => {
-        if (await showConfirmModal("Revenir aux champs par défaut ?", { danger: false })) {
+        if (await showConfirmModal(i18n.t('modal_confirm_default_fields'), { danger: false })) {
             Storage.resetRatingTemplate();
             closeModal();
-            showToast("Réinitialisé !");
+            showToast(i18n.t('toast_reset_success'));
         }
     };
+
+    openModal(wrapper);
+}
+
+function renderLegalPage(type) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'modal-dialog legal-dialog';
+
+    const title = i18n.t(`legal_${type}_title`);
+    const content = i18n.t(`legal_${type}_content`);
+
+    wrapper.innerHTML = `
+        <div class="legal-header">
+            <h2>${title}</h2>
+            <div class="legal-title-underline"></div>
+        </div>
+        <div class="legal-body">
+            <p>${content}</p>
+        </div>
+        <div class="legal-actions">
+            <button id="btn-close-legal" class="btn-outline">${i18n.t('btn_close') || 'Fermer'}</button>
+        </div>
+    `;
+
+    wrapper.querySelector('#btn-close-legal').onclick = () => closeModal();
 
     openModal(wrapper);
 }
@@ -3254,16 +3596,16 @@ function renderAdvancedStats(allBeers, userData) {
 
     // Fun Comparisons logic (Volume)
     const comparisons = [
-        { label: 'Pintes (50cl)', vol: 500, icon: '🍺' },
-        { label: 'Packs de 6', vol: 1980, icon: '📦' },
-        { label: 'Seaux (10L)', vol: 10000, icon: '🪣' },
-        { label: 'Fûts (30L)', vol: 30000, icon: '🛢️' },
-        { label: 'Douches (60L)', vol: 60000, icon: '🚿' },
-        { label: 'Baignoires (150L)', vol: 150000, icon: '🛁' },
-        { label: 'Jacuzzis (1000L)', vol: 1000000, icon: '🧖' },
-        { label: 'Camions Citerne (30k L)', vol: 30000000, icon: '🚚' },
-        { label: 'Piscines (50k L)', vol: 50000000, icon: '🏊' },
-        { label: 'Piscines Olympiques', vol: 2500000000, icon: '🏟️' }
+        { label: i18n.t('stats_label_pints'), vol: 500, icon: '🍺' },
+        { label: i18n.t('stats_label_packs'), vol: 1980, icon: '📦' },
+        { label: i18n.t('stats_label_buckets'), vol: 10000, icon: '🪣' },
+        { label: i18n.t('stats_label_barrels'), vol: 30000, icon: '🛢️' },
+        { label: i18n.t('stats_label_showers'), vol: 60000, icon: '🚿' },
+        { label: i18n.t('stats_label_bathtubs'), vol: 150000, icon: '🛁' },
+        { label: i18n.t('stats_label_jacuzzis'), vol: 1000000, icon: '🧖' },
+        { label: i18n.t('stats_label_trucks'), vol: 30000000, icon: '🚚' },
+        { label: i18n.t('stats_label_pools'), vol: 50000000, icon: '🏊' },
+        { label: i18n.t('stats_label_olympic_pools'), vol: 2500000000, icon: '🏟️' }
     ];
 
     let compHTML = '';
@@ -3281,11 +3623,11 @@ function renderAdvancedStats(allBeers, userData) {
     // Alcohol Comparisons Logic
     // totalAlcoholMl is pure alcohol.
     const alcComps = [
-        { label: 'Pintes de Pils (50cl, 5%)', pure: 25, icon: '🍺' },
-        { label: 'Shots de Tequila (3cl, 40%)', pure: 12, icon: '🥃' },
-        { label: 'Bouteilles de Vin (75cl, 12%)', pure: 90, icon: '🍷' },
-        { label: 'Bouteilles de Whisky (70cl, 40%)', pure: 280, icon: '🍾' },
-        { label: 'Bouteilles de Vodka (70cl, 40%)', pure: 280, icon: '🍸' }
+        { label: i18n.t('stats_label_pints_pils'), pure: 25, icon: '🍺' },
+        { label: i18n.t('stats_label_tequila_shots'), pure: 12, icon: '🥃' },
+        { label: i18n.t('stats_label_wine_bottles'), pure: 90, icon: '🍷' },
+        { label: i18n.t('stats_label_whisky_bottles'), pure: 280, icon: '🍾' },
+        { label: i18n.t('stats_label_vodka_bottles'), pure: 280, icon: '🍸' }
     ];
 
     let alcHTML = '';
@@ -3305,7 +3647,7 @@ function renderAdvancedStats(allBeers, userData) {
         compHTML = `
         <div class="comp-item">
                  <span style="font-size:1.2rem;">🍺</span>
-                 <span><strong>${(totalVolumeMl / 500).toFixed(2)}</strong> Pintes</span>
+                 <span><strong>${(totalVolumeMl / 500).toFixed(2)}</strong> ${i18n.t('stats_label_pints')}</span>
              </div>`;
     }
 
@@ -3313,24 +3655,24 @@ function renderAdvancedStats(allBeers, userData) {
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px;">
                     <div class="stat-card">
                         <div class="stat-value">${totalLiters} L</div>
-                        <div class="stat-label">Volume Total</div>
+                        <div class="stat-label">${i18n.t('stats_volume_total')}</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-value">${alcoholLiters} L</div>
-                        <div class="stat-label">Alcool Pur</div>
+                        <div class="stat-label">${i18n.t('stats_pure_alcohol')}</div>
                     </div>
                 </div>
 
                 <div class="mt-20">
-                    <h4 class="ach-category-title text-center">Équivalences Volume</h4>
+                    <h4 class="ach-category-title text-center">${i18n.t('stats_equiv_volume')}</h4>
                     <div class="ach-grid" style="grid-template-columns:1fr 1fr;">
                         ${compHTML}
                     </div>
                 </div>
 
                 <div class="stat-card mt-20">
-                    <h4 class="text-center" style="color:var(--danger); font-size:0.9rem; margin-bottom:10px;">Équivalences Alcool</h4>
-                    <p class="text-center" style="font-size:0.75rem; color:#888; margin-bottom:10px;">C'est comme si vous aviez bu...</p>
+                    <h4 class="text-center" style="color:var(--danger); font-size:0.9rem; margin-bottom:10px;">${i18n.t('stats_equiv_alcohol')}</h4>
+                    <p class="text-center" style="font-size:0.75rem; color:#888; margin-bottom:10px;">${i18n.t('stats_equiv_desc')}</p>
                     ${alcHTML}
                 </div>
     `;
@@ -3345,37 +3687,35 @@ function renderAchievementsList() {
     // Group by Category
     const byCategory = {};
     all.forEach(ach => {
-        const cat = ach.category || 'Autres';
-        if (!byCategory[cat]) byCategory[cat] = [];
-        byCategory[cat].push(ach);
+        const catKey = ach.categoryKey || 'ach_cat_fun';
+        if (!byCategory[catKey]) byCategory[catKey] = [];
+        byCategory[catKey].push(ach);
     });
 
     let html = '';
 
-    Object.keys(byCategory).forEach(cat => {
-        html += `<h4 class="ach-category-title text-center">${cat}</h4>`;
+    Object.keys(byCategory).forEach(catKey => {
+        const catTranslated = i18n.t(catKey);
+        html += `<h4 class="ach-category-title text-center">${catTranslated}</h4>`;
         html += `<div class="ach-grid">`;
 
-        html += byCategory[cat].map(ach => {
+        html += byCategory[catKey].map(ach => {
             const isUnlocked = unlockedIds.includes(ach.id);
-            const opacity = isUnlocked ? '1' : '0.4'; // Improved visibility for locked items
+            const opacity = isUnlocked ? '1' : '0.4';
             const filter = isUnlocked ? 'none' : 'grayscale(100%)';
 
-            let title = ach.title;
-            let desc = ach.desc;
+            let title = i18n.t(ach.titleKey, ach.titleData || {});
+            let desc = i18n.t(ach.descKey, ach.descData || {});
 
-            // Only mask if locked AND hidden
             if (!isUnlocked && ach.hidden) {
                 title = '???';
-                desc = 'Mystère... Continuez à explorer !';
+                desc = i18n.t('ach_hidden_desc'); // Or hardcoded if not in i18n
             }
 
-            // Safe properties
             const safeTitle = title.replace(/'/g, "\\'").replace(/"/g, '&quot;');
             const safeDesc = desc.replace(/'/g, "\\'").replace(/"/g, '&quot;');
             const safeIcon = ach.icon.replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
-            // Foil based on rarity
             const rarityClass = isUnlocked && ach.rarity ? `ach-rarity-${ach.rarity}` : '';
 
             return `
@@ -3401,11 +3741,11 @@ const TutorialSystem = {
         {
             id: 'intro',
             target: null,
-            message: `
+            message: () => `
                 <div style="font-size:3rem; margin-bottom:10px;">👋</div>
-                <h3 style="color:var(--accent-gold); margin-bottom:10px;">Le Grand Tour</h3>
-                <p>Découvrons ensemble toutes les fonctionnalités de Beerdex !</p>
-                <button class="btn-primary mt-20" onclick="TutorialSystem.next()">C'est parti !</button>
+                <h3 style="color:var(--accent-gold); margin-bottom:10px;">${i18n.t('tuto_intro_title')}</h3>
+                <p>${i18n.t('tuto_intro_msg')}</p>
+                <button class="btn-primary mt-20" onclick="TutorialSystem.next()">${i18n.t('tuto_btn_start')}</button>
             `
         },
         // --- HOME FEATURES ---
@@ -3413,50 +3753,51 @@ const TutorialSystem = {
             id: 'search',
             target: '#search-toggle',
             position: 'bottom',
-            message: `
-                <h3>Recherche</h3>
-                <p>Trouvez vos bières instantanément.</p>
-                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">Suivant</button>
+            message: () => `
+                <h3>${i18n.t('tuto_search_title')}</h3>
+                <p>${i18n.t('tuto_search_msg')}</p>
+                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">${i18n.t('tuto_btn_next')}</button>
             `
         },
         {
             id: 'scan',
-            target: '#scan-toggle',
+            target: '#fab-scan',
             position: 'bottom',
-            message: `
-                <h3>Scanner Intelligent</h3>
-                <p>Scannez un code-barre pour ajouter une bière ou voir sa fiche.</p>
-                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">Suivant</button>
+            message: () => `
+                <h3>${i18n.t('tuto_scan_title')}</h3>
+                <p>${i18n.t('tuto_scan_msg')}</p>
+                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">${i18n.t('tuto_btn_next')}</button>
             `
         },
         {
             id: 'filter',
             target: '#filter-toggle',
             position: 'bottom',
-            message: `
-                <h3>Filtres Intelligents</h3>
-                <p>Triez par goût, couleur, brasserie ou rareté.</p>
-                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">Suivant</button>
+            message: () => `
+                <h3>${i18n.t('tuto_filter_title')}</h3>
+                <p>${i18n.t('tuto_filter_msg')}</p>
+                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">${i18n.t('tuto_btn_next')}</button>
             `
         },
         {
             id: 'tap-beer',
             target: '.beer-card:first-child',
             position: 'auto',
-            message: `
-                <h3>Noter une Bière</h3>
-                <p>Touchez une carte pour ouvrir la fiche de dégustation.</p>
-                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">Suivant</button>
+            noClick: true,
+            message: () => `
+                <h3>${i18n.t('tuto_tap_title')}</h3>
+                <p>${i18n.t('tuto_tap_msg')}</p>
+                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">${i18n.t('tuto_btn_next')}</button>
             `
         },
         {
             id: 'add-beer',
             target: '#fab-add',
             position: 'left',
-            message: `
-                <h3>Ajouter</h3>
-                <p>Scanner un code-barre ou ajouter manuellement.</p>
-                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">Suivant</button>
+            message: () => `
+                <h3>${i18n.t('tuto_add_title')}</h3>
+                <p>${i18n.t('tuto_add_msg')}</p>
+                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">${i18n.t('tuto_btn_next')}</button>
             `
         },
         // --- STATS ---
@@ -3464,9 +3805,9 @@ const TutorialSystem = {
             id: 'go-stats',
             target: '[data-view="stats"]',
             position: 'top',
-            message: `
-                <h3>Statistiques</h3>
-                <p>Allons voir vos progrès. Cliquez ici !</p>
+            message: () => `
+                <h3>${i18n.t('tuto_stats_title')}</h3>
+                <p>${i18n.t('tuto_stats_msg')}</p>
             `,
             waitFor: 'click'
         },
@@ -3474,40 +3815,40 @@ const TutorialSystem = {
             id: 'stats-map',
             target: '#beer-map-container',
             position: 'top',
-            message: `
-                <h3>Carte des Bières</h3>
-                <p>Visualisez la provenance de vos dégustations.</p>
-                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">Suivant</button>
+            message: () => `
+                <h3>${i18n.t('tuto_map_title')}</h3>
+                <p>${i18n.t('tuto_map_msg')}</p>
+                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">${i18n.t('tuto_btn_next')}</button>
             `
         },
         {
             id: 'stats-achievements',
             target: '#card-achievements',
             position: 'top',
-            message: `
-                <h3>Succès</h3>
-                <p>Débloquez des badges en découvrant de nouveaux styles !</p>
-                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">Suivant</button>
-            `
-        },
-        {
-            id: 'stats-match',
-            target: '#btn-match',
-            position: 'top',
-            message: `
-                <h3>Beer Match ⚔️</h3>
-                <p>Comparez vos goûts avec ceux d'un ami via QR Code.</p>
-                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">Suivant</button>
+            message: () => `
+                <div style="text-align:center;">
+                    <h3 style="color:var(--accent-gold);">${i18n.t('tuto_ach_title')}</h3>
+                    <p>${i18n.t('tuto_ach_msg')}</p>
+                    <div class="mt-15" style="display:flex; gap:10px; justify-content:center;">
+                        <button class="btn-primary" style="font-size:0.8rem; background:#444;" onclick="TutorialSystem.prev()">${i18n.t('tuto_btn_prev')}</button>
+                        <button class="btn-primary" style="font-size:0.8rem;" onclick="TutorialSystem.next()">${i18n.t('tuto_btn_next')}</button>
+                    </div>
+                </div>
             `
         },
         {
             id: 'stats-wrapped',
             target: '#btn-open-wrapped',
             position: 'top',
-            message: `
-                <h3>Wrapped 🎬</h3>
-                <p>Revivez votre année brassicole en Story animée !</p>
-                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">Suivant</button>
+            message: () => `
+                <div style="text-align:center;">
+                    <h3 style="color:var(--accent-gold);">${i18n.t('wrapped_title')}</h3>
+                    <p>${i18n.t('tuto_wrapped_msg')}</p>
+                    <div class="mt-15" style="display:flex; gap:10px; justify-content:center;">
+                        <button class="btn-primary" style="font-size:0.8rem; background:#444;" onclick="TutorialSystem.prev()">${i18n.t('tuto_btn_prev')}</button>
+                        <button class="btn-primary" style="font-size:0.8rem;" onclick="TutorialSystem.finish()">${i18n.t('tuto_btn_finish')}</button>
+                    </div>
+                </div>
             `
         },
         // --- SETTINGS ---
@@ -3515,50 +3856,116 @@ const TutorialSystem = {
             id: 'go-settings',
             target: '[data-view="settings"]',
             position: 'top',
-            message: `
-                <h3>Paramètres</h3>
-                <p>Passons à la configuration. Cliquez ici !</p>
+            message: () => `
+                <h3>${i18n.t('tuto_settings_title')}</h3>
+                <p>${i18n.t('tuto_settings_msg')}</p>
             `,
             waitFor: 'click'
         },
         {
             id: 'set-discovery',
-            target: '#toggle-discovery', // Requires checking actual structure logic in showStep
+            target: '#toggle-discovery',
             position: 'bottom',
-            message: `
-                <h3>Mode Découverte</h3>
-                <p>Cache les bières non bues pour garder le mystère.</p>
-                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">Suivant</button>
+            message: () => `
+                <h3>${i18n.t('tuto_discovery_title')}</h3>
+                <p>${i18n.t('tuto_discovery_msg')}</p>
+                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">${i18n.t('tuto_btn_next')}</button>
             `
         },
         {
             id: 'set-rarity',
-            target: '#check-reveal-rarity', // Check logic
+            target: '#check-reveal-rarity',
             position: 'bottom',
-            message: `
-                <h3>Révéler la Rareté</h3>
-                <p>Affiche le cadre coloré même pour les bières non bues.</p>
-                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">Suivant</button>
+            message: () => `
+                <h3>${i18n.t('tuto_rarity_title')}</h3>
+                <p>${i18n.t('tuto_rarity_msg')}</p>
+                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">${i18n.t('tuto_btn_next')}</button>
             `
         },
         {
             id: 'set-data',
             target: '#btn-manage-export',
             position: 'top',
-            message: `
-                <h3>Sauvegarde</h3>
-                <p>Exportez vos données pour ne jamais les perdre.</p>
-                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">Suivant</button>
+            message: () => `
+                <h3>${i18n.t('tuto_data_title')}</h3>
+                <p>${i18n.t('tuto_data_msg')}</p>
+                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">${i18n.t('tuto_btn_next')}</button>
             `
         },
         {
             id: 'noah-preset',
             target: '#btn-preset-noah',
             position: 'top',
-            message: `
-                <h3>Modèle prédéfinis</h3>
-                <p>Activez 'Noah' pour des notes détaillées (Nez, Bouche, Robe).</p>
-                <button class="btn-primary mt-10" onclick="TutorialSystem.finish()">Terminer</button>
+            message: () => `
+                <h3>${i18n.t('tuto_presets_title')}</h3>
+                <p>${i18n.t('tuto_presets_msg')}</p>
+                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">${i18n.t('tuto_btn_next')}</button>
+            `
+        },
+        // --- NEW FEATURES ---
+        {
+            id: 'go-home-final',
+            target: '[data-view="home"]',
+            position: 'top',
+            message: () => `
+                <h3>${i18n.t('tuto_home_title')}</h3>
+                <p>${i18n.t('tuto_home_msg')}</p>
+            `,
+            waitFor: 'click'
+        },
+        {
+            id: 'view-toggle',
+            target: '#view-toggle',
+            position: 'bottom',
+            message: () => `
+                <h3>${i18n.t('tuto_view_title')}</h3>
+                <p>${i18n.t('tuto_view_msg')}</p>
+                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">${i18n.t('tuto_btn_next')}</button>
+            `
+        },
+        {
+            id: 'bac-badge',
+            target: '.bac-speculative-badge',
+            position: 'auto',
+            message: () => `
+                <h3>${i18n.t('tuto_bac_badge_title')}</h3>
+                <p>${i18n.t('tuto_bac_badge_msg')}</p>
+                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">${i18n.t('tuto_btn_next')}</button>
+            `
+        },
+        {
+            id: 'bac-config',
+            target: null,
+            message: () => `
+                <div style="font-size:2rem; margin-bottom:10px;">🩸</div>
+                <h3 style="color:var(--accent-gold); margin-bottom:10px;">${i18n.t('tuto_bac_config_title')}</h3>
+                <p style="margin-bottom:15px;">${i18n.t('tuto_bac_config_msg')}</p>
+                <div style="display:flex; gap:10px; margin-bottom:15px; text-align:left;">
+                    <div style="flex:1;">
+                        <label style="font-size:0.75rem; color:#888; display:block; margin-bottom:4px;">${i18n.t('settings_weight')} (kg)</label>
+                        <input type="number" id="tuto-bac-weight" class="form-input" value="${Storage.getPreference('bac_weight', 70)}" min="30" max="200" style="padding:6px; font-size:0.9rem; width:100%;">
+                    </div>
+                    <div style="flex:1;">
+                        <label style="font-size:0.75rem; color:#888; display:block; margin-bottom:4px;">${i18n.t('settings_gender')}</label>
+                        <select id="tuto-bac-gender" class="form-select" style="padding:6px; font-size:0.9rem; width:100%;">
+                            <option value="M" ${Storage.getPreference('bac_gender', 'M') === 'M' ? 'selected' : ''}>${i18n.t('settings_male')}</option>
+                            <option value="F" ${Storage.getPreference('bac_gender', 'M') === 'F' ? 'selected' : ''}>${i18n.t('settings_female')}</option>
+                            <option value="X" ${Storage.getPreference('bac_gender', 'M') === 'X' ? 'selected' : ''}>${i18n.t('settings_not_specified')}</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-primary" style="width:100%; margin-bottom:8px;" onclick="TutorialSystem.saveBac()">${i18n.t('tuto_btn_save')}</button>
+                <div style="font-size:0.75rem; color:#888; text-decoration:underline; cursor:pointer;" onclick="TutorialSystem.skipBac()">${i18n.t('tuto_btn_skip_bac')}</div>
+            `
+        },
+        {
+            id: 'finale',
+            target: null,
+            message: () => `
+                <div style="font-size:3rem; margin-bottom:10px;">🍻</div>
+                <h3 style="color:var(--accent-gold);">${i18n.t('tuto_finale_title')}</h3>
+                <p>${i18n.t('tuto_finale_msg')}</p>
+                <button class="btn-primary mt-20" onclick="TutorialSystem.finish()">${i18n.t('tuto_btn_finish')}</button>
             `
         }
     ],
@@ -3622,9 +4029,28 @@ const TutorialSystem = {
         }
     },
 
+    saveBac() {
+        const w = document.getElementById('tuto-bac-weight');
+        const g = document.getElementById('tuto-bac-gender');
+        if (w) Storage.savePreference('bac_weight', parseInt(w.value) || 70);
+        if (g) Storage.savePreference('bac_gender', g.value);
+        Storage.savePreference('bac_enabled', true);
+        showToast(i18n.t('toast_bac_on'), 'success');
+        this.next();
+    },
+
+    skipBac() {
+        Storage.savePreference('bac_enabled', false);
+        showToast(i18n.t('toast_bac_off'));
+        this.next();
+    },
+
     showStep() {
         const step = this.steps[this.currentStep];
         if (!step) return;
+
+        // Message can be a string or a function returning localized HTML
+        this.tooltip.innerHTML = typeof step.message === 'function' ? step.message() : step.message;
 
         let targetEl = null;
 
@@ -3708,13 +4134,19 @@ const TutorialSystem = {
             this.spotlight.style.width = width + 'px';
             this.spotlight.style.height = height + 'px';
             this.spotlight.style.opacity = '1';
+
+            // Activate anti-click barrier when the step proceeds via "Suivant" instead of clicking the target.
+            this.spotlight.style.pointerEvents = step.waitFor === 'click' ? 'none' : 'auto';
         } else {
             this.spotlight.style.opacity = '0';
         }
 
         // 4. Position Tooltip
-        this.tooltip.innerHTML = step.message +
-            `<div style="margin-top:10px; font-size:0.7rem; color:#888; text-decoration:underline; cursor:pointer;" onclick="TutorialSystem.finish()">Passer le tutoriel</div>`;
+        if (this.currentHighlightId !== step.id) {
+            const messageHtml = typeof step.message === 'function' ? step.message() : step.message;
+            this.tooltip.innerHTML = messageHtml +
+                `<div style="margin-top:10px; font-size:0.7rem; color:#888; text-decoration:underline; cursor:pointer;" onclick="TutorialSystem.finish()">${i18n.t('tuto_btn_skip')}</div>`;
+        }
         this.tooltip.style.opacity = '1';
 
         requestAnimationFrame(() => {
@@ -3754,12 +4186,14 @@ const TutorialSystem = {
         });
 
         // 5. Binding
-        if (step.waitFor === 'click' && el) {
+        if (step.waitFor === 'click' && el && this.currentHighlightId !== step.id) {
             const oneTimeClick = (e) => {
                 setTimeout(() => this.next(), 200);
             };
             el.addEventListener('click', oneTimeClick, { once: true });
         }
+
+        this.currentHighlightId = step.id;
     },
 
     updatePosition() {
@@ -3784,7 +4218,7 @@ const TutorialSystem = {
         }, 300);
 
         localStorage.setItem('beerdex_welcome_seen_v3', 'true');
-        showToast("Tutoriel terminé ! À vous de jouer 🍻");
+        showToast(i18n.t('toast_tuto_finished'));
     }
 };
 
@@ -3794,46 +4228,46 @@ window.restartTutorial = () => TutorialSystem.start();
 window.TutorialSystem = TutorialSystem;
 
 const PRESET_TRISTAN = [
-    { id: 'score', label: 'Note Globale (/20)', type: 'number', min: 0, max: 20, step: 0.1 },
-    { id: 'comment', label: 'Commentaire', type: 'textarea' },
+    { id: 'score', label: 'preset_global_score', type: 'number', min: 0, max: 20, step: 0.1 },
+    { id: 'comment', label: 'preset_comment', type: 'textarea' },
 
     // Visuel
-    { id: 'apparence', label: 'Apparence', type: 'textarea' },
-    { id: 'couleur', label: 'Couleur (1=Blanche, 10=Noire)', type: 'range', min: 1, max: 10, step: 1 },
-    { id: 'transparence', label: 'Transparence (1=Transp, 10=Opaque)', type: 'range', min: 1, max: 10, step: 1 },
-    { id: 'mousse', label: 'Mousse (1=Plate, 10=Incontrôlable)', type: 'range', min: 1, max: 10, step: 1 },
-    { id: 'mousse_tenue', label: 'Ténacité Mousse (1=Instant, 10=Eternelle)', type: 'range', min: 1, max: 10, step: 1 },
+    { id: 'apparence', label: 'preset_tristan_apparence', type: 'textarea' },
+    { id: 'couleur', label: 'preset_tristan_couleur', type: 'range', min: 1, max: 10, step: 1 },
+    { id: 'transparence', label: 'preset_tristan_transparence', type: 'range', min: 1, max: 10, step: 1 },
+    { id: 'mousse', label: 'preset_tristan_mousse', type: 'range', min: 1, max: 10, step: 1 },
+    { id: 'mousse_tenue', label: 'preset_tristan_mousse_tenue', type: 'range', min: 1, max: 10, step: 1 },
 
     // Olfactif
-    { id: 'aromes_txt', label: 'Arômes (Desc)', type: 'textarea' },
-    { id: 'cafe', label: 'Café', type: 'range', min: 0, max: 10, step: 1 },
-    { id: 'caramel', label: 'Caramel', type: 'range', min: 0, max: 10, step: 1 },
-    { id: 'cereales', label: 'Céréales', type: 'range', min: 0, max: 10, step: 1 },
-    { id: 'chocolat', label: 'Chocolat', type: 'range', min: 0, max: 10, step: 1 },
-    { id: 'sucre', label: 'Sucré', type: 'range', min: 0, max: 10, step: 1 },
-    { id: 'noisette', label: 'Noisette', type: 'range', min: 0, max: 10, step: 1 },
-    { id: 'pain', label: 'Pain', type: 'range', min: 0, max: 10, step: 1 },
-    { id: 'agrumes', label: 'Agrumes', type: 'range', min: 0, max: 10, step: 1 },
-    { id: 'epices', label: 'Épices', type: 'range', min: 0, max: 10, step: 1 },
-    { id: 'fleurs', label: 'Fleurs', type: 'range', min: 0, max: 10, step: 1 },
-    { id: 'herbes', label: 'Herbes', type: 'range', min: 0, max: 10, step: 1 },
-    { id: 'poivre', label: 'Poivre', type: 'range', min: 0, max: 10, step: 1 },
-    { id: 'resine', label: 'Résine', type: 'range', min: 0, max: 10, step: 1 },
-    { id: 'fruit', label: 'Fruit', type: 'range', min: 0, max: 10, step: 1 },
-    { id: 'mais', label: 'Maïs', type: 'range', min: 0, max: 10, step: 1 },
+    { id: 'aromes_txt', label: 'preset_tristan_aromes', type: 'textarea' },
+    { id: 'cafe', label: 'preset_tristan_cafe', type: 'range', min: 0, max: 10, step: 1 },
+    { id: 'caramel', label: 'preset_tristan_caramel', type: 'range', min: 0, max: 10, step: 1 },
+    { id: 'cereales', label: 'preset_tristan_cereales', type: 'range', min: 0, max: 10, step: 1 },
+    { id: 'chocolat', label: 'preset_tristan_chocolat', type: 'range', min: 0, max: 10, step: 1 },
+    { id: 'sucre', label: 'preset_tristan_sucre', type: 'range', min: 0, max: 10, step: 1 },
+    { id: 'noisette', label: 'preset_tristan_noisette', type: 'range', min: 0, max: 10, step: 1 },
+    { id: 'pain', label: 'preset_tristan_pain', type: 'range', min: 0, max: 10, step: 1 },
+    { id: 'agrumes', label: 'preset_tristan_agrumes', type: 'range', min: 0, max: 10, step: 1 },
+    { id: 'epices', label: 'preset_tristan_epices', type: 'range', min: 0, max: 10, step: 1 },
+    { id: 'fleurs', label: 'preset_tristan_fleurs', type: 'range', min: 0, max: 10, step: 1 },
+    { id: 'herbes', label: 'preset_tristan_herbes', type: 'range', min: 0, max: 10, step: 1 },
+    { id: 'poivre', label: 'preset_tristan_poivre', type: 'range', min: 0, max: 10, step: 1 },
+    { id: 'resine', label: 'preset_tristan_resine', type: 'range', min: 0, max: 10, step: 1 },
+    { id: 'fruit', label: 'preset_tristan_fruit', type: 'range', min: 0, max: 10, step: 1 },
+    { id: 'mais', label: 'preset_tristan_mais', type: 'range', min: 0, max: 10, step: 1 },
 
     // Goût
-    { id: 'intensite', label: 'Intensité (1=Faible, 10=Puissante)', type: 'range', min: 1, max: 10, step: 1 },
-    { id: 'equilibre', label: 'Equilibre (1=Doux, 10=Amer)', type: 'range', min: 1, max: 10, step: 1 },
-    { id: 'impression', label: 'Impression (1=Déplaisante, 10=Plaisante)', type: 'range', min: 1, max: 10, step: 1 },
-    { id: 'corps', label: 'Corps (1=Léger, 10=Plein)', type: 'range', min: 1, max: 10, step: 1 },
-    { id: 'carbonation', label: 'Carbonation (1=Plate, 10=Explosion)', type: 'range', min: 1, max: 10, step: 1 },
+    { id: 'intensite', label: 'preset_tristan_intensite', type: 'range', min: 1, max: 10, step: 1 },
+    { id: 'equilibre', label: 'preset_tristan_equilibre', type: 'range', min: 1, max: 10, step: 1 },
+    { id: 'impression', label: 'preset_tristan_impression', type: 'range', min: 1, max: 10, step: 1 },
+    { id: 'corps', label: 'preset_tristan_corps', type: 'range', min: 1, max: 10, step: 1 },
+    { id: 'carbonation', label: 'preset_tristan_carbonation', type: 'range', min: 1, max: 10, step: 1 },
 
     // Conclusion
-    { id: 'synthese', label: 'Synthèse', type: 'textarea' },
-    { id: 'duree', label: 'Durée (1=Fugace, 10=Forcing)', type: 'range', min: 1, max: 10, step: 1 },
-    { id: 'intensite_globale', label: 'Intensité Globale', type: 'range', min: 1, max: 10, step: 1 },
-    { id: 'ensemble_equilibre', label: 'Ensemble & Équilibre (Qualité)', type: 'range', min: 1, max: 10, step: 1 }
+    { id: 'synthese', label: 'preset_tristan_synthese', type: 'textarea' },
+    { id: 'duree', label: 'preset_tristan_duree', type: 'range', min: 1, max: 10, step: 1 },
+    { id: 'intensite_globale', label: 'preset_tristan_intensite_globale', type: 'range', min: 1, max: 10, step: 1 },
+    { id: 'ensemble_equilibre', label: 'preset_tristan_qualite', type: 'range', min: 1, max: 10, step: 1 }
 ];
 
 function applyTristanPreset() {
@@ -3842,33 +4276,33 @@ function applyTristanPreset() {
 }
 
 const PRESET_NOAH = [
-    { id: 'score', label: 'Note Globale (/20)', type: 'number', min: 0, max: 20, step: 0.1 },
-    { id: 'comment', label: 'Commentaire', type: 'textarea' },
+    { id: 'score', label: 'preset_global_score', type: 'number', min: 0, max: 20, step: 0.1 },
+    { id: 'comment', label: 'preset_comment', type: 'textarea' },
 
     // Visuel (Expert)
-    { id: 'robe', label: 'Robe (Couleur/Turbidité)', type: 'textarea' },
-    { id: 'mousse_aspect', label: 'Aspect Mousse', type: 'textarea' },
+    { id: 'robe', label: 'preset_noah_robe', type: 'textarea' },
+    { id: 'mousse_aspect', label: 'preset_noah_mousse', type: 'textarea' },
 
     // Olfactif (Nez)
-    { id: 'nez_intensite', label: 'Intensité Nez (1-10)', type: 'range', min: 1, max: 10, step: 1 },
-    { id: 'nez_notes', label: 'Notes Olfactives', type: 'textarea' },
+    { id: 'nez_intensite', label: 'preset_noah_nez_intensite', type: 'range', min: 1, max: 10, step: 1 },
+    { id: 'nez_notes', label: 'preset_noah_nez_notes', type: 'textarea' },
 
     // Gustatif (Bouche)
-    { id: 'attaque', label: 'Attaque', type: 'textarea' },
-    { id: 'milieu_bouche', label: 'Milieu de Bouche', type: 'textarea' },
-    { id: 'finale', label: 'Finale / Arrière-goût', type: 'textarea' },
+    { id: 'attaque', label: 'preset_noah_attaque', type: 'textarea' },
+    { id: 'milieu_bouche', label: 'preset_noah_milieu', type: 'textarea' },
+    { id: 'finale', label: 'preset_noah_finale', type: 'textarea' },
 
     // Sensations
-    { id: 'corpulence', label: 'Corpulence (1=Eau, 10=Sirop)', type: 'range', min: 1, max: 10, step: 1 },
-    { id: 'petillance', label: 'Pétillance', type: 'range', min: 1, max: 10, step: 1 },
-    { id: 'amertume', label: 'Amertume Ressentie', type: 'range', min: 1, max: 10, step: 1 },
+    { id: 'corpulence', label: 'preset_noah_corpulence', type: 'range', min: 1, max: 10, step: 1 },
+    { id: 'petillance', label: 'preset_noah_petillance', type: 'range', min: 1, max: 10, step: 1 },
+    { id: 'amertume', label: 'preset_noah_amertume', type: 'range', min: 1, max: 10, step: 1 },
 
     // Accord
-    { id: 'accord_mets', label: 'Accord ideal', type: 'textarea' },
+    { id: 'accord_mets', label: 'preset_noah_accord', type: 'textarea' },
 
     // Conclusion
-    { id: 'potentiel_garde', label: 'Potentiel de Garde', type: 'textarea' },
-    { id: 'verdict', label: 'Verdict de l\'Expert', type: 'textarea' }
+    { id: 'potentiel_garde', label: 'preset_noah_garde', type: 'textarea' },
+    { id: 'verdict', label: 'preset_noah_verdict', type: 'textarea' }
 ];
 
 function applyNoahPreset() {
@@ -3886,7 +4320,7 @@ export function showAchievementDetails(title, desc, icon, isUnlocked) {
         <p style="font-size:1.1rem; color:#ddd; margin-bottom:30px; line-height:1.5;">
             ${desc}
         </p>
-        <button class="btn-primary" onclick="UI.closeModal()">Fermer</button>
+        <button class="btn-primary" onclick="UI.closeModal()">${i18n.t('btn_close')}</button>
     `;
 
     openModal(wrapper);
@@ -3905,31 +4339,31 @@ export function renderMatchModal(allBeers) {
             </div>
 
             <div style="display:flex; border-bottom:1px solid #333; margin-bottom:20px;">
-                <button id="tab-qr" style="flex:1; background:none; border:none; color:var(--accent-gold); padding:10px; border-bottom:2px solid var(--accent-gold); cursor:pointer;">Mon Code</button>
-                <button id="tab-scan" style="flex:1; background:none; border:none; color:#666; padding:10px; cursor:pointer;">Scanner</button>
+                <button id="tab-qr" style="flex:1; background:none; border:none; color:var(--accent-gold); padding:10px; border-bottom:2px solid var(--accent-gold); cursor:pointer;">${i18n.t('match_tab_my_code')}</button>
+                <button id="tab-scan" style="flex:1; background:none; border:none; color:#666; padding:10px; cursor:pointer;">${i18n.t('match_tab_scan')}</button>
             </div>
 
             <div id="view-qr" style="display:block;">
-                <p style="color:#aaa; font-size:0.9rem; margin-bottom:15px;">Montrez ce code à un ami.</p>
+                <p style="color:#aaa; font-size:0.9rem; margin-bottom:15px;">${i18n.t('match_show_friend')}</p>
                 <div id="qrcode-container" style="background:#FFF; padding:15px; border-radius:10px; display:inline-block; margin-bottom:15px;"></div>
                 
                 <!-- Text Fallback -->
                 <div style="text-align:left;">
-                    <p style="font-size:0.8rem; color:#888; margin-bottom:5px;">Code Texte (Copier si le scan échoue) :</p>
+                    <p style="font-size:0.8rem; color:#888; margin-bottom:5px;">${i18n.t('match_text_fallback')}</p>
                     <textarea id="my-qr-text" readonly style="width:100%; height:60px; background:#222; border:1px solid #444; color:#aaa; font-size:0.7rem; padding:5px; border-radius:4px; resize:none;"></textarea>
-                    <button id="btn-copy-code" class="form-input" style="padding:5px 10px; font-size:0.8rem; margin-top:5px; width:100%;">📋 Copier le code</button>
+                    <button id="btn-copy-code" class="form-input" style="padding:5px 10px; font-size:0.8rem; margin-top:5px; width:100%;">${i18n.t('match_btn_copy')}</button>
                 </div>
             </div>
 
             <div id="view-scan" style="display:none;">
-                <p style="color:#aaa; font-size:0.9rem; margin-bottom:15px;">Scannez le code.</p>
+                <p style="color:#aaa; font-size:0.9rem; margin-bottom:15px;">${i18n.t('match_scan_desc')}</p>
                 <div id="reader" style="width:100%; height:250px; background:#000; border-radius:8px; overflow:hidden; position:relative;"></div>
                 <div id="scan-feedback" style="margin-top:10px; color:var(--accent-gold); font-size:0.8rem; height:20px;"></div>
                 
                 <details style="margin-top:15px; text-align:left;">
-                    <summary style="color:#555; cursor:pointer; font-size:0.8rem;">Problème de caméra ?</summary>
-                    <textarea id="manual-paste" placeholder="Collez le code texte ici (BEERDEX:...)" style="width:100%; height:60px; background:#222; border:1px solid #444; color:#FFF; margin-top:5px; font-size:0.7rem; padding:5px;"></textarea>
-                    <button id="btn-manual-compare" class="form-input" style="padding:5px 10px; font-size:0.8rem; margin-top:5px;">Comparer</button>
+                    <summary style="color:#555; cursor:pointer; font-size:0.8rem;">${i18n.t('match_camera_issue')}</summary>
+                    <textarea id="manual-paste" placeholder="${i18n.t('match_paste_placeholder')}" style="width:100%; height:60px; background:#222; border:1px solid #444; color:#FFF; margin-top:5px; font-size:0.7rem; padding:5px;"></textarea>
+                    <button id="btn-manual-compare" class="form-input" style="padding:5px 10px; font-size:0.8rem; margin-top:5px;">${i18n.t('match_btn_compare')}</button>
                 </details>
             </div>
 
@@ -3989,14 +4423,14 @@ export function renderMatchModal(allBeers) {
         const myIds = Object.keys(ratings).filter(k => ratings[k] && ratings[k].count > 0).map(k => k.split('_')[0]);
 
         if (myIds.length === 0) {
-            wrapper.querySelector('#qrcode-container').innerHTML = "<p style='color:#ccc; padding:20px;'>Aucune bière notée !<br><small>Buvez d'abord... 😉</small></p>";
-            wrapper.querySelector('#my-qr-text').value = "Rien à partager.";
+            wrapper.querySelector('#qrcode-container').innerHTML = `<p style='color:#ccc; padding:20px;'>${i18n.t('match_no_beers')}</p>`;
+            wrapper.querySelector('#my-qr-text').value = i18n.t('match_nothing_to_share');
             return;
         }
 
         if (typeof LZString === 'undefined') {
             console.error("LZString missing");
-            wrapper.querySelector('#qrcode-container').innerHTML = "Erreur: Lib Compression manquante";
+            wrapper.querySelector('#qrcode-container').innerHTML = i18n.t('match_lib_missing');
             return;
         }
 
@@ -4024,7 +4458,7 @@ export function renderMatchModal(allBeers) {
                     });
                 } catch (e) {
                     console.error("QR Gen Error", e);
-                    container.innerHTML = "Erreur Génération QR";
+                    container.innerHTML = i18n.t('match_qr_error');
                 }
             } else {
                 container.innerHTML = "Lib QR manquante";
@@ -4036,22 +4470,22 @@ export function renderMatchModal(allBeers) {
             if (window.navigator && window.navigator.clipboard) {
                 txtArea.select();
                 navigator.clipboard.writeText(qrString).then(() => {
-                    showToast("Code copié !");
-                }).catch(() => showToast("Erreur copie"));
+                    showToast(i18n.t('match_code_copied'));
+                }).catch(() => showToast(i18n.t('match_copy_error')));
             } else {
                 txtArea.select();
                 document.execCommand('copy');
-                showToast("Code copié (legacy)");
+                showToast(i18n.t('match_code_copied'));
             }
         };
     };
 
     const startScanner = () => {
         const feedback = wrapper.querySelector('#scan-feedback');
-        feedback.textContent = "Initialisation caméra...";
+        feedback.textContent = i18n.t('match_camera_init');
 
         if (!window.Html5Qrcode) {
-            feedback.textContent = "Erreur: Librairie QR non chargée";
+            feedback.textContent = i18n.t('match_lib_missing');
             return;
         }
 
@@ -4059,7 +4493,7 @@ export function renderMatchModal(allBeers) {
         html5QrcodeScanner = html5QrCode;
 
         const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-            feedback.textContent = "Code détecté !";
+            feedback.textContent = i18n.t('match_code_detected');
             stopScanner().then(() => {
                 processMatch(decodedText);
             });
@@ -4070,11 +4504,11 @@ export function renderMatchModal(allBeers) {
         html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback)
             .then(() => {
                 isScanning = true;
-                feedback.textContent = "Scannez un code...";
+                feedback.textContent = i18n.t('match_scan_prompt');
             })
             .catch(err => {
                 console.error("Camera Error", err);
-                feedback.textContent = "Caméra inaccessible (Permissions ?)";
+                feedback.textContent = i18n.t('match_camera_error');
                 isScanning = false;
             });
     };
@@ -4082,7 +4516,7 @@ export function renderMatchModal(allBeers) {
     const processMatch = (qrString) => {
         const friendData = Match.parseQRData(qrString);
         if (!friendData) {
-            showAlertModal("Code invalide !", { icon: '❌' });
+            showAlertModal(i18n.t('match_invalid_code'), { icon: '❌' });
             // Restart scanner if valid fail? No, easier to stay stopped.
             return;
         }
@@ -4114,7 +4548,7 @@ export function renderMatchModal(allBeers) {
 
         viewResult.innerHTML = `
             <div style="text-align:center; margin-bottom:20px;">
-                <h3 style="color:var(--accent-gold); margin:0; font-family:'Russo One', sans-serif;">Match avec ${results.userName}</h3>
+                <h3 style="color:var(--accent-gold); margin:0; font-family:'Russo One', sans-serif;">${i18n.t('match_with', { name: results.userName })}</h3>
                 
                 <div style="width:160px; height:160px; margin:20px auto; position:relative;">
                     <svg viewBox="0 0 36 36" style="width:100%; height:100%; transform: rotate(-90deg);">
@@ -4129,7 +4563,7 @@ export function renderMatchModal(allBeers) {
                     </svg>
                     <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center;">
                         <span style="font-size:2.5rem; font-family:'Russo One', sans-serif; color:${circleColor}; text-shadow:0 0 15px ${circleColor}66;">${results.score}%</span>
-                        <span style="display:block; font-size:0.75rem; color:#888; text-transform:uppercase; letter-spacing:1px; margin-top:-5px;">Compatibilité</span>
+                        <span style="display:block; font-size:0.75rem; color:#888; text-transform:uppercase; letter-spacing:1px; margin-top:-5px;">${i18n.t('match_compatibility')}</span>
                     </div>
                 </div>
             </div>
@@ -4137,31 +4571,31 @@ export function renderMatchModal(allBeers) {
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
                 <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:15px; border-radius:12px; text-align:center;">
                     <div style="font-size:2rem; font-weight:bold; color:#FFF;">${results.commonCount}</div>
-                    <div style="font-size:0.8rem; color:#aaa; text-transform:uppercase;">En commun</div>
+                    <div style="font-size:0.8rem; color:#aaa; text-transform:uppercase;">${i18n.t('match_common_labels')}</div>
                 </div>
                  <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:15px; border-radius:12px; text-align:center;">
                     <div style="font-size:2rem; font-weight:bold; color:var(--accent-gold);">${results.friendTotal}</div>
-                    <div style="font-size:0.8rem; color:#aaa; text-transform:uppercase;">Total Ami</div>
+                    <div style="font-size:0.8rem; color:#aaa; text-transform:uppercase;">${i18n.t('match_friend_total')}</div>
                 </div>
             </div>
 
             ${results.commonCount > 0 ? `
             <div style="text-align:left; margin-bottom:20px;">
-                <strong style="color:var(--accent-gold); display:block; margin-bottom:10px; font-size:0.9rem; text-transform:uppercase; font-weight:bold;">Bières en commun (Top 5)</strong>
+                <strong style="color:var(--accent-gold); display:block; margin-bottom:10px; font-size:0.9rem; text-transform:uppercase; font-weight:bold;">${i18n.t('match_common_title')}</strong>
                 <div style="display:flex; flex-direction:column; gap:8px;">
                     ${results.common.slice(0, 5).map(b => `
                         <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.05); padding:10px; border-radius:8px; display:flex; align-items:center; gap:12px;">
                             ${b.image ? `<img src="${b.image}" style="height:35px; width:20px; object-fit:contain;">` : '<span style="font-size:1.2rem">🍻</span>'}
                             <span style="font-weight:bold; font-size:0.95rem; color:#fff;">${b.title}</span>
                         </div>`).join('')}
-                    ${results.common.length > 5 ? `<div style="color:#666; font-style:italic; text-align:center; font-size:0.85rem; margin-top:5px;">...et ${results.common.length - 5} autres partagées</div>` : ''}
+                    ${results.common.length > 5 ? `<div style="color:#666; font-style:italic; text-align:center; font-size:0.85rem; margin-top:5px;">${i18n.t('match_common_others', { count: results.common.length - 5 })}</div>` : ''}
                 </div>
             </div>
             ` : ''}
 
             ${results.discovery.length > 0 ? `
             <div style="text-align:left; margin-bottom:10px;">
-                <strong style="color:#2196F3; display:block; margin-bottom:10px; font-size:0.9rem; text-transform:uppercase; font-weight:bold;">Vos futures découvertes (Top 3)</strong>
+                <strong style="color:#2196F3; display:block; margin-bottom:10px; font-size:0.9rem; text-transform:uppercase; font-weight:bold;">${i18n.t('match_discoveries_title')}</strong>
                 <div style="display:flex; flex-direction:column; gap:8px;">
                      ${results.discovery.slice(0, 3).map(b => `
                         <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.05); padding:10px; border-radius:8px; display:flex; align-items:center; gap:12px;">
@@ -4172,7 +4606,7 @@ export function renderMatchModal(allBeers) {
             </div>
             ` : ''}
             
-            <button id="btn-restart" class="form-input text-center mt-20" style="background:#333; margin-top:25px; padding:15px; border-radius:12px; font-weight:bold; cursor:pointer;">Nouveau Match</button>
+            <button id="btn-restart" class="form-input text-center mt-20" style="background:#333; margin-top:25px; padding:15px; border-radius:12px; font-weight:bold; cursor:pointer;">${i18n.t('match_btn_restart')}</button>
         `;
 
         wrapper.querySelector('#btn-restart').onclick = () => {
@@ -4214,23 +4648,23 @@ export function renderImportModal() {
     wrapper.style.maxHeight = '80vh';
 
     wrapper.innerHTML = `
-        <h2 style="margin-bottom:20px;">Restaurer / Importer</h2>
-        <p style="color:#888; font-size:0.85rem; margin-bottom:20px;">
-            Collez le code JSON ou le lien magique ci-dessous, ou chargez un fichier.
+        <h2 style="margin-bottom:20px;" data-i18n="import_title">${i18n.t('import_title')}</h2>
+        <p style="color:#888; font-size:0.85rem; margin-bottom:20px;" data-i18n="import_desc">
+            ${i18n.t('import_desc')}
         </p>
 
-        <textarea id="import-area" class="form-textarea" rows="5" placeholder='{"ratings":...} ou URL...'></textarea>
+        <textarea id="import-area" class="form-textarea" rows="5" placeholder='${i18n.t('import_placeholder')}'></textarea>
 
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-            <button id="btn-paste" class="text-btn">📋 Coller</button>
+            <button id="btn-paste" class="text-btn">${i18n.t('import_btn_paste')}</button>
             <label class="text-btn" style="cursor:pointer; display:flex; align-items:center; gap:5px;">
-                📂 Charger Fichier
+                ${i18n.t('import_btn_file')}
                 <input type="file" id="import-file-input" accept=".json, .txt" style="display:none;">
             </label>
         </div>
 
         <button id="btn-do-import" class="btn-primary" style="margin-top:20px; background:var(--accent-gold); color:black;">
-            📥 Importer
+            ${i18n.t('import_btn_submit')}
         </button>
     `;
 
@@ -4244,9 +4678,9 @@ export function renderImportModal() {
         try {
             const text = await navigator.clipboard.readText();
             if (text) textarea.value = text;
-            else showToast("Presse-papier vide ou inaccessible");
+            else showToast(i18n.t('toast_clipboard_empty'));
         } catch (e) {
-            showToast("Accès presse-papier refusé. Collez manuellement.");
+            showToast(i18n.t('toast_clipboard_denied'));
             textarea.focus();
         }
     };
@@ -4255,16 +4689,16 @@ export function renderImportModal() {
     wrapper.querySelector('#btn-do-import').onclick = () => {
         const text = textarea.value;
         if (!text.trim()) {
-            showToast("Veuillez coller des données.");
+            showToast(i18n.t('toast_import_empty'));
             return;
         }
 
         if (Storage.importData(text)) {
             closeModal();
-            showToast("Importation réussie !");
+            showToast(i18n.t('toast_import_success'));
             setTimeout(() => location.reload(), 1500);
         } else {
-            showToast("Format invalide.");
+            showToast(i18n.t('toast_import_invalid'));
         }
     };
 
@@ -4277,7 +4711,7 @@ export function renderImportModal() {
         reader.onload = (ev) => {
             const content = ev.target.result;
             textarea.value = content;
-            showToast("Fichier chargé ! Cliquez sur Importer.");
+            showToast(i18n.t('toast_file_loaded'));
         };
         reader.readAsText(file);
     };
@@ -4289,23 +4723,23 @@ export function renderAdvancedShareModal(beer, userRating) {
     const wrapper = document.createElement('div');
     wrapper.className = 'modal-content';
     wrapper.innerHTML = `
-        <h2>✨ Story Personnalisée</h2>
-        <p style="color:#888; font-size:0.85rem; margin-bottom:20px;">
-            Modifiez la note et le commentaire pour cette story (ne change pas vos données réelles).
+        <h2 data-i18n="share_story_title">${i18n.t('share_story_title')}</h2>
+        <p style="color:#888; font-size:0.85rem; margin-bottom:20px;" data-i18n="share_story_desc">
+            ${i18n.t('share_story_desc')}
         </p>
 
         <div class="form-group">
-            <label class="form-label">Note affichée (/20)</label>
+            <label class="form-label" data-i18n="share_score_label">${i18n.t('share_score_label')}</label>
             <input type="number" id="share-score" class="form-input" value="${userRating.score || 0}" min="0" max="20" step="0.5">
         </div>
 
         <div class="form-group">
-            <label class="form-label">Commentaire affiché</label>
+            <label class="form-label" data-i18n="share_comment_label">${i18n.t('share_comment_label')}</label>
             <textarea id="share-comment" class="form-textarea" rows="3">${userRating.comment || ''}</textarea>
         </div>
 
         <button id="btn-gen-link" class="btn-primary" style="margin-top:20px; background:var(--accent-gold); color:black;">
-            🔗 Générer le Lien API
+            ${i18n.t('share_btn_gen')}
         </button>
     `;
 
@@ -4358,65 +4792,65 @@ export function renderExportModal(defaultScope = 'all') {
         }
 
         wrapper.innerHTML = `
-            <h2>Sauvegarder & Partager</h2>
-            <p style="color:#888; margin-bottom:20px;">Exportez vos données pour les sauvegarder ou les transférer.</p>
+            <h2 data-i18n="export_title">${i18n.t('export_title')}</h2>
+            <p style="color:#888; margin-bottom:20px;" data-i18n="export_desc">${i18n.t('export_desc')}</p>
 
             <div style="margin-bottom:20px; text-align:left;">
-                <label style="display:block; color:var(--accent-gold); margin-bottom:8px;">1. Quoi exporter ?</label>
+                <label style="display:block; color:var(--accent-gold); margin-bottom:8px;" data-i18n="export_scope_label">${i18n.t('export_scope_label')}</label>
                 <div class="scope-selector" style="display:flex; gap:10px; margin-bottom:10px;">
-                    <button class="btn-scope ${currentScope === 'all' ? 'active' : ''}" data-scope="all" style="flex:1; padding:10px; border-radius:8px; border:1px solid #444; background:${currentScope === 'all' ? 'var(--accent-gold)' : '#222'}; color:${currentScope === 'all' ? 'black' : '#fff'};">
-                        Tout
+                    <button class="btn-scope ${currentScope === 'all' ? 'active' : ''}" data-scope="all" style="flex:1; padding:10px; border-radius:8px; border:1px solid #444; background:${currentScope === 'all' ? 'var(--accent-gold)' : '#222'}; color:${currentScope === 'all' ? 'black' : '#fff'};" data-i18n="export_scope_all">
+                        ${i18n.t('export_scope_all')}
                     </button>
-                    <button class="btn-scope ${currentScope === 'custom' ? 'active' : ''}" data-scope="custom" style="flex:1; padding:10px; border-radius:8px; border:1px solid #444; background:${currentScope === 'custom' ? 'var(--accent-gold)' : '#222'}; color:${currentScope === 'custom' ? 'black' : '#fff'};">
-                        Bières Perso
+                    <button class="btn-scope ${currentScope === 'custom' ? 'active' : ''}" data-scope="custom" style="flex:1; padding:10px; border-radius:8px; border:1px solid #444; background:${currentScope === 'custom' ? 'var(--accent-gold)' : '#222'}; color:${currentScope === 'custom' ? 'black' : '#fff'};" data-i18n="export_scope_custom">
+                        ${i18n.t('export_scope_custom')}
                     </button>
-                    <button class="btn-scope ${currentScope === 'ratings' ? 'active' : ''}" data-scope="ratings" style="flex:1; padding:10px; border-radius:8px; border:1px solid #444; background:${currentScope === 'ratings' ? 'var(--accent-gold)' : '#222'}; color:${currentScope === 'ratings' ? 'black' : '#fff'};">
-                        Notes
+                    <button class="btn-scope ${currentScope === 'ratings' ? 'active' : ''}" data-scope="ratings" style="flex:1; padding:10px; border-radius:8px; border:1px solid #444; background:${currentScope === 'ratings' ? 'var(--accent-gold)' : '#222'}; color:${currentScope === 'ratings' ? 'black' : '#fff'};" data-i18n="export_scope_ratings">
+                        ${i18n.t('export_scope_ratings')}
                     </button>
                 </div>
                 ${customSelectionHTML}
             </div>
 
             <div style="margin-bottom:20px; text-align:left;">
-                <label style="display:block; color:var(--accent-gold); margin-bottom:8px;">2. Méthode d'export</label>
+                <label style="display:block; color:var(--accent-gold); margin-bottom:8px;" data-i18n="export_method_label">${i18n.t('export_method_label')}</label>
                 
                 <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px; margin-bottom:15px;">
-                    <button id="mode-file" class="btn-primary" style="font-size:0.75rem; padding:8px; background:${currentMode === 'file' ? '#333' : '#111'}; color:#fff; border:1px solid ${currentMode === 'file' ? 'var(--accent-gold)' : '#444'}; opacity:${currentMode === 'file' ? 1 : 0.7};">
-                        📄 Fichier
+                    <button id="mode-file" class="btn-primary" style="font-size:0.75rem; padding:8px; background:${currentMode === 'file' ? '#333' : '#111'}; color:#fff; border:1px solid ${currentMode === 'file' ? 'var(--accent-gold)' : '#444'}; opacity:${currentMode === 'file' ? 1 : 0.7};" data-i18n="export_method_file">
+                        ${i18n.t('export_method_file')}
                     </button>
-                    <button id="mode-url" class="btn-primary" style="font-size:0.75rem; padding:8px; background:${currentMode === 'url' ? '#333' : '#111'}; color:#fff; border:1px solid ${currentMode === 'url' ? 'var(--accent-gold)' : '#444'}; opacity:${currentMode === 'url' ? 1 : 0.7};">
-                        🔗 Lien
+                    <button id="mode-url" class="btn-primary" style="font-size:0.75rem; padding:8px; background:${currentMode === 'url' ? '#333' : '#111'}; color:#fff; border:1px solid ${currentMode === 'url' ? 'var(--accent-gold)' : '#444'}; opacity:${currentMode === 'url' ? 1 : 0.7};" data-i18n="export_method_url">
+                        ${i18n.t('export_method_url')}
                     </button>
-                    <button id="mode-text" class="btn-primary" style="font-size:0.75rem; padding:8px; background:${currentMode === 'text' ? '#333' : '#111'}; color:#fff; border:1px solid ${currentMode === 'text' ? 'var(--accent-gold)' : '#444'}; opacity:${currentMode === 'text' ? 1 : 0.7};">
-                        📝 Texte
+                    <button id="mode-text" class="btn-primary" style="font-size:0.75rem; padding:8px; background:${currentMode === 'text' ? '#333' : '#111'}; color:#fff; border:1px solid ${currentMode === 'text' ? 'var(--accent-gold)' : '#444'}; opacity:${currentMode === 'text' ? 1 : 0.7};" data-i18n="export_method_text">
+                        ${i18n.t('export_method_text')}
                     </button>
                 </div>
 
                 ${currentMode === 'file' ? `
-                    <div style="background:#222; padding:10px; border-radius:8px; font-size:0.85rem; color:#ccc;">
-                        Télécharge un fichier <code>.json</code>. Utilisez "Restaurer" pour l'importer plus tard.
+                    <div style="background:#222; padding:10px; border-radius:8px; font-size:0.85rem; color:#ccc;" data-i18n="export_method_file_desc">
+                        ${i18n.t('export_method_file_desc')}
                     </div>
                 ` : currentMode === 'url' ? `
                     <div style="background:#222; padding:10px; border-radius:8px; font-size:0.85rem; color:#ccc;">
-                        <div style="margin-bottom:10px;">Type de lien :</div>
+                        <div style="margin-bottom:10px;" data-i18n="export_url_type_label">${i18n.t('export_url_type_label')}</div>
                         <label style="display:flex; align-items:center; gap:10px; cursor:pointer; margin-bottom:5px;">
                             <input type="radio" name="urlTxType" class="rb-url-type" value="import" ${!downloadMode ? 'checked' : ''}>
-                            <span>Lien d'Import (Direct)</span>
+                            <span data-i18n="export_url_import">${i18n.t('export_url_import')}</span>
                         </label>
                         <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
                             <input type="radio" name="urlTxType" class="rb-url-type" value="download" ${downloadMode ? 'checked' : ''}>
-                            <span>Lien de Téléchargement (Fichier)</span>
+                            <span data-i18n="export_url_download">${i18n.t('export_url_download')}</span>
                         </label>
                     </div>
                 ` : `
-                    <div style="background:#222; padding:10px; border-radius:8px; font-size:0.85rem; color:#ccc;">
-                        Affiche le code JSON brut à copier/coller manuellement.
+                    <div style="background:#222; padding:10px; border-radius:8px; font-size:0.85rem; color:#ccc;" data-i18n="export_method_text_desc">
+                        ${i18n.t('export_method_text_desc')}
                     </div>
                 `}
             </div>
 
             <button id="btn-do-export" class="btn-primary" style="width:100%; margin-top:10px;">
-                ${currentMode === 'file' ? '📥 Télécharger' : currentMode === 'url' ? '✨ Générer Lien' : '👀 Voir le Code'}
+                ${currentMode === 'file' ? i18n.t('export_btn_download') : currentMode === 'url' ? i18n.t('export_btn_generate') : i18n.t('export_btn_view')}
             </button>
         `;
 
@@ -4469,10 +4903,10 @@ export function renderExportModal(defaultScope = 'all') {
                 if (currentMode === 'file') {
                     const count = Storage.triggerExportFile(currentScope, idsToExport);
                     if (count > 0) {
-                        showToast(`Export réussi !`, "success");
+                        showToast(i18n.t('toast_export_success'), "success");
                         closeModal();
                     } else {
-                        showToast("Rien à exporter !", "warning");
+                        showToast(i18n.t('toast_nothing_export'), "warning");
                         btn.disabled = false;
                         btn.innerHTML = originalText;
                     }
@@ -4481,7 +4915,7 @@ export function renderExportModal(defaultScope = 'all') {
                     if (link) {
                         showLinkResult(link, currentScope);
                     } else {
-                        showToast("Erreur ou Trop de données", "error");
+                        showToast(i18n.t('toast_export_error'), "error");
                         btn.disabled = false;
                         btn.innerHTML = originalText;
                     }
@@ -4521,25 +4955,25 @@ export function renderExportModal(defaultScope = 'all') {
 
     const showLinkResult = (content, scopeName, isText = false) => {
         wrapper.innerHTML = `
-            <h2>${isText ? '📝 Code JSON' : '🔗 Lien Prêt !'}</h2>
-            <p style="font-size:0.85rem; color:#ccc; margin-bottom:15px;">
-                ${isText ? 'Copiez ce code pour le sauvegarder ou l\'envoyer.' : `Copiez ce lien pour importer : <strong>${scopeName}</strong>.`}
+            <h2>${isText ? i18n.t('export_result_title_json') : i18n.t('export_result_title_link')}</h2>
+            <p style="font-size:0.85rem; color:#ccc; margin-bottom:15px;" data-i18n="${isText ? 'export_result_desc_json' : ''}">
+                ${isText ? i18n.t('export_result_desc_json') : i18n.t('export_result_desc_link', { scope: scopeName })}
             </p>
             
             <textarea id="result-area" readonly style="width:100%; height:150px; background:#111; color:#0f0; border:1px solid #333; border-radius:4px; font-family:monospace; font-size:0.7rem; padding:5px;">${content}</textarea>
             
-            <button id="btn-copy-result" class="btn-primary" style="width:100%; margin-top:10px;">
-                📋 Copier
+            <button id="btn-copy-result" class="btn-primary" style="width:100%; margin-top:10px;" data-i18n="match_btn_copy">
+                ${i18n.t('match_btn_copy')}
             </button>
             
-            <button id="btn-back" class="btn-primary" style="margin-top:15px; background:transparent; border:1px solid #444; color:#fff;">Retour</button>
+            <button id="btn-back" class="btn-primary" style="margin-top:15px; background:transparent; border:1px solid #444; color:#fff;" data-i18n="btn_back">${i18n.t('btn_back')}</button>
         `;
 
         wrapper.querySelector('#btn-copy-result').onclick = () => {
             const area = wrapper.querySelector('#result-area');
             area.select();
             navigator.clipboard.writeText(content).then(() => {
-                showToast("Copié !", "success");
+                showToast(i18n.t('toast_copied'), "success");
             });
         };
 
@@ -4560,7 +4994,7 @@ export function renderShareLink(link) {
         <h2>Lien de Partage</h2>
         <p style="color:#888; font-size:0.85rem; margin-bottom:15px;">Si l'image ne s'affiche pas, utilisez ce lien :</p>
         <textarea readonly style="width:100%; height:80px; background:#111; color:#0f0; border:1px solid #333; margin-bottom:10px;">${link}</textarea>
-        <button class="btn-primary" onclick="navigator.clipboard.writeText('${link}').then(() => showToast('Copié !'))">Copier</button>
+        <button class="btn-primary" onclick="navigator.clipboard.writeText('${link}').then(() => showToast(i18n.t('toast_copied')))">${i18n.t('match_btn_copy')}</button>
     `;
     openModal(wrapper);
 }
@@ -4596,4 +5030,191 @@ export function applyRarityAnimations(container) {
             badge.classList.add('anim-super_rare');
         }
     });
+}
+
+// ======================================= //
+// Patchnotes System                        //
+// ======================================= //
+
+const CURRENT_VERSION = '2.5.0';
+
+
+export function checkPatchnotes() {
+    const lastSeen = localStorage.getItem('beerdex_last_seen_version');
+    if (lastSeen !== CURRENT_VERSION) {
+        // Show notification dot on settings
+        const settingsNav = document.querySelector('.nav-item[data-view="settings"]');
+        if (settingsNav && !settingsNav.querySelector('.notification-dot')) {
+            const dot = document.createElement('span');
+            dot.className = 'notification-dot';
+            settingsNav.appendChild(dot);
+        }
+    }
+}
+
+export function markPatchnotesSeen() {
+    localStorage.setItem('beerdex_last_seen_version', CURRENT_VERSION);
+    const dot = document.querySelector('.nav-item[data-view="settings"] .notification-dot');
+    if (dot) dot.remove();
+}
+
+export function renderPatchnotesSection() {
+    const lastSeen = localStorage.getItem('beerdex_last_seen_version');
+    const isNew = lastSeen !== CURRENT_VERSION;
+
+    const versionList = i18n.t('patchnote_versions').split(',');
+
+    let html = '';
+    versionList.forEach(version => {
+        const isCurrentNew = (version === CURRENT_VERSION && isNew);
+        const date = i18n.t(`patchnote_${version}_date`);
+        const title = i18n.t(`patchnote_${version}_title`);
+
+        // Items are stored as item_1, item_2... until not found
+        let items = [];
+        let i = 1;
+        while (true) {
+            const itemKey = `patchnote_${version}_item_${i}`;
+            const translated = i18n.t(itemKey);
+            if (translated === itemKey) break;
+            items.push(translated);
+            i++;
+        }
+
+        html += `
+            <div class="patchnote-section" id="patchnote-${version}" ${isCurrentNew ? 'data-new="true"' : ''}>
+                <div class="version-badge">
+                    ${isCurrentNew ? '🆕 ' : ''}v${version} — ${date}
+                </div>
+                <h4 style="color:var(--text-primary); margin-bottom:10px; font-size:0.95rem;">${title}</h4>
+                ${items.map(item => {
+            const chars = Array.from(item.trim());
+            const isEmoji = chars[0] && chars[0].match(/[^a-zA-Z0-9\s]/);
+            const icon = isEmoji ? chars[0] : '✨';
+            const text = isEmoji ? chars.slice(1).join('').trim() : item.trim();
+            return `
+                        <div class="patchnote-item">
+                            <span class="pn-icon">${icon}</span>
+                            <span>${text}</span>
+                        </div>
+                    `;
+        }).join('')}
+            </div>
+        `;
+    });
+
+    return html;
+}
+
+// ======================================= //
+// Star Rating HTML Generator               //
+// ======================================= //
+
+export function generateStarRatingHTML(currentValue = 0, beerId = '', maxStars = 5) {
+    // Each star can be empty, half, or full
+    // Value is /10 (0-10), each star = 2 units
+    const value = Math.min(maxStars * 2, Math.max(0, currentValue));
+
+    let starsHtml = '';
+    for (let i = 1; i <= maxStars; i++) {
+        const starValue = i * 2;
+        const halfValue = starValue - 1;
+
+        let cls = '';
+        if (value >= starValue) cls = 'full';
+        else if (value >= halfValue) cls = 'half';
+
+        starsHtml += `
+            <div class="star ${cls}" data-beer="${beerId}" data-half="${halfValue}" data-full="${starValue}">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <clipPath id="star-left-${beerId}-${i}">
+                            <rect x="0" y="0" width="12" height="24"/>
+                        </clipPath>
+                        <clipPath id="star-right-${beerId}-${i}">
+                            <rect x="12" y="0" width="12" height="24"/>
+                        </clipPath>
+                    </defs>
+                    <path class="star-bg" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    <path class="star-fill-left" clip-path="url(#star-left-${beerId}-${i})" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    <path class="star-fill-right" clip-path="url(#star-right-${beerId}-${i})" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+            </div>
+        `;
+    }
+
+    const displayValue = value > 0 ? `${value}/10` : '';
+
+    return `
+        <div class="star-rating" data-beer="${beerId}" data-value="${value}">
+            ${starsHtml}
+        </div>
+        <span class="star-label" data-beer="${beerId}">${displayValue}</span>
+    `;
+}
+
+// ======================================= //
+// Unrated Beer Banner/Carousel             //
+// ======================================= //
+
+export function renderUnratedBanner(allBeers, container) {
+    const userData = Storage.getAllUserData();
+    const consumedIds = Storage.getAllConsumedBeerIds();
+
+    // Find beers that are consumed but not rated
+    const unratedBeers = [];
+    consumedIds.forEach(id => {
+        const user = userData[id];
+        const beer = allBeers.find(b => String(b.id) === String(id));
+        if (beer && user && (user.count || 0) > 0 && (!user.score && user.score !== 0)) {
+            unratedBeers.push({ beer, user });
+        }
+    });
+
+    if (unratedBeers.length === 0) return ''; // Nothing to show
+
+    const slidesHtml = unratedBeers.slice(0, 15).map(({ beer }) => {
+        const fallbackImg = 'images/beer/default.png';
+        const img = beer.image || fallbackImg;
+
+        return `
+            <div class="unrated-chip" data-beer-id="${beer.id}" style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 5px 12px 5px 5px; border-radius: 24px; flex: 0 0 auto; cursor: pointer; backdrop-filter: blur(5px); box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+                <img src="${img}" alt="" onerror="this.src='${fallbackImg}'" style="width: 28px; height: 28px; border-radius: 50%; object-fit: contain; background: #222;">
+                <span style="font-size: 0.8rem; font-weight: 500; color: #fff; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${beer.title}</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-gold)" stroke-width="2.5" style="margin-left: 2px;"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"></path></svg>
+            </div>
+        `;
+    }).join('');
+
+    const bannerHtml = `
+        <div class="unrated-banner-modern" style="margin: 10px 15px 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <h4 style="font-size: 0.8rem; color: var(--accent-gold); margin: 0; display: flex; align-items: center; gap: 6px;">${i18n.t('unrated_banner_title')}</h4>
+                <span style="font-size: 0.7rem; color: #888; background: rgba(255, 255, 255, 0.06); padding: 2px 8px; border-radius: 10px;">${unratedBeers.length}</span>
+            </div>
+            <div style="display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 5px; -webkit-overflow-scrolling: touch;">
+                ${slidesHtml}
+            </div>
+        </div>
+    `;
+
+    // Insert at beginning of container
+    container.insertAdjacentHTML('afterbegin', bannerHtml);
+
+    // Bind clicks to open the standard rating modal
+    const banner = container.querySelector('.unrated-banner-modern');
+    if (banner) {
+        banner.querySelectorAll('.unrated-chip').forEach(chip => {
+            chip.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const beerId = chip.dataset.beerId;
+                const beer = allBeers.find(b => String(b.id) === String(beerId));
+                if (beer) {
+                    renderBeerDetail(beer, allBeers);
+                }
+            });
+        });
+    }
+
+    return bannerHtml;
 }

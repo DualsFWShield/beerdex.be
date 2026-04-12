@@ -73,7 +73,7 @@ export class FX {
                 <div class="ach-icon" style="font-size:1.5rem; line-height:1;">${icon}</div>
             </div>
             <div class="ach-content" style="z-index: 10; position:relative;">
-                <div class="ach-label" style="color: var(--rarity-${rarity}); font-weight:bold; text-shadow: 0 0 5px rgba(255,255,255,0.3);">Succès Déverrouillé !</div>
+                <div class="ach-label" style="color: var(--rarity-${rarity}); font-weight:bold; text-shadow: 0 0 5px rgba(255,255,255,0.3);">${i18n.t('fx_achievement_unlocked')}</div>
                 <div class="ach-title">${title}</div>
             </div>
         `;

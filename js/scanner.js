@@ -1,3 +1,5 @@
+import { i18n } from './i18n.js';
+
 /**
  * Scanner Module for Beerdex
  * Wraps Html5Qrcode library for easy integration.
@@ -75,13 +77,13 @@ export async function startScanner(elementId, onScanSuccess, onScanFailure) {
             );
         } else {
             console.error("No cameras found.");
-            if (window.UI && window.UI.showAlertModal) window.UI.showAlertModal("Aucune caméra trouvée.", { icon: '📷' });
+            if (window.UI && window.UI.showAlertModal) window.UI.showAlertModal(i18n.t('error_no_camera'), { icon: '📷' });
             else console.error("Aucune caméra trouvée.");
         }
 
     } catch (err) {
         console.error("Error starting scanner:", err);
-        if (window.UI && window.UI.showAlertModal) window.UI.showAlertModal("Erreur démarrage caméra: " + err, { icon: '⚠️' });
+        if (window.UI && window.UI.showAlertModal) window.UI.showAlertModal(i18n.t('error_camera_start', { err }), { icon: '⚠️' });
         else console.error("Erreur démarrage caméra: " + err);
     }
 }

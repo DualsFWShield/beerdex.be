@@ -1,0 +1,73 @@
+## 🚀 Méthode Recommandée (Tout-en-un)
+Ce script s'occupe de TOUT : synchronisation, builds des 4 variantes, et collecte des fichiers dans le dossier `release/`.
+
+```bash
+# Depuis la racine beerdex.be/
+chmod +x scripts/build-all.sh
+./scripts/build-all.sh
+```
+
+---
+
+## 🛠️ Méthode Manuelle (Pas à pas)
+Utile si vous ne voulez builder qu'une seule variante spécifique.
+
+### 1. Synchronisation préalable
+```bash
+./scripts/sync-mobile.sh
+```
+
+### 2. Variante spécifique
+Idéal pour mettre à jour la version principale qui pointe sur le serveur.
+
+```bash
+cd bd-mobile/play-store-online
+npx cap copy android
+cd android
+./gradlew bundleRelease    # Génère l'AAB pour Play Console
+./gradlew assembleRelease  # Génère l'APK pour test
+```
+
+---
+
+## 3. Variante : Play Store OFFLINE (co.median...)
+Version autonome pour le Play Store.
+
+```bash
+cd bd-mobile/play-store-offline
+npx cap copy android
+cd android
+./gradlew bundleRelease    # Génère l'AAB
+./gradlew assembleRelease
+```
+
+---
+
+## 4. Variante : GitHub ONLINE (be.beerdex...)
+Version Web-Wrapper pour GitHub.
+
+```bash
+cd bd-mobile/github-online
+npx cap copy android
+cd android
+./gradlew assembleRelease  # Génère l'APK
+```
+
+---
+
+## 5. Variante : GitHub OFFLINE (be.beerdex...)
+Version 100% autonome pour GitHub.
+
+```bash
+cd bd-mobile/github-offline
+npx cap copy android
+cd android
+./gradlew assembleRelease  # Génère l'APK
+```
+
+---
+
+## 💡 Localisation des fichiers générés
+Après le build, vos fichiers se trouvent ici :
+- **AAB** : `[dossier-variante]/android/app/build/outputs/bundle/release/app-release.aab`
+- **APK** : `[dossier-variante]/android/app/build/outputs/apk/release/app-release.apk`

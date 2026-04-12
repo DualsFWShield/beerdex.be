@@ -7,7 +7,7 @@
     <link rel="manifest" href="manifest.webmanifest">
     <meta name="theme-color" content="#ffc107">
     <title>Beerdex</title>
-    <meta name="description" content="Le Pokedex ultime pour vos bières. Collectionnez, notez et savourez.">
+    <meta name="description" content="Le Pokedex ultime pour vos bières. Collectionnez, notez et savourez." data-i18n="meta_desc">
     <!-- CSP for Security -->
     <meta http-equiv="Content-Security-Policy"
         content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:;">
@@ -15,7 +15,7 @@
 
     <!-- Open Graph -->
     <meta property="og:title" content="Beerdex">
-    <meta property="og:description" content="Le Dex ultime pour vos bières.">
+    <meta property="og:description" content="Le Dex ultime pour vos bières." data-i18n="og_desc">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://beerdex.dualsfwshield.be">
     <meta property="og:image" content="https://beerdex.dualsfwshield.be/icons/logo-bnr.png">
@@ -64,15 +64,16 @@
             <div class="logo">
                 <img src="icons/logo-bnr.png" width="32" height="32" alt="Beerdex Logo">
                 <h1>Beerdex</h1>
+                <span id="offline-badge" class="offline-badge" data-i18n="status_offline">OFFLINE</span>
             </div>
             <div class="header-toolbar" style="display: flex; gap: 10px; align-items: center;">
-                <button type="button" id="filter-toggle" class="icon-btn" aria-label="Ouvrir les filtres">
+                <button type="button" id="filter-toggle" class="icon-btn" aria-label="Ouvrir les filtres" data-i18n-label="aria_open_filters">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         aria-hidden="true">
                         <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                     </svg>
                 </button>
-                <button type="button" id="view-toggle" class="icon-btn" aria-label="Changer la vue" title="Vue Carte / Liste">
+                <button type="button" id="view-toggle" class="icon-btn" aria-label="Changer la vue" title="Vue Carte / Liste" data-i18n-label="aria_change_view">
                     <svg id="view-toggle-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <!-- Default: Grid icon (will toggle to list) -->
                         <rect x="3" y="3" width="7" height="7"></rect>
@@ -81,7 +82,7 @@
                         <rect x="14" y="14" width="7" height="7"></rect>
                     </svg>
                 </button>
-                <button type="button" id="btn-add-header" class="icon-btn" aria-label="Ajouter manuellement">
+                <button type="button" id="btn-add-header" class="icon-btn" aria-label="Ajouter manuellement" data-i18n-label="aria_add_manual">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -91,7 +92,7 @@
 
                 <!-- Search Container: Will expand when active -->
                 <div id="header-search-container" style="display:flex; align-items:center; transition: all 0.3s;">
-                    <button type="button" id="search-toggle" class="icon-btn" aria-label="Ouvrir la recherche">
+                    <button type="button" id="search-toggle" class="icon-btn" aria-label="Ouvrir la recherche" data-i18n-label="aria_open_search">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2" aria-hidden="true">
                             <circle cx="11" cy="11" r="8"></circle>
@@ -105,16 +106,16 @@
         <!-- Search Bar Overlay (Initially Hidden) -->
         <div id="search-bar" class="search-bar hidden">
             <input type="text" id="search-input" placeholder="Rechercher une bière..." autocomplete="off"
-                aria-label="Champs de recherche">
+                aria-label="Champs de recherche" data-i18n-placeholder="search_placeholder">
 
             <!-- Quick API Search Button -->
             <button type="button" id="btn-search-api-bar" class="btn-primary"
                 style="width:auto; margin:0; padding: 8px 12px; font-size: 0.8rem; background: var(--bg-card-hover); border: 1px solid var(--border-color); color: var(--accent-gold);"
-                aria-label="Recherche Approfondie (API)">
+                aria-label="Recherche Approfondie (API)" data-i18n-label="aria_search_api">
                 🌍 <span class="desktop-only" style="margin-left:5px;">OFF API</span>
             </button>
 
-            <button type="button" id="search-close" class="icon-btn" aria-label="Fermer la recherche">
+            <button type="button" id="search-close" class="icon-btn" aria-label="Fermer la recherche" data-i18n-label="aria_close_search">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     aria-hidden="true">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -127,12 +128,12 @@
             <!-- Dynamic Content Injected Here -->
             <div class="loading-state">
                 <div class="spinner"></div>
-                <p>Chargement du Beerdex...</p>
+                <p data-i18n="loading_app">Chargement du Beerdex...</p>
             </div>
         </main>
 
         <!-- Floating Action Button for Scanning -->
-        <button type="button" id="fab-scan" class="fab" aria-label="Scanner une bière">
+        <button type="button" id="fab-scan" class="fab" aria-label="Scanner une bière" data-i18n-label="aria_scan_beer">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 7V5a2 2 0 0 1 2-2h2"></path>
@@ -147,52 +148,25 @@
 
         <!-- Navigation Bar -->
         <nav class="bottom-nav">
-            <button type="button" class="nav-item active" data-view="home" aria-label="Accueil - Liste des bières">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    aria-hidden="true">
-                    <rect x="3" y="3" width="7" height="7"></rect>
-                    <rect x="14" y="3" width="7" height="7"></rect>
-                    <rect x="14" y="14" width="7" height="7"></rect>
-                    <rect x="3" y="14" width="7" height="7"></rect>
-                </svg>
-                <span>Dex</span>
+            <button type="button" class="nav-item active" data-view="home" aria-label="Accueil - Liste des bières" data-i18n-label="aria_nav_home">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                <span data-i18n="nav_home">Dex</span>
             </button>
-            <button type="button" class="nav-item" data-view="drunk" aria-label="Historique de consommation">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    aria-hidden="true">
-                    <path
-                        d="M12 21.5C16.9706 21.5 21 17.2467 21 12C21 6.75329 16.9706 2.5 12 2.5C7.02944 2.5 3 6.75329 3 12C3 17.2467 7.02944 21.5 12 21.5Z" />
-                    <path d="M9 12L11 14L15 10" />
-                </svg>
-                <span>Bus</span>
+            <button type="button" class="nav-item" data-view="drunk" aria-label="Historique de consommation" data-i18n-label="aria_nav_history">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21.5C16.9706 21.5 21 17.2467 21 12C21 6.75329 16.9706 2.5 12 2.5C7.02944 2.5 3 6.75329 3 12C3 17.2467 7.02944 21.5 12 21.5Z" /><path d="M9 12L11 14L15 10" /></svg>
+                <span data-i18n="nav_history">Bus</span>
             </button>
-            <button type="button" class="nav-item" data-view="stats" aria-label="Statistiques et Succès">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    aria-hidden="true">
-                    <line x1="18" y1="20" x2="18" y2="10"></line>
-                    <line x1="12" y1="20" x2="12" y2="4"></line>
-                    <line x1="6" y1="20" x2="6" y2="14"></line>
-                </svg>
-                <span>Stats</span>
+            <button type="button" class="nav-item" data-view="stats" aria-label="Statistiques et Succès" data-i18n-label="aria_nav_stats">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                <span data-i18n="nav_stats">Stats</span>
             </button>
-            <button type="button" class="nav-item" data-view="beerpedia"
-                aria-label="Beerpedia - L'encyclopédie de la bière">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                </svg>
-                <span>Beerpedia</span>
+            <button type="button" class="nav-item" data-view="beerpedia" aria-label="Beerpedia - L'encyclopédie de la bière" data-i18n-label="aria_nav_beerpedia">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                <span data-i18n="nav_beerpedia">Beerpedia</span>
             </button>
-            <button type="button" class="nav-item" data-view="settings" aria-label="Paramètres">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    aria-hidden="true">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path
-                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                    </path>
-                </svg>
-                <span>Paramètres</span>
+            <button type="button" class="nav-item" data-view="settings" aria-label="Paramètres" data-i18n-label="aria_nav_settings">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <span data-i18n="nav_settings">Paramètres</span>
             </button>
         </nav>
     </div>

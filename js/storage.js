@@ -4,10 +4,6 @@ const STORAGE_KEY_CUSTOM = 'beerdex_custom_beers';
 // Get all ratings/notes
 export function getAllUserData() {
     const data = localStorage.getItem(STORAGE_KEY_RATINGS);
-    if (!data) {
-        console.warn("Storage: beerdex_ratings is empty. Checking keys...");
-        console.log("Storage keys:", Object.keys(localStorage));
-    }
     return data ? JSON.parse(data) : {};
 }
 
@@ -166,8 +162,8 @@ export function removeConsumption(id) {
 // --- Rating Template ---
 
 const DEFAULT_TEMPLATE = [
-    { id: 'score', label: 'Note Globale (/20)', type: 'number', min: 0, max: 20, step: 0.5 },
-    { id: 'comment', label: 'Commentaire', type: 'textarea' }
+    { id: 'score', label: 'preset_global_score', type: 'number', min: 0, max: 20, step: 0.5 },
+    { id: 'comment', label: 'preset_comment', type: 'textarea' }
 ];
 
 export function getRatingTemplate() {
@@ -290,9 +286,19 @@ export function triggerExportFile(scope = 'all', ids = null) {
 export async function exportDataAdvanced(options = { scope: 'all' }) {
     const exportObj = {
         ratingTemplate: getRatingTemplate(),
+        preferences: {}, 
         exportDate: new Date().toISOString(),
-        version: 3
+        version: 4
     };
+
+    // Include all beerdex_pref_ keys
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('beerdex_pref_')) {
+            const prefKey = key.replace('beerdex_pref_', '');
+            exportObj.preferences[prefKey] = getPreference(prefKey);
+        }
+    }
 
     const scope = options.scope;
     const ids = options.ids; // Array of string IDs or null
@@ -572,9 +578,29 @@ export function getExportDataString(includeCustom = true) {
     const exportObj = {
         ratings: getAllUserData(),
         ratingTemplate: getRatingTemplate(),
+        preferences: {},
         exportDate: new Date().toISOString(),
-        version: 3
+        version: 4
     };
+
+    // Include all extra metadata and preferences
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+
+        // Skip the big ones already handled
+        if (key === STORAGE_KEY_RATINGS || key === STORAGE_KEY_CUSTOM || key === 'beerdex_rating_template' || key === 'beerdex_auto_backup') continue;
+
+        if (key.startsWith('beerdex_') || key === 'defaultMapScope') {
+            const raw = localStorage.getItem(key);
+            try {
+                exportObj.preferences[key] = JSON.parse(raw);
+            } catch {
+                exportObj.preferences[key] = raw;
+            }
+        }
+    }
+
     if (includeCustom) {
         exportObj.customBeers = getCustomBeers();
     }
@@ -647,8 +673,17 @@ export function mergeUserData(importedData) {
     }
 
     // 3. Template
-    if (importedData.ratingTemplate && !localStorage.getItem('beerdex_rating_template')) {
+    if (importedData.ratingTemplate) {
         localStorage.setItem('beerdex_rating_template', JSON.stringify(importedData.ratingTemplate));
+    }
+
+    // 4. Preferences & Extra State
+    if (importedData.preferences) {
+        Object.keys(importedData.preferences).forEach(key => {
+            const value = importedData.preferences[key];
+            const storageKey = key.startsWith('beerdex_') || key === 'defaultMapScope' ? key : `beerdex_pref_${key}`;
+            localStorage.setItem(storageKey, JSON.stringify(value));
+        });
     }
 }
 

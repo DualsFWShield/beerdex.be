@@ -1,0 +1,50 @@
+{
+  "FR": {
+    "nameKey": "country_fr",
+    "sanctionThreshold": 0.5,
+    "withdrawThreshold": 0.8,
+    "airRatio": 0.50,
+    "sanctionKey": "bac_fr_sanction",
+    "withdrawKey": "bac_fr_withdraw"
+  },
+  "BE": {
+    "nameKey": "country_be",
+    "sanctionThreshold": 0.5,
+    "withdrawThreshold": 0.8,
+    "airRatio": 0.44,
+    "sanctionKey": "bac_be_sanction",
+    "withdrawKey": "bac_be_withdraw"
+  },
+  "DE": {
+    "nameKey": "country_de",
+    "sanctionThreshold": 0.5,
+    "withdrawThreshold": 1.1,
+    "airRatio": 0.50,
+    "sanctionKey": "bac_de_sanction",
+    "withdrawKey": "bac_de_withdraw"
+  },
+  "NL": {
+    "nameKey": "country_nl",
+    "sanctionThreshold": 0.5,
+    "withdrawThreshold": 1.3,
+    "airRatio": 0.44,
+    "sanctionKey": "bac_nl_sanction",
+    "withdrawKey": "bac_nl_withdraw"
+  },
+  "CO": {
+    "nameKey": "country_co",
+    "sanctionThreshold": 0.2,
+    "withdrawThreshold": 0.2,
+    "airRatio": 0.48,
+    "sanctionKey": "bac_co_sanction",
+    "withdrawKey": "bac_co_withdraw"
+  },
+  "US": {
+    "nameKey": "country_us",
+    "sanctionThreshold": 0.8,
+    "withdrawThreshold": 0.8,
+    "airRatio": 0.48,
+    "sanctionKey": "bac_us_sanction",
+    "withdrawKey": "bac_us_withdraw"
+  }
+}

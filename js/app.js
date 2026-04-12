@@ -4,12 +4,14 @@ import * as Storage from './storage.js';
 import * as Achievements from './achievements.js';
 import * as API from './api.js';
 import { fetchProductByBarcode, searchProducts } from './off-api.js';
+import * as Env from './env.js';
 import { Feedback } from './feedback.js';
 import { Analytics } from './analytics.js';
 import * as Share from './share.js';
 import * as BAC from './bac.js';
 import * as Wrapped from './wrapped.js';
 import { EventSystem } from './event-system.js';
+import { i18n } from './i18n.js';
 
 window.Share = Share;
 window.Wrapped = Wrapped;
@@ -29,9 +31,6 @@ window.savePlayedAnims = () => {
 };
 
 // App State
-
-// Initialize Wrapped
-Wrapped.init(() => state.beers);
 const state = {
     beers: [],
     filteredBeers: [], // Cache for filtered results
@@ -47,14 +46,28 @@ const state = {
     observer: null // Store observer to disconnect if needed
 };
 
+// Initialize Wrapped
+Wrapped.init(() => state.beers);
+
 // Initialize Application
 async function init() {
     try {
-        Analytics.track('app_open', { isStandalone: window.matchMedia('(display-mode: standalone)').matches });
+        // --- NETWORK & EDITION SETUP ---
+        setupNetworkListeners();
+        const edition = await Env.getEdition();
+        document.body.dataset.edition = edition;
+
+        Analytics.track('app_open', { isStandalone: window.matchMedia('(display-mode: standalone)').matches, edition });
         Analytics.retroactiveSync();
 
         // --- EVENT SYSTEM INIT ---
         await EventSystem.init();
+
+        // --- I18N INIT ---
+        await i18n.init();
+
+        // Re-check network status after translation to ensure badge text is correct and visible
+        if (window.handleStatusChange) window.handleStatusChange();
 
         // Apply Theme
         applyTheme();
@@ -82,6 +95,9 @@ async function init() {
         // Check Auto Backup
         UI.checkAutoBackup();
 
+        // Check for new patchnotes
+        UI.checkPatchnotes();
+
         // Setup Keyboard safe area fixes natively for edge-to-edge
         if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Keyboard) {
             window.Capacitor.Plugins.Keyboard.addListener('keyboardWillShow', () => {
@@ -97,9 +113,45 @@ async function init() {
 
     } catch (error) {
         console.error("Failed to initialize Beerdex:", error);
-        UI.showToast("Erreur de chargement des données. Vérifiez votre connexion.");
+        UI.showToast(i18n.t('error_load_data'));
     }
 }
+
+/**
+ * Setup Network listeners to update UI and service state
+ */
+function setupNetworkListeners() {
+    const handleStatusChange = () => {
+        const isOnline = navigator.onLine;
+        
+        // Update Body class for CSS targeting
+        if (isOnline) {
+            document.body.classList.remove('is-offline');
+        } else {
+            document.body.classList.add('is-offline');
+        }
+
+        // Notify specific modules
+        if (isOnline) {
+            Analytics.flush();
+        }
+        
+        // Update UI components (Scan button, OFF button, etc.)
+        if (UI.updateNetworkStatus) {
+            UI.updateNetworkStatus(isOnline);
+        }
+    };
+
+    window.addEventListener('online', handleStatusChange);
+    window.addEventListener('offline', handleStatusChange);
+
+    // Make it globally accessible for re-checks during init
+    window.handleStatusChange = handleStatusChange;
+    
+    // Initial check
+    handleStatusChange();
+}
+
 
 /**
  * Apply the current theme based on user preferences.
@@ -167,7 +219,7 @@ function loadMoreBeers(container, isAppend = false, isDiscoveryMode = false, sho
             state.filter = ''; // Reset filter after add? or keep it?
             renderCurrentView();
             UI.closeModal();
-            UI.showToast("Bière ajoutée !");
+            UI.showToast(i18n.t('toast_beer_added'));
         }, state.filter);
     }, isAppend);
 
@@ -319,7 +371,7 @@ function setupEventListeners() {
                 const { status, product } = result || { status: 'error' };
 
                 if (status === 'success' && product) {
-                    UI.setScannerFeedback("✅ Produit trouvé !", false);
+                    UI.setScannerFeedback(i18n.t('scanner_found'), false);
 
                     // Stop scanner & Close modal after short delay
                     setTimeout(() => {
@@ -331,6 +383,7 @@ function setupEventListeners() {
                         const getTokens = (s) => new Set(normalize(s).split(/\s+/).filter(t => t.length > 2));
 
                         const scanTokens = getTokens(product.title);
+                        const scanBreweryTokens = product.brewery ? getTokens(product.brewery) : new Set();
 
                         let bestMatch = null;
                         let bestScore = 0;
@@ -349,7 +402,15 @@ function setupEventListeners() {
                             if (isSubset && intersection.size >= 1) score += 0.5; // Boost subsets
                             if (beer.id === 'API_' + product.id) score += 1; // ID Match
 
-                            if (score > bestScore) {
+                            // Brewery match bonus: prevents API dupes when JSON version exists
+                            if (beer.brewery && scanBreweryTokens.size > 0) {
+                                const dbBreweryTokens = getTokens(beer.brewery);
+                                const breweryInter = new Set([...scanBreweryTokens].filter(x => dbBreweryTokens.has(x)));
+                                if (breweryInter.size > 0) score += 0.3;
+                            }
+
+                            // Prefer non-API/non-CUSTOM versions (original JSON beers)
+                            if (score > bestScore || (score === bestScore && bestMatch && (String(bestMatch.id).startsWith('API_') || String(bestMatch.id).startsWith('CUSTOM_')))) {
                                 bestScore = score;
                                 bestMatch = beer;
                             }
@@ -364,7 +425,7 @@ function setupEventListeners() {
                         }
 
                         if (bestMatch && bestScore > 0.8) {
-                            UI.showToast(`Trouvé en local : ${bestMatch.title}`);
+                            UI.showToast(i18n.t('toast_found_local', { title: bestMatch.title }));
                             UI.closeModal(); // Ensure close
                             UI.renderBeerDetail(bestMatch, (data) => {
                                 const oldRating = Storage.getBeerRating(bestMatch.id);
@@ -376,7 +437,7 @@ function setupEventListeners() {
                                 const newCount = newRating ? (parseInt(newRating.count) || 0) : 0;
                                 const diff = newCount - oldCount;
 
-                                if (Storage.getPreference('bac_enabled', false) && !Storage.getPreference('bac_manual_only', false)) {
+                                if (Storage.getPreference('bac_enabled', true) && !Storage.getPreference('bac_manual_only', false)) {
                                     if (diff > 0) {
                                         for (let i = 0; i < diff; i++) {
                                             BAC.addDrinkToBAC(bestMatch.volume, bestMatch.alcohol);
@@ -388,7 +449,7 @@ function setupEventListeners() {
                                     }
                                 }
 
-                                UI.showToast("Note mise à jour !");
+                                UI.showToast(i18n.t('toast_rating_updated'));
                             });
                             return true; // STOP SCANNER
                         }
@@ -417,7 +478,7 @@ function setupEventListeners() {
                             const newCount = newRating ? (parseInt(newRating.count) || 0) : 0;
                             const diff = newCount - oldCount;
 
-                            if (Storage.getPreference('bac_enabled', false) && !Storage.getPreference('bac_manual_only', false)) {
+                            if (Storage.getPreference('bac_enabled', true) && !Storage.getPreference('bac_manual_only', false)) {
                                 if (diff > 0) {
                                     for (let i = 0; i < diff; i++) {
                                         BAC.addDrinkToBAC(beerRef.volume, beerRef.alcohol);
@@ -429,7 +490,7 @@ function setupEventListeners() {
                                 }
                             }
 
-                            UI.showToast("Note sauvegardée !");
+                            UI.showToast(i18n.t('toast_rating_saved'));
                         });
 
                     }, 200);
@@ -438,7 +499,7 @@ function setupEventListeners() {
                 } else if (status === 'not_beer') {
                     // FORCE ADD OPTION
                     UI.setScannerFeedback(
-                        `<span>⛔ Pas une bière. <button id="btn-force-add" style="text-decoration:underline; background:none; border:none; color:inherit; cursor:pointer;">Ajouter quand même ?</button></span>`,
+                        `<span>${i18n.t('scanner_not_beer')} <button id="btn-force-add" style="text-decoration:underline; background:none; border:none; color:inherit; cursor:pointer;">${i18n.t('scanner_btn_force_add')}</button></span>`,
                         true
                     );
 
@@ -461,7 +522,7 @@ function setupEventListeners() {
                                 Achievements.checkAchievements(state.beers);
                                 renderCurrentView();
                                 UI.closeModal();
-                                UI.showToast("Forcé et Ajouté !");
+                                UI.showToast(i18n.t('toast_beer_added'));
                             }, null, prefill);
                         }, { once: true });
                     }, 100);
@@ -469,9 +530,10 @@ function setupEventListeners() {
                     return false; // Signal scanner to RESUME (user can decide)
 
                 } else {
-                    // NOT FOUND -> Search By Name
+                    // NOT FOUND -> Improved message
                     UI.setScannerFeedback(
-                        `<span>🤔 Inconnu. <button id="btn-scan-search" style="text-decoration:underline; background:none; border:none; color:inherit; cursor:pointer;">Chercher par nom ?</button></span>`,
+                        `<span>${i18n.t('scanner_unknown')}
+                        <button id="btn-scan-search" style="text-decoration:underline; background:none; border:none; color:var(--accent-gold); cursor:pointer; font-weight:bold;">${i18n.t('scanner_btn_search_dex')}</button></span>`,
                         true
                     );
 
@@ -509,7 +571,7 @@ function setupEventListeners() {
         btnApi.addEventListener('click', async () => {
             const query = searchInput.value.trim();
             if (query.length < 2) {
-                UI.showToast("Tapez au moins 2 lettres...");
+                UI.showToast(i18n.t('search_at_least_2'));
                 return;
             }
 
@@ -530,14 +592,14 @@ function setupEventListeners() {
                 UI.renderApiSearchResults(products, main);
 
                 if (products.length > 0) {
-                    UI.showToast(`${products.length} résultats trouvés !`);
+                    UI.showToast(i18n.t('search_results_found', { count: products.length }));
                 } else {
-                    UI.showToast("Aucun résultat.");
+                    UI.showToast(i18n.t('search_no_results'));
                 }
 
             } catch (e) {
                 console.error(e);
-                UI.showToast("Erreur recherche API");
+                UI.showToast(i18n.t('search_api_error'));
             } finally {
                 btnApi.disabled = false;
                 btnApi.innerHTML = originalContent;
@@ -584,7 +646,7 @@ function setupEventListeners() {
 
             // Re-render and Apply Filtering Logic Upstream (handled below)
             renderCurrentView();
-            if (hasFilters) UI.showToast("Filtres appliqués !");
+            if (hasFilters) UI.showToast(i18n.t('toast_preference_saved'));
         });
     });
 
@@ -616,7 +678,7 @@ function setupEventListeners() {
             // But if they rate it right away? renderAddBeerForm doesn't take rating.
             // It just adds the beer. Wait, user specifically rates/drinks from details modal.
 
-            UI.showToast("Bière ajoutée avec succès !");
+            UI.showToast(i18n.t('toast_beer_added'));
         });
     });
 
@@ -637,7 +699,7 @@ function setupEventListeners() {
                     const newCount = newRating ? (parseInt(newRating.count) || 0) : 0;
                     const diff = newCount - oldCount;
 
-                    if (Storage.getPreference('bac_enabled', false) && !Storage.getPreference('bac_manual_only', false)) {
+                    if (Storage.getPreference('bac_enabled', true) && !Storage.getPreference('bac_manual_only', false)) {
                         if (diff > 0) {
                             for (let i = 0; i < diff; i++) {
                                 BAC.addDrinkToBAC(beer.volume, beer.alcohol);
@@ -659,7 +721,7 @@ function setupEventListeners() {
 
                     if (ratingData) card.classList.add('drunk');
 
-                    UI.showToast("Note sauvegardée !");
+                    UI.showToast(i18n.t('toast_rating_saved'));
                 });
             }
         }
@@ -823,7 +885,11 @@ function applyFilters(beers, filters) {
 */
 
 // Initialize
-window.addEventListener('DOMContentLoaded', init);
+if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
 
 // Global event listener for actions triggering achievements
 window.addEventListener('beerdex-action', () => {
@@ -924,7 +990,7 @@ function renderCurrentView() {
         loadMoreBeers(mainContent, false, isDiscovery, isDiscovery && state.filter);
 
         // BAC Widget on Home page (Must be after loadMoreBeers so it doesn't get cleared)
-        if (Storage.getPreference('bac_enabled', false)) {
+        if (Storage.getPreference('bac_enabled', true)) {
 
             if (Storage.getPreference('bac_show_home', true)) {
 
@@ -935,12 +1001,12 @@ function renderCurrentView() {
                 const widgetHtml = `
                     <div class="bac-widget-home" style="background: linear-gradient(135deg, #111, #222); border-left: 5px solid ${bacStatus.color}; padding: 15px; border-radius: 12px; margin: 0 15px 20px 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 8px 16px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid ${bacStatus.color};">
                         <div>
-                            <div style="font-size: 0.7rem; color: #aaa; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 5px; font-weight: bold;">Alcoolémie Spéculative</div>
+                            <div style="font-size: 0.7rem; color: #aaa; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 5px; font-weight: bold;">${i18n.t('bac_speculative_title')}</div>
                             <div style="font-size: 1.1rem; font-weight: 700; color: ${bacStatus.color}; text-shadow: 0 0 10px ${bacStatus.color}44;">
                                 ${bacStatus.title} <span style="font-size: 0.9rem; color: #fff; font-weight: normal; margin-left: 5px;">(${bacValue} g/l)</span>
                             </div>
                             <div style="font-size: 0.75rem; color: #888; margin-top: 5px;">
-                                Air expiré: <span style="color: ${bacStatus.color}; font-weight: bold;">${breathValue}</span> mg/l
+                                ${i18n.t('bac_air_expired')}: <span style="color: ${bacStatus.color}; font-weight: bold;">${breathValue}</span> mg/l
                             </div>
                         </div>
                         <div style="background: ${bacStatus.color}22; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid ${bacStatus.color}44;">
@@ -952,7 +1018,9 @@ function renderCurrentView() {
             }
         }
 
-
+        if (isDiscovery) {
+            UI.renderUnratedBanner(state.beers, mainContent);
+        }
 
     } else if (state.view === 'drunk') {
         const consumedIds = Storage.getAllConsumedBeerIds();
@@ -966,6 +1034,9 @@ function renderCurrentView() {
         state.pagination.hasMore = true;
 
         loadMoreBeers(mainContent, false, false, false);
+
+        // Unrated banner on drunk view
+        UI.renderUnratedBanner(state.beers, mainContent);
 
     } else if (state.view === 'stats') {
         const isDiscovery = Storage.getPreference('discoveryMode', false);
@@ -989,14 +1060,14 @@ function renderCurrentView() {
 
         if (isMedian) {
             // In Median app: open in internal browser or external browser
-            mainContent.style.padding = 'var(--spacing-md)';
+            mainContent.style.padding = 'calc(env(safe-area-inset-top) + var(--spacing-md)) var(--spacing-md) env(safe-area-inset-bottom) var(--spacing-md)';
             mainContent.innerHTML = `
                 <div style="
                     display: flex;
                     flex-direction: column;
                     align-items: center;
                     justify-content: center;
-                    height: calc(100vh - 120px);
+                    height: calc(100dvh - var(--nav-height) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
                     gap: 20px;
                     text-align: center;
                     padding: 20px;
@@ -1007,7 +1078,7 @@ function renderCurrentView() {
                     </svg>
                     <h2 style="color: var(--accent-gold); font-family: 'Russo One', sans-serif;">Beerpedia</h2>
                     <p style="color: var(--text-secondary); max-width: 280px;">
-                        L'encyclopédie de la bière. Découvrez les styles, les brasseries et tout l'univers brassicole.
+                        ${i18n.t('beerpedia_desc')}
                     </p>
                     <button onclick="window.open('https://beerpedia.beerdex.be', '_blank')" class="btn-primary" style="
                         width: auto;
@@ -1022,13 +1093,13 @@ function renderCurrentView() {
                             <polyline points="15 3 21 3 21 9"></polyline>
                             <line x1="10" y1="14" x2="21" y2="3"></line>
                         </svg>
-                        Ouvrir Beerpedia
+                        ${i18n.t('beerpedia_btn_open')}
                     </button>
                 </div>
             `;
         } else {
             // In browser: use iframe
-            mainContent.style.padding = '0';
+            mainContent.style.padding = 'env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0';
             mainContent.style.margin = '0';
             mainContent.style.paddingBottom = '0';
             mainContent.innerHTML = `
@@ -1044,15 +1115,14 @@ function renderCurrentView() {
                     z-index: 5;
                 ">
                     <div class="spinner" style="width: 50px; height: 50px;"></div>
-                    <span style="color: var(--text-secondary); font-size: 0.9rem;">Chargement de Beerpedia...</span>
+                    <span style="color: var(--text-secondary); font-size: 0.9rem;">${i18n.t('beerpedia_loading')}</span>
                 </div>
                 <iframe 
                     id="beerpedia-frame"
-                    src="https://beerpedia.beerdex.be" 
+                    src="https://beerpedia.beerdex.be?lang=${i18n.currentLang}" 
                     style="
                         width: 100%;
-                        height: calc(100vh - 60px);
-                        height: calc(100dvh - 60px);
+                        height: calc(100dvh - var(--nav-height) - env(safe-area-inset-top) - env(safe-area-inset-bottom));
                         border: none;
                         display: block;
                         background: #0d0d0d;
