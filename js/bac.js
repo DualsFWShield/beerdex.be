@@ -303,10 +303,36 @@ export function getHoursToDrive(simOverride = null) {
         return 0;
     }
 
-    // Fallback
-    const peakFuture = futurePoints.length > 0 ? Math.max(...futurePoints.map(p => p.bac)) : sim.currentBAC;
-    const differenceToTarget = peakFuture - (limit - 0.01);
     return Math.max(0, differenceToTarget / ELIMINATION_RATE);
+}
+
+/**
+ * Calculates hours to wait until BAC hits 0.0 g/L
+ */
+export function getHoursToZero(simOverride = null) {
+    const sim = simOverride || simulateBAC();
+    const now = new Date().getTime();
+    if (sim.currentBAC === 0 && (!sim.curve.length || sim.curve.every(p => p.time < now || p.bac === 0))) {
+        return 0;
+    }
+
+    const futurePoints = sim.curve.filter(p => p.time >= now);
+    let recoveryTime = null;
+
+    // Scan backwards to find the last point with any alcohol
+    for (let i = futurePoints.length - 1; i >= 0; i--) {
+        if (futurePoints[i].bac > 0) {
+            recoveryTime = futurePoints[i].time;
+            break;
+        }
+    }
+
+    if (recoveryTime) {
+        return Math.max(0, (recoveryTime - now) / (1000 * 60 * 60));
+    }
+
+    // Mathematical fallback: (current_bac / elimination_rate)
+    return Math.max(0, sim.currentBAC / ELIMINATION_RATE);
 }
 
 /**
@@ -362,6 +388,7 @@ export function getBACStatus(simOverride = null) {
     const statusBac = Math.max(currentBac, peakBac);
 
     const timeToWait = formatHoursToTimeStr(getHoursToDrive(sim));
+    const timeToZero = formatHoursToTimeStr(getHoursToZero(sim));
     const timeAt = getTimeCanDriveStr();
 
     // Vehicle type context for sanctions
@@ -375,66 +402,84 @@ export function getBACStatus(simOverride = null) {
 
     const b = statusBac.toFixed(2);
 
+    const baseStatus = {
+        currentBac,
+        peakBac,
+        timeToWaitLong: timeToWait,
+        timeToWaitShort: timeToWait.replace(' ' + i18n.t('time_minutes'), 'min').replace(' ' + i18n.t('time_hours'), 'h'),
+        timeToZero,
+        timeAt,
+        rules
+    };
+
     if (statusBac === 0) {
         return {
+            ...baseStatus,
             level: 'zero', color: '#4CAF50', title: i18n.t('bac_level_zero_title'),
-            subtitle: i18n.t('bac_level_zero_msg_other'),
+            subtitle: i18n.t('bac_subtitle_sober'),
             symptoms: '',
             message: isDriver ? i18n.t('bac_level_zero_msg_drive') : i18n.t('bac_level_zero_msg_other'),
             canDrive: true
         };
     } else if (statusBac < 0.2) {
         return {
+            ...baseStatus,
             level: 'ok', color: '#8BC34A', title: i18n.t('bac_level_ok_title'),
-            subtitle: i18n.t('bac_level_zero_msg_other'),
+            subtitle: i18n.t('bac_subtitle_sober'),
             symptoms: '',
             message: i18n.t('bac_level_ok_msg', { bac: b }),
             canDrive: true
         };
     } else if (statusBac < sanctionLimit) {
         return {
+            ...baseStatus,
             level: 'caution', color: '#CDDC39', title: i18n.t('bac_level_caution_title'),
-            subtitle: i18n.t('bac_caution_limit'),
+            subtitle: i18n.t('bac_subtitle_legal_near'),
             symptoms: '',
             message: i18n.t('bac_level_caution_msg', { bac: b, limit: sanctionLimit }),
             canDrive: true
         };
     } else if (statusBac < withdrawLimit) {
         return {
+            ...baseStatus,
             level: 'warning', color: '#FF9800', title: i18n.t('bac_level_warning_title'),
-            subtitle: isDriver ? (isBike ? i18n.t('bac_bike_fine') : i18n.t('bac_level_warning_msg_drive')) : i18n.t('bac_level_warning_msg_other'),
+            subtitle: isDriver ? (isBike ? i18n.t('bac_bike_fine') : i18n.t('bac_subtitle_fine')) : i18n.t('bac_subtitle_legal_over'),
             symptoms: '',
             message: isDriver ? i18n.t('bac_level_warning_msg_drive', { bac: b, wait: timeToWait, time: timeAt }) : i18n.t('bac_level_warning_msg_other', { bac: b }),
             canDrive: false
         };
     } else if (statusBac < 1.5) {
         return {
+            ...baseStatus,
             level: 'danger', color: '#F44336', title: i18n.t('bac_level_danger_title'),
-            subtitle: isDriver ? i18n.t('bac_level_danger_msg_drive') : i18n.t('bac_level_danger_msg_other'),
+            subtitle: isDriver ? i18n.t('bac_subtitle_withdrawal') : i18n.t('bac_subtitle_danger'),
             symptoms: '',
             message: isDriver ? i18n.t('bac_level_danger_msg_drive', { bac: b, wait: timeToWait }) : i18n.t('bac_level_danger_msg_other', { bac: b }),
             canDrive: false
         };
     } else if (statusBac < 3.0) {
         return {
+            ...baseStatus,
             level: 'severe', color: '#D32F2F', title: i18n.t('bac_level_severe_title'),
-            subtitle: i18n.t('bac_level_severe_msg'),
+            subtitle: i18n.t('bac_subtitle_medical'),
             symptoms: '',
             message: i18n.t('bac_level_severe_msg', { bac: b, wait: timeToWait }),
             canDrive: false
         };
     } else if (statusBac < 4.0) {
         return {
+            ...baseStatus,
             level: 'emergency', color: '#ff5252', title: i18n.t('bac_level_emergency_title'),
-            subtitle: i18n.t('bac_level_emergency_title'),
+            subtitle: i18n.t('bac_subtitle_emergency'),
             symptoms: '',
             message: i18n.t('bac_level_emergency_msg'),
             canDrive: false
         };
     } else {
         return {
+            ...baseStatus,
             level: 'lethal', color: '#ff1744', title: i18n.t('bac_level_lethal_title'),
-            subtitle: i18n.t('bac_level_lethal_title'),
+            subtitle: i18n.t('bac_subtitle_lethal'),
             symptoms: '',
             message: i18n.t('bac_level_lethal_msg'),
             canDrive: false

@@ -2695,12 +2695,50 @@ export function renderBACStatsContent(container) {
         </div>
 
         ${svgGraphHtml}
+        
+        <!-- Recovery Section -->
+        ${currentBAC > 0 ? `
+        <div style="background: #1a1a1a; border: 1px solid #333; border-radius: 12px; padding: 15px; margin-bottom: 20px; text-align: left;">
+            <div style="font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">
+                🕒 ${i18n.t('bac_recovery_title')}
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <!-- Drive Recovery -->
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.9rem; color: #ccc;">
+                        🚗 ${i18n.t('bac_recovery_legal', { limit: rules.sanctionThreshold })}
+                    </span>
+                    <div style="text-align: right;">
+                        <span style="display: block; font-weight: bold; color: ${bacStatus.canDrive ? '#4CAF50' : '#FF9800'};">
+                            ${bacStatus.canDrive ? i18n.t('time_now') : i18n.t('bac_recovery_in', { wait: bacStatus.timeToWaitShort })}
+                        </span>
+                        <span style="display: block; font-size: 0.75rem; color: #777;">
+                            ${bacStatus.canDrive ? '✅' : bacStatus.timeAt}
+                        </span>
+                    </div>
+                </div>
 
-        <div class="bac-status-enhanced" style="background: ${bacStatus.color}11; border: 1px solid ${bacStatus.color}44;">
-            <h2 style="color:${bacStatus.color};">${bacStatus.title}</h2>
-            ${bacStatus.subtitle ? `<div class="bac-subtitle" style="background:${bacStatus.color}22; color:${bacStatus.color};">${bacStatus.subtitle}</div>` : ''}
+                <!-- Sober Recovery -->
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #222; padding-top: 12px;">
+                    <span style="font-size: 0.9rem; color: #ccc;">
+                        ✨ ${i18n.t('bac_recovery_sober')}
+                    </span>
+                    <div style="text-align: right;">
+                        <span style="display: block; font-weight: bold; color: #2196F3;">
+                            ${i18n.t('bac_recovery_in', { wait: bacStatus.timeToZero })}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        ` : ''}
+
+        <div class="bac-status-enhanced" style="background: ${bacStatus.color}11; border: 1px solid ${bacStatus.color}44; margin-bottom: 20px;">
+            <h2 style="color:${bacStatus.color}; margin-bottom: 4px;">${bacStatus.title}</h2>
+            ${bacStatus.subtitle ? `<div class="bac-subtitle" style="display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; background:${bacStatus.color}22; color:${bacStatus.color}; margin-bottom: 12px; font-weight: bold; text-transform: uppercase;">${bacStatus.subtitle}</div>` : ''}
             <span style="color: #eee; font-size: 0.9rem; line-height:1.4; display:block;">${bacStatus.message}</span>
-            ${bacStatus.symptoms ? `<div class="bac-symptoms">⚠️ ${bacStatus.symptoms}</div>` : ''}
+            ${bacStatus.symptoms ? `<div class="bac-symptoms" style="margin-top: 10px; font-size: 0.85rem; color: #ff9800; font-style: italic;">⚠️ ${bacStatus.symptoms}</div>` : ''}
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
