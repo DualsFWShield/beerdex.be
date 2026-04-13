@@ -106,17 +106,17 @@
   },
   {
     "title": "Aguila Original",
-    "brewery": "Heineken España S.A.",
-    "type": "Lager (Unfiltered)",
+    "brewery": "Cervecería Bavaria",
+    "type": "Lager",
     "volume": "0.33 L",
-    "alcohol": "5.5°",
-    "id": "ES_AGUILA_ORIGINAL",
+    "alcohol": "4.0°",
+    "id": "CO_AGUILA_ORIGINAL",
     "image": "images/beer/co/Original Aguila beer.png",
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
     "community_rating": 3.6,
-    "ingredients": "Eau, Malt d'orge, Maïs, Houblon, Levure",
+    "ingredients": "Orge, Houblon, Sirop de maïs",
     "rarity_rank": "Commun"
   }
 ]
