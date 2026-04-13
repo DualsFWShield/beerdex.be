@@ -1,49 +1,39 @@
 # 🍺 Beerdex
 
-> **Le Pokédex ultime pour vos bières.**
-> Collectionnez, notez, dégustez et devenez un véritable Zythologue.
+> **Attrapez-les toutes... les bières !**
+> Le compagnon ultime pour tout zythologue en quête de collection.
 
 ![Beerdex Banner](icons/logo-bnr.png)
 
 ## 📖 À propos
 
-**Beerdex** est une Progressive Web App (PWA) conçue pour les amateurs de bière qui souhaitent garder une trace de leurs dégustations sans dépendre d'une application lourde ou payante.
-Construit avec la philosophie **"0$ Stack"**, le projet est entièrement statique, gratuit, respectueux de la vie privée (données locales uniquement) et fonctionne hors ligne.
+Vous ne vous souvenez plus si vous avez déjà goûté cette IPA artisanale au fond du frigo ? Vous voulez garder une trace de chaque pépite dégustée lors de vos voyages ? Bienvenue sur **Beerdex**, le premier "Pokedex" entièrement dédié à l'univers de la bière.
+
+Beerdex est une Progressive Web App (PWA) gratuite, respectueuse de la vie privée (données locales uniquement) et fonctionnant intégralement hors ligne.
 
 ---
 
 ## ✨ Fonctionnalités
 
-### 🔍 Collection & Découverte
-*   **Mode Découverte** : Cacher les bières non découvertes pour gamifier l'expérience. Si vous cherchez une bière inconnue, l'application vous propose de la créer.
-*   **Filtres Avancés** :
-    *   Par Type (Blonde, Trappiste, IPA...)
-    *   Par Brasserie
-    *   Par Degré d'alcool (Min, Max, Exact)
-    *   Par Volume
-*   **Recherche Instantanée** : Trouvez vos boissons par nom ou brasserie.
-*   **Scanner de Code-Barres** : Scannez le code-barres d'une bouteille ou canette pour l'ajouter automatiquement à votre collection grâce à l'intégration **Open Food Facts**.
+### 🔍 REMPLISSEZ VOTRE BEERDEX
+*   **Capturez vos dégustations** : Scannez, répertoriez et collectionnez chaque bouteille, canette ou pression grâce au scanner intégré (Open Food Facts).
+*   **Mode Découverte** : Gamifiez votre expérience en cachant les bières que vous n'avez pas encore débusquées.
+*   **Fiches Détaillées** : Notez l'amertume (IBU), le degré d'alcool, le style, les calories et vos impressions personnelles.
 
-### 📝 Notes & Dégustation
-*   **Fiches Détaillées** : Photo, infos techniques et statistiques personnelles pour chaque bière.
-*   **Notation Personnalisable** :
-    *   Score sur 20.
-    *   Commentaires textuels.
-    *   **Éditeur de Modèle** : Ajoutez vos propres critères (Amertume, Douceur, Robe...) via des sliders ou des cases à cocher.
-*   **Historique de Consommation** : Suivez combien de fois et dans quel volume (Galopin, Pinte, etc.) vous avez consommé chaque bière.
-*   **Ajout de Bières Custom** : Ajoutez vos propres trouvailles avec photo (support du recadrage automatique).
+### 🛡️ SÉCURITÉ & SÉRIEUX
+*   **Calculateur d'Alcoolémie** : Suivez votre taux (g/L) estimé en temps réel selon votre profil (poids/sexe).
+*   **Indicateur de Conduite** : Sachez précisément combien de temps vous devez attendre avant de reprendre le volant en toute sécurité.
+*   **Réglementation Locale** : Adaptation automatique des seuils de sanction (France, Belgique, US, etc.).
 
-### 🏆 Gamification
-*   **Système de Succès** : Plus de **100 succès** à débloquer (Le Centurion, Zythologue, Voyageur...).
-*   **Statistiques** : Graphiques de progression, volume total bu (en litres/baignoires/piscines), et analyse de votre palais.
-*   **Challenge Alphabet** : Buvez une bière commençant par chaque lettre de l'alphabet !
+### 📊 STATISTIQUES & RÉCAP
+*   **Tableau de Bord** : Visualisez votre volume total bu (en litres... ou en baignoires !).
+*   **Beerdex Wrapped** : Vivez votre propre récapitulatif annuel pour découvrir vos styles et brasseries préférés.
+*   **Succès & Rangs** : Plus de 100 succès à débloquer pour passer de "Novice" à "Légende".
 
-### 📱 Expérience PWA & Mobile
-*   **Installable** : Ajoutez l'app sur votre écran d'accueil (Android/iOS/Desktop).
-*   **Support Hors-Ligne** : Consultez votre collection même sans internet.
-    *   *Page Offline Immersive* : "Le Bar est Fermé" avec animation interactive.
-*   **Mise à jour Intelligente** : Détection automatique des nouvelles versions avec notification "Toast".
-*   **Design Premium** : Thème sombre, Glassmorphism et animations fluides.
+### 🌍 GLOBAL & ACCESSIBLE
+*   **Multilingue** : Entièrement traduit en **Français** et en **Anglais**.
+*   **No Framework** : Construit sans dépendance lourde pour une vitesse de chargement instantanée (même sur vieux mobiles).
+*   **Local First** : Vos données vous appartiennent et ne quittent jamais votre téléphone.
 
 ### 💾 Données & Vie Privée
 *   **Local First** : Toutes les données sont stockées dans votre navigateur (IndexedDB/LocalStorage).
