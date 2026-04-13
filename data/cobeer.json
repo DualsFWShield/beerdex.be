@@ -1,7 +1,7 @@
 [
   {
     "title": "Poker",
-    "brewery": "BAVARIA",
+    "brewery": "Cervecería Bavaria",
     "type": "Lager",
     "volume": "0.33 L",
     "alcohol": "4.0°",
@@ -16,7 +16,7 @@
   },
   {
     "title": "Aguila",
-    "brewery": "BAVARIA",
+    "brewery": "Cervecería Bavaria",
     "type": "Lager",
     "volume": "0.33 L",
     "alcohol": "4.0°",
@@ -31,7 +31,7 @@
   },
   {
     "title": "Aguila (Lata 473ml)",
-    "brewery": "BAVARIA",
+    "brewery": "Cervecería Bavaria",
     "type": "Lager",
     "volume": "0.473 L",
     "alcohol": "4.0°",
@@ -46,7 +46,7 @@
   },
   {
     "title": "Club Colombia Dorada",
-    "brewery": "BAVARIA",
+    "brewery": "Cervecería Bavaria",
     "type": "Lager",
     "volume": "0.33 L",
     "alcohol": "4.7°",
@@ -61,7 +61,7 @@
   },
   {
     "title": "Club Colombia Roja",
-    "brewery": "BAVARIA",
+    "brewery": "Cervecería Bavaria",
     "type": "Ambrée",
     "volume": "0.33 L",
     "alcohol": "4.7°",
@@ -76,7 +76,7 @@
   },
   {
     "title": "Club Colombia Negra",
-    "brewery": "BAVARIA",
+    "brewery": "Cervecería Bavaria",
     "type": "Brune",
     "volume": "0.33 L",
     "alcohol": "4.7°",
