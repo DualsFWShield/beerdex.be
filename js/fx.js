@@ -1,5 +1,7 @@
 /* js/fx.js - Premium Visual Effects using Canvas Confetti & Animate.css */
 
+import { i18n } from './i18n.js';
+
 export class FX {
     static burst(x, y, color = '#FFC000') {
         const xNorm = x / window.innerWidth;

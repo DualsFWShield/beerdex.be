@@ -303,7 +303,7 @@ export function getHoursToDrive(simOverride = null) {
         return 0;
     }
 
-    return Math.max(0, differenceToTarget / ELIMINATION_RATE);
+    return Math.max(0, (sim.currentBAC - limit) / ELIMINATION_RATE);
 }
 
 /**

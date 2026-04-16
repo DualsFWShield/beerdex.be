@@ -354,7 +354,7 @@ export function checkAchievements(allBeers) {
         if (newUnlocks.length > 0) {
             newUnlocks.forEach(ach => {
                 // Use new FX
-                import('./fx.js').then(m => m.FX.achievementUnlock(ach.title, ach.icon, ach.rarity));
+                import('./fx.js').then(m => m.FX.achievementUnlock(i18n.t(ach.titleKey, ach.titleData), ach.icon, ach.rarity));
             });
             // Feedback handled inside FX
         }
