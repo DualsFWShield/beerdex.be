@@ -83,20 +83,31 @@ export async function startScanner(elementId, onScanSuccess, onScanFailure) {
                     // Pause on success to prevent multiple triggers while processing
                     html5QrCode.pause();
 
-                    // Allow callback to determine if we should stop (valid) or resume (invalid)
                     Promise.resolve(onScanSuccess(decodedText, decodedResult)).then((shouldStop) => {
                         if (shouldStop) {
                             console.log("[Scanner] Callback requested stop.");
                             stopScanner();
                         } else {
-                            console.log("[Scanner] Callback requested resume.");
-                            html5QrCode.isProcessing = false;
-                            html5QrCode.resume();
+                            console.log("[Scanner] Callback requested resume. Waiting 5s...");
+                            if (window.UI && window.UI.setScannerFeedback) {
+                                window.UI.setScannerFeedback("📍 Scan terminé (Pause 5s...)", false);
+                            }
+                            
+                            setTimeout(() => {
+                                if (html5QrCode && !html5QrCode.isScanning) {
+                                    console.log("[Scanner] Resuming after delay.");
+                                    html5QrCode.isProcessing = false;
+                                    html5QrCode.resume();
+                                    if (window.UI && window.UI.setScannerFeedback) {
+                                        window.UI.setScannerFeedback("🔍 Scan prêt", false);
+                                    }
+                                }
+                            }, 5000);
                         }
                     }).catch(err => {
                         console.error("Scanner callback error:", err);
                         html5QrCode.isProcessing = false;
-                        html5QrCode.resume(); // Resume on error?
+                        html5QrCode.resume(); // Resume on error
                     });
                 },
                 (errorMessage) => {
