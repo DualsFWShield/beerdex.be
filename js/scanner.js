@@ -83,26 +83,34 @@ export async function startScanner(elementId, onScanSuccess, onScanFailure) {
                     // Pause on success to prevent multiple triggers while processing
                     html5QrCode.pause();
 
-                    Promise.resolve(onScanSuccess(decodedText, decodedResult)).then((shouldStop) => {
-                        if (shouldStop) {
+                    Promise.resolve(onScanSuccess(decodedText, decodedResult)).then((result) => {
+                        if (result === true) {
                             console.log("[Scanner] Callback requested stop.");
                             stopScanner();
                         } else {
-                            console.log("[Scanner] Callback requested resume. Waiting 5s...");
-                            if (window.UI && window.UI.setScannerFeedback) {
-                                window.UI.setScannerFeedback("📍 Scan terminé (Pause 5s...)", false);
-                            }
+                            const delay = typeof result === 'number' ? result : 0;
                             
-                            setTimeout(() => {
-                                if (html5QrCode && !html5QrCode.isScanning) {
-                                    console.log("[Scanner] Resuming after delay.");
-                                    html5QrCode.isProcessing = false;
-                                    html5QrCode.resume();
-                                    if (window.UI && window.UI.setScannerFeedback) {
-                                        window.UI.setScannerFeedback("🔍 Scan prêt", false);
-                                    }
+                            if (delay > 0) {
+                                console.log(`[Scanner] Callback requested resume with delay: ${delay}ms`);
+                                if (window.UI && window.UI.setScannerFeedback) {
+                                    window.UI.setScannerFeedback(`📍 Scan terminé (Pause ${delay/1000}s...)`, false);
                                 }
-                            }, 5000);
+                                
+                                setTimeout(() => {
+                                    if (html5QrCode && !html5QrCode.isScanning) {
+                                        console.log("[Scanner] Resuming after delay.");
+                                        html5QrCode.isProcessing = false;
+                                        html5QrCode.resume();
+                                        if (window.UI && window.UI.setScannerFeedback) {
+                                            window.UI.setScannerFeedback("🔍 Scan prêt", false);
+                                        }
+                                    }
+                                }, delay);
+                            } else {
+                                console.log("[Scanner] Callback requested immediate resume.");
+                                html5QrCode.isProcessing = false;
+                                html5QrCode.resume();
+                            }
                         }
                     }).catch(err => {
                         console.error("Scanner callback error:", err);

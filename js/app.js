@@ -380,12 +380,13 @@ function setupEventListeners() {
     document.getElementById('fab-scan')?.addEventListener('click', () => {
         console.log("[App] Scan toggle clicked. Resetting session cache.");
         const scanCache = new Set();
+        let consecutiveFailures = 0;
 
         UI.renderScannerModal(async (barcode) => {
             console.log("[App] Scanner Callback for:", barcode);
             if (scanCache.has(barcode)) {
                 console.log("[App] Barcode cached, ignoring.");
-                return false;
+                return 0; // Resume immediately if already cached
             }
             UI.setScannerFeedback("🔍 Recherche...", false);
 
@@ -395,145 +396,111 @@ function setupEventListeners() {
                 const { status, product } = result || { status: 'error' };
 
                 if (status === 'success' && product) {
+                    consecutiveFailures = 0;
                     scanCache.add(barcode);
                     UI.setScannerFeedback(i18n.t('scanner_found'), false);
 
                     // --- DEDUPLICATION LOGIC (FUZZY) ---
-                        // Ensure we use latest state
-                        const normalize = (s) => s.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
-                        const getTokens = (s) => new Set(normalize(s).split(/\s+/).filter(t => t.length > 2));
+                    const normalize = (s) => s.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+                    const getTokens = (s) => new Set(normalize(s).split(/\s+/).filter(t => t.length > 2));
 
-                        const scanTokens = getTokens(product.title);
-                        const scanBreweryTokens = product.brewery ? getTokens(product.brewery) : new Set();
+                    const scanTokens = getTokens(product.title);
+                    const scanBreweryTokens = product.brewery ? getTokens(product.brewery) : new Set();
 
-                        let bestMatch = null;
-                        let bestScore = 0;
+                    let bestMatch = null;
+                    let bestScore = 0;
 
-                        state.beers.forEach(beer => {
-                            const dbTokens = getTokens(beer.title);
-                            if (dbTokens.size === 0) return;
+                    state.beers.forEach(beer => {
+                        const dbTokens = getTokens(beer.title);
+                        if (dbTokens.size === 0) return;
 
-                            const intersection = new Set([...scanTokens].filter(x => dbTokens.has(x)));
-                            const union = new Set([...scanTokens, ...dbTokens]);
+                        const intersection = new Set([...scanTokens].filter(x => dbTokens.has(x)));
+                        const union = new Set([...scanTokens, ...dbTokens]);
 
-                            const jaccard = union.size === 0 ? 0 : intersection.size / union.size;
-                            const isSubset = intersection.size === dbTokens.size || intersection.size === scanTokens.size;
+                        const jaccard = union.size === 0 ? 0 : intersection.size / union.size;
+                        const isSubset = intersection.size === dbTokens.size || intersection.size === scanTokens.size;
 
-                            let score = jaccard;
-                            if (isSubset && intersection.size >= 1) score += 0.5; // Boost subsets
-                            if (beer.id === 'API_' + product.id) score += 1; // ID Match
+                        let score = jaccard;
+                        if (isSubset && intersection.size >= 1) score += 0.5;
+                        if (beer.id === 'API_' + product.id) score += 1;
 
-                            // Brewery match bonus: prevents API dupes when JSON version exists
-                            if (beer.brewery && scanBreweryTokens.size > 0) {
-                                const dbBreweryTokens = getTokens(beer.brewery);
-                                const breweryInter = new Set([...scanBreweryTokens].filter(x => dbBreweryTokens.has(x)));
-                                if (breweryInter.size > 0) score += 0.3;
-                            }
-
-                            // Prefer non-API/non-CUSTOM versions (original JSON beers)
-                            if (score > bestScore || (score === bestScore && bestMatch && (String(bestMatch.id).startsWith('API_') || String(bestMatch.id).startsWith('CUSTOM_')))) {
-                                bestScore = score;
-                                bestMatch = beer;
-                            }
-                        });
-
-                        // Check for strict match as fallback/priority
-                        const normalizedScan = normalize(product.title);
-                        const strictMatch = state.beers.find(b => normalize(b.title) === normalizedScan);
-                        if (strictMatch) {
-                            bestMatch = strictMatch;
-                            bestScore = 2.0;
+                        if (beer.brewery && scanBreweryTokens.size > 0) {
+                            const dbBreweryTokens = getTokens(beer.brewery);
+                            const breweryInter = new Set([...scanBreweryTokens].filter(x => dbBreweryTokens.has(x)));
+                            if (breweryInter.size > 0) score += 0.3;
                         }
 
-                        if (bestMatch && bestScore > 0.8) {
-                            UI.showToast(i18n.t('toast_found_local', { title: bestMatch.title }));
-                            UI.closeModal(); // Ensure close
-                            UI.renderBeerDetail(bestMatch, (data) => {
-                                const oldRating = Storage.getBeerRating(bestMatch.id);
-                                Storage.saveBeerRating(bestMatch.id, data);
-                                Achievements.checkAchievements(state.beers);
-
-                                const oldCount = oldRating ? (parseInt(oldRating.count) || 0) : 0;
-                                const newRating = Storage.getBeerRating(bestMatch.id);
-                                const newCount = newRating ? (parseInt(newRating.count) || 0) : 0;
-                                const diff = newCount - oldCount;
-
-                                if (Storage.getPreference('bac_enabled', true) && !Storage.getPreference('bac_manual_only', false)) {
-                                    if (diff > 0) {
-                                        for (let i = 0; i < diff; i++) {
-                                            BAC.addDrinkToBAC(bestMatch.volume, bestMatch.alcohol);
-                                        }
-                                    } else if (diff < 0) {
-                                        for (let i = 0; i < Math.abs(diff); i++) {
-                                            BAC.removeDrinkFromBAC(bestMatch.volume, bestMatch.alcohol);
-                                        }
-                                    }
-                                }
-
-                                UI.showToast(i18n.t('toast_rating_updated'));
-                            });
-                            return true; // STOP SCANNER
+                        if (score > bestScore || (score === bestScore && bestMatch && (String(bestMatch.id).startsWith('API_') || String(bestMatch.id).startsWith('CUSTOM_')))) {
+                            bestScore = score;
+                            bestMatch = beer;
                         }
+                    });
 
-                        // If no exact match local, proceed with API product
-                        UI.renderBeerDetail(product, (data) => {
-                            let beerRef = product;
-                            let oldRating = Storage.getBeerRating(product.id);
+                    const normalizedScan = normalize(product.title);
+                    const strictMatch = state.beers.find(b => normalize(b.title) === normalizedScan);
+                    if (strictMatch) {
+                        bestMatch = strictMatch;
+                        bestScore = 2.0;
+                    }
 
-                            if (product.fromAPI) {
-                                const newBeer = { ...product };
-                                newBeer.id = 'CUSTOM_' + Date.now();
-                                delete newBeer.fromAPI;
-                                Storage.saveCustomBeer(newBeer);
-                                Storage.saveBeerRating(newBeer.id, data);
-                                window.dispatchEvent(new CustomEvent('beerdex-action'));
-                                renderCurrentView();
-                                beerRef = newBeer;
-                            } else {
-                                Storage.saveBeerRating(product.id, data);
-                                Achievements.checkAchievements(state.beers);
-                            }
-
+                    if (bestMatch && bestScore > 0.8) {
+                        UI.showToast(i18n.t('toast_found_local', { title: bestMatch.title }));
+                        UI.closeModal();
+                        UI.renderBeerDetail(bestMatch, (data) => {
+                            const oldRating = Storage.getBeerRating(bestMatch.id);
+                            Storage.saveBeerRating(bestMatch.id, data);
+                            Achievements.checkAchievements(state.beers);
                             const oldCount = oldRating ? (parseInt(oldRating.count) || 0) : 0;
-                            const newRating = Storage.getBeerRating(beerRef.id);
-                            const newCount = newRating ? (parseInt(newRating.count) || 0) : 0;
+                            const newCount = Storage.getBeerRating(bestMatch.id)?.count || 0;
                             const diff = newCount - oldCount;
 
                             if (Storage.getPreference('bac_enabled', true) && !Storage.getPreference('bac_manual_only', false)) {
-                                if (diff > 0) {
-                                    for (let i = 0; i < diff; i++) {
-                                        BAC.addDrinkToBAC(beerRef.volume, beerRef.alcohol);
-                                    }
-                                } else if (diff < 0) {
-                                    for (let i = 0; i < Math.abs(diff); i++) {
-                                        BAC.removeDrinkFromBAC(beerRef.volume, beerRef.alcohol);
-                                    }
-                                }
+                                if (diff > 0) for (let i = 0; i < diff; i++) BAC.addDrinkToBAC(bestMatch.volume, bestMatch.alcohol);
+                                else if (diff < 0) for (let i = 0; i < Math.abs(diff); i++) BAC.removeDrinkFromBAC(bestMatch.volume, bestMatch.alcohol);
                             }
+                            UI.showToast(i18n.t('toast_rating_updated'));
+                        });
+                        return 5000;
+                    }
 
-                            UI.showToast(i18n.t('toast_rating_saved'));
+                    UI.renderBeerDetail(product, (data) => {
+                        let beerRef = product;
+                        let oldRating = Storage.getBeerRating(product.id);
+                        if (product.fromAPI) {
+                            const newBeer = { ...product };
+                            newBeer.id = 'CUSTOM_' + Date.now();
+                            delete newBeer.fromAPI;
+                            Storage.saveCustomBeer(newBeer);
+                            Storage.saveBeerRating(newBeer.id, data);
+                            window.dispatchEvent(new CustomEvent('beerdex-action'));
+                            renderCurrentView();
+                            beerRef = newBeer;
+                        } else {
+                            Storage.saveBeerRating(product.id, data);
+                            Achievements.checkAchievements(state.beers);
+                        }
+                        const oldCount = oldRating ? (parseInt(oldRating.count) || 0) : 0;
+                        const newCount = Storage.getBeerRating(beerRef.id)?.count || 0;
+                        const diff = newCount - oldCount;
+
+                        if (Storage.getPreference('bac_enabled', true) && !Storage.getPreference('bac_manual_only', false)) {
+                            if (diff > 0) for (let i = 0; i < diff; i++) BAC.addDrinkToBAC(beerRef.volume, beerRef.alcohol);
+                            else if (diff < 0) for (let i = 0; i < Math.abs(diff); i++) BAC.removeDrinkFromBAC(beerRef.volume, beerRef.alcohol);
+                        }
+                        UI.showToast(i18n.t('toast_rating_saved'));
                     });
+                    return 5000;
 
-                    return true; // Signal scanner to STOP
                 } else if (status === 'not_beer') {
-                    // FORCE ADD OPTION
+                    consecutiveFailures = 0;
                     UI.setScannerFeedback(
                         `<span>${i18n.t('scanner_not_beer')} <button id="btn-force-add" style="text-decoration:underline; background:none; border:none; color:inherit; cursor:pointer;">${i18n.t('scanner_btn_force_add')}</button></span>`,
                         true
                     );
-
-                    // Bind the force add button dynamically? 
-                    // Warning: innerHTML replacement kills listeners if not careful.
-                    // Instead of complex delegation, we can check document click or rely on specific UI method.
-                    // For simplicity, we assume user might tap it. 
-                    // We need a way to hook this click. 
-                    // Hack: use a global delegation or timeout bind. 
                     setTimeout(() => {
                         document.getElementById('btn-force-add')?.addEventListener('click', (e) => {
-                            e.stopPropagation(); // prevent modal close if any
+                            e.stopPropagation();
                             UI.closeModal();
-                            // Open Add Form with pre-filled data if available? 
-                            // product comes from API even if rejected
                             const prefill = product || {};
                             UI.renderAddBeerForm((newBeer) => {
                                 Storage.saveCustomBeer(newBeer);
@@ -545,39 +512,56 @@ function setupEventListeners() {
                             }, null, prefill);
                         }, { once: true });
                     }, 100);
-
-                    return false; // Signal scanner to RESUME (user can decide)
+                    return 5000;
 
                 } else {
-                    // NOT FOUND -> Improved message
+                    consecutiveFailures++;
+                    if (consecutiveFailures >= 10) {
+                        consecutiveFailures = 0;
+                        UI.setScannerFeedback(
+                            `<span>⚠️ 10 essais infructueux...<br>Essayez la recherche manuelle ?<br>
+                            <button id="btn-scan-search" style="text-decoration:underline; background:none; border:none; color:var(--accent-gold); cursor:pointer; font-weight:bold;">${i18n.t('scanner_btn_search_dex')}</button></span>`,
+                            true
+                        );
+                        setTimeout(() => {
+                            document.getElementById('btn-scan-search')?.addEventListener('click', () => {
+                                UI.closeModal();
+                                setTimeout(() => {
+                                    const searchBtn = document.getElementById('search-toggle');
+                                    if (searchBtn) searchBtn.click();
+                                }, 300);
+                            }, { once: true });
+                        }, 100);
+                        return 10000;
+                    }
+
                     UI.setScannerFeedback(
                         `<span>${i18n.t('scanner_unknown')}
                         <button id="btn-scan-search" style="text-decoration:underline; background:none; border:none; color:var(--accent-gold); cursor:pointer; font-weight:bold;">${i18n.t('scanner_btn_search_dex')}</button></span>`,
                         true
                     );
-
                     setTimeout(() => {
                         document.getElementById('btn-scan-search')?.addEventListener('click', () => {
                             UI.closeModal();
                             setTimeout(() => {
                                 const searchBtn = document.getElementById('search-toggle');
                                 if (searchBtn) searchBtn.click();
-                                // Focus input handled by toggle
                             }, 300);
                         }, { once: true });
                     }, 100);
-
-                    return false; // Signal scanner to RESUME
+                    return 0;
                 }
 
             } catch (err) {
+                consecutiveFailures++;
                 console.error("[App] Scan process error:", err);
                 const isNetworkError = err.name === 'TypeError' || err.message.includes('fetch');
                 const errMsg = isNetworkError ? "Erreur Réseau/CORS 🌐" : "Erreur Inconnue ❌";
                 UI.setScannerFeedback(errMsg, true);
-                return false; // Resume scanner
+                return 0;
             }
         });
+    });
     });
 
 
