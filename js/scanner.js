@@ -92,9 +92,7 @@ export async function startScanner(elementId, onScanSuccess, onScanFailure) {
                             
                             if (delay > 0) {
                                 console.log(`[Scanner] Callback requested resume with delay: ${delay}ms`);
-                                if (window.UI && window.UI.setScannerFeedback) {
-                                    window.UI.setScannerFeedback(`📍 Scan terminé (Pause ${delay/1000}s...)`, false);
-                                }
+                                // Do not overwrite app message immediately, let it stay during pause
                                 
                                 setTimeout(() => {
                                     if (html5QrCode && !html5QrCode.isScanning) {
