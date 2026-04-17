@@ -562,7 +562,6 @@ function setupEventListeners() {
             }
         });
     });
-    });
 
 
     // Search Toggle
