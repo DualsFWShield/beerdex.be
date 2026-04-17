@@ -75,13 +75,36 @@ async function init() {
         // Show skeleton loading immediately
         showSkeletonLoading(document.getElementById('main-content'));
 
-        // Load Data
-        const staticBeers = await Data.fetchAllBeers();
+        // Lazy-loading: Load Core Beers first for fast render
+        const coreFiles = ['data/newbeer.json', 'data/belgiumbeer.json'];
+        const staticBeers = await Data.fetchAllBeers(coreFiles);
         const customBeers = Storage.getCustomBeers();
         state.beers = [...customBeers, ...staticBeers];
 
         // Initial Render
         renderCurrentView();
+
+        // Lazy-load the rest
+        setTimeout(async () => {
+            const restFiles = [
+                'data/deutchbeer.json',
+                'data/frenchbeer.json',
+                'data/nlbeer.json',
+                'data/usbeer.json',
+                'data/cobeer.json'
+            ];
+            const moreBeers = await Data.fetchAllBeers(restFiles);
+            // Deduplicate Custom/Static overlaps just in case? Data.js handles internal dedupe, but let's just append
+            const currentIds = new Set(state.beers.map(b => b.id));
+            const newBeersToAdd = moreBeers.filter(b => !currentIds.has(b.id));
+            
+            if (newBeersToAdd.length > 0) {
+                state.beers = [...state.beers, ...newBeersToAdd];
+                applyFilters();
+                // We don't forcefully re-render to avoid jumping, but next paginate will include them.
+                // If user is searching right now, they'll show up on next input.
+            }
+        }, 1500);
 
         // Setup Event Listeners
         setupEventListeners();
@@ -160,6 +183,9 @@ function setupNetworkListeners() {
 export function applyTheme() {
     const museumThemeEnabled = Storage.getPreference('museumThemeEnabled', false);
     
+    // Always default to dark
+    document.documentElement.removeAttribute('data-theme');
+
     // Toggle Stylesheet
     const museumLink = document.getElementById('css-museum');
     if (museumLink) {
@@ -173,8 +199,8 @@ export function applyTheme() {
         document.body.classList.remove('theme-museum');
     }
 
-    // Update Meta Theme Color
-    const themeColor = museumThemeEnabled ? '#C9A84C' : '#FFC000';
+    // Update Meta Theme Color (Light mode not needed)
+    let themeColor = museumThemeEnabled ? '#C9A84C' : '#FFC000';
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
 
     // Handle Curtain Animation (only if actually playing)
@@ -361,8 +387,6 @@ function setupEventListeners() {
                 console.log("[App] Barcode cached, ignoring.");
                 return false;
             }
-            scanCache.add(barcode);
-
             UI.setScannerFeedback("🔍 Recherche...", false);
 
             try {
@@ -371,13 +395,10 @@ function setupEventListeners() {
                 const { status, product } = result || { status: 'error' };
 
                 if (status === 'success' && product) {
+                    scanCache.add(barcode);
                     UI.setScannerFeedback(i18n.t('scanner_found'), false);
 
-                    // Stop scanner & Close modal after short delay
-                    setTimeout(() => {
-                        UI.closeModal();
-
-                        // --- DEDUPLICATION LOGIC (FUZZY) ---
+                    // --- DEDUPLICATION LOGIC (FUZZY) ---
                         // Ensure we use latest state
                         const normalize = (s) => s.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
                         const getTokens = (s) => new Set(normalize(s).split(/\s+/).filter(t => t.length > 2));
@@ -491,11 +512,9 @@ function setupEventListeners() {
                             }
 
                             UI.showToast(i18n.t('toast_rating_saved'));
-                        });
+                    });
 
-                    }, 200);
                     return true; // Signal scanner to STOP
-
                 } else if (status === 'not_beer') {
                     // FORCE ADD OPTION
                     UI.setScannerFeedback(
@@ -551,10 +570,12 @@ function setupEventListeners() {
                     return false; // Signal scanner to RESUME
                 }
 
-            } catch (e) {
-                console.error(e);
-                UI.setScannerFeedback("⚠️ Erreur réseau / API", true);
-                return false; // Signal scanner to RESUME
+            } catch (err) {
+                console.error("[App] Scan process error:", err);
+                const isNetworkError = err.name === 'TypeError' || err.message.includes('fetch');
+                const errMsg = isNetworkError ? "Erreur Réseau/CORS 🌐" : "Erreur Inconnue ❌";
+                UI.setScannerFeedback(errMsg, true);
+                return false; // Resume scanner
             }
         });
     });

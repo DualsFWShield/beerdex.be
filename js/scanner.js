@@ -28,9 +28,34 @@ export async function startScanner(elementId, onScanSuccess, onScanFailure) {
             await stopScanner();
         }
 
-        html5QrCode = new Html5Qrcode(elementId);
+        let formatsToSupport = [];
+        try {
+            const F = window.Html5QrcodeSupportedFormats || {};
+            formatsToSupport = [
+                F.EAN_13 || 6,
+                F.EAN_8 || 7,
+                F.CODE_128 || 1,
+                F.UPC_A || 11,
+                F.UPC_E || 12,
+                F.QR_CODE || 0
+            ];
+        } catch (e) {
+            console.warn("Could not load barcode formats, using defaults.");
+        }
 
-        const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+        html5QrCode = new Html5Qrcode(elementId, { formatsToSupport });
+
+        const config = { 
+            fps: 20, 
+            aspectRatio: 1.0,
+            disableFlip: false, // Aide pour certaines orientations
+            showTorchButtonIfSupported: true,
+            showTorchButtonIfSupported: true,
+            useBarCodeDetectorIfSupported: true,
+            experimentalFeatures: {
+                useBarCodeDetectorIfSupported: true
+            }
+        };
 
         // Prefer back camera
         const cameras = await Html5Qrcode.getCameras();
@@ -39,9 +64,13 @@ export async function startScanner(elementId, onScanSuccess, onScanFailure) {
             const cameraId = cameras[cameras.length - 1].id;
 
             await html5QrCode.start(
-                { facingMode: "environment" }, // Prefer environment facing
+                cameraId, 
                 config,
                 (decodedText, decodedResult) => {
+                    // Update feedback immediately
+                    if (window.UI && window.UI.setScannerFeedback) {
+                         window.UI.setScannerFeedback("⚡ Code détecté !", false);
+                    }
                     console.log("[Scanner] Code detected:", decodedText);
                     // Prevent multiple triggers if already processing
                     if (html5QrCode.isProcessing) {
@@ -97,7 +126,9 @@ export async function stopScanner() {
             if (html5QrCode.isScanning) {
                 await html5QrCode.stop();
             }
-            html5QrCode.clear();
+            if (html5QrCode) {
+                html5QrCode.clear();
+            }
         } catch (err) {
             console.error("Failed to stop scanner", err);
         } finally {

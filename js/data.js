@@ -1,7 +1,7 @@
 import { calculateRarity } from './autoRarity.js';
 import { MAPS } from './map.js';
 
-const DATA_FILES = [
+const ALL_DATA_FILES = [
     'data/belgiumbeer.json',
     'data/deutchbeer.json',
     'data/frenchbeer.json',
@@ -11,10 +11,10 @@ const DATA_FILES = [
     'data/cobeer.json'
 ];
 
-export async function fetchAllBeers() {
+export async function fetchAllBeers(files = ALL_DATA_FILES) {
     let allBeers = [];
 
-    const promises = DATA_FILES.map(url =>
+    const promises = files.map(url =>
         fetch(url)
             .then(response => {
                 if (!response.ok) throw new Error(`Failed to load ${url}`);

@@ -12,6 +12,7 @@ import { fetchProductByBarcode, searchProducts } from './off-api.js';
 import { Feedback } from './feedback.js';
 import * as BAC from './bac.js';
 import * as Achievements from './achievements.js';
+import { AromaWheel } from './aroma-wheel.js';
 
 let editModeBeer = null;
 // We assume global libs: QRCode, Html5QrcodeScanner (handled via CDN)
@@ -25,6 +26,29 @@ const modalContainer = document.getElementById('modal-container');
 const toastQueue = [];
 let isToastActive = false;
 let modalCleanup = null;
+
+let chartJsPromise = null;
+function loadChartJs() {
+    if (chartJsPromise) return chartJsPromise;
+    chartJsPromise = new Promise((resolve, reject) => {
+        if (window.Chart) {
+            resolve();
+            return;
+        }
+        const script1 = document.createElement('script');
+        script1.src = "https://cdn.jsdelivr.net/npm/chart.js";
+        script1.onload = () => {
+            const script2 = document.createElement('script');
+            script2.src = "https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation";
+            script2.onload = resolve;
+            script2.onerror = reject;
+            document.head.appendChild(script2);
+        };
+        script1.onerror = reject;
+        document.head.appendChild(script1);
+    });
+    return chartJsPromise;
+}
 
 export function checkAutoBackup() {
     const lastBackup = parseInt(Storage.getPreference('last_file_backup', '0'), 10);
@@ -143,18 +167,54 @@ function processToastQueue() {
     }, 3000);
 }
 
+let previousFocusElement = null;
+
+function focusTrap(e) {
+    if (e.key === 'Escape') {
+        closeModal();
+        return;
+    }
+    if (e.key === 'Tab') {
+        const focusableElements = modalContainer.querySelectorAll('a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])');
+        if (focusableElements.length === 0) {
+            e.preventDefault();
+            return;
+        }
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (!e.shiftKey && document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+        } else if (e.shiftKey && document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+        }
+    }
+}
+
 export function closeModal() {
     if (modalCleanup) {
         modalCleanup();
         modalCleanup = null;
     }
+    
+    document.removeEventListener('keydown', focusTrap);
+    
     modalContainer.classList.add('hidden');
     modalContainer.setAttribute('aria-hidden', 'true');
     modalContainer.innerHTML = '';
     document.body.classList.remove('modal-open');
+    
+    if (previousFocusElement) {
+        previousFocusElement.focus();
+        previousFocusElement = null;
+    }
 }
 
 function openModal(content) {
+    previousFocusElement = document.activeElement;
+    
     modalContainer.innerHTML = '';
     modalContainer.appendChild(content);
     modalContainer.classList.remove('hidden');
@@ -165,6 +225,14 @@ function openModal(content) {
     modalContainer.onclick = (e) => {
         if (e.target === modalContainer) closeModal();
     };
+    
+    document.addEventListener('keydown', focusTrap);
+    
+    // Auto focus first interactive element
+    setTimeout(() => {
+        const focusableElements = modalContainer.querySelectorAll('a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])');
+        if (focusableElements.length) focusableElements[0].focus();
+    }, 10);
 }
 
 // ===== REUSABLE DIALOG MODALS (replaces prompt/confirm/alert) =====
@@ -788,7 +856,7 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
             </svg>
             <div class="beer-image-container" style="width:100%; height:120px; display:flex; justify-content:center; align-items:center;">
                 <img src="${displayImage}" alt="${beer.title}" class="beer-image" loading="${index < 10 ? 'eager' : 'lazy'}" 
-                     ${beer.removeBackground ? 'onload="removeImageBackground(this)"' : ''}
+                     onload="removeImageBackground(this)"
                      onerror="if(this.src.includes('${fallbackImage}')) return; this.src='${fallbackImage}';">
             </div>
             <div class="beer-info">
@@ -1350,6 +1418,8 @@ export function renderBeerDetail(beer, onSave) {
     // Clean string for display
     defaultVol = defaultVol.replace('.', ',');
 
+    const lastVolume = Storage.getPreference('last_volume_preset', defaultVol);
+
     consumptionWrapper.innerHTML = `
                 <h3 style="margin-bottom:10px; font-size:1rem;">${i18n.t('detail_consumption_title')}</h3>
                 <div style="font-size:2rem; font-weight:bold; color:var(--accent-gold); margin-bottom:10px;">
@@ -1357,16 +1427,20 @@ export function renderBeerDetail(beer, onSave) {
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">${i18n.t('detail_volume_drunk')}</label>
-                    <select id="consumption-volume" class="form-select" style="text-align:center;">
-                        <option value="${defaultVol}" selected>${defaultVol} ${i18n.t('detail_default')}</option>
-                        <option value="25cl">25cl</option>
-                        <option value="33cl">33cl</option>
-                        <option value="50cl">50cl ${i18n.t('detail_pint')}</option>
-                        <option value="1L">1L</option>
-                        <option value="1.5L">1.5L</option>
-                        <option value="2L">2L</option>
-                    </select>
+                    <label class="form-label" style="margin-bottom:5px;">${i18n.t('detail_volume_drunk')}</label>
+                    <div class="vol-preset-grid" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 10px;">
+                        <button type="button" class="vol-btn" data-vol="15cl" style="background:var(--bg-dark); border:1px solid #444; color:#fff; padding:6px 10px; border-radius:8px; cursor:pointer; font-size:0.9rem; flex:1 1 30%; max-width:120px;">15 cl</button>
+                        <button type="button" class="vol-btn" data-vol="25cl" style="background:var(--bg-dark); border:1px solid #444; color:#fff; padding:6px 10px; border-radius:8px; cursor:pointer; font-size:0.9rem; flex:1 1 30%; max-width:120px;">25 cl</button>
+                        <button type="button" class="vol-btn" data-vol="33cl" style="background:var(--bg-dark); border:1px solid #444; color:#fff; padding:6px 10px; border-radius:8px; cursor:pointer; font-size:0.9rem; flex:1 1 30%; max-width:120px;">33 cl</button>
+                        <button type="button" class="vol-btn" data-vol="50cl" style="background:var(--bg-dark); border:1px solid #444; color:#fff; padding:6px 10px; border-radius:8px; cursor:pointer; font-size:0.9rem; flex:1 1 30%; max-width:120px;">50 cl</button>
+                        <button type="button" class="vol-btn" data-vol="75cl" style="background:var(--bg-dark); border:1px solid #444; color:#fff; padding:6px 10px; border-radius:8px; cursor:pointer; font-size:0.9rem; flex:1 1 30%; max-width:120px;">75 cl</button>
+                        <button type="button" class="vol-btn" data-vol="150cl" style="background:var(--bg-dark); border:1px solid #444; color:#fff; padding:6px 10px; border-radius:8px; cursor:pointer; font-size:0.9rem; flex:1 1 30%; max-width:120px;">150 cl</button>
+                        <button type="button" class="vol-btn" data-vol="custom" style="background:var(--bg-dark); border:1px solid #444; color:#fff; padding:6px 10px; border-radius:8px; cursor:pointer; font-size:0.9rem; flex:1 1 30%; max-width:120px;">Personnalisé</button>
+                    </div>
+                    <div id="custom-vol-container" style="display: none; transition: 0.3s; text-align: center;">
+                        <input type="text" id="custom-vol-input" class="form-input" placeholder="ex: 12.5cl ou 330ml" style="text-align: center;">
+                    </div>
+                    <input type="hidden" id="consumption-volume" value="${lastVolume}">
                 </div>
 
                 <div style="display:flex; gap:10px; justify-content:center;">
@@ -1462,7 +1536,7 @@ export function renderBeerDetail(beer, onSave) {
 
                 <div style="text-align: center; margin-bottom: 20px;">
                     <img src="${displayImage}" style="height: 150px; object-fit: contain; filter: drop-shadow(0 0 10px rgba(255,255,255,0.1));" 
-                         ${beer.removeBackground ? 'onload="removeImageBackground(this)"' : ''}
+                         onload="removeImageBackground(this)"
                          onerror="if(this.src.includes('${fallbackImage}')) return; this.src='${fallbackImage}';">
                         <h2 style="margin-top: 10px; color: var(--accent-gold);">${beer.title}</h2>
                         <p style="color: #888;">${beer.brewery} - ${beer.type}</p>
@@ -1579,6 +1653,12 @@ export function renderBeerDetail(beer, onSave) {
                     <summary style="font-weight:bold; cursor:pointer; list-style:none;">📝 ${i18n.t('info_label_tasting_note')} ${existingData.score ? '✅' : ''}</summary>
                     <form id="rating-form" style="margin-top:15px;">
                         ${formFields}
+
+                        <div style="margin-top:20px; border-top:1px solid #333; padding-top:15px; padding-bottom: 15px;">
+                            <label class="form-label" style="text-align:center; display:block; margin-bottom:10px;">Sélectionnez les arômes ressentis</label>
+                            <div id="aroma-wheel-container"></div>
+                        </div>
+
                         <button type="submit" class="btn-primary">${i18n.t('info_btn_save_note')}</button>
                     </form>
                 </details>
@@ -1593,6 +1673,69 @@ export function renderBeerDetail(beer, onSave) {
 
                 ${customActions}
                 `;
+
+    // Volume Presets Logic
+    const volBtns = wrapper.querySelectorAll('.vol-btn');
+    const hiddenVol = wrapper.querySelector('#consumption-volume');
+    const customVolContainer = wrapper.querySelector('#custom-vol-container');
+    const customVolInput = wrapper.querySelector('#custom-vol-input');
+
+    const updateVolUI = (vol) => {
+        let isCustom = true;
+        volBtns.forEach(btn => {
+            if (btn.dataset.vol === vol) {
+                btn.style.background = 'var(--accent-gold)';
+                btn.style.color = '#000';
+                btn.style.borderColor = 'var(--accent-gold)';
+                btn.style.fontWeight = 'bold';
+                isCustom = false;
+            } else {
+                btn.style.background = 'var(--bg-dark)';
+                btn.style.color = '#fff';
+                btn.style.borderColor = '#444';
+                btn.style.fontWeight = 'normal';
+            }
+        });
+        
+        if (isCustom) {
+            const customBtn = wrapper.querySelector('[data-vol="custom"]');
+            customBtn.style.background = 'var(--accent-gold)';
+            customBtn.style.color = '#000';
+            customBtn.style.borderColor = 'var(--accent-gold)';
+            customBtn.style.fontWeight = 'bold';
+            customVolContainer.style.display = 'block';
+            customVolInput.value = vol;
+        } else {
+            customVolContainer.style.display = 'none';
+        }
+    };
+
+    volBtns.forEach(btn => {
+        btn.onclick = () => {
+            const v = btn.dataset.vol;
+            if (v === 'custom') {
+                updateVolUI(customVolInput.value || '33cl');
+            } else {
+                hiddenVol.value = v;
+                updateVolUI(v);
+                Storage.savePreference('last_volume_preset', v);
+            }
+        };
+    });
+
+    customVolInput.oninput = (e) => {
+        hiddenVol.value = e.target.value;
+        Storage.savePreference('last_volume_preset', e.target.value);
+    };
+
+    // Init Volume UI
+    updateVolUI(hiddenVol.value);
+
+    // Initialize Aroma Wheel from within the modal wrapper
+    let currentAromas = existingData.aromas || [];
+    const aromaWheel = new AromaWheel(wrapper.querySelector('#aroma-wheel-container'), currentAromas, (selected) => {
+        currentAromas = selected;
+    });
 
     // Initialize Rarity Logic *after* HTML is in DOM
     initRarityLogic();
@@ -1761,7 +1904,7 @@ export function renderBeerDetail(beer, onSave) {
                             <div class="beer-card card-rarity-${beer.rarity} ${beer.rarity === 'ultra_legendaire' ? 'card-anim-ultra_legendary' : ''}" style="width: 260px; height: auto; min-height: 400px; margin: 0; background: var(--bg-card); display: flex; flex-direction: column; cursor: pointer; border-width: 3px;">
                                 
                                 <div style="width:100%; height:200px; display:flex; justify-content:center; align-items:center; margin-bottom: 15px;">
-                                    <img src="${displayImage}" alt="${beer.title}" class="beer-image" style="max-height: 180px; object-fit: contain;">
+                                    <img src="${displayImage}" alt="${beer.title}" class="beer-image" style="max-height: 180px; object-fit: contain;" onload="removeImageBackground(this)">
                                 </div>
                                 <div class="beer-info" style="text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
                                     <h3 class="beer-title" style="font-size: 1.5rem; margin-bottom: 5px;">${beer.title}</h3>
@@ -1935,6 +2078,8 @@ export function renderBeerDetail(beer, onSave) {
             return;
         }
 
+        data.aromas = currentAromas;
+
         onSave(data);
 
         // Track rating optionally filtering out null score
@@ -1988,13 +2133,9 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
     wrapper.innerHTML = `
                 <h2 style="margin-bottom: 5px;">${title}</h2>
                 <div style="display:flex; gap:10px; margin-bottom:15px;">
-                     <button type="button" id="btn-autofill-scan" class="form-input" style="font-size:0.8rem; padding: 5px; flex:1; display:flex; align-items:center; justify-content:center; gap:5px; background:rgba(255,255,255,0.1);">
-                        📷 Scanner & Remplir
-                    </button>
                     <button type="button" id="btn-autofill-name" class="form-input" style="font-size:0.8rem; padding: 5px; flex:1; display:flex; align-items:center; justify-content:center; gap:5px; background:rgba(255,255,255,0.1);">
                         🔍 Remplir via Nom
                     </button>
-                    <!-- "Check DB" button could be here too but let's stick to request -->
                 </div>
                 <form id="add-beer-form">
                     <div class="form-group">
@@ -2531,9 +2672,16 @@ export function renderBACStatsContent(container) {
         `;
 
         // Let the DOM update, then initialize Chart.js
-        setTimeout(() => {
+        setTimeout(async () => {
             const ctx = document.getElementById('bacChartCanvas');
             if (ctx && curveData.length > 0) {
+                try {
+                    await loadChartJs();
+                } catch (e) {
+                    console.error("Failed to load Chart.js", e);
+                    return;
+                }
+
                 if (window.bacChartInstance) {
                     window.bacChartInstance.destroy();
                 }
@@ -2899,6 +3047,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                     </select>
                 </div>
                 
+
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                     <div style="text-align:left;">
                         <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_discovery_title">${i18n.t('settings_discovery_title')}</strong>
@@ -3111,6 +3260,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     `;
 
     // --- Handlers ---
+
 
     // Map Setting
     const mapSelect = container.querySelector('#select-default-map');

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Beerdex-v90'; // Hardened Response logic
+const CACHE_NAME = 'Beerdex-v91'; // Hardened Response logic
 const ASSETS = [
     './index.html',
     './style.css',

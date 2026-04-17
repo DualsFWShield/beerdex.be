@@ -43,10 +43,7 @@ export async function fetchProductByBarcode(barcode) {
 
     try {
         const response = await fetch(`${API_BASE_URL}/product/${barcode}.json`, {
-            method: 'GET',
-            headers: {
-                'User-Agent': 'Beerdex/1.0 (clément.picoret@gmail.com)'
-            }
+            method: 'GET'
         });
 
         if (!response.ok) {
@@ -125,24 +122,23 @@ function mapProductToBeer(product) {
     // Capitalize properly (Title Case Helper)
     const title = toTitleCase(simpleTitle);
 
-    // 3. Alcohol: 'alcohol_value' field OR Regex from Raw Title
-    let alcoholVal = product.alcohol_value || product.alcohol;
-    if (!alcoholVal) {
+    // 3. Alcohol: 'alcohol' field in nutriments OR top level
+    let alcoholVal = product.alcohol_value ?? product.alcohol ?? product.nutriments?.alcohol ?? product.nutriments?.['alcohol_100g'];
+    
+    if (alcoholVal === undefined || alcoholVal === null) {
         // Try extract from raw title:
-        // Matches: "8%", "8,5%", "8.5%", "0.0%", "0,0 %", "Alc. 5.5%"
-        // Also supports: "5.5°", "5,5 °"
-        // Avoids matching "100%" if it's not alcohol related? Usually in title it is.
-        const alcMatch = rawTitle.match(/(?:alc\.?|vol\.?)?\s*(\d+(?:[\.,]\d+)?)?\s*(?:%|°)/i);
+        const alcMatch = rawTitle.match(/(?:alc\.?|vol\.?|deg\.?)?\s*(\d+(?:[\.,]\d+)?)?\s*(?:%|°)/i);
         if (alcMatch && alcMatch[1]) {
-            alcoholVal = parseFloat(alcMatch[1].replace(',', '.'));
+            alcoholVal = alcMatch[1].replace(',', '.');
         }
     }
 
-    let alcohol = 0;
-    if (alcoholVal) {
-        alcohol = parseFloat(alcoholVal).toFixed(1) + '°';
-    } else {
-        alcohol = '?';
+    let alcohol = '?';
+    if (alcoholVal !== undefined && alcoholVal !== null && alcoholVal !== '') {
+        const val = parseFloat(alcoholVal);
+        if (!isNaN(val)) {
+            alcohol = val.toFixed(1) + '°';
+        }
     }
 
     // 4. Volume: Quantity
@@ -233,8 +229,7 @@ export async function searchProducts(query, page = 1) {
         const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&tagtype_0=categories&tag_contains_0=contains&tag_0=beers&json=1&page=${page}&page_size=24`;
 
         const response = await fetch(url, {
-            method: 'GET',
-            headers: { 'User-Agent': 'Beerdex/1.0' }
+            method: 'GET'
         });
 
         if (!response.ok) return { products: [], count: 0 };
@@ -336,6 +331,16 @@ function normalizeVolume(volStr) {
     // Check cl
     if (v.includes('cl')) {
         return v; // Keep as is usually
+    }
+
+    if (v === '1' || v === '1.0' || v === '1,0') return '1L';
+
+    // If it's just a number without units
+    const num = parseFloat(v);
+    if (!isNaN(num) && !/[a-z]/.test(v)) {
+        if (num >= 1 && num <= 5) return num + 'L';
+        if (num >= 15 && num <= 75) return num + 'cl';
+        if (num > 100) return (num / 10) + 'cl'; // Assume ml if large number
     }
 
     return volStr;
