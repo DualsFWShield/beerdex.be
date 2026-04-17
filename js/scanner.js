@@ -95,7 +95,7 @@ export async function startScanner(elementId, onScanSuccess, onScanFailure) {
                                 // Do not overwrite app message immediately, let it stay during pause
                                 
                                 setTimeout(() => {
-                                    if (html5QrCode && !html5QrCode.isScanning) {
+                                    if (html5QrCode) {
                                         console.log("[Scanner] Resuming after delay.");
                                         html5QrCode.isProcessing = false;
                                         html5QrCode.resume();
