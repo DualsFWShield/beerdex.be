@@ -2982,6 +2982,17 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
 
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                         <div style="text-align:left;">
+                            <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">📱 Widget Écran d'accueil</strong>
+                            <span style="font-size:0.8rem; color:#888;">Synchroniser les données BAC avec le widget natif Android</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-bac-widget" ${Storage.getPreference('bac_widget_enabled', true) ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <div style="text-align:left;">
                             <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_manual_only_title">${i18n.t('settings_manual_only_title')}</strong>
                             <span style="font-size:0.8rem; color:#888;" data-i18n="settings_manual_only_desc">${i18n.t('settings_manual_only_desc')}</span>
                         </div>
@@ -3408,6 +3419,14 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     if (toggleBacHome) {
         toggleBacHome.onchange = (e) => {
             Storage.savePreference('bac_show_home', e.target.checked);
+        };
+    }
+
+    const toggleBacWidget = container.querySelector('#toggle-bac-widget');
+    if (toggleBacWidget) {
+        toggleBacWidget.onchange = (e) => {
+            Storage.savePreference('bac_widget_enabled', e.target.checked);
+            showToast(e.target.checked ? 'Widget activé' : 'Widget désactivé');
         };
     }
 

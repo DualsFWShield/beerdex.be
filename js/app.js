@@ -12,6 +12,7 @@ import * as BAC from './bac.js';
 import * as Wrapped from './wrapped.js';
 import { EventSystem } from './event-system.js';
 import { i18n } from './i18n.js';
+import { updateWidgetData } from './widget-bridge.js';
 
 window.Share = Share;
 window.Wrapped = Wrapped;
@@ -130,6 +131,12 @@ async function init() {
                 document.body.classList.remove('keyboard-open');
             });
         }
+
+        // --- NATIVE WIDGET INITIAL SYNC ---
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') updateWidgetData();
+        });
+        updateWidgetData();
 
         // --- API AUTO-ACTION CHECK ---
         API.start(() => state.beers);
@@ -459,6 +466,7 @@ function setupEventListeners() {
                                 else if (diff < 0) for (let i = 0; i < Math.abs(diff); i++) BAC.removeDrinkFromBAC(bestMatch.volume, bestMatch.alcohol);
                             }
                             UI.showToast(i18n.t('toast_rating_updated'));
+                            updateWidgetData();
                         });
                         return 5000;
                     }
@@ -488,6 +496,7 @@ function setupEventListeners() {
                             else if (diff < 0) for (let i = 0; i < Math.abs(diff); i++) BAC.removeDrinkFromBAC(beerRef.volume, beerRef.alcohol);
                         }
                         UI.showToast(i18n.t('toast_rating_saved'));
+                        updateWidgetData();
                     });
                     return 5000;
 
@@ -726,6 +735,7 @@ function setupEventListeners() {
                     if (ratingData) card.classList.add('drunk');
 
                     UI.showToast(i18n.t('toast_rating_saved'));
+                    updateWidgetData();
                 });
             }
         }
@@ -1020,6 +1030,9 @@ function renderCurrentView() {
                 `;
                 mainContent.insertAdjacentHTML('afterbegin', widgetHtml);
             }
+
+            // Sync data to native home screen widget
+            updateWidgetData();
         }
 
         if (isDiscovery) {

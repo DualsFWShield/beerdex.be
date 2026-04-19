@@ -5,7 +5,12 @@
 # of the Offline mobile variants.
 
 # Directories for the 4 variants
-VARIANTS=("bd-mobile/github-offline" "bd-mobile/play-store-offline")
+VARIANTS=(
+    "bd-mobile/github-offline" 
+    "bd-mobile/play-store-offline"
+    "bd-mobile/github-online"
+    "bd-mobile/play-store-online"
+)
 
 # Source files and directories to copy
 FILES=(
