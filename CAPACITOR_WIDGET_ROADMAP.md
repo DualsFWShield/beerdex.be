@@ -46,10 +46,16 @@ Le design du widget natif devra reprendre la même esthétique :
 - **Dark Mode :** Fond `#111` ou effet glassmorphism (si natif).
 - **Couleurs d'accent :** Doré (`#ffcc00`) pour les données importantes ou Rouge/Vert selon le niveau de BAC.
 
-## Étapes d'implémentation futures
+## État d'avancement (v2.7.0)
+- [x] Initialisation du pont natif Android.
+- [x] Création du `BeerdexWidgetProvider` (Kotlin).
+- [x] Design du widget XML avec support graphique (Base64 Chart).
+- [x] Synchronisation bidirectionnelle (JS → Native).
+- [x] Build et déploiement multi-variantes (Play Store/GitHub).
 
-1. Cloner ou initialiser le dépôt Capacitor source de l'application Beerdex.
-2. Installer le support Swift pour iOS / le support Kotlin pour Android.
-3. Créer une Extension `AppWidgetProvider` sous Android et utiliser `WidgetKit` sous iOS (via Xcode).
-4. Relier les appels JavaScript à la surcouche native pour rafraîchir les données.
-5. Intégrer un bouton dans les paramètres de Beerdex "Activer le Widget en Live".
+## Étapes d'implémentation réalisées
+1. ✅ Initialisation du dépôt Capacitor source.
+2. ✅ Support Kotlin pour Android activé.
+3. ✅ Création du `AppWidgetProvider` avec rendu `RemoteViews`.
+4. ✅ Liaison JS via `WidgetBridgePlugin` pour le rafraîchissement.
+5. ✅ Optimisation de la visibilité pour rafraîchissement automatique au premier plan.
