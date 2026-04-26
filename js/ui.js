@@ -2980,16 +2980,6 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                         </label>
                     </div>
 
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <div style="text-align:left;">
-                            <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">📱 Widget Écran d'accueil</strong>
-                            <span style="font-size:0.8rem; color:#888;">Synchroniser les données BAC avec le widget natif Android</span>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" id="toggle-bac-widget" ${Storage.getPreference('bac_widget_enabled', true) ? 'checked' : ''}>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
 
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                         <div style="text-align:left;">
@@ -3019,6 +3009,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                                 <select id="select-bac-vehicle" class="form-select" style="padding:8px;">
                                     <option value="voiture" ${Storage.getPreference('bac_vehicle', 'voiture') === 'voiture' ? 'selected' : ''}>${i18n.t('settings_bac_car')}</option>
                                     <option value="moto" ${Storage.getPreference('bac_vehicle', 'voiture') === 'moto' ? 'selected' : ''}>${i18n.t('settings_bac_moto')}</option>
+                                    <option value="velo" ${Storage.getPreference('bac_vehicle', 'voiture') === 'velo' ? 'selected' : ''}>${i18n.t('settings_bac_bike')}</option>
                                     <option value="pieton" ${Storage.getPreference('bac_vehicle', 'voiture') === 'pieton' ? 'selected' : ''}>${i18n.t('settings_bac_pedestrian')}</option>
                                     <option value="ne_conduit_pas" ${Storage.getPreference('bac_vehicle', 'voiture') === 'ne_conduit_pas' ? 'selected' : ''}>${i18n.t('settings_bac_none')}</option>
                                 </select>
@@ -3422,13 +3413,6 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
         };
     }
 
-    const toggleBacWidget = container.querySelector('#toggle-bac-widget');
-    if (toggleBacWidget) {
-        toggleBacWidget.onchange = (e) => {
-            Storage.savePreference('bac_widget_enabled', e.target.checked);
-            showToast(e.target.checked ? 'Widget activé' : 'Widget désactivé');
-        };
-    }
 
     const toggleBacManual = container.querySelector('#toggle-bac-manual');
     if (toggleBacManual) {
@@ -3969,7 +3953,7 @@ const TutorialSystem = {
         {
             id: 'scan',
             target: '#fab-scan',
-            position: 'bottom',
+            position: 'top',
             message: () => `
                 <h3>${i18n.t('tuto_scan_title')}</h3>
                 <p>${i18n.t('tuto_scan_msg')}</p>
@@ -4000,7 +3984,7 @@ const TutorialSystem = {
         {
             id: 'add-beer',
             target: '#fab-add',
-            position: 'left',
+            position: 'top',
             message: () => `
                 <h3>${i18n.t('tuto_add_title')}</h3>
                 <p>${i18n.t('tuto_add_msg')}</p>
@@ -4033,14 +4017,9 @@ const TutorialSystem = {
             target: '#card-achievements',
             position: 'top',
             message: () => `
-                <div style="text-align:center;">
-                    <h3 style="color:var(--accent-gold);">${i18n.t('tuto_ach_title')}</h3>
-                    <p>${i18n.t('tuto_ach_msg')}</p>
-                    <div class="mt-15" style="display:flex; gap:10px; justify-content:center;">
-                        <button class="btn-primary" style="font-size:0.8rem; background:#444;" onclick="TutorialSystem.prev()">${i18n.t('tuto_btn_prev')}</button>
-                        <button class="btn-primary" style="font-size:0.8rem;" onclick="TutorialSystem.next()">${i18n.t('tuto_btn_next')}</button>
-                    </div>
-                </div>
+                <h3 style="color:var(--accent-gold);">${i18n.t('tuto_ach_title')}</h3>
+                <p>${i18n.t('tuto_ach_msg')}</p>
+                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">${i18n.t('tuto_btn_next')}</button>
             `
         },
         {
@@ -4048,14 +4027,9 @@ const TutorialSystem = {
             target: '#btn-open-wrapped',
             position: 'top',
             message: () => `
-                <div style="text-align:center;">
-                    <h3 style="color:var(--accent-gold);">${i18n.t('wrapped_title')}</h3>
-                    <p>${i18n.t('tuto_wrapped_msg')}</p>
-                    <div class="mt-15" style="display:flex; gap:10px; justify-content:center;">
-                        <button class="btn-primary" style="font-size:0.8rem; background:#444;" onclick="TutorialSystem.prev()">${i18n.t('tuto_btn_prev')}</button>
-                        <button class="btn-primary" style="font-size:0.8rem;" onclick="TutorialSystem.finish()">${i18n.t('tuto_btn_finish')}</button>
-                    </div>
-                </div>
+                <h3 style="color:var(--accent-gold);">${i18n.t('wrapped_title')}</h3>
+                <p>${i18n.t('tuto_wrapped_msg')}</p>
+                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">${i18n.t('tuto_btn_next')}</button>
             `
         },
         // --- SETTINGS ---
@@ -4146,23 +4120,56 @@ const TutorialSystem = {
             message: () => `
                 <div style="font-size:2rem; margin-bottom:10px;">🩸</div>
                 <h3 style="color:var(--accent-gold); margin-bottom:10px;">${i18n.t('tuto_bac_config_title')}</h3>
-                <p style="margin-bottom:15px;">${i18n.t('tuto_bac_config_msg')}</p>
-                <div style="display:flex; gap:10px; margin-bottom:15px; text-align:left;">
+                <p style="margin-bottom:12px; font-size:0.85rem;">${i18n.t('tuto_bac_config_msg')}</p>
+                <div style="display:flex; gap:8px; margin-bottom:10px; text-align:left;">
                     <div style="flex:1;">
-                        <label style="font-size:0.75rem; color:#888; display:block; margin-bottom:4px;">${i18n.t('settings_weight')} (kg)</label>
-                        <input type="number" id="tuto-bac-weight" class="form-input" value="${Storage.getPreference('bac_weight', 70)}" min="30" max="200" style="padding:6px; font-size:0.9rem; width:100%;">
+                        <label style="font-size:0.7rem; color:#888; display:block; margin-bottom:3px;">${i18n.t('settings_weight')} (kg)</label>
+                        <input type="number" id="tuto-bac-weight" class="form-input" value="${Storage.getPreference('bac_weight', 70)}" min="30" max="200" style="padding:5px; font-size:0.85rem; width:100%;">
                     </div>
                     <div style="flex:1;">
-                        <label style="font-size:0.75rem; color:#888; display:block; margin-bottom:4px;">${i18n.t('settings_gender')}</label>
-                        <select id="tuto-bac-gender" class="form-select" style="padding:6px; font-size:0.9rem; width:100%;">
+                        <label style="font-size:0.7rem; color:#888; display:block; margin-bottom:3px;">${i18n.t('settings_gender')}</label>
+                        <select id="tuto-bac-gender" class="form-select" style="padding:5px; font-size:0.85rem; width:100%;">
                             <option value="M" ${Storage.getPreference('bac_gender', 'M') === 'M' ? 'selected' : ''}>${i18n.t('settings_male')}</option>
                             <option value="F" ${Storage.getPreference('bac_gender', 'M') === 'F' ? 'selected' : ''}>${i18n.t('settings_female')}</option>
                             <option value="X" ${Storage.getPreference('bac_gender', 'M') === 'X' ? 'selected' : ''}>${i18n.t('settings_not_specified')}</option>
                         </select>
                     </div>
                 </div>
+                <div style="display:flex; gap:8px; margin-bottom:12px; text-align:left;">
+                    <div style="flex:1;">
+                        <label style="font-size:0.7rem; color:#888; display:block; margin-bottom:3px;">${i18n.t('tuto_bac_country_label')}</label>
+                        <select id="tuto-bac-country" class="form-select" style="padding:5px; font-size:0.85rem; width:100%;">
+                            <option value="BE" ${Storage.getPreference('bac_country', 'BE') === 'BE' ? 'selected' : ''}>🇧🇪 ${i18n.t('country_be')}</option>
+                            <option value="FR" ${Storage.getPreference('bac_country', 'BE') === 'FR' ? 'selected' : ''}>🇫🇷 ${i18n.t('country_fr')}</option>
+                            <option value="DE" ${Storage.getPreference('bac_country', 'BE') === 'DE' ? 'selected' : ''}>🇩🇪 ${i18n.t('country_de')}</option>
+                            <option value="NL" ${Storage.getPreference('bac_country', 'BE') === 'NL' ? 'selected' : ''}>🇳🇱 ${i18n.t('country_nl')}</option>
+                            <option value="US" ${Storage.getPreference('bac_country', 'BE') === 'US' ? 'selected' : ''}>🇺🇸 ${i18n.t('country_us')}</option>
+                            <option value="CO" ${Storage.getPreference('bac_country', 'BE') === 'CO' ? 'selected' : ''}>🇨🇴 ${i18n.t('country_co')}</option>
+                        </select>
+                    </div>
+                    <div style="flex:1;">
+                        <label style="font-size:0.7rem; color:#888; display:block; margin-bottom:3px;">${i18n.t('tuto_bac_vehicle_label')}</label>
+                        <select id="tuto-bac-vehicle" class="form-select" style="padding:5px; font-size:0.85rem; width:100%;">
+                            <option value="voiture" ${Storage.getPreference('bac_vehicle', 'voiture') === 'voiture' ? 'selected' : ''}>🚗 ${i18n.t('settings_bac_car')}</option>
+                            <option value="moto" ${Storage.getPreference('bac_vehicle', 'voiture') === 'moto' ? 'selected' : ''}>🏍️ ${i18n.t('settings_bac_moto')}</option>
+                            <option value="velo" ${Storage.getPreference('bac_vehicle', 'voiture') === 'velo' ? 'selected' : ''}>🚲 ${i18n.t('settings_bac_bike')}</option>
+                            <option value="pieton" ${Storage.getPreference('bac_vehicle', 'voiture') === 'pieton' ? 'selected' : ''}>🚶 ${i18n.t('settings_bac_pedestrian')}</option>
+                            <option value="ne_conduit_pas" ${Storage.getPreference('bac_vehicle', 'voiture') === 'ne_conduit_pas' ? 'selected' : ''}>❌ ${i18n.t('settings_bac_none')}</option>
+                        </select>
+                    </div>
+                </div>
                 <button class="btn-primary" style="width:100%; margin-bottom:8px;" onclick="TutorialSystem.saveBac()">${i18n.t('tuto_btn_save')}</button>
                 <div style="font-size:0.75rem; color:#888; text-decoration:underline; cursor:pointer;" onclick="TutorialSystem.skipBac()">${i18n.t('tuto_btn_skip_bac')}</div>
+            `
+        },
+        {
+            id: 'widget-info',
+            target: null,
+            message: () => `
+                <div style="font-size:2rem; margin-bottom:10px;">📱</div>
+                <h3 style="color:var(--accent-gold); margin-bottom:10px;">${i18n.t('tuto_widget_title')}</h3>
+                <p>${i18n.t('tuto_widget_msg')}</p>
+                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">${i18n.t('tuto_btn_next')}</button>
             `
         },
         {
@@ -4239,8 +4246,12 @@ const TutorialSystem = {
     saveBac() {
         const w = document.getElementById('tuto-bac-weight');
         const g = document.getElementById('tuto-bac-gender');
+        const c = document.getElementById('tuto-bac-country');
+        const v = document.getElementById('tuto-bac-vehicle');
         if (w) Storage.savePreference('bac_weight', parseInt(w.value) || 70);
         if (g) Storage.savePreference('bac_gender', g.value);
+        if (c) Storage.savePreference('bac_country', c.value);
+        if (v) Storage.savePreference('bac_vehicle', v.value);
         Storage.savePreference('bac_enabled', true);
         showToast(i18n.t('toast_bac_on'), 'success');
         this.next();

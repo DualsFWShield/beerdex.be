@@ -395,6 +395,7 @@ export function getBACStatus(simOverride = null) {
     const vehicle = Storage.getPreference('bac_vehicle', 'voiture');
     const isDriver = (vehicle !== 'pieton' && vehicle !== 'ne_conduit_pas' && vehicle !== 'none' && vehicle !== 'pedestrian');
     const isBike = vehicle === 'velo' || vehicle === 'moto';
+    const isBicycle = vehicle === 'velo';
 
     const rules = getCurrentRules();
     const sanctionLimit = rules.sanctionThreshold;
@@ -440,21 +441,51 @@ export function getBACStatus(simOverride = null) {
             canDrive: true
         };
     } else if (statusBac < withdrawLimit) {
+        // --- WARNING LEVEL: vehicle-specific messages ---
+        let warnSubtitle, warnMessage;
+        if (!isDriver) {
+            warnSubtitle = i18n.t('bac_subtitle_legal_over');
+            warnMessage = i18n.t('bac_level_warning_msg_other', { bac: b });
+        } else if (isBicycle) {
+            warnSubtitle = i18n.t('bac_bicycle_fine');
+            warnMessage = i18n.t('bac_level_warning_msg_bike', { bac: b, wait: timeToWait, time: timeAt });
+        } else if (isBike) {
+            warnSubtitle = i18n.t('bac_bike_fine');
+            warnMessage = i18n.t('bac_level_warning_msg_moto', { bac: b, wait: timeToWait, time: timeAt });
+        } else {
+            warnSubtitle = i18n.t('bac_subtitle_fine');
+            warnMessage = i18n.t('bac_level_warning_msg_drive', { bac: b, wait: timeToWait, time: timeAt });
+        }
         return {
             ...baseStatus,
             level: 'warning', color: '#FF9800', title: i18n.t('bac_level_warning_title'),
-            subtitle: isDriver ? (isBike ? i18n.t('bac_bike_fine') : i18n.t('bac_subtitle_fine')) : i18n.t('bac_subtitle_legal_over'),
+            subtitle: warnSubtitle,
             symptoms: '',
-            message: isDriver ? i18n.t('bac_level_warning_msg_drive', { bac: b, wait: timeToWait, time: timeAt }) : i18n.t('bac_level_warning_msg_other', { bac: b }),
+            message: warnMessage,
             canDrive: false
         };
     } else if (statusBac < 1.5) {
+        // --- DANGER LEVEL: vehicle-specific messages ---
+        let dangerSubtitle, dangerMessage;
+        if (!isDriver) {
+            dangerSubtitle = i18n.t('bac_subtitle_danger');
+            dangerMessage = i18n.t('bac_level_danger_msg_other', { bac: b });
+        } else if (isBicycle) {
+            dangerSubtitle = i18n.t('bac_bicycle_withdrawal');
+            dangerMessage = i18n.t('bac_level_danger_msg_bike', { bac: b, wait: timeToWait });
+        } else if (isBike) {
+            dangerSubtitle = i18n.t('bac_moto_withdrawal');
+            dangerMessage = i18n.t('bac_level_danger_msg_moto', { bac: b, wait: timeToWait });
+        } else {
+            dangerSubtitle = i18n.t('bac_subtitle_withdrawal');
+            dangerMessage = i18n.t('bac_level_danger_msg_drive', { bac: b, wait: timeToWait });
+        }
         return {
             ...baseStatus,
             level: 'danger', color: '#F44336', title: i18n.t('bac_level_danger_title'),
-            subtitle: isDriver ? i18n.t('bac_subtitle_withdrawal') : i18n.t('bac_subtitle_danger'),
+            subtitle: dangerSubtitle,
             symptoms: '',
-            message: isDriver ? i18n.t('bac_level_danger_msg_drive', { bac: b, wait: timeToWait }) : i18n.t('bac_level_danger_msg_other', { bac: b }),
+            message: dangerMessage,
             canDrive: false
         };
     } else if (statusBac < 3.0) {
