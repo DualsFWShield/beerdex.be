@@ -7,7 +7,8 @@ import { i18n } from './i18n.js';
 
 // Load branding assets
 const LOGO_PATH = "icons/logo-bnr.png";
-const FOAM_PATH = "images/foam.png";
+const FOAM_LOCAL = "images/foam.png";
+const FOAM_REMOTE = "https://beerdex.be/images/foam.png";
 
 /**
  * Generates a "Polaroid style" image for a specific beer review
@@ -93,14 +94,18 @@ export async function generateBeerCard(beer, rating, comment) {
         ctx.fill();
     }
 
-    // 3. Beer Foam (Image)
+    // 3. Beer Foam (Image) — try local first, then remote
     try {
-        const foamImg = await loadImage(FOAM_PATH);
-        // Draw at top, full width, auto height driven by aspect ratio
+        let foamImg;
+        try {
+            foamImg = await loadImage(FOAM_LOCAL);
+        } catch (_) {
+            foamImg = await loadImage(FOAM_REMOTE);
+        }
         const foamH = width * (foamImg.height / foamImg.width);
-        ctx.drawImage(foamImg, 0, -5, width, foamH); // -5 to cover very top edge edge cases
+        ctx.drawImage(foamImg, 0, -5, width, foamH);
     } catch (e) {
-        console.warn("Foam image not found, skipping");
+        console.warn("Foam image not available, skipping");
     }
 
     ctx.restore();
