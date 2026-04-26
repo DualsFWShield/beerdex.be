@@ -5254,7 +5254,7 @@ export function applyRarityAnimations(container) {
 // Patchnotes System                        //
 // ======================================= //
 
-const CURRENT_VERSION = '2.5.0';
+const CURRENT_VERSION = '2.8.0';
 
 
 export function checkPatchnotes() {
