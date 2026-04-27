@@ -193,10 +193,33 @@ function focusTrap(e) {
     }
 }
 
-export function closeModal() {
+let isClosingFromPopState = false;
+
+window.addEventListener('popstate', (e) => {
+    // If user presses native back button while a modal is open
+    if (document.body.classList.contains('modal-open')) {
+        if (isClosingFromPopState) {
+            // We triggered this back via the UI close button.
+            isClosingFromPopState = false;
+        } else {
+            // User triggered native back, close the modal without pushing another back
+            closeModal(true);
+        }
+    }
+});
+
+export function closeModal(fromPopState = false) {
+    const isNativeBack = fromPopState === true; // Strict boolean check to avoid event objects
+
     if (modalCleanup) {
         modalCleanup();
         modalCleanup = null;
+    }
+    
+    // Manage history stack to keep it clean
+    if (!isNativeBack && window.history.state && window.history.state.isModal) {
+        isClosingFromPopState = true;
+        window.history.back();
     }
     
     document.removeEventListener('keydown', focusTrap);
@@ -204,6 +227,10 @@ export function closeModal() {
     modalContainer.classList.add('hidden');
     modalContainer.setAttribute('aria-hidden', 'true');
     modalContainer.innerHTML = '';
+    
+    // Notify other detached modals (like Wrapped/Share overlays) to close
+    window.dispatchEvent(new Event('app-close-modals'));
+    
     document.body.classList.remove('modal-open');
     
     if (previousFocusElement) {
@@ -220,6 +247,9 @@ function openModal(content) {
     modalContainer.classList.remove('hidden');
     modalContainer.setAttribute('aria-hidden', 'false');
     document.body.classList.add('modal-open');
+
+    // Add state to browser history
+    window.history.pushState({ isModal: true, timestamp: Date.now() }, '');
 
     // Close on click outside
     modalContainer.onclick = (e) => {
@@ -842,15 +872,54 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
             const driveInfo = BAC.getSpeculativeDriveInfo(beer.volume, beer.alcohol);
             if (driveInfo) {
                 const timeHtml = driveInfo.timeStr ? `<span class="bac-time"> · ${driveInfo.timeStr}</span>` : '';
-                bacBadgeHtml = `<div class="bac-speculative-badge" style="color:${driveInfo.color}; border-color:${driveInfo.color}33;">
-                    <span class="bac-icon">${driveInfo.icon}</span>
-                    <span>+${driveInfo.delta.toFixed(2)}</span>${timeHtml}
+                bacBadgeHtml = `<div class="beer-card-bac-row" style="display:flex; justify-content:center; margin-top:8px;">
+                    <div class="bac-speculative-badge" style="color:${driveInfo.color}; border-color:${driveInfo.color}33; display:inline-flex;">
+                        <span class="bac-icon">${driveInfo.icon}</span>
+                        <span>+${driveInfo.delta.toFixed(2)}</span>${timeHtml}
+                    </div>
                 </div>`;
             }
         }
+        // Card Stats Overlay
+        let cardStatsHtml = '';
+        if (isDrunk) {
+            const showCount = Storage.getPreference('card_stat_count', false);
+            const showVolume = Storage.getPreference('card_stat_volume', false);
+            if (showCount || showVolume) {
+                let statsParts = [];
+                if (showCount) statsParts.push(`${u.count}x`);
+                if (showVolume) {
+                    let totalMl = 0;
+                    if (u.history) {
+                        totalMl = u.history.reduce((sum, h) => sum + (h.volume || 0), 0);
+                    } else if (beer.volume) {
+                        // Fallback: parse beer.volume * count
+                        const parsed = Storage.parseVolumeToMl ? Storage.parseVolumeToMl(beer.volume) : 330;
+                        totalMl = parsed * u.count;
+                    }
+                    if (totalMl > 0) {
+                        if (totalMl >= 1000) statsParts.push(`${(totalMl/1000).toFixed(1)}L`);
+                        else statsParts.push(`${totalMl}ml`);
+                    }
+                }
+                if (statsParts.length > 0) {
+                    cardStatsHtml = `<div class="bac-speculative-badge" style="color:#ddd; border-color:rgba(255,255,255,0.08); font-weight:normal; display:inline-flex;">
+                        <span>${statsParts.join(' · ')}</span>
+                    </div>`;
+                }
+            }
+        }
+
+        let badgesContainerHtml = '';
+        if (cardStatsHtml) {
+            badgesContainerHtml = `<div class="card-badges-left">
+                ${cardStatsHtml}
+            </div>`;
+        }
 
         card.innerHTML = `
-            ${isFavorite ? '<div style="position:absolute; top:5px; left:5px; z-index:2; font-size:1.2rem; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));">⭐</div>' : ''}
+            ${badgesContainerHtml}
+            ${isFavorite ? '<div style="position:absolute; top:5px; right:5px; z-index:2; font-size:1.2rem; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));">⭐</div>' : ''}
             <svg class="check-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                 <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
@@ -862,11 +931,11 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
             <div class="beer-info">
                 <h3 class="beer-title">${beer.title}</h3>
                 <p class="beer-brewery">${beer.brewery}</p>
-                <div style="display:flex; gap:5px; justify-content:center; margin-top:5px; color:#aaa; flex-wrap:wrap;">
+                <div class="beer-card-stats-row" style="display:flex; gap:5px; justify-content:center; margin-top:5px; color:#aaa; flex-wrap:wrap;">
                     ${abv} ${vol} ${typeBadge}
                 </div>
+                ${bacBadgeHtml}
             </div>
-            ${bacBadgeHtml}
         `;
 
         grid.appendChild(card);
@@ -1413,12 +1482,20 @@ export function renderBeerDetail(beer, onSave) {
     const consumptionWrapper = document.createElement('div');
     consumptionWrapper.style.cssText = 'background:var(--bg-card); padding:15px; border-radius:12px; margin-bottom:20px; text-align:center;';
 
-    // Default Volume logic
+    // Default Volume logic: always use the beer's own volume
     let defaultVol = beer.volume || '33cl';
+    // For kegs (>1L), default to 50cl since nobody drinks 20L at once
+    const volStr = defaultVol.toLowerCase();
+    const numericVol = parseFloat(volStr) || 0;
+    const isKegVol = volStr.includes('fut') || volStr.includes('fût') ||
+        (volStr.includes('l') && !volStr.includes('cl') && !volStr.includes('ml') && numericVol >= 1) ||
+        (volStr.includes('ml') && numericVol >= 1000);
+    if (isKegVol) defaultVol = '50cl';
     // Clean string for display
     defaultVol = defaultVol.replace('.', ',');
 
-    const lastVolume = Storage.getPreference('last_volume_preset', defaultVol);
+    // Always use the beer's volume, not the last user selection
+    const lastVolume = defaultVol;
 
     consumptionWrapper.innerHTML = `
                 <h3 style="margin-bottom:10px; font-size:1rem;">${i18n.t('detail_consumption_title')}</h3>
@@ -2545,10 +2622,12 @@ export function renderStats(allBeers, userData, container) {
                         </div>
                     </div>
 
-                    <div style="margin-top: 25px; padding: 15px; background: #222; border-radius: 12px; border: 1px solid #333;">
-                        <span style="font-size: 0.8rem; color: #888; text-transform: uppercase;">${i18n.t('stats_volume_total')}</span>
-                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--text-primary); margin-top: 5px;">
-                            ${totalDrunkCount} <span style="font-size: 1rem; color: #666; font-weight: normal;">${i18n.t('stats_beers_count')}</span>
+                    <div style="margin-top: 25px; padding: 20px; background: linear-gradient(135deg, rgba(30,30,30,0.8), rgba(15,15,15,0.9)); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.3); text-align: center;">
+                        <div style="font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
+                            ${i18n.t('stats_volume_total')} 
+                        </div>
+                        <div style="font-size: 2.2rem; font-family: 'Russo One', sans-serif; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                            ${totalDrunkCount} <span style="font-size: 1rem; color: #888; font-family: sans-serif; font-weight: normal;">${i18n.t('stats_beers_count')}</span>
                         </div>
                     </div>
 
@@ -3167,6 +3246,33 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                 </div>
             </div>
 
+            <!-- 2b. Card Stats Overlay -->
+            <div class="stat-card mt-20">
+                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;" data-i18n="settings_card_stats_title">${i18n.t('settings_card_stats_title')}</h4>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <div style="text-align:left;">
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_card_stats_count_title">${i18n.t('settings_card_stats_count_title')}</strong>
+                        <span style="font-size:0.8rem; color:#888;" data-i18n="settings_card_stats_count_desc">${i18n.t('settings_card_stats_count_desc')}</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-card-stat-count" ${Storage.getPreference('card_stat_count', false) ? 'checked' : ''}>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="text-align:left;">
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_card_stats_volume_title">${i18n.t('settings_card_stats_volume_title')}</strong>
+                        <span style="font-size:0.8rem; color:#888;" data-i18n="settings_card_stats_volume_desc">${i18n.t('settings_card_stats_volume_desc')}</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-card-stat-volume" ${Storage.getPreference('card_stat_volume', false) ? 'checked' : ''}>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+            </div>
+
             <!-- 3. Alcoolémie section moved to top -->
 
             <!-- 4. Données -->
@@ -3374,6 +3480,22 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     if (checkAnimOnce) {
         checkAnimOnce.onchange = (e) => {
             Storage.savePreference('anim_only_once', e.target.checked);
+            showToast(i18n.t('toast_preference_saved'));
+        };
+    }
+
+    // Card Stats Overlay
+    const toggleCardStatCount = container.querySelector('#toggle-card-stat-count');
+    if (toggleCardStatCount) {
+        toggleCardStatCount.onchange = (e) => {
+            Storage.savePreference('card_stat_count', e.target.checked);
+            showToast(i18n.t('toast_preference_saved'));
+        };
+    }
+    const toggleCardStatVolume = container.querySelector('#toggle-card-stat-volume');
+    if (toggleCardStatVolume) {
+        toggleCardStatVolume.onchange = (e) => {
+            Storage.savePreference('card_stat_volume', e.target.checked);
             showToast(i18n.t('toast_preference_saved'));
         };
     }
@@ -3804,10 +3926,10 @@ function renderAdvancedStats(allBeers, userData) {
         const val = (totalVolumeMl / c.vol).toFixed(1);
         if (parseFloat(val) >= 1) {
             compHTML += `
-        <div style="background:var(--bg-card); padding:10px; border-radius:12px; font-size:0.85rem; color:#888; display:flex; gap:10px; align-items:center;">
-                 <span style="font-size:1.2rem;">${c.icon}</span>
-                 <span><strong>${val}</strong> ${c.label}</span>
-             </div>`;
+                <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); padding:6px 12px; border-radius:20px; font-size:0.85rem; color:#ddd; display:inline-flex; gap:6px; align-items:center; white-space:nowrap;">
+                    <span style="font-size:1.1rem; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));">${c.icon}</span>
+                    <span><strong style="color:var(--accent-gold);">${val}</strong> ${c.label}</span>
+                </div>`;
         }
     });
 
@@ -3826,46 +3948,66 @@ function renderAdvancedStats(allBeers, userData) {
         const val = (totalAlcoholMl / c.pure).toFixed(0);
         if (parseInt(val) > 0) {
             alcHTML += `
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; padding:5px 0;">
-                <span style="color:#aaa;">${c.icon} ${c.label}</span>
-                <strong style="color:var(--text-primary);">${val}</strong>
-            </div>`;
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.05); padding:10px 5px;">
+                    <span style="color:#bbb; font-size:0.9rem; display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:1.1rem; background:rgba(255,255,255,0.05); width:32px; height:32px; display:flex; justify-content:center; align-items:center; border-radius:8px;">${c.icon}</span> 
+                        ${c.label}
+                    </span>
+                    <strong style="color:var(--accent-gold); font-size:1.1rem; text-shadow:0 0 10px rgba(255,192,0,0.3);">${val}</strong>
+                </div>`;
         }
     });
 
     // If nothing matches (too small volume), show at least one small one
     if (compHTML === '' && totalVolumeMl > 0) {
         compHTML = `
-        <div class="comp-item">
-                 <span style="font-size:1.2rem;">🍺</span>
-                 <span><strong>${(totalVolumeMl / 500).toFixed(2)}</strong> ${i18n.t('stats_label_pints')}</span>
-             </div>`;
+                <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); padding:6px 12px; border-radius:20px; font-size:0.85rem; color:#ddd; display:inline-flex; gap:6px; align-items:center;">
+                    <span style="font-size:1.1rem; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));">🍺</span>
+                    <span><strong style="color:var(--accent-gold);">${(totalVolumeMl / 500).toFixed(2)}</strong> ${i18n.t('stats_label_pints')}</span>
+                </div>`;
     }
 
     return `
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px;">
-                    <div class="stat-card">
-                        <div class="stat-value">${totalLiters} L</div>
-                        <div class="stat-label">${i18n.t('stats_volume_total')}</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${alcoholLiters} L</div>
-                        <div class="stat-label">${i18n.t('stats_pure_alcohol')}</div>
-                    </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px;">
+            <div style="padding:15px; background:linear-gradient(135deg, rgba(30,30,30,0.8), rgba(15,15,15,0.9)); border-radius:12px; border:1px solid rgba(255,255,255,0.05); box-shadow:0 4px 15px rgba(0,0,0,0.3); text-align:center; display:flex; flex-direction:column; justify-content:center;">
+                <div style="font-size:1.8rem; font-family:'Russo One', sans-serif; color:#fff; text-shadow:0 2px 4px rgba(0,0,0,0.5);">${totalLiters} L</div>
+                <div style="font-size:0.75rem; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-top:5px;">${i18n.t('stats_volume_total')}</div>
+            </div>
+            <div style="padding:15px; background:linear-gradient(135deg, rgba(30,30,30,0.8), rgba(15,15,15,0.9)); border-radius:12px; border:1px solid rgba(255,255,255,0.05); box-shadow:0 4px 15px rgba(0,0,0,0.3); text-align:center; display:flex; flex-direction:column; justify-content:center;">
+                <div style="font-size:1.8rem; font-family:'Russo One', sans-serif; color:#fff; text-shadow:0 2px 4px rgba(0,0,0,0.5);">${alcoholLiters} L</div>
+                <div style="font-size:0.75rem; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-top:5px;">${i18n.t('stats_pure_alcohol')}</div>
+            </div>
+        </div>
+
+        <div class="stat-card mt-20" style="padding:0; overflow:hidden; border:1px solid rgba(255,192,0,0.15); background:linear-gradient(180deg, rgba(20,20,20,0.6) 0%, rgba(10,10,10,0.8) 100%);">
+            <div style="background: linear-gradient(90deg, rgba(255,192,0,0.1), transparent); padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <h4 style="color:var(--accent-gold); margin:0; display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:1.2rem; filter:drop-shadow(0 2px 4px rgba(255,192,0,0.3));">⚖️</span> 
+                    ${i18n.t('stats_equiv_alcohol').replace('Alcohol Equivalents', 'Equivalences').replace("Équivalences d'alcool", 'Équivalences')}
+                </h4>
+                <p style="font-size:0.75rem; color:#888; margin:5px 0 0 0;">${i18n.t('stats_equiv_desc')}</p>
+            </div>
+            
+            <div style="padding: 15px;">
+                <h5 style="color:#888; font-size:0.75rem; margin-bottom:12px; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center; gap:8px;">
+                    <span style="flex:1; height:1px; background:rgba(255,255,255,0.1);"></span>
+                    ${i18n.t('stats_equiv_volume')}
+                    <span style="flex:1; height:1px; background:rgba(255,255,255,0.1);"></span>
+                </h5>
+                <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin-bottom: 25px;">
+                    ${compHTML}
                 </div>
 
-                <div class="mt-20">
-                    <h4 class="ach-category-title text-center">${i18n.t('stats_equiv_volume')}</h4>
-                    <div class="ach-grid" style="grid-template-columns:1fr 1fr;">
-                        ${compHTML}
-                    </div>
-                </div>
-
-                <div class="stat-card mt-20">
-                    <h4 class="text-center" style="color:var(--danger); font-size:0.9rem; margin-bottom:10px;">${i18n.t('stats_equiv_alcohol')}</h4>
-                    <p class="text-center" style="font-size:0.75rem; color:#888; margin-bottom:10px;">${i18n.t('stats_equiv_desc')}</p>
+                <h5 style="color:#888; font-size:0.75rem; margin-bottom:12px; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center; gap:8px;">
+                    <span style="flex:1; height:1px; background:rgba(255,255,255,0.1);"></span>
+                    ${i18n.t('stats_equiv_alcohol')}
+                    <span style="flex:1; height:1px; background:rgba(255,255,255,0.1);"></span>
+                </h5>
+                <div style="background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid rgba(255,255,255,0.03); padding: 5px 10px;">
                     ${alcHTML}
                 </div>
+            </div>
+        </div>
     `;
 }
 

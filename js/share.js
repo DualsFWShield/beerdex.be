@@ -558,6 +558,16 @@ export function createFullscreenPreview(blob, apiLink) {
         overlay.appendChild(linkContainer);
     }
 
+    // Close logic extracted for reusability
+    const closePreview = () => {
+        if (document.body.contains(overlay)) {
+            document.body.removeChild(overlay);
+        }
+        document.body.classList.remove('modal-open');
+        URL.revokeObjectURL(url);
+        window.removeEventListener('app-close-modals', closePreview);
+    };
+
     // Close Hint
     const hint = document.createElement('div');
     hint.innerHTML = `<div style="font-size:2rem; margin-bottom:10px;">✖️</div>${i18n.t('btn_close')}`;
@@ -565,12 +575,22 @@ export function createFullscreenPreview(blob, apiLink) {
     hint.style.marginTop = '20px';
     hint.style.cursor = 'pointer';
     hint.onclick = () => {
-        document.body.removeChild(overlay);
-        URL.revokeObjectURL(url);
+        if (window.history.state && window.history.state.isModal) {
+            window.history.back();
+        } else {
+            closePreview();
+        }
     };
 
     overlay.appendChild(hint);
     document.body.appendChild(overlay);
+    document.body.classList.add('modal-open');
+    
+    // Add state to browser history
+    window.history.pushState({ isModal: true, timestamp: Date.now() }, '');
+    
+    // Support native back button via app.js
+    window.addEventListener('app-close-modals', closePreview);
 }
 
 // --- Helpers ---

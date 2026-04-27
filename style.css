@@ -2193,378 +2193,80 @@ body.modal-open {
     opacity: 0;
 }
 
-/* --- WRAPPED STORY --- */
-.story-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 10000;
-    display: flex;
-    flex-direction: column;
-    color: #fff;
-    font-family: 'Inter', sans-serif;
-}
-
-.story-overlay.fade-out {
-    opacity: 0;
-    transition: opacity 0.3s;
-}
-
-.story-progress-container {
-    display: flex;
-    gap: 4px;
-    padding: 10px;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: 10002;
-}
-
-.story-progress-bar {
-    flex: 1;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 2px;
-    overflow: hidden;
-}
-
-.story-progress-fill {
-    width: 0%;
-    height: 100%;
-    background: #fff;
-    border-radius: 2px;
-}
-
-.story-close-btn {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 2rem;
-    z-index: 10003;
-    cursor: pointer;
-    opacity: 0.7;
-}
-
-.story-content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 20px;
-    z-index: 10001;
-}
-
-.story-tap-left,
-.story-tap-right {
-    position: absolute;
-    top: 0;
-    height: 100%;
-    width: 30%;
-    z-index: 10001;
-    /* Above content? No, invisible overlay for nav */
-}
-
-.story-tap-left {
-    left: 0;
-}
-
-.story-tap-right {
-    right: 0;
-    width: 70%;
-    /* Give more space to 'Next' */
-}
-
-/* Story Typography */
-.story-title {
-    font-family: 'Russo One', sans-serif;
-    font-size: 3rem;
-    line-height: 1.1;
-    margin-bottom: 10px;
-    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-    color: var(--accent-gold);
-}
-
-.story-subtitle {
-    font-size: 1.2rem;
-    color: #ddd;
-}
-
-.story-stat-label {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--accent-gold);
-    margin-bottom: 20px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-}
-
-.story-big-number {
-    font-size: 5rem;
-    font-weight: 900;
-    font-family: 'Russo One', sans-serif;
-    background: -webkit-linear-gradient(#fff, #aaa);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 10px;
-}
-
-.story-big-text {
-    font-size: 3rem;
-    font-weight: bold;
-    font-family: 'Russo One', sans-serif;
-    margin-bottom: 20px;
-}
-
-.story-beer-img {
-    width: 200px;
-    height: 200px;
-    object-fit: contain;
-    margin-bottom: 20px;
-    border-radius: 50%;
-    border: 4px solid var(--accent-gold);
-    background: #fff;
-    padding: 10px;
-}
-
-.story-beer-name {
-    font-size: 2rem;
-    font-weight: bold;
-    margin-bottom: 5px;
-    color: #fff;
-}
+/* --- WRAPPED STORY --- Moved to css/wrapped.css --- */
 
 /* Animations */
 @keyframes pop-in {
-    0% {
-        transform: scale(0.5);
-        opacity: 0;
-    }
-
-    80% {
-        transform: scale(1.1);
-    }
-
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
+    0% { transform: scale(0.5); opacity: 0; }
+    80% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
 }
-
 @keyframes slide-up {
-    0% {
-        transform: translateY(50px);
-        opacity: 0;
-    }
-
-    100% {
-        transform: translateY(0);
-        opacity: 1;
-    }
+    0% { transform: translateY(50px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
 }
-
 @keyframes fade-in {
-    0% {
-        opacity: 0;
-    }
-
-    100% {
-        opacity: 1;
-    }
+    0% { opacity: 0; }
+    100% { opacity: 1; }
 }
-
 @keyframes scale-up {
-    0% {
-        transform: scale(0.8);
-        opacity: 0;
-    }
-
-    100% {
-        transform: scale(1);
-        opacity: 1;
-    }
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
 }
-
 @keyframes rotate-in {
-    0% {
-        transform: rotate(-10deg) scale(0.8);
-        opacity: 0;
-    }
-
-    100% {
-        transform: rotate(0) scale(1);
-        opacity: 1;
-    }
+    0% { transform: rotate(-10deg) scale(0.8); opacity: 0; }
+    100% { transform: rotate(0) scale(1); opacity: 1; }
 }
-
 @keyframes bounce {
-
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-
-    50% {
-        transform: translateY(-20px);
-    }
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
 }
 
-.animate-pop-in {
-    animation: pop-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    opacity: 0;
-}
-
-.animate-slide-up {
-    animation: slide-up 0.6s ease-out forwards;
-    opacity: 0;
-}
-
-.animate-fade-in {
-    animation: fade-in 1s ease-out forwards;
-    opacity: 0;
-}
-
-.animate-scale-up {
-    animation: scale-up 0.5s ease-out forwards;
-    opacity: 0;
-}
-
-.animate-rotate-in {
-    animation: rotate-in 0.7s ease-out forwards;
-    opacity: 0;
-}
-
-.animate-bounce {
-    animation: bounce 2s infinite;
-}
-
-/* New Premium Wrapped Styles */
-.story-bento-card {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 24px;
-    padding: 25px;
-    margin-top: 20px;
-    width: 85%;
-    max-width: 320px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
-.story-glow-bg {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 280px;
-    height: 280px;
-    background: radial-gradient(circle, rgba(255, 192, 0, 0.2) 0%, transparent 70%);
-    z-index: -1;
-    border-radius: 50%;
-}
-
-.story-hero-img {
-    width: 240px;
-    height: 240px;
-    object-fit: contain;
-    filter: drop-shadow(0 0 20px rgba(0,0,0,0.5));
-    margin-bottom: 30px;
-}
-
-.story-stat-sub {
-    font-size: 0.9rem;
-    color: #aaa;
-    margin-top: 5px;
-}
-
-.story-fun-fact {
-    font-weight: bold;
-    font-size: 1.1rem;
-    margin-top: 15px;
-}
+.animate-pop-in { animation: pop-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; opacity: 0; }
+.animate-slide-up { animation: slide-up 0.6s ease-out forwards; opacity: 0; }
+.animate-fade-in { animation: fade-in 1s ease-out forwards; opacity: 0; }
+.animate-scale-up { animation: scale-up 0.5s ease-out forwards; opacity: 0; }
+.animate-rotate-in { animation: rotate-in 0.7s ease-out forwards; opacity: 0; }
+.animate-bounce { animation: bounce 2s infinite; }
 
 /* Stat Breakdown Badges */
-.stat-badge {
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-weight: normal;
-}
-
-.stat-badge-json {
-    color: #888;
-    background: rgba(255,255,255,0.05);
-}
+.stat-badge { padding: 2px 8px; border-radius: 10px; font-weight: normal; }
+.stat-badge-json { color: #888; background: rgba(255,255,255,0.05); }
 .stat-badge-json span { color: #fff; }
-
-.stat-badge-api {
-    color: #2196F3;
-    background: rgba(33, 150, 243, 0.1);
-}
-
-.stat-badge-custom {
-    color: var(--accent-gold);
-    background: rgba(255, 192, 0, 0.1);
-}
+.stat-badge-api { color: #2196F3; background: rgba(33, 150, 243, 0.1); }
+.stat-badge-custom { color: var(--accent-gold); background: rgba(255, 192, 0, 0.1); }
 
 /* --- Chart Styles --- */
-.chart-container {
-    width: 160px;
-    height: 160px;
-    margin: 0 auto;
-    position: relative;
-}
-
+.chart-container { width: 160px; height: 160px; margin: 0 auto; position: relative; }
 .chart-percentage {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 1.8rem;
-    font-weight: bold;
-    color: var(--accent-gold);
-    line-height: 1;
-    text-align: center;
-    width: 100%;
-    pointer-events: none;
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 1.8rem; font-weight: bold; color: var(--accent-gold);
+    line-height: 1; text-align: center; width: 100%; pointer-events: none;
+}
+@media (min-width: 768px) {
+    .chart-container { width: 240px; height: 240px; }
+    .chart-percentage { font-size: 3rem; }
 }
 
+/* --- PC Layout Optimization (Full Width Override) --- */
 @media (min-width: 768px) {
-    .chart-container {
-        width: 240px;
-        height: 240px;
-    }
-
-    .chart-percentage {
-        font-size: 3rem;
-    }
-}
-
-/* --- PC Layout Optimization --- */
-@media (min-width: 768px) {
-
-    /* Widen App */
     #app {
-        max-width: 1200px !important;
-        border-left: 1px solid #222;
-        border-right: 1px solid #222;
-        box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+        max-width: 100% !important;
+        border: none;
+        box-shadow: none;
     }
-
-    /* Responsive Grid */
     .beer-grid {
         grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
+        padding: 0 40px;
     }
-
-    /* Dock Navigation */
+    .search-bar {
+        max-width: 100% !important;
+        left: 0;
+        transform: none;
+        width: 100%;
+        padding: 10px 40px;
+        right: 0;
+    }
     .bottom-nav {
         position: fixed;
         bottom: 20px;
@@ -2576,166 +2278,20 @@ body.modal-open {
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         padding-bottom: 0;
     }
-
-    /* Search Bar Width */
-    .search-bar {
-        max-width: 1200px;
-        left: 50%;
-        transform: translateX(-50%);
-        right: auto;
-        width: 100%;
-    }
-}
-
-/* --- PC Layout Optimization (Full Width Override) --- */
-@media (min-width: 768px) {
-    #app {
-        max-width: 100% !important;
-        border: none;
-        box-shadow: none;
-    }
-
-    .beer-grid {
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
-        padding: 0 40px;
-    }
-
-    .search-bar {
-        max-width: 100% !important;
-        left: 0;
-        transform: none;
-        width: 100%;
-        padding: 10px 40px;
-        right: 0;
-    }
 }
 
 /* --- Stats & Settings Specifics (PC) --- */
 @media (min-width: 768px) {
-
-    /* Center Stats/Settings Content */
     #main-content>.text-center.p-20 {
         max-width: 900px;
         margin: 0 auto;
         display: grid;
         gap: 20px;
     }
-
-    /* Settings Buttons - Prevent Mega Stretch */
-    .btn-primary {
-        max-width: 400px;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    /* Map Aspect Ratio */
-    #beer-map-container svg {
-        max-height: 600px;
-    }
-
-    /* Fix weird left alignment in Settings titles */
-    .stat-card h4 {
-        text-align: center !important;
-    }
-
-    .stat-card {
-        padding: 30px;
-    }
-}
-
-/* Wrapped Story Styles (Appended for Z-Index Fix) */
-.story-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 9999;
-    background: #000;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-.story-content {
-    position: relative;
-    z-index: 20;
-    width: 100%;
-    height: 100%;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    pointer-events: none;
-}
-
-.story-content>* {
-    pointer-events: none;
-}
-
-/* Default text non-clickable */
-.story-content button,
-.story-content a {
-    pointer-events: auto;
-}
-
-/* Buttons clickable */
-.story-tap-left {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 50%;
-    z-index: 10;
-}
-
-.story-tap-right {
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: 50%;
-    z-index: 10;
-}
-
-.story-close-btn {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    z-index: 30;
-    background: none;
-    border: none;
-    font-size: 2rem;
-    color: #fff;
-    cursor: pointer;
-}
-
-.story-progress-container {
-    position: absolute;
-    top: 10px;
-    left: 0;
-    width: 100%;
-    padding: 0 10px;
-    display: flex;
-    gap: 4px;
-    z-index: 30;
-}
-
-.story-progress-bar {
-    flex: 1;
-    height: 3px;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 2px;
-    overflow: hidden;
-}
-
-.story-progress-fill {
-    height: 100%;
-    width: 0%;
-    background: #fff;
-    transition: width 0.1s linear;
+    .btn-primary { max-width: 400px; margin-left: auto; margin-right: auto; }
+    #beer-map-container svg { max-height: 600px; }
+    .stat-card h4 { text-align: center !important; }
+    .stat-card { padding: 30px; }
 }
 
 /* --- Achievement Toast Styling --- */
@@ -3121,6 +2677,11 @@ body.modal-open {
     text-overflow: ellipsis;
 }
 
+.beer-grid.view-list .beer-card-stats-row,
+.beer-grid.view-list .beer-card-bac-row {
+    justify-content: flex-start !important;
+}
+
 .beer-grid.view-list .beer-card .check-icon {
     position: static;
     width: 28px;
@@ -3198,10 +2759,28 @@ body.modal-open {
 /* Speculative BAC Badge on Beer Cards      */
 /* ======================================= */
 
-.bac-speculative-badge {
+.card-badges-left {
     position: absolute;
     top: 6px;
     left: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 5;
+    align-items: flex-start;
+}
+
+.beer-grid.view-list .card-badges-left {
+    top: auto;
+    bottom: 6px;
+    left: auto;
+    right: 6px;
+    align-items: flex-end;
+}
+
+.bac-speculative-badge {
+    position: relative;
+    /* top/left removed to allow stacking */
     display: flex;
     align-items: center;
     gap: 3px;

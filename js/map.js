@@ -116,7 +116,7 @@ export async function renderMapWithData(container, historyWithBreweries) {
     });
 
     const switcherHtml = `
-        <div style="display:flex; overflow-x:auto; gap:10px; margin-bottom:15px; padding-bottom:5px; scrollbar-width: none;">
+        <div id="map-switcher-container" style="display:flex; overflow-x:auto; gap:10px; margin-bottom:15px; padding-bottom:10px; scrollbar-width: thin; scrollbar-color: var(--accent-gold) rgba(0,0,0,0.2);">
             ${Object.keys(MAPS).map(scope => `
                 <button class="map-switch-btn ${scope === currentMapScope ? 'active' : ''}" data-scope="${scope}" 
                     style="background: ${scope === currentMapScope ? 'var(--accent-gold)' : 'rgba(255,255,255,0.05)'}; 
@@ -137,7 +137,7 @@ export async function renderMapWithData(container, historyWithBreweries) {
                 Info
             </div>
         </div>
-        <div style="display:flex; justify-content:center; gap:10px; margin-top:5px; font-size:0.8rem; color:#888;">
+        <div style="display:flex; justify-content:center; gap:10px; margin-top:5px; font-size:0.8rem; color:#888; flex-wrap:wrap;">
             <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; background:#f1c40f; display:inline-block; border-radius:50%; margin-right:4px;"></span>1+</span>
             <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; background:#f39c12; display:inline-block; border-radius:50%; margin-right:4px;"></span>3+</span>
             <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; background:#d35400; display:inline-block; border-radius:50%; margin-right:4px;"></span>5+</span>
@@ -148,16 +148,38 @@ export async function renderMapWithData(container, historyWithBreweries) {
     `;
 
     // Event listeners for switcher
+    const switcherContainer = container.querySelector('#map-switcher-container');
+    if (switcherContainer) {
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        switcherContainer.addEventListener('mousedown', (e) => {
+            isDown = true;
+            switcherContainer.style.cursor = 'grabbing';
+            startX = e.pageX - switcherContainer.offsetLeft;
+            scrollLeft = switcherContainer.scrollLeft;
+        });
+        switcherContainer.addEventListener('mouseleave', () => {
+            isDown = false;
+            switcherContainer.style.cursor = 'pointer';
+        });
+        switcherContainer.addEventListener('mouseup', () => {
+            isDown = false;
+            switcherContainer.style.cursor = 'pointer';
+        });
+        switcherContainer.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - switcherContainer.offsetLeft;
+            const walk = (x - startX) * 2;
+            switcherContainer.scrollLeft = scrollLeft - walk;
+        });
+    }
+
     container.querySelectorAll('.map-switch-btn').forEach(btn => {
         btn.onclick = () => {
             currentMapScope = btn.getAttribute('data-scope');
-            
-            // Allow the user to save default?
-            // Actually, an explicit Settings modal is better, but maybe long-press or auto-save?
-            // Let's just automatically set it when they click? No, the explicit setting was requested maybe.
-            // "Permet de choisir la map par défaut dans les paramètres, et affiche par défaut celle du pays de l'utilisateur"
-            // So if they want to override, they do it in parameters. For the switcher, it's temporary.
-            
             renderMapWithData(container, historyWithBreweries); // Re-render
         };
     });
