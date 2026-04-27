@@ -193,32 +193,25 @@ function focusTrap(e) {
     }
 }
 
-let isClosingFromPopState = false;
+export const modalStack = [];
 
 window.addEventListener('popstate', (e) => {
-    // If user presses native back button while a modal is open
-    if (document.body.classList.contains('modal-open')) {
-        if (isClosingFromPopState) {
-            // We triggered this back via the UI close button.
-            isClosingFromPopState = false;
-        } else {
-            // User triggered native back, close the modal without pushing another back
-            closeModal(true);
-        }
+    if (modalStack.length > 0) {
+        // Native back pressed, close the top-most modal
+        const topModalClose = modalStack.pop();
+        topModalClose(true); // pass true to indicate native back
     }
 });
 
 export function closeModal(fromPopState = false) {
-    const isNativeBack = fromPopState === true; // Strict boolean check to avoid event objects
-
+    // If it's the standard modal, we handle its teardown
     if (modalCleanup) {
         modalCleanup();
         modalCleanup = null;
     }
     
-    // Manage history stack to keep it clean
-    if (!isNativeBack && window.history.state && window.history.state.isModal) {
-        isClosingFromPopState = true;
+    // If this wasn't triggered by native back, keep history stack clean
+    if (fromPopState !== true && window.history.state && window.history.state.isModal) {
         window.history.back();
     }
     
@@ -228,10 +221,10 @@ export function closeModal(fromPopState = false) {
     modalContainer.setAttribute('aria-hidden', 'true');
     modalContainer.innerHTML = '';
     
-    // Notify other detached modals (like Wrapped/Share overlays) to close
-    window.dispatchEvent(new Event('app-close-modals'));
-    
-    document.body.classList.remove('modal-open');
+    // Only remove body class if no other modals are open
+    if (modalStack.length === 0) {
+        document.body.classList.remove('modal-open');
+    }
     
     if (previousFocusElement) {
         previousFocusElement.focus();
@@ -250,6 +243,9 @@ function openModal(content) {
 
     // Add state to browser history
     window.history.pushState({ isModal: true, timestamp: Date.now() }, '');
+    
+    // Push the standard close function to the stack
+    modalStack.push(closeModal);
 
     // Close on click outside
     modalContainer.onclick = (e) => {

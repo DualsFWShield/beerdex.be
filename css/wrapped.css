@@ -21,7 +21,7 @@
 /* --- Progress Bar (Golden) --- */
 .wrapped-progress {
     position: absolute;
-    top: 0;
+    top: env(safe-area-inset-top, 0px);
     left: 0;
     width: 100%;
     padding: 12px 14px;
@@ -47,7 +47,7 @@
 /* --- Close Button --- */
 .wrapped-close {
     position: absolute;
-    top: 16px;
+    top: calc(16px + env(safe-area-inset-top, 0px));
     right: 16px;
     z-index: 110;
     background: rgba(0,0,0,0.4);
@@ -72,7 +72,7 @@
     position: absolute;
     top: 0;
     bottom: 0;
-    z-index: 50;
+    z-index: 10;
 }
 .wrapped-tap-left { left: 0; width: 35%; }
 .wrapped-tap-right { right: 0; width: 65%; }
@@ -86,7 +86,7 @@
     justify-content: center;
     align-items: center;
     text-align: center;
-    padding: 60px 28px 80px;
+    padding: calc(60px + env(safe-area-inset-top, 0px)) 28px calc(80px + env(safe-area-inset-bottom, 0px));
     z-index: 20;
     opacity: 0;
     transition: opacity 0.5s ease, transform 0.5s ease;
@@ -96,7 +96,7 @@
 .wrapped-slide.active {
     opacity: 1;
     transform: translateX(0);
-    pointer-events: auto;
+    /* Keep pointer-events: none on the container so clicks pass through to tap areas */
 }
 .wrapped-slide.exit-left {
     opacity: 0;
@@ -147,7 +147,7 @@
 /* --- Brand Footer --- */
 .wrapped-brand {
     position: absolute;
-    bottom: 20px;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
     left: 0;
     width: 100%;
     text-align: center;
@@ -309,6 +309,8 @@
 
 /* --- Share Button --- */
 .wrapped-share-btn {
+    position: relative;
+    z-index: 100;
     display: inline-flex;
     align-items: center;
     gap: 12px;

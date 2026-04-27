@@ -512,7 +512,7 @@ export function createFullscreenPreview(blob, apiLink) {
     overlay.style.flexDirection = 'column';
     overlay.style.alignItems = 'center';
     overlay.style.justifyContent = 'center';
-    overlay.style.padding = '20px';
+    overlay.style.padding = 'env(safe-area-inset-top, 20px) 20px env(safe-area-inset-bottom, 20px) 20px';
 
     // Image
     const img = document.createElement('img');
@@ -559,13 +559,21 @@ export function createFullscreenPreview(blob, apiLink) {
     }
 
     // Close logic extracted for reusability
-    const closePreview = () => {
+    const closePreview = (fromPopState = false) => {
         if (document.body.contains(overlay)) {
             document.body.removeChild(overlay);
         }
-        document.body.classList.remove('modal-open');
+        
+        if (fromPopState !== true && window.UI && window.UI.modalStack) {
+            const index = window.UI.modalStack.indexOf(closePreview);
+            if (index > -1) window.UI.modalStack.splice(index, 1);
+        }
+        
+        if (!window.UI || !window.UI.modalStack || window.UI.modalStack.length === 0) {
+            document.body.classList.remove('modal-open');
+        }
+        
         URL.revokeObjectURL(url);
-        window.removeEventListener('app-close-modals', closePreview);
     };
 
     // Close Hint
@@ -589,8 +597,10 @@ export function createFullscreenPreview(blob, apiLink) {
     // Add state to browser history
     window.history.pushState({ isModal: true, timestamp: Date.now() }, '');
     
-    // Support native back button via app.js
-    window.addEventListener('app-close-modals', closePreview);
+    // Push to UI modal stack
+    if (window.UI && window.UI.modalStack) {
+        window.UI.modalStack.push(closePreview);
+    }
 }
 
 // --- Helpers ---

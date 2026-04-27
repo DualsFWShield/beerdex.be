@@ -319,7 +319,7 @@ function renderStory(stats) {
     }
 
     function showSlide(index) {
-        if (index >= slides.length) { close(); return; }
+        if (index >= slides.length) { closeWrapped(); return; }
         if (index < 0) index = 0;
 
         // Transition out current
@@ -379,22 +379,33 @@ function renderStory(stats) {
         timer = setTimeout(() => showSlide(current + 1), 5000);
     }
 
-    function closeWrapped() {
+    function closeWrapped(fromPopState = false) {
         if (!overlay.parentNode) return;
+        
+        // Remove from stack if we're not closing from a native back
+        if (fromPopState !== true) {
+            const index = window.UI.modalStack.indexOf(closeWrapped);
+            if (index > -1) window.UI.modalStack.splice(index, 1);
+        }
+
         if (timer) clearTimeout(timer);
         overlay.classList.add('fade-out');
-        document.body.classList.remove('modal-open');
+        
+        if (window.UI.modalStack.length === 0) {
+            document.body.classList.remove('modal-open');
+        }
+        
         setTimeout(() => overlay.remove(), 400);
     }
 
-    // Support native back button via app.js
-    window.addEventListener('app-close-modals', closeWrapped);
+    // Push to global modal stack
+    if (window.UI && window.UI.modalStack) {
+        window.UI.modalStack.push(closeWrapped);
+    }
 
     overlay.querySelector('.wrapped-close').onclick = () => {
-        // Since we pushed state, let's close via history.back if possible,
-        // which triggers popstate -> UI.closeModal -> app-close-modals -> closeWrapped
         if (window.history.state && window.history.state.isModal) {
-            window.history.back();
+            window.history.back(); // Triggers popstate -> pops stack -> closeWrapped(true)
         } else {
             closeWrapped();
         }
