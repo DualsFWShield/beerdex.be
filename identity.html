@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beerdex - Brand Identity</title>
+    <link rel="icon" type="image/png" href="icons/logo-bnr.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&family=Russo+One&family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Original App CSS -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Premium FX Libraries -->
+    <script src="js/vendor/confetti.browser.min.js"></script>
+    <script src="js/vendor/vanilla-tilt.min.js"></script>
+
+    <style>
+        /* Identity Page Specific Layout Override */
+        :root {
+            --sidebar-width: 250px;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+            overflow: auto; /* Enable scroll for documentation */
+            height: auto !important; /* Override app-fix */
+        }
+
+        /* Sidebar Navigation */
+        .identity-nav {
+            width: var(--sidebar-width);
+            background: var(--bg-card);
+            border-right: var(--glass-border);
+            padding: var(--spacing-lg);
+            position: fixed;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+            z-index: 100;
+        }
+
+        .identity-nav h2 {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.2rem;
+            color: var(--accent-gold);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .identity-nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+            padding: 8px 0;
+            display: block;
+        }
+
+        .identity-nav a:hover {
+            color: var(--accent-gold);
+        }
+
+        /* Main Content */
+        .identity-container {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 60px 80px;
+            max-width: 1200px;
+        }
+
+        header.brand-hero {
+            margin-bottom: 80px;
+            text-align: center;
+        }
+
+        .brand-hero img {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 20px rgba(255, 192, 0, 0.3));
+        }
+
+        .brand-hero h1 {
+            font-family: 'Russo One', sans-serif;
+            font-size: 4rem;
+            margin: 0;
+            background: linear-gradient(to bottom, #fff, var(--accent-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-hero p {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+
+        section {
+            margin-bottom: 100px;
+        }
+
+        section h2 {
+            font-family: 'Russo One', sans-serif;
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        /* Color Grid */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 30px;
+        }
+
+        .color-swatch {
+            background: var(--bg-card);
+            border-radius: 16px;
+            overflow: hidden;
+            border: var(--glass-border);
+            transition: transform 0.3s;
+        }
+
+        .color-swatch:hover {
+            transform: translateY(-5px);
+        }
+
+        .color-box {
+            height: 120px;
+            width: 100%;
+        }
+
+        .color-info {
+            padding: var(--spacing-md);
+        }
+
+        .color-name { font-weight: 700; display: block; margin-bottom: 4px; }
+        .color-hex { font-family: monospace; color: var(--text-secondary); font-size: 0.85rem; display: block; }
+        .color-var { font-family: monospace; color: var(--accent-gold); font-size: 0.75rem; margin-top: 8px; display: block; }
+
+        /* Typography */
+        .typo-spec { margin-bottom: 40px; }
+        .typo-family { font-size: 1.2rem; color: var(--accent-gold); margin-bottom: 10px; display: block; }
+        .typo-sample { font-size: 3rem; margin-bottom: 10px; }
+        .typo-details { color: var(--text-secondary); font-size: 0.9rem; }
+
+        /* Icons */
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 20px;
+        }
+        .icon-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: var(--glass-border);
+        }
+        .icon-card img { width: 48px; height: 48px; margin-bottom: 12px; }
+
+        /* Rarity Showcase Structure */
+        .rarity-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        /* REPLICATION OF ORIGINAL APP CARD SIZE FOR DOCS */
+        .identity-card-wrapper {
+            width: 180px;
+            perspective: 1000px;
+        }
+        
+        .identity-card-wrapper .beer-card {
+             width: 100%;
+             margin: 0;
+             /* Ensure animations play even if no JS class logic is present by using the same classes as ui.js */
+        }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .identity-nav { width: 100%; height: auto; position: relative; border-right: none; border-bottom: var(--glass-border); padding: 15px; }
+            .identity-container { margin-left: 0; padding: 40px 20px; }
+            .brand-hero h1 { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="identity-nav">
+        <img src="icons/logo-bnr.png" width="40" height="40" alt="Beerdex">
+        <h2>IDENTITÉ VISUELLE</h2>
+        <a href="#colors">Palettes Couleurs</a>
+        <a href="#typography">Système Typo</a>
+        <a href="#logos">Logotypes & Icones</a>
+        <a href="#components">Composants & Raretés</a>
+        <a href="index.html" style="margin-top: auto; color: var(--accent-gold); font-weight: bold;">← RETOUR BEERDEX</a>
+    </nav>
+
+    <div class="identity-container">
+        
+        <header class="brand-hero">
+            <img src="icons/logo-bnr.png" alt="Beerdex Large Logo">
+            <h1>Identity System</h1>
+            <p>Guide de style premium pour l'écosystème Beerdex. Codes couleurs, typographies et effets originaux.</p>
+        </header>
+
+        <!-- PALETTE SECTION -->
+        <section id="colors">
+            <h2>Couleurs</h2>
+            
+            <h3 style="margin-bottom: 20px; color: var(--text-secondary); font-size: 1rem; text-transform: uppercase;">Palette Interface (Sombre)</h3>
+            <div class="color-grid">
+                <div class="color-swatch">
+                    <div class="color-box" style="background: var(--bg-dark);"></div>
+                    <div class="color-info">
+                        <span class="color-name">Background Dark</span>
+                        <span class="color-hex">#0A0A0A</span>
+                        <span class="color-var">--bg-dark</span>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-box" style="background: var(--bg-card);"></div>
+                    <div class="color-info">
+                        <span class="color-name">Card Background</span>
+                        <span class="color-hex">#141414</span>
+                        <span class="color-var">--bg-card</span>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-box" style="background: var(--accent-gold);"></div>
+                    <div class="color-info">
+                        <span class="color-name">Accent Gold</span>
+                        <span class="color-hex">#FFC000</span>
+                        <span class="color-var">--accent-gold</span>
+                    </div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-box" style="background: var(--accent-amber);"></div>
+                    <div class="color-info">
+                        <span class="color-name">Accent Amber</span>
+                        <span class="color-hex">#FF9900</span>
+                        <span class="color-var">--accent-amber</span>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin: 40px 0 20px 0; color: var(--text-secondary); font-size: 1rem; text-transform: uppercase;">Palette de Rareté (Originale)</h3>
+            <div class="color-grid">
+                <div class="color-swatch">
+                    <div class="color-box" style="background: var(--rarity-commun);"></div>
+                    <div class="color-info"><strong>Commun</strong><span class="color-hex">#2ECC71</span><span class="color-var">--rarity-commun</span></div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-box" style="background: var(--rarity-rare);"></div>
+                    <div class="color-info"><strong>Rare</strong><span class="color-hex">#3498DB</span><span class="color-var">--rarity-rare</span></div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-box" style="background: var(--rarity-super_rare);"></div>
+                    <div class="color-info"><strong>S. Rare</strong><span class="color-hex">#00BCD4</span><span class="color-var">--rarity-super_rare</span></div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-box" style="background: var(--rarity-epique);"></div>
+                    <div class="color-info"><strong>Épique</strong><span class="color-hex">#9B59B6</span><span class="color-var">--rarity-epique</span></div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-box" style="background: var(--rarity-mythique);"></div>
+                    <div class="color-info"><strong>Mythique</strong><span class="color-hex">#E74C3C</span><span class="color-var">--rarity-mythique</span></div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-box" style="background: var(--rarity-legendaire);"></div>
+                    <div class="color-info"><strong>Légendaire</strong><span class="color-hex">#F39C12</span><span class="color-var">--rarity-legendaire</span></div>
+                </div>
+                <div class="color-swatch">
+                    <div class="color-box" style="background: var(--rarity-ultra_legendaire);"></div>
+                    <div class="color-info"><strong>Ultra L.</strong><span class="color-hex">#FF00CC</span><span class="color-var">--rarity-ultra_legendaire</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TYPOGRAPHY SECTION -->
+        <section id="typography">
+            <h2>Typographie</h2>
+            <div class="typo-spec">
+                <span class="typo-family">Principale: Outfit</span>
+                <div class="typo-sample" style="font-family: 'Outfit', sans-serif; font-weight: 300;">Léger: The quick brown fox jumps...</div>
+                <div class="typo-sample" style="font-family: 'Outfit', sans-serif; font-weight: 500;">Medium: The quick brown fox jumps...</div>
+                <div class="typo-sample" style="font-family: 'Outfit', sans-serif; font-weight: 700;">Gras: The quick brown fox jumps...</div>
+            </div>
+            <div class="typo-spec">
+                <span class="typo-family">Titres & Accent: Russo One</span>
+                <div class="typo-sample" style="font-family: 'Russo One', sans-serif;">BEERDEX SYSTEM 2026</div>
+                <div class="typo-details">Utilisé pour les titres H1, H2 et les noms de bières.</div>
+            </div>
+            <div class="typo-spec">
+                <span class="typo-family">Élégance (Museum): Playfair Display</span>
+                <div class="typo-sample" style="font-family: 'Playfair Display', serif; font-style: italic;">L'Art de la Brasserie</div>
+                <div class="typo-details">Utilisé dans le thème Museum pour une ambiance classique.</div>
+            </div>
+        </section>
+
+        <!-- LOGOS SECTION -->
+        <section id="logos">
+            <h2>Logotypes</h2>
+            <div class="icon-grid">
+                <div class="icon-card"><img src="icons/logo-bnr.png"><div class="icon-name">logo-bnr.png</div></div>
+                <div class="icon-card"><img src="icons/logo.png"><div class="icon-name">logo.png</div></div>
+                <div class="icon-card" style="background: white;"><img src="icons/logo-bnr.png" style="filter: none;"><div class="icon-name" style="color: black;">Fidélité Couleur</div></div>
+            </div>
+        </section>
+
+        <!-- COMPONENTS SECTION (THE CORE OF THE REQUEST) -->
+        <section id="components">
+            <h2>Composants & Effets Originaux</h2>
+            
+            <div style="margin-bottom: 60px;">
+                <h3 style="color: var(--text-secondary); margin-bottom: 20px; font-size: 1rem; text-transform: uppercase;">Badges de Rareté (Animations CSS Originales)</h3>
+                <div class="rarity-showcase">
+                    <div class="icon-card">
+                        <span class="rarity-badge rarity-commun anim-commun">Commun</span>
+                        <div style="margin-top:10px; font-size: 0.7rem; color: var(--rarity-commun);">rarity-bounce</div>
+                    </div>
+                    <div class="icon-card">
+                        <span class="rarity-badge rarity-rare anim-rare">Rare</span>
+                        <div style="margin-top:10px; font-size: 0.7rem; color: var(--rarity-rare);">rarity-flash</div>
+                    </div>
+                    <div class="icon-card">
+                        <span class="rarity-badge rarity-super_rare anim-super_rare">S. Rare</span>
+                        <div style="margin-top:10px; font-size: 0.7rem; color: var(--rarity-super_rare);">rarity-pulse</div>
+                    </div>
+                    <div class="icon-card">
+                        <span class="rarity-badge rarity-epique anim-epique">Épique</span>
+                        <div style="margin-top:10px; font-size: 0.7rem; color: var(--rarity-epique);">rarity-shake</div>
+                    </div>
+                    <div class="icon-card">
+                        <span class="rarity-badge rarity-mythique anim-mythique">Mythique</span>
+                        <div style="margin-top:10px; font-size: 0.7rem; color: var(--rarity-mythique);">rarity-spin</div>
+                    </div>
+                    <div class="icon-card">
+                        <span class="rarity-badge rarity-legendaire anim-legendaire">Légen.</span>
+                        <div style="margin-top:10px; font-size: 0.7rem; color: var(--rarity-legendaire);">rarity-gold</div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3 style="color: var(--text-secondary); margin-bottom: 20px; font-size: 1rem; text-transform: uppercase;">Beer Cards (Structure & Effets Identiques)</h3>
+                <div class="rarity-showcase">
+                    <!-- CLASSIC DRUNK CARD -->
+                    <div class="identity-card-wrapper">
+                        <div class="beer-card drunk" data-tilt>
+                            <svg class="check-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <img src="icons/logo-bnr.png" class="beer-image">
+                            <div class="beer-info">
+                                <div class="beer-title">Jupiler</div>
+                                <div class="beer-brewery">AB INBEV</div>
+                            </div>
+                        </div>
+                        <div style="text-align:center; padding-top:10px; font-size:0.7rem;">.beer-card.drunk</div>
+                    </div>
+
+                    <!-- REPLICAS OF EACH PREMIUM EFFECT -->
+                    <div class="identity-card-wrapper">
+                        <div class="beer-card card-rarity-commun" data-tilt>
+                            <img src="icons/logo-bnr.png" class="beer-image">
+                            <div class="beer-info">
+                                <div class="beer-title">Hertog Jan</div>
+                                <div class="beer-brewery">COMMUN</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="identity-card-wrapper">
+                        <div class="beer-card card-rarity-rare" data-tilt>
+                            <img src="icons/logo-bnr.png" class="beer-image">
+                            <div class="beer-info">
+                                <div class="beer-title">Leffe Blonde</div>
+                                <div class="beer-brewery">RARE</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="identity-card-wrapper">
+                        <div class="beer-card card-rarity-epique" data-tilt>
+                            <img src="icons/logo-bnr.png" class="beer-image">
+                            <div class="beer-info">
+                                <div class="beer-title">Chimay Bleue</div>
+                                <div class="beer-brewery">ÉPIQUE</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="identity-card-wrapper">
+                        <div class="beer-card card-rarity-mythique" data-tilt>
+                            <img src="icons/logo-bnr.png" class="beer-image">
+                            <div class="beer-info">
+                                <div class="beer-title">Orval</div>
+                                <div class="beer-brewery">MYTHIQUE</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="identity-card-wrapper">
+                        <div class="beer-card card-rarity-legendaire" data-tilt>
+                            <img src="icons/logo-bnr.png" class="beer-image">
+                            <div class="beer-info">
+                                <div class="beer-title">Westvleteren 12</div>
+                                <div class="beer-brewery">LÉGENDAIRE</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="identity-card-wrapper">
+                        <div class="beer-card card-anim-ultra_legendary" data-tilt>
+                            <img src="icons/logo-bnr.png" class="beer-image">
+                            <div class="beer-info">
+                                <div class="beer-title">Void Star</div>
+                                <div class="beer-brewery">ULTRA</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div style="margin-top: 60px;">
+                <h3 style="color: var(--text-secondary); margin-bottom: 20px; font-size: 1rem; text-transform: uppercase;">Actions & États</h3>
+                <div class="component-row">
+                    <button class="btn-primary" style="width: auto; padding: 12px 30px;" onclick="triggerConfetti()">TEST CONFETTI</button>
+                    <button class="icon-btn" style="border: 1px solid var(--border-color);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+                    <button class="fab" style="position: static;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path></svg></button>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- REPLICA SCRIPTS -->
+    <script>
+        // Use EXACT same init parameters as the main app
+        VanillaTilt.init(document.querySelectorAll("[data-tilt]"), {
+            max: 15,
+            speed: 400,
+            glare: true,
+            "max-glare": 0.3,
+        });
+
+        function triggerConfetti() {
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#FFC000', '#FF9900', '#ffffff']
+            });
+        }
+    </script>
+</body>
+</html>
