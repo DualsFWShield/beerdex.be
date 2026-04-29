@@ -1,0 +1,374 @@
+/* ============================================
+   BEERDEX WRAPPED — Spotify-Inspired Premium
+   ============================================ */
+
+/* --- Overlay & Layout --- */
+.wrapped-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: #000;
+    overflow: hidden;
+    font-family: 'Outfit', sans-serif;
+    color: #fff;
+    -webkit-user-select: none;
+    user-select: none;
+}
+.wrapped-overlay.fade-out {
+    animation: wrapped-fade-out 0.4s ease forwards;
+}
+
+/* --- Progress Bar (Golden) --- */
+.wrapped-progress {
+    position: absolute;
+    top: env(safe-area-inset-top, 0px);
+    left: 0;
+    width: 100%;
+    padding: 12px 14px;
+    display: flex;
+    gap: 5px;
+    z-index: 100;
+}
+.wrapped-progress-seg {
+    flex: 1;
+    height: 3px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 3px;
+    overflow: hidden;
+}
+.wrapped-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #FFC000, #FF9900);
+    border-radius: 3px;
+    box-shadow: 0 0 6px rgba(255,192,0,0.5);
+}
+
+/* --- Close Button --- */
+.wrapped-close {
+    position: absolute;
+    top: calc(16px + env(safe-area-inset-top, 0px));
+    right: 16px;
+    z-index: 110;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+.wrapped-close:active { transform: scale(0.9); }
+
+/* --- Tap Zones --- */
+.wrapped-tap-left,
+.wrapped-tap-right {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 10;
+}
+.wrapped-tap-left { left: 0; width: 35%; }
+.wrapped-tap-right { right: 0; width: 65%; }
+
+/* --- Slide Container --- */
+.wrapped-slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: calc(60px + env(safe-area-inset-top, 0px)) 28px calc(80px + env(safe-area-inset-bottom, 0px));
+    z-index: 20;
+    opacity: 0;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    transform: translateX(40px);
+    pointer-events: none;
+}
+.wrapped-slide.active {
+    opacity: 1;
+    transform: translateX(0);
+    /* Keep pointer-events: none on the container so clicks pass through to tap areas */
+}
+.wrapped-slide.exit-left {
+    opacity: 0;
+    transform: translateX(-40px);
+}
+
+/* --- Decorative Blobs --- */
+.wrapped-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.35;
+    z-index: 1;
+    animation: blob-drift 12s ease-in-out infinite alternate;
+}
+.wrapped-blob-1 {
+    width: 300px; height: 300px;
+    top: -80px; right: -60px;
+    background: #FFC000;
+}
+.wrapped-blob-2 {
+    width: 250px; height: 250px;
+    bottom: -60px; left: -80px;
+    background: #FF6D00;
+    animation-delay: -4s;
+}
+.wrapped-blob-3 {
+    width: 200px; height: 200px;
+    top: 40%; left: 50%;
+    background: #8D6E63;
+    animation-delay: -8s;
+}
+
+/* --- Year Badge --- */
+.wrapped-year-badge {
+    position: absolute;
+    top: 50px;
+    left: 20px;
+    z-index: 30;
+    font-family: 'Russo One', sans-serif;
+    font-size: 1rem;
+    color: rgba(255,192,0,0.6);
+    letter-spacing: 3px;
+    writing-mode: vertical-lr;
+    text-orientation: mixed;
+}
+
+/* --- Brand Footer --- */
+.wrapped-brand {
+    position: absolute;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    left: 0;
+    width: 100%;
+    text-align: center;
+    z-index: 30;
+    font-size: 0.7rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.25);
+    font-weight: 600;
+}
+
+/* --- Typography --- */
+.wrapped-label {
+    font-size: clamp(0.85rem, 2.5vw, 1.1rem);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    color: rgba(255,192,0,0.85);
+    margin-bottom: 12px;
+}
+.wrapped-big-num {
+    font-family: 'Russo One', sans-serif;
+    font-size: clamp(4rem, 15vw, 8rem);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    background: linear-gradient(180deg, #fff 30%, #FFC000 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin: 8px 0;
+    filter: drop-shadow(0 4px 12px rgba(255,192,0,0.25));
+}
+.wrapped-big-text {
+    font-family: 'Russo One', sans-serif;
+    font-size: clamp(2rem, 8vw, 4rem);
+    line-height: 1.1;
+    color: #fff;
+    margin: 8px 0;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+.wrapped-title {
+    font-family: 'Russo One', sans-serif;
+    font-size: clamp(2.5rem, 10vw, 5rem);
+    line-height: 1;
+    color: #FFC000;
+    text-shadow: 0 0 40px rgba(255,192,0,0.3);
+    margin-bottom: 8px;
+}
+.wrapped-subtitle {
+    font-size: clamp(1rem, 3vw, 1.4rem);
+    color: rgba(255,255,255,0.7);
+    font-weight: 300;
+}
+.wrapped-sub {
+    font-size: clamp(0.85rem, 2.5vw, 1rem);
+    color: rgba(255,255,255,0.5);
+    margin-top: 6px;
+}
+.wrapped-unit {
+    font-size: clamp(1.5rem, 5vw, 2.5rem);
+    -webkit-text-fill-color: rgba(255,255,255,0.6);
+}
+
+/* --- Glassmorphism Card --- */
+.wrapped-card {
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,192,0,0.15);
+    border-radius: 24px;
+    padding: 28px 24px;
+    margin-top: 20px;
+    width: min(88%, 340px);
+    box-shadow:
+        0 8px 32px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.wrapped-card-row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+.wrapped-card-stat {
+    text-align: center;
+}
+.wrapped-card-stat-num {
+    font-family: 'Russo One', sans-serif;
+    font-size: 1.8rem;
+    color: #FFC000;
+}
+.wrapped-card-stat-label {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 2px;
+}
+
+/* --- Hero Beer Image --- */
+.wrapped-hero-ring {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 16px;
+}
+.wrapped-hero-ring::before {
+    content: '';
+    position: absolute;
+    inset: -12px;
+    border-radius: 50%;
+    background: conic-gradient(#FFC000, #FF6D00, #FFC000);
+    opacity: 0.6;
+    z-index: -1;
+    animation: ring-spin 6s linear infinite;
+}
+.wrapped-hero-ring::after {
+    content: '';
+    position: absolute;
+    inset: -30px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,192,0,0.25) 0%, transparent 70%);
+    z-index: -2;
+}
+.wrapped-hero-img {
+    width: clamp(160px, 40vw, 240px);
+    height: clamp(160px, 40vw, 240px);
+    object-fit: contain;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    filter: drop-shadow(0 0 30px rgba(255,192,0,0.3));
+}
+.wrapped-hero-fallback {
+    width: clamp(160px, 40vw, 240px);
+    height: clamp(160px, 40vw, 240px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5rem;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+}
+
+/* --- Fun Fact Badge --- */
+.wrapped-fun-fact {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,192,0,0.1);
+    border: 1px solid rgba(255,192,0,0.2);
+    border-radius: 50px;
+    padding: 10px 20px;
+    margin-top: 16px;
+    font-size: 0.95rem;
+    color: #FFC000;
+    font-weight: 600;
+}
+
+/* --- Share Button --- */
+.wrapped-share-btn {
+    position: relative;
+    z-index: 100;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, #FFC000, #FF9900);
+    color: #000;
+    border: none;
+    border-radius: 50px;
+    padding: 16px 36px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: 'Outfit', sans-serif;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(255,192,0,0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+    pointer-events: auto;
+}
+.wrapped-share-btn:active {
+    transform: scale(0.95);
+}
+
+/* --- Intro Emoji Bounce --- */
+.wrapped-emoji-float {
+    font-size: 4rem;
+    margin-top: 20px;
+    animation: emoji-float 3s ease-in-out infinite;
+}
+
+/* --- Keyframes --- */
+@keyframes wrapped-fade-out {
+    to { opacity: 0; }
+}
+@keyframes blob-drift {
+    0%   { transform: translate(0, 0) scale(1); }
+    50%  { transform: translate(20px, -30px) scale(1.15); }
+    100% { transform: translate(-15px, 20px) scale(0.95); }
+}
+@keyframes ring-spin {
+    to { transform: rotate(360deg); }
+}
+@keyframes emoji-float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50%      { transform: translateY(-15px) rotate(5deg); }
+}
+@keyframes counter-pop {
+    0%   { transform: scale(0.5); opacity: 0; }
+    70%  { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
+}
+.animate-counter-pop {
+    animation: counter-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* --- Slide-specific gradients (applied via data-attr or JS) --- */
+.wrapped-bg-intro   { background: linear-gradient(160deg, #1a1005 0%, #000 40%, #1a0f00 100%); }
+.wrapped-bg-volume  { background: linear-gradient(160deg, #1a2636 0%, #000 50%, #0d1f2d 100%); }
+.wrapped-bg-count   { background: linear-gradient(160deg, #0a1f0a 0%, #000 50%, #0d2818 100%); }
+.wrapped-bg-month   { background: linear-gradient(160deg, #2a1500 0%, #000 50%, #1a0d00 100%); }
+.wrapped-bg-brewery { background: linear-gradient(160deg, #1a0033 0%, #000 50%, #0d001a 100%); }
+.wrapped-bg-beer    { background: linear-gradient(160deg, #2a0a0a 0%, #0a0000 50%, #1a0505 100%); }
+.wrapped-bg-style   { background: linear-gradient(160deg, #1a1006 0%, #000 50%, #2a1a08 100%); }
+.wrapped-bg-thanks  { background: linear-gradient(160deg, #0a0a0a 0%, #111 50%, #0a0a0a 100%); }

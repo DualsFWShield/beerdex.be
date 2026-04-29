@@ -1,4 +1,5 @@
 import { getAllUserData, getCustomBeers } from './storage.js';
+import { i18n } from './i18n.js';
 
 let _allBeersProvider = null;
 
@@ -6,6 +7,19 @@ export function init(allBeersProvider) {
     _allBeersProvider = allBeersProvider;
 }
 
+/* ── Animated Counter ── */
+function animateCounter(el, target, duration = 1200) {
+    const start = performance.now();
+    const update = (now) => {
+        const progress = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+        el.textContent = Math.round(ease * target);
+        if (progress < 1) requestAnimationFrame(update);
+    };
+    requestAnimationFrame(update);
+}
+
+/* ── Stats Calculation (unchanged logic) ── */
 function calculateStats() {
     const userData = getAllUserData();
     const customBeers = getCustomBeers();
@@ -27,17 +41,14 @@ function calculateStats() {
 
     Object.keys(userData).forEach(key => {
         const entry = userData[key];
-        const beerId = key.split('_')[0];
+        const beerId = key;
 
-        // Loose equality check for ID
         let beer = allBeers.find(b => b.id == beerId);
         if (!beer) beer = customBeers.find(b => b.id == beerId);
 
-        // Fallback: Legacy data might use UPPERCASE TITLE as key
         if (!beer) {
             const cleanKey = beerId.toUpperCase().trim();
             beer = allBeers.find(b => b.title.toUpperCase().trim() === cleanKey);
-            // Also check custom beers by title
             if (!beer) beer = customBeers.find(b => b.title.toUpperCase().trim() === cleanKey);
         }
 
@@ -46,7 +57,7 @@ function calculateStats() {
         }
 
         if (entry.count > 0) {
-            uniqueCount++; // A unique beer actually drunk
+            uniqueCount++;
         }
 
         if (entry.count > 0) {
@@ -58,7 +69,7 @@ function calculateStats() {
                     image: beer.image,
                     id: beer.id
                 });
-                
+
                 if (beer.brewery) {
                     const bname = beer.brewery.trim();
                     breweries[bname] = (breweries[bname] || 0) + entry.count;
@@ -77,13 +88,10 @@ function calculateStats() {
                 totalVolumeMl += entry.count * 330;
             }
 
-            // User requested Type (fallback to Style)
             const rawType = beer ? (beer.type || beer.style) : null;
             if (rawType) {
                 const type = rawType.split('-')[0].trim();
                 styles[type] = (styles[type] || 0) + entry.count;
-            } else if (beer) {
-                console.warn(`[Wrapped] Beer found but NO TYPE/STYLE: ${beer.title} (ID: ${beerId})`);
             }
         }
     });
@@ -92,8 +100,6 @@ function calculateStats() {
     const favoriteBeer = topBeers.length > 0 ? topBeers[0] : null;
 
     const sortedStyles = Object.entries(styles).sort((a, b) => b[1] - a[1]);
-
-    // Support multiple winners for Favorite Type
     let favoriteStyle = i18n.t('label_unknown');
     if (sortedStyles.length > 0) {
         const maxCount = sortedStyles[0][1];
@@ -101,11 +107,9 @@ function calculateStats() {
         favoriteStyle = winners.join(' & ');
     }
 
-    // Top Brewery
     const sortedBreweries = Object.entries(breweries).sort((a, b) => b[1] - a[1]);
     const favoriteBrewery = sortedBreweries.length > 0 ? sortedBreweries[0] : null;
 
-    // Top Month
     const sortedMonths = Object.entries(months).sort((a, b) => b[1] - a[1]);
     let topMonth = null;
     if (sortedMonths.length > 0) {
@@ -152,158 +156,216 @@ export function start() {
     renderStory(stats);
 }
 
-function renderStory(stats) {
-    const slides = [
-        {
-            bg: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)',
-            content: `
-                <div class="story-title animate-pop-in">${i18n.t('wrapped_title')}</div>
-                <div class="story-subtitle animate-slide-up" style="animation-delay:0.5s">${i18n.t('wrapped_subtitle')}</div>
-                <div style="font-size:4rem; margin-top:20px;" class="animate-bounce">🎇</div>
-            `
-        },
-        {
-            bg: 'linear-gradient(135deg, #2c3e50 0%, #000000 100%)',
-            content: `
-                <div class="story-stat-label animate-fade-in">${i18n.t('wrapped_you_drank')}</div>
-                <div class="story-bento-card animate-scale-up" style="animation-delay:0.2s">
-                    <div class="story-big-number">${stats.totalLiters} <span style="font-size:2rem">${i18n.t('wrapped_liters')}</span></div>
-                    <div class="story-stat-sub">${i18n.t('wrapped_approx')}</div>
-                    <div class="story-fun-fact" style="font-size:1.1rem; color:var(--accent-gold); margin-top:10px;">🌊 ${stats.equivalence.label}</div>
-                </div>
-            `
-        },
-        {
-            bg: 'linear-gradient(135deg, #1b5e20 0%, #000000 100%)',
-            content: `
-                <div class="story-stat-label animate-fade-in">${i18n.t('wrapped_adventurer')}</div>
-                <div class="story-bento-card animate-scale-up" style="animation-delay:0.2s">
-                    <div class="story-big-number" style="color:#a5d6a7;">${stats.totalBeers}</div>
-                    <div class="story-stat-sub" style="margin-bottom:15px;">${i18n.t('wrapped_beers_unlocked')}</div>
-                    <div style="border-top:1px solid rgba(255,255,255,0.1); padding-top:15px;">
-                        <span style="color:#fff;font-weight:bold;font-size:1.4rem;">🧭 ${stats.uniqueBeers}</span>
-                        <div style="font-size:0.9rem; color:#aaa;">${i18n.t('wrapped_unique_beers')}</div>
+/* ── Build Slide Definitions ── */
+function buildSlides(stats) {
+    const year = new Date().getFullYear();
+    const slides = [];
+
+    // 1. Intro
+    slides.push({
+        bg: 'wrapped-bg-intro',
+        html: `
+            <div class="wrapped-title animate-counter-pop">${i18n.t('wrapped_title')}</div>
+            <div class="wrapped-subtitle" style="animation: fade-in 1s 0.4s both">${i18n.t('wrapped_subtitle')} ${year}</div>
+            <div class="wrapped-emoji-float">🍺</div>
+        `
+    });
+
+    // 2. Volume
+    slides.push({
+        bg: 'wrapped-bg-volume',
+        html: `
+            <div class="wrapped-label">${i18n.t('wrapped_you_drank')}</div>
+            <div class="wrapped-big-num" data-counter="${stats.totalLiters}">0</div>
+            <div class="wrapped-big-num wrapped-unit">${i18n.t('wrapped_liters')}</div>
+            <div class="wrapped-sub">${i18n.t('wrapped_approx')}</div>
+            <div class="wrapped-fun-fact">🌊 ${stats.equivalence.label}</div>
+        `
+    });
+
+    // 3. Adventurer (count)
+    slides.push({
+        bg: 'wrapped-bg-count',
+        html: `
+            <div class="wrapped-label">${i18n.t('wrapped_adventurer')}</div>
+            <div class="wrapped-big-num" data-counter="${stats.totalBeers}">0</div>
+            <div class="wrapped-sub" style="margin-bottom:8px">${i18n.t('wrapped_beers_unlocked')}</div>
+            <div class="wrapped-card">
+                <div class="wrapped-card-row" style="border:none;padding:0;margin:0">
+                    <div class="wrapped-card-stat">
+                        <div class="wrapped-card-stat-num" data-counter="${stats.uniqueBeers}">0</div>
+                        <div class="wrapped-card-stat-label">🧭 ${i18n.t('wrapped_unique_beers')}</div>
                     </div>
                 </div>
+            </div>
+        `
+    });
+
+    // 4. Top Month (optional)
+    if (stats.topMonth) {
+        slides.push({
+            bg: 'wrapped-bg-month',
+            html: `
+                <div class="wrapped-label">${i18n.t('wrapped_festive_month')}</div>
+                <div style="font-size:4rem;margin-bottom:8px">📅</div>
+                <div class="wrapped-big-text" style="color:#ffcc80">${stats.topMonth.name}</div>
+                <div class="wrapped-sub">${i18n.t('wrapped_tastings', { count: stats.topMonth.count })}</div>
             `
-        },
-        stats.topMonth ? {
-            bg: 'linear-gradient(135deg, #e65100 0%, #3e2723 100%)',
-            content: `
-                <div class="story-stat-label animate-fade-in">${i18n.t('wrapped_festive_month')}</div>
-                <div class="story-bento-card animate-scale-up" style="animation-delay:0.2s">
-                    <div style="font-size:3rem; margin-bottom:10px;">📅</div>
-                    <div class="story-big-text" style="color:#ffcc80;">${stats.topMonth.name}</div>
-                    <div class="story-stat-sub">${i18n.t('wrapped_tastings', { count: stats.topMonth.count })}</div>
-                </div>
+        });
+    }
+
+    // 5. Top Brewery (optional)
+    if (stats.favoriteBrewery) {
+        slides.push({
+            bg: 'wrapped-bg-brewery',
+            html: `
+                <div class="wrapped-label">${i18n.t('wrapped_top_brewery')}</div>
+                <div style="font-size:4rem;margin-bottom:8px">🏭</div>
+                <div class="wrapped-big-text" style="color:#b39ddb">${stats.favoriteBrewery[0]}</div>
+                <div class="wrapped-sub">${i18n.t('wrapped_brewery_honor', { count: stats.favoriteBrewery[1] })}</div>
             `
-        } : null,
-        stats.favoriteBrewery ? {
-            bg: 'linear-gradient(135deg, #311b92 0%, #000000 100%)',
-            content: `
-                <div class="story-stat-label animate-fade-in">${i18n.t('wrapped_top_brewery')}</div>
-                <div class="story-bento-card animate-scale-up" style="animation-delay:0.2s">
-                    <div style="font-size:3rem; margin-bottom:10px;">🏭</div>
-                    <div class="story-big-text" style="font-size:2.5rem; color:#b39ddb; margin:10px 0;">${stats.favoriteBrewery[0]}</div>
-                    <div class="story-stat-sub">${i18n.t('wrapped_brewery_honor', { count: stats.favoriteBrewery[1] })}</div>
-                </div>
+        });
+    }
+
+    // 6. Favorite Beer (optional)
+    if (stats.favoriteBeer) {
+        const imgMarkup = stats.favoriteBeer.image
+            ? `<img src="${stats.favoriteBeer.image}" class="wrapped-hero-img" alt="${stats.favoriteBeer.name}">`
+            : `<div class="wrapped-hero-fallback">🍻</div>`;
+        slides.push({
+            bg: 'wrapped-bg-beer',
+            html: `
+                <div class="wrapped-label">${i18n.t('wrapped_fav_beer')}</div>
+                <div class="wrapped-hero-ring">${imgMarkup}</div>
+                <div class="wrapped-big-text" style="font-size:clamp(1.4rem,5vw,2.2rem)">${stats.favoriteBeer.name}</div>
+                <div class="wrapped-sub">${i18n.t('wrapped_times_drunk', { count: stats.favoriteBeer.count })}</div>
             `
-        } : null,
-        stats.favoriteBeer ? {
-            bg: 'linear-gradient(135deg, #4b1d1d 0%, #1a0505 100%)',
-            content: `
-                <div class="story-stat-label animate-fade-in">${i18n.t('wrapped_fav_beer')}</div>
-                <div style="position:relative; display:inline-block;" class="animate-rotate-in">
-                    <div class="story-glow-bg"></div>
-                    ${stats.favoriteBeer.image ? `<img src="${stats.favoriteBeer.image}" class="story-hero-img">` : '<div style="font-size:5rem; line-height:300px;">🍻</div>'}
-                </div>
-                <div class="story-bento-card animate-slide-up" style="animation-delay:0.4s; padding:15px; margin-top:0;">
-                    <div class="story-beer-name" style="font-size:1.6rem;">${stats.favoriteBeer.name}</div>
-                    <div class="story-stat-sub">${i18n.t('wrapped_times_drunk', { count: stats.favoriteBeer.count })}</div>
-                </div>
-            `
-        } : null,
-        {
-            bg: 'linear-gradient(135deg, #5D4037 0%, #3E2723 100%)',
-            content: `
-                <div class="story-stat-label animate-fade-in">${i18n.t('wrapped_favorite_style')}</div>
-                <div class="story-bento-card animate-scale-up" style="animation-delay:0.2s">
-                    <div style="font-size:3rem; margin-bottom:10px;">🏆</div>
-                    <div class="story-big-text" style="color:var(--accent-gold);">${stats.favoriteStyle}</div>
-                    <div class="story-stat-sub">${i18n.t('wrapped_good_taste')}</div>
-                </div>
-            `
-        },
-        {
-            bg: 'linear-gradient(135deg, #000000 0%, #111 100%)',
-            content: `
-                <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-                    <div class="story-title animate-pop-in" style="margin-bottom:0.5rem;">${i18n.t('wrapped_thanks')}</div>
-                    <div class="story-stat-sub animate-slide-up" style="animation-delay:0.3s; margin-bottom:2rem; font-size:1.1rem; max-width:280px;">${i18n.t('wrapped_reminder')}</div>
-                    
-                    <button id="btn-share-wrapped" class="btn-primary animate-scale-up" style="animation-delay:0.6s; background:var(--accent-gold); color:black; padding:18px 32px; font-size:1.2rem; display:flex; align-items:center; gap:12px; border-radius:16px; font-weight:bold; box-shadow:0 10px 20px rgba(255, 192, 0, 0.2);">
-                        <span>${i18n.t('wrapped_share_btn')}</span>
-                        <span>📸</span>
-                    </button>
-                </div>
-            `
-        }
-    ].filter(s => s !== null);
+        });
+    }
+
+    // 7. Favorite Style
+    slides.push({
+        bg: 'wrapped-bg-style',
+        html: `
+            <div class="wrapped-label">${i18n.t('wrapped_favorite_style')}</div>
+            <div style="font-size:4rem;margin-bottom:8px">🏆</div>
+            <div class="wrapped-big-text" style="color:#FFC000">${stats.favoriteStyle}</div>
+            <div class="wrapped-sub">${i18n.t('wrapped_good_taste')}</div>
+        `
+    });
+
+    // 8. Thank You + Share
+    slides.push({
+        bg: 'wrapped-bg-thanks',
+        isLast: true,
+        html: `
+            <div class="wrapped-title" style="font-size:clamp(2rem,8vw,3.5rem)">${i18n.t('wrapped_thanks')}</div>
+            <div class="wrapped-sub" style="max-width:280px;margin:12px auto 28px;font-size:1rem;color:rgba(255,255,255,0.6)">${i18n.t('wrapped_reminder')}</div>
+            <button id="btn-share-wrapped" class="wrapped-share-btn">
+                <span>${i18n.t('wrapped_share_btn')}</span>
+                <span>📸</span>
+            </button>
+        `
+    });
+
+    return slides;
+}
+
+/* ── Render the Story ── */
+function renderStory(stats) {
+    const slides = buildSlides(stats);
 
     const overlay = document.createElement('div');
-    overlay.className = 'story-overlay';
+    overlay.className = 'wrapped-overlay';
 
-    let progressHTML = '<div class="story-progress-container">';
-    slides.forEach(() => {
-        progressHTML += '<div class="story-progress-bar"><div class="story-progress-fill"></div></div>';
-    });
-    progressHTML += '</div>';
-
+    // Decorative blobs
     overlay.innerHTML = `
-        ${progressHTML}
-        <button class="story-close-btn">&times;</button>
-        <div class="story-content"></div>
-        <div class="story-tap-left"></div>
-        <div class="story-tap-right"></div>
+        <div class="wrapped-blob wrapped-blob-1"></div>
+        <div class="wrapped-blob wrapped-blob-2"></div>
+        <div class="wrapped-blob wrapped-blob-3"></div>
+        <div class="wrapped-year-badge">${new Date().getFullYear()}</div>
+        <div class="wrapped-brand">BEERDEX.BE</div>
+        <div class="wrapped-progress">${slides.map(() => `<div class="wrapped-progress-seg"><div class="wrapped-progress-fill"></div></div>`).join('')}</div>
+        <button class="wrapped-close">&times;</button>
+        <div class="wrapped-tap-left"></div>
+        <div class="wrapped-tap-right"></div>
     `;
 
+    // Create slide elements
+    slides.forEach((slide, i) => {
+        const el = document.createElement('div');
+        el.className = `wrapped-slide ${slide.bg}`;
+        el.innerHTML = slide.html;
+        if (i === 0) el.classList.add('active');
+        overlay.appendChild(el);
+    });
+
     document.body.appendChild(overlay);
+    document.body.classList.add('modal-open');
 
-    let currentSlide = 0;
-    const contentDiv = overlay.querySelector('.story-content');
-    const progressFills = overlay.querySelectorAll('.story-progress-fill');
+    // Add state to browser history
+    window.history.pushState({ isModal: true, timestamp: Date.now() }, '');
+
+    let current = 0;
     let timer = null;
+    const slideEls = overlay.querySelectorAll('.wrapped-slide');
+    const fills = overlay.querySelectorAll('.wrapped-progress-fill');
 
-    const showSlide = (index) => {
-        if (index >= slides.length) {
-            close();
-            return;
-        }
+    function runCounters(slideEl) {
+        slideEl.querySelectorAll('[data-counter]').forEach(el => {
+            const target = parseInt(el.dataset.counter, 10);
+            if (!isNaN(target)) animateCounter(el, target, 1000);
+        });
+    }
+
+    function showSlide(index) {
+        if (index >= slides.length) { closeWrapped(); return; }
         if (index < 0) index = 0;
 
-        currentSlide = index;
-        const slide = slides[currentSlide];
+        // Transition out current
+        slideEls[current]?.classList.remove('active');
+        slideEls[current]?.classList.add('exit-left');
 
-        overlay.style.background = slide.bg;
-        contentDiv.innerHTML = slide.content;
+        current = index;
 
-        progressFills.forEach((fill, i) => {
-            if (i < currentSlide) fill.style.width = '100%';
-            else if (i > currentSlide) fill.style.width = '0%';
-            else {
+        // Reset all
+        slideEls.forEach((el, i) => {
+            if (i !== current) {
+                el.classList.remove('active', 'exit-left');
+            }
+        });
+
+        // Transition in next
+        slideEls[current].classList.remove('exit-left');
+        slideEls[current].classList.add('active');
+
+        // Progress bars
+        fills.forEach((fill, i) => {
+            fill.style.transition = 'none';
+            if (i < current) {
+                fill.style.width = '100%';
+            } else if (i > current) {
                 fill.style.width = '0%';
-                void fill.offsetWidth;
+            } else {
+                fill.style.width = '0%';
+                void fill.offsetWidth; // force reflow
                 fill.style.transition = 'width 5s linear';
                 fill.style.width = '100%';
             }
         });
 
-        if (timer) clearTimeout(timer);
-        timer = setTimeout(() => {
-            showSlide(currentSlide + 1);
-        }, 5000);
+        // Run counters
+        runCounters(slideEls[current]);
 
-        const shareBtn = contentDiv.querySelector('#btn-share-wrapped');
+        // Confetti on last slide
+        if (slides[current].isLast && window.confetti) {
+            setTimeout(() => {
+                window.confetti({ particleCount: 80, spread: 90, origin: { y: 0.6 }, colors: ['#FFC000', '#FF9900', '#fff'] });
+            }, 400);
+        }
+
+        // Share button
+        const shareBtn = slideEls[current].querySelector('#btn-share-wrapped');
         if (shareBtn) {
             shareBtn.onclick = (e) => {
                 e.stopPropagation();
@@ -311,21 +373,63 @@ function renderStory(stats) {
                 handleWrappedShare(stats);
             };
         }
-    };
 
-    const close = () => {
+        // Auto-advance
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => showSlide(current + 1), 5000);
+    }
+
+    function closeWrapped(fromPopState = false) {
+        if (!overlay.parentNode) return;
+        
+        // Remove from stack if we're not closing from a native back
+        if (fromPopState !== true) {
+            const index = window.UI.modalStack.indexOf(closeWrapped);
+            if (index > -1) window.UI.modalStack.splice(index, 1);
+        }
+
         if (timer) clearTimeout(timer);
         overlay.classList.add('fade-out');
-        setTimeout(() => overlay.remove(), 300);
+        
+        if (window.UI.modalStack.length === 0) {
+            document.body.classList.remove('modal-open');
+        }
+        
+        setTimeout(() => overlay.remove(), 400);
+    }
+
+    // Push to global modal stack
+    if (window.UI && window.UI.modalStack) {
+        window.UI.modalStack.push(closeWrapped);
+    }
+
+    overlay.querySelector('.wrapped-close').onclick = () => {
+        if (window.history.state && window.history.state.isModal) {
+            window.history.back(); // Triggers popstate -> pops stack -> closeWrapped(true)
+        } else {
+            closeWrapped();
+        }
     };
 
-    overlay.querySelector('.story-tap-left').onclick = (e) => { e.stopPropagation(); showSlide(currentSlide - 1); };
-    overlay.querySelector('.story-tap-right').onclick = (e) => { e.stopPropagation(); showSlide(currentSlide + 1); };
-    overlay.querySelector('.story-close-btn').onclick = close;
+    // Navigation
+    overlay.querySelector('.wrapped-tap-left').onclick = () => showSlide(current - 1);
+    overlay.querySelector('.wrapped-tap-right').onclick = () => showSlide(current + 1);
 
+    // Swipe support
+    let touchStartX = 0;
+    overlay.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+    overlay.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 50) {
+            dx > 0 ? showSlide(current - 1) : showSlide(current + 1);
+        }
+    }, { passive: true });
+
+    // Start
     requestAnimationFrame(() => showSlide(0));
 }
 
+/* ── Share Handler (unchanged logic) ── */
 async function handleWrappedShare(stats) {
     const shareBtn = document.getElementById('btn-share-wrapped');
     if (shareBtn) shareBtn.textContent = i18n.t('toast_generating_image');
@@ -337,38 +441,30 @@ async function handleWrappedShare(stats) {
         if (stats.favoriteBeer) {
             beer = allBeers.find(b => b.id == stats.favoriteBeer.id);
             if (!beer) {
-                // Fallback by title
                 const cleanKey = stats.favoriteBeer.name.toUpperCase().trim();
                 beer = allBeers.find(b => b.title.toUpperCase().trim() === cleanKey);
             }
 
-            // Fix: If still not found, DO NOT default to allBeers[0].
-            // Use the info we have in stats (Ghost Beer)
             if (!beer) {
                 beer = {
                     id: stats.favoriteBeer.id,
                     title: stats.favoriteBeer.name || "Bière Archivée",
                     name: stats.favoriteBeer.name || "Bière Archivée",
-                    image: null, // Use default in generation
+                    image: null,
                     style: i18n.t('label_unknown')
                 };
             }
         }
 
-        // Use a default beer ONLY if really no stats (empty profile)
         if (!beer) {
             beer = allBeers[0] || { title: 'Beerdex', name: 'Beerdex', image: null };
         }
 
-        // Check for generateWrappedCard (new design) or fallback to generateBeerCard
         if (window.Share && (window.Share.generateWrappedCard || window.Share.generateBeerCard) && beer) {
-
             let blob;
             if (window.Share.generateWrappedCard) {
-                // New Premium Design
                 blob = await window.Share.generateWrappedCard(stats, beer);
             } else {
-                // Fallback to old design
                 const lines = [
                     `🏆 Mon Beerdex Wrapped 🏆`,
                     `🍺 Consommation : ${stats.totalLiters} Litres !`,
@@ -379,12 +475,9 @@ async function handleWrappedShare(stats) {
                 blob = await window.Share.generateBeerCard(beer, 10, comment);
             }
 
-
-
-            // Mock API generation URL
             const baseUrl = window.location.origin + window.location.pathname;
             const apiUrl = new URL(baseUrl);
-            apiUrl.searchParams.set("mode", "wrapped_share"); // Trigger flag
+            apiUrl.searchParams.set("mode", "wrapped_share");
             apiUrl.searchParams.set("year", new Date().getFullYear());
             apiUrl.searchParams.set("total_liters", stats.totalLiters);
             apiUrl.searchParams.set("total_count", stats.totalBeers);

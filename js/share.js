@@ -7,7 +7,8 @@ import { i18n } from './i18n.js';
 
 // Load branding assets
 const LOGO_PATH = "icons/logo-bnr.png";
-const FOAM_PATH = "images/foam.png";
+const FOAM_LOCAL = "images/foam.png";
+const FOAM_REMOTE = "https://beerdex.be/images/foam.png";
 
 /**
  * Generates a "Polaroid style" image for a specific beer review
@@ -93,14 +94,18 @@ export async function generateBeerCard(beer, rating, comment) {
         ctx.fill();
     }
 
-    // 3. Beer Foam (Image)
+    // 3. Beer Foam (Image) — try local first, then remote
     try {
-        const foamImg = await loadImage(FOAM_PATH);
-        // Draw at top, full width, auto height driven by aspect ratio
+        let foamImg;
+        try {
+            foamImg = await loadImage(FOAM_LOCAL);
+        } catch (_) {
+            foamImg = await loadImage(FOAM_REMOTE);
+        }
         const foamH = width * (foamImg.height / foamImg.width);
-        ctx.drawImage(foamImg, 0, -5, width, foamH); // -5 to cover very top edge edge cases
+        ctx.drawImage(foamImg, 0, -5, width, foamH);
     } catch (e) {
-        console.warn("Foam image not found, skipping");
+        console.warn("Foam image not available, skipping");
     }
 
     ctx.restore();
@@ -507,7 +512,7 @@ export function createFullscreenPreview(blob, apiLink) {
     overlay.style.flexDirection = 'column';
     overlay.style.alignItems = 'center';
     overlay.style.justifyContent = 'center';
-    overlay.style.padding = '20px';
+    overlay.style.padding = 'env(safe-area-inset-top, 20px) 20px env(safe-area-inset-bottom, 20px) 20px';
 
     // Image
     const img = document.createElement('img');
@@ -553,6 +558,24 @@ export function createFullscreenPreview(blob, apiLink) {
         overlay.appendChild(linkContainer);
     }
 
+    // Close logic extracted for reusability
+    const closePreview = (fromPopState = false) => {
+        if (document.body.contains(overlay)) {
+            document.body.removeChild(overlay);
+        }
+        
+        if (fromPopState !== true && window.UI && window.UI.modalStack) {
+            const index = window.UI.modalStack.indexOf(closePreview);
+            if (index > -1) window.UI.modalStack.splice(index, 1);
+        }
+        
+        if (!window.UI || !window.UI.modalStack || window.UI.modalStack.length === 0) {
+            document.body.classList.remove('modal-open');
+        }
+        
+        URL.revokeObjectURL(url);
+    };
+
     // Close Hint
     const hint = document.createElement('div');
     hint.innerHTML = `<div style="font-size:2rem; margin-bottom:10px;">✖️</div>${i18n.t('btn_close')}`;
@@ -560,12 +583,24 @@ export function createFullscreenPreview(blob, apiLink) {
     hint.style.marginTop = '20px';
     hint.style.cursor = 'pointer';
     hint.onclick = () => {
-        document.body.removeChild(overlay);
-        URL.revokeObjectURL(url);
+        if (window.history.state && window.history.state.isModal) {
+            window.history.back();
+        } else {
+            closePreview();
+        }
     };
 
     overlay.appendChild(hint);
     document.body.appendChild(overlay);
+    document.body.classList.add('modal-open');
+    
+    // Add state to browser history
+    window.history.pushState({ isModal: true, timestamp: Date.now() }, '');
+    
+    // Push to UI modal stack
+    if (window.UI && window.UI.modalStack) {
+        window.UI.modalStack.push(closePreview);
+    }
 }
 
 // --- Helpers ---

@@ -132,6 +132,21 @@ async function init() {
             });
         }
 
+        // Setup Capacitor Back Button (Universal Back Navigation)
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+            window.Capacitor.Plugins.App.addListener('backButton', ({ canGoBack }) => {
+                // If there's history (including our pushed modal states), go back.
+                // This triggers 'popstate', which is handled cleanly by ui.js/wrapped.js
+                if (canGoBack) {
+                    window.history.back();
+                } 
+                // Otherwise, minimize/exit the app
+                else {
+                    window.Capacitor.Plugins.App.exitApp();
+                }
+            });
+        }
+
         // --- NATIVE WIDGET INITIAL SYNC ---
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') updateWidgetData();
