@@ -413,6 +413,32 @@ function setupEventListeners() {
             UI.setScannerFeedback("🔍 Recherche...", false);
 
             try {
+                // --- LOCAL BARCODE LOOKUP (offline-first) ---
+                const localMatch = state.beers.find(b => b.barcode && b.barcode === barcode);
+                if (localMatch) {
+                    consecutiveFailures = 0;
+                    scanCache.add(barcode);
+                    UI.showToast(i18n.t('toast_found_local', { title: localMatch.title }));
+                    UI.closeModal();
+                    UI.renderBeerDetail(localMatch, (data) => {
+                        const oldRating = Storage.getBeerRating(localMatch.id);
+                        Storage.saveBeerRating(localMatch.id, data);
+                        Achievements.checkAchievements(state.beers);
+                        const oldCount = oldRating ? (parseInt(oldRating.count) || 0) : 0;
+                        const newCount = Storage.getBeerRating(localMatch.id)?.count || 0;
+                        const diff = newCount - oldCount;
+
+                        if (Storage.getPreference('bac_enabled', true) && !Storage.getPreference('bac_manual_only', false)) {
+                            if (diff > 0) for (let i = 0; i < diff; i++) BAC.addDrinkToBAC(localMatch.volume, localMatch.alcohol);
+                            else if (diff < 0) for (let i = 0; i < Math.abs(diff); i++) BAC.removeDrinkFromBAC(localMatch.volume, localMatch.alcohol);
+                        }
+                        UI.showToast(i18n.t('toast_rating_updated'));
+                        updateWidgetData();
+                    });
+                    return 5000;
+                }
+
+                // --- ONLINE API LOOKUP (fallback) ---
                 // Fetch product with enhanced status
                 const result = await fetchProductByBarcode(barcode);
                 const { status, product } = result || { status: 'error' };

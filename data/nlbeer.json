@@ -42,7 +42,8 @@
     "barrel_aged": false,
     "community_rating": 2.4,
     "ingredients": "Cerise / Forte",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "8714800050098"
   },
   {
     "title": "BAVARIA 8.6 ORIGINAL",
@@ -57,7 +58,8 @@
     "barrel_aged": false,
     "community_rating": 2.5,
     "ingredients": "Standard Forte",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "8714800048286"
   },
   {
     "title": "BAVARIA 8.6 RED",
@@ -87,7 +89,8 @@
     "barrel_aged": false,
     "community_rating": 2.5,
     "ingredients": "Sans alcool",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "8714800046992"
   },
   {
     "title": "LA TRAPPE BLONDE",

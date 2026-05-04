@@ -3299,6 +3299,10 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                 <button id="btn-restart-tuto" class="btn-primary text-white" style="background:#222; border:1px solid #444; width:100%; margin-bottom:15px;">
                     ${i18n.t('settings_restart_tuto')}
                 </button>
+
+                <button id="btn-request-beer" class="btn-primary" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; width:100%; margin-bottom:15px; font-weight:bold; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);">
+                    ${i18n.t('request_beer_btn')}
+                </button>
                 
                 <details style="border-top:1px solid #333; padding-top:10px;">
                     <summary style="cursor:pointer; color:#888; font-size:0.8rem; text-align:left;" data-i18n="settings_danger_zone">${i18n.t('settings_danger_zone')}</summary>
@@ -3633,6 +3637,8 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
         }, 500);
     };
 
+    container.querySelector('#btn-request-beer').onclick = () => renderRequestBeerForm();
+
     // Granular Resets
     const confirmReset = async (msg, action) => {
         if (await showConfirmModal(msg)) {
@@ -3685,6 +3691,213 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     };
 
     i18n.translateDOM(container);
+}
+
+function renderRequestBeerForm() {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'modal-content';
+    wrapper.style.maxHeight = '85vh';
+    wrapper.style.overflowY = 'auto';
+
+    wrapper.innerHTML = `
+        <div style="text-align:center; margin-bottom:20px;">
+            <div style="font-size:2.5rem; margin-bottom:8px;">🍺</div>
+            <h2 style="color:var(--accent-gold); margin-bottom:4px;">${i18n.t('request_beer_title')}</h2>
+            <p style="font-size:0.85rem; color:#888;">${i18n.t('request_beer_subtitle')}</p>
+        </div>
+
+        <form id="request-beer-form" style="display:flex; flex-direction:column; gap:12px;">
+            <!-- Beer Name (Required) -->
+            <div class="form-group">
+                <label class="form-label" style="display:flex; align-items:center; gap:5px;">
+                    ${i18n.t('request_beer_name')} <span style="color:#f44336;">*</span>
+                </label>
+                <input type="text" class="form-input" name="beer_name" required
+                    placeholder="${i18n.t('request_beer_name_placeholder')}">
+            </div>
+
+            <!-- Brewery -->
+            <div class="form-group">
+                <label class="form-label">${i18n.t('request_beer_brewery')}</label>
+                <input type="text" class="form-input" name="brewery"
+                    placeholder="${i18n.t('request_beer_brewery_placeholder')}">
+            </div>
+
+            <!-- Type & ABV (side by side) -->
+            <div style="display:flex; gap:10px;">
+                <div class="form-group" style="flex:1;">
+                    <label class="form-label">${i18n.t('request_beer_type')}</label>
+                    <input type="text" class="form-input" name="beer_type"
+                        placeholder="${i18n.t('request_beer_type_placeholder')}">
+                </div>
+                <div class="form-group" style="flex:0.6;">
+                    <label class="form-label">${i18n.t('request_beer_alcohol')}</label>
+                    <input type="text" class="form-input" name="alcohol"
+                        placeholder="${i18n.t('request_beer_alcohol_placeholder')}">
+                </div>
+            </div>
+
+            <!-- Volume & Country (side by side) -->
+            <div style="display:flex; gap:10px;">
+                <div class="form-group" style="flex:1;">
+                    <label class="form-label">${i18n.t('request_beer_volume')}</label>
+                    <input type="text" class="form-input" name="volume"
+                        placeholder="${i18n.t('request_beer_volume_placeholder')}">
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label class="form-label">${i18n.t('request_beer_country')}</label>
+                    <input type="text" class="form-input" name="country"
+                        placeholder="${i18n.t('request_beer_country_placeholder')}">
+                </div>
+            </div>
+
+            <!-- Region -->
+            <div class="form-group">
+                <label class="form-label">${i18n.t('request_beer_region')}</label>
+                <input type="text" class="form-input" name="region"
+                    placeholder="${i18n.t('request_beer_region_placeholder')}">
+            </div>
+
+            <!-- Distribution -->
+            <div class="form-group">
+                <label class="form-label">${i18n.t('request_beer_distribution')}</label>
+                <select class="form-select" name="distribution">
+                    <option value="">${i18n.t('request_beer_dist_unknown')}</option>
+                    <option value="Partout">${i18n.t('form_dist_partout')}</option>
+                    <option value="Supermarché">${i18n.t('form_dist_supermarket')}</option>
+                    <option value="Cavistes">${i18n.t('form_dist_cavistes')}</option>
+                    <option value="Cavistes spécialisés">${i18n.t('form_dist_cavistes_spec')}</option>
+                    <option value="À la brasserie">${i18n.t('form_dist_brewery')}</option>
+                </select>
+            </div>
+
+            <!-- Ingredients / Tasting Notes -->
+            <div class="form-group">
+                <label class="form-label">${i18n.t('request_beer_ingredients')}</label>
+                <input type="text" class="form-input" name="ingredients"
+                    placeholder="${i18n.t('request_beer_ingredients_placeholder')}">
+            </div>
+
+            <!-- Barcode -->
+            <div class="form-group">
+                <label class="form-label">${i18n.t('request_beer_barcode')}</label>
+                <input type="text" class="form-input" name="barcode" inputmode="numeric"
+                    placeholder="${i18n.t('request_beer_barcode_placeholder')}">
+            </div>
+
+            <!-- Barrel Aged & Seasonal (checkboxes side by side) -->
+            <div style="display:flex; gap:20px; padding:8px 0;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" name="barrel_aged" id="req-barrel" style="width:18px; height:18px;">
+                    <label for="req-barrel" style="font-size:0.85rem; color:var(--text-secondary); margin:0;">${i18n.t('request_beer_barrel')}</label>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" name="seasonal" id="req-seasonal" style="width:18px; height:18px;">
+                    <label for="req-seasonal" style="font-size:0.85rem; color:var(--text-secondary); margin:0;">${i18n.t('request_beer_seasonal')}</label>
+                </div>
+            </div>
+
+            <!-- Web Link -->
+            <div class="form-group">
+                <label class="form-label">${i18n.t('request_beer_link')}</label>
+                <input type="url" class="form-input" name="link"
+                    placeholder="${i18n.t('request_beer_link_placeholder')}">
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" id="btn-submit-request" class="btn-primary"
+                style="background: linear-gradient(135deg, #f59e0b, #d97706); color:#000; font-weight:bold; margin-top:5px; box-shadow: 0 4px 15px rgba(245,158,11,0.3);">
+                ${i18n.t('request_beer_submit')}
+            </button>
+        </form>
+    `;
+
+    openModal(wrapper);
+
+    const form = wrapper.querySelector('#request-beer-form');
+    const submitBtn = wrapper.querySelector('#btn-submit-request');
+
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+
+        const beerName = form.querySelector('[name="beer_name"]').value.trim();
+        if (!beerName) {
+            showToast(i18n.t('request_beer_required'), 'error');
+            return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `<span class="spinner"></span> ${i18n.t('request_beer_sending')}`;
+
+        // Build DB-ready beer JSON
+        const brewery = form.querySelector('[name="brewery"]').value.trim();
+        const beerType = form.querySelector('[name="beer_type"]').value.trim();
+        const alcohol = form.querySelector('[name="alcohol"]').value.trim();
+        const volume = form.querySelector('[name="volume"]').value.trim();
+        const country = form.querySelector('[name="country"]').value.trim();
+        const region = form.querySelector('[name="region"]').value.trim();
+        const distribution = form.querySelector('[name="distribution"]').value;
+        const ingredients = form.querySelector('[name="ingredients"]').value.trim();
+        const barcode = form.querySelector('[name="barcode"]').value.trim();
+        const barrelAged = form.querySelector('[name="barrel_aged"]').checked;
+        const seasonal = form.querySelector('[name="seasonal"]').checked;
+        const link = form.querySelector('[name="link"]').value.trim();
+
+        // Generate ID like existing beers: TITLE_TYPE_VOLUME
+        const volNormalized = volume.replace(/[^0-9.]/g, '') || '0';
+        const idBase = `${beerName}_${beerType}_${volNormalized}`
+            .toUpperCase().replace(/\s+/g, '_').replace(/[^A-Z0-9_.]/g, '');
+
+        const beerEntry = {
+            title: beerName.toUpperCase(),
+            brewery: brewery.toUpperCase() || '',
+            type: beerType || '',
+            volume: volume ? `${volNormalized.replace('.', '.')} L` : '',
+            alcohol: alcohol || '',
+            id: idBase,
+            image: '',
+            distribution: distribution || '',
+            barrel_aged: barrelAged,
+            community_rating: 0,
+            ingredients: ingredients || '',
+            isSeasonal: seasonal
+        };
+
+        // Add optional fields
+        if (region) beerEntry.province = region;
+        if (country) beerEntry.country = country;
+        if (barcode) beerEntry.barcode = barcode;
+        if (link) beerEntry.link = link;
+
+        const formData = {
+            access_key: 'dc29b29d-99f5-4ea7-9a42-8c4f41ad1a14',
+            subject: `🍺 Beer Request: ${beerName}`,
+            from_name: 'Beerdex App',
+            message: JSON.stringify(beerEntry, null, 2)
+        };
+
+        try {
+            const response = await fetch('https://api.web3forms.com/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                closeModal();
+                showToast(i18n.t('toast_request_beer_success'));
+            } else {
+                throw new Error(result.message || 'Unknown error');
+            }
+        } catch (err) {
+            console.error('[RequestBeer] Error:', err);
+            showToast(i18n.t('toast_request_beer_error'), 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = i18n.t('request_beer_submit');
+        }
+    };
 }
 
 function renderTemplateEditor() {

@@ -10,7 +10,7 @@
     "production_volume": "Industrielle",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 2.0,
+    "community_rating": 2,
     "ingredients": "Maïs/Standard",
     "rarity_rank": "Base"
   },
@@ -55,7 +55,7 @@
     "production_volume": "Régionale",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -87,7 +87,8 @@
     "barrel_aged": false,
     "community_rating": 3.6,
     "ingredients": "Houblonnage à cru",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5412186003013"
   },
   {
     "title": "BACCHUS FRAMBOISE",
@@ -207,7 +208,8 @@
     "barrel_aged": false,
     "community_rating": 3.5,
     "ingredients": "Miel",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5411676301332"
   },
   {
     "title": "BARBAR ROUGE",
@@ -222,7 +224,8 @@
     "barrel_aged": false,
     "community_rating": 3.1,
     "ingredients": "Miel / Cerise",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5411676100867"
   },
   {
     "title": "BERTINCHAMPS BLONDE",
@@ -237,7 +240,8 @@
     "barrel_aged": false,
     "community_rating": 3.4,
     "ingredients": "Malt de ferme",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5425033240011"
   },
   {
     "title": "BIERE DES OURS",
@@ -282,7 +286,8 @@
     "barrel_aged": false,
     "community_rating": 3.1,
     "ingredients": "Coriandre/Orange",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5411676800446"
   },
   {
     "title": "BLANCHE DE NAMUR",
@@ -492,7 +497,8 @@
     "barrel_aged": false,
     "community_rating": 3.7,
     "ingredients": "Malt Caramel",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5411551300818"
   },
   {
     "title": "BUSH BLONDE",
@@ -507,7 +513,8 @@
     "barrel_aged": false,
     "community_rating": 3.6,
     "ingredients": "Standard",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5411551310817"
   },
   {
     "title": "BUSH BLONDE TRIPLE",
@@ -522,7 +529,8 @@
     "barrel_aged": false,
     "community_rating": 3.6,
     "ingredients": "Standard",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5411551310817"
   },
   {
     "title": "BUSH DE NUITS",
@@ -582,7 +590,8 @@
     "barrel_aged": false,
     "community_rating": 3.7,
     "ingredients": "Standard",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5425006240116"
   },
   {
     "title": "CAROLUS XMAS",
@@ -730,7 +739,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Faible Alcool",
     "rarity_rank": "Commun"
   },
@@ -777,7 +786,8 @@
     "barrel_aged": false,
     "community_rating": 2.5,
     "ingredients": "Maïs/Riz",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "7501064191466"
   },
   {
     "title": "CORSENDONK AGNUS",
@@ -837,7 +847,8 @@
     "barrel_aged": false,
     "community_rating": 3.3,
     "ingredients": "Standard",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5411491003893"
   },
   {
     "title": "CURTIUS CLASSIC",
@@ -957,7 +968,8 @@
     "barrel_aged": false,
     "community_rating": 3.3,
     "ingredients": "Cerises",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5412186002436"
   },
   {
     "title": "DELIRIUM TREMENS",
@@ -1017,7 +1029,8 @@
     "barrel_aged": false,
     "community_rating": 3.8,
     "ingredients": "Standard",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5411681014531"
   },
   {
     "title": "DUVEL 6.66",
@@ -1062,7 +1075,8 @@
     "barrel_aged": false,
     "community_rating": 3.4,
     "ingredients": "Standard",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5411081006211"
   },
   {
     "title": "FILOU IPA",
@@ -1255,7 +1269,7 @@
     "production_volume": "Régionale",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Bio / Sans Gluten",
     "rarity_rank": "Commun"
   },
@@ -1272,7 +1286,8 @@
     "barrel_aged": false,
     "community_rating": 3.5,
     "ingredients": "Houblons Saaz",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5412186000135"
   },
   {
     "title": "GULDEN DRAAK",
@@ -1377,7 +1392,8 @@
     "barrel_aged": false,
     "community_rating": 3.5,
     "ingredients": "Houblons",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5425025122011"
   },
   {
     "title": "JACOBINS ROUGE MAX",
@@ -1467,7 +1483,8 @@
     "barrel_aged": false,
     "community_rating": 3.2,
     "ingredients": "Liqueur de cerise",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5411081003425"
   },
   {
     "title": "KASTEEL ROUGE 0,0%",
@@ -1647,7 +1664,8 @@
     "barrel_aged": false,
     "community_rating": 3.2,
     "ingredients": "Maïs/Standard",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "5410228102762"
   },
   {
     "title": "LEFFE PRESTIGE",
@@ -1752,7 +1770,8 @@
     "barrel_aged": false,
     "community_rating": 3.3,
     "ingredients": "Sucre Candi",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "5411223030067"
   },
   {
     "title": "LINDEMANS FRAMBOISE",
@@ -1765,7 +1784,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Jus de framboise",
     "rarity_rank": "Base"
   },
@@ -1782,7 +1801,8 @@
     "barrel_aged": false,
     "community_rating": 3.2,
     "ingredients": "Jus de cerise",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "5411223007243"
   },
   {
     "title": "LINDEMANS PECHERESSE",
@@ -1797,7 +1817,8 @@
     "barrel_aged": false,
     "community_rating": 3.2,
     "ingredients": "Jus de pêche",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "5411223030043"
   },
   {
     "title": "LINDEMANS TAROT D'OR",
@@ -1857,7 +1878,8 @@
     "barrel_aged": false,
     "community_rating": 3.4,
     "ingredients": "Standard",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5425025122172"
   },
   {
     "title": "LUPULUS FRUCTUS",
@@ -1887,7 +1909,8 @@
     "barrel_aged": false,
     "community_rating": 3.5,
     "ingredients": "Bio",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5425025122073"
   },
   {
     "title": "LUPULUS TRIPLE BLONDE",
@@ -2037,7 +2060,8 @@
     "barrel_aged": false,
     "community_rating": 3.6,
     "ingredients": "Standard",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5410702001383"
   },
   {
     "title": "MOINETTE BLONDE",
@@ -2052,7 +2076,8 @@
     "barrel_aged": false,
     "community_rating": 3.7,
     "ingredients": "Standard",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5410702000133"
   },
   {
     "title": "MONGOZO COCONUT",
@@ -2125,7 +2150,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes & Supermarchés",
     "barrel_aged": false,
-    "community_rating": 4.0,
+    "community_rating": 4,
     "ingredients": "Levures Sauvages (Brettanomyces)",
     "rarity_rank": "Mythique"
   },
@@ -2187,7 +2212,8 @@
     "barrel_aged": false,
     "community_rating": 3.1,
     "ingredients": "Arômes Pêche",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5411551130392"
   },
   {
     "title": "PETRUS TRIPLE",
@@ -2305,7 +2331,7 @@
     "production_volume": "Régionale",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Pomme / Rhum",
     "rarity_rank": "Commun"
   },
@@ -2320,7 +2346,7 @@
     "production_volume": "Industrielle",
     "distribution": "Horeca",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -2382,7 +2408,8 @@
     "barrel_aged": false,
     "community_rating": 4.3,
     "ingredients": "Standard Trappiste",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5412858000104"
   },
   {
     "title": "ROCHEFORT 6%",
@@ -2412,7 +2439,8 @@
     "barrel_aged": false,
     "community_rating": 4.2,
     "ingredients": "Standard Trappiste",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5412858000104"
   },
   {
     "title": "ROCHEFORT TRIPLE",
@@ -2427,7 +2455,8 @@
     "barrel_aged": false,
     "community_rating": 3.9,
     "ingredients": "Standard Trappiste",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5412858000357"
   },
   {
     "title": "SAISON DUPONT",
@@ -2442,7 +2471,8 @@
     "barrel_aged": false,
     "community_rating": 3.8,
     "ingredients": "Saison Traditionnelle",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5410702000331"
   },
   {
     "title": "SAISON DUPONT DRY HOPPINg",
@@ -2470,9 +2500,10 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5413023000158"
   },
   {
     "title": "SILLY KRIEK",
@@ -2485,7 +2516,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Cerises",
     "rarity_rank": "Commun"
   },
@@ -2500,7 +2531,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -2577,7 +2608,8 @@
     "barrel_aged": false,
     "community_rating": 4.2,
     "ingredients": "Eau de St Sixtus",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "54079021"
   },
   {
     "title": "ST BERNARDUS EXTRA",
@@ -2592,7 +2624,8 @@
     "barrel_aged": false,
     "community_rating": 3.5,
     "ingredients": "Standard",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5411911001782"
   },
   {
     "title": "ST BERNARDUS TRIPLE",
@@ -2635,7 +2668,7 @@
     "production_volume": "Régionale",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Fruits",
     "rarity_rank": "Commun"
   },
@@ -2712,7 +2745,8 @@
     "barrel_aged": false,
     "community_rating": 2.9,
     "ingredients": "Standard",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "5410228260646"
   },
   {
     "title": "STRAFFE HENDRIK QUADRUPEL",
@@ -2800,7 +2834,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -2920,7 +2954,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Fruits",
     "rarity_rank": "Rare"
   },
@@ -3027,7 +3061,8 @@
     "barrel_aged": false,
     "community_rating": 3.4,
     "ingredients": "Standard",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5413977000013"
   },
   {
     "title": "VAL DIEU TRIPLE",
@@ -3042,7 +3077,8 @@
     "barrel_aged": false,
     "community_rating": 3.7,
     "ingredients": "Standard",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5413977000037"
   },
   {
     "title": "VEDETT EXTRA WHITE",

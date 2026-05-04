@@ -85,7 +85,7 @@
     "production_volume": "Industrielle",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Pommes",
     "rarity_rank": "Base"
   },
@@ -117,7 +117,8 @@
     "barrel_aged": false,
     "community_rating": 3.9,
     "ingredients": "Saison / Bière de Garde",
-    "rarity_rank": "Super Rare"
+    "rarity_rank": "Super Rare",
+    "barcode": "3760070190014"
   },
   {
     "title": "FESSEE BLONDE",
@@ -147,7 +148,8 @@
     "barrel_aged": false,
     "community_rating": 3.3,
     "ingredients": "Standard",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "3770006626012"
   },
   {
     "title": "HELLFEST IPA",
@@ -162,7 +164,8 @@
     "barrel_aged": false,
     "community_rating": 3.4,
     "ingredients": "Collaboration Hellfest",
-    "rarity_rank": "Épique"
+    "rarity_rank": "Épique",
+    "barcode": "3760057680774"
   },
   {
     "title": "KEKETTE AMBREE",
@@ -175,9 +178,10 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "3760138360021"
   },
   {
     "title": "KEKETTE BLONDE",
@@ -190,7 +194,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -235,7 +239,7 @@
     "production_volume": "Régionale",
     "distribution": "Local",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Bio",
     "rarity_rank": "Rare"
   },
@@ -250,7 +254,7 @@
     "production_volume": "Régionale",
     "distribution": "Local",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Bio",
     "rarity_rank": "Rare"
   },
@@ -282,7 +286,8 @@
     "barrel_aged": false,
     "community_rating": 3.5,
     "ingredients": "Blé / Craft",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "3770006063046"
   },
   {
     "title": "LA MOCHE BLONDE",
@@ -340,7 +345,7 @@
     "production_volume": "Régionale",
     "distribution": "Local",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
     "rarity_rank": "Rare"
   },
@@ -355,7 +360,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -370,7 +375,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -477,7 +482,8 @@
     "barrel_aged": false,
     "community_rating": 3.4,
     "ingredients": "Eau des Glaciers",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "3760023250772"
   },
   {
     "title": "MONT BLANC MYRTILLE",
@@ -492,7 +498,8 @@
     "barrel_aged": false,
     "community_rating": 3.3,
     "ingredients": "Myrtilles",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "3760023250239"
   },
   {
     "title": "MONT BLANC ROUSSE",
@@ -507,7 +514,8 @@
     "barrel_aged": false,
     "community_rating": 3.6,
     "ingredients": "3 Malts",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "3760026624112"
   },
   {
     "title": "MONT BLANC VERTE GENEPI",
@@ -672,7 +680,8 @@
     "barrel_aged": false,
     "community_rating": 3.4,
     "ingredients": "Farine de châtaigne",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "3498640100001"
   },
   {
     "title": "SKUMENN LA BETISE BIO",
@@ -717,7 +726,8 @@
     "barrel_aged": false,
     "community_rating": 3.3,
     "ingredients": "Bio",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "3770013752025"
   },
   {
     "title": "TANDEM PAS CAP BIO",
