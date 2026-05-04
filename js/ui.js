@@ -203,7 +203,15 @@ window.addEventListener('popstate', (e) => {
         return;
     }
 
-    // Priority 2: Navigate back to previous view
+    // Priority 2: Close search bar if open
+    const searchBar = document.getElementById('search-bar');
+    if (searchBar && !searchBar.classList.contains('hidden')) {
+        // Dispatch event for app.js to handle cleanup
+        window.dispatchEvent(new CustomEvent('beerdex-close-search'));
+        return;
+    }
+
+    // Priority 3: Navigate back to previous view
     if (e.state && e.state.view) {
         const targetView = e.state.view;
         // Update nav bar active state

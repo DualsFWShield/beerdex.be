@@ -698,13 +698,28 @@ function setupEventListeners() {
     }
 
     searchToggle.addEventListener('click', () => {
+        const isOpening = searchBar.classList.contains('hidden');
         searchBar.classList.toggle('hidden');
-        if (!searchBar.classList.contains('hidden')) {
+        if (isOpening) {
             searchInput.focus();
+            // Push history state so back button can close it
+            window.history.pushState({ isSearch: true }, '');
         }
     });
 
     searchClose.addEventListener('click', () => {
+        searchBar.classList.add('hidden');
+        searchInput.value = '';
+        state.filter = '';
+        renderCurrentView();
+        // Pop the search history state
+        if (window.history.state && window.history.state.isSearch) {
+            window.history.back();
+        }
+    });
+
+    // Handle back button closing search bar
+    window.addEventListener('beerdex-close-search', () => {
         searchBar.classList.add('hidden');
         searchInput.value = '';
         state.filter = '';
