@@ -44,7 +44,8 @@ const state = {
         itemsPerPage: 24,
         hasMore: true
     },
-    observer: null // Store observer to disconnect if needed
+    observer: null, // Store observer to disconnect if needed
+    initialView: 'home' // Track the view at app launch for back navigation
 };
 
 // Initialize Wrapped
@@ -163,6 +164,18 @@ async function init() {
                 return;
             }
         }, false);
+
+        // Set initial history state so we know when we're back at the start
+        window.history.replaceState({ view: state.view, isInitial: true }, '');
+
+        // Listen for back-navigation view changes from popstate handler
+        window.addEventListener('beerdex-navigate-back', (e) => {
+            const targetView = e.detail.view;
+            if (targetView && targetView !== state.view) {
+                state.view = targetView;
+                renderCurrentView();
+            }
+        });
 
         // --- NATIVE WIDGET INITIAL SYNC ---
         document.addEventListener('visibilitychange', () => {
@@ -410,6 +423,12 @@ function setupEventListeners() {
 
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
             e.currentTarget.classList.add('active');
+
+            // Push view change to history for back navigation
+            if (state.view !== targetView) {
+                window.history.pushState({ view: targetView }, '');
+            }
+
             state.view = targetView;
             renderCurrentView();
         });

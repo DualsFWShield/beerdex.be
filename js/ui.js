@@ -196,10 +196,22 @@ function focusTrap(e) {
 export const modalStack = [];
 
 window.addEventListener('popstate', (e) => {
+    // Priority 1: Close modals
     if (modalStack.length > 0) {
-        // Native back pressed, close the top-most modal
         const topModalClose = modalStack.pop();
         topModalClose(true); // pass true to indicate native back
+        return;
+    }
+
+    // Priority 2: Navigate back to previous view
+    if (e.state && e.state.view) {
+        const targetView = e.state.view;
+        // Update nav bar active state
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        const navBtn = document.querySelector(`.nav-item[data-view="${targetView}"]`);
+        if (navBtn) navBtn.classList.add('active');
+        // Dispatch a custom event for app.js to handle the view change
+        window.dispatchEvent(new CustomEvent('beerdex-navigate-back', { detail: { view: targetView } }));
     }
 });
 
