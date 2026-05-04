@@ -135,15 +135,26 @@ async function init() {
         // Setup Capacitor Back Button (Universal Back Navigation)
         if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
             window.Capacitor.Plugins.App.addListener('backButton', ({ canGoBack }) => {
-                // If there's history (including our pushed modal states), go back.
-                // This triggers 'popstate', which is handled cleanly by ui.js/wrapped.js
+                // Priority 1: If modals are open (our own stack), go back to trigger popstate → close modal
+                if (UI.modalStack && UI.modalStack.length > 0) {
+                    window.history.back();
+                    return;
+                }
+
+                // Priority 2: If history state is a modal (edge case: stack desynced)
+                if (window.history.state && window.history.state.isModal) {
+                    window.history.back();
+                    return;
+                }
+
+                // Priority 3: Real browser history navigation
                 if (canGoBack) {
                     window.history.back();
-                } 
-                // Otherwise, minimize/exit the app
-                else {
-                    window.Capacitor.Plugins.App.exitApp();
+                    return;
                 }
+
+                // No modals, no history → minimize/exit
+                window.Capacitor.Plugins.App.minimizeApp();
             });
         }
 
