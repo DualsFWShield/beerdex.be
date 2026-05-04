@@ -132,31 +132,37 @@ async function init() {
             });
         }
 
-        // Setup Capacitor Back Button (Universal Back Navigation)
+        // Setup Back Button Navigation (Universal)
+        // Strategy 1: Capacitor @capacitor/app plugin (if installed)
         if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
             window.Capacitor.Plugins.App.addListener('backButton', ({ canGoBack }) => {
-                // Priority 1: If modals are open (our own stack), go back to trigger popstate → close modal
                 if (UI.modalStack && UI.modalStack.length > 0) {
                     window.history.back();
                     return;
                 }
-
-                // Priority 2: If history state is a modal (edge case: stack desynced)
                 if (window.history.state && window.history.state.isModal) {
                     window.history.back();
                     return;
                 }
-
-                // Priority 3: Real browser history navigation
                 if (canGoBack) {
                     window.history.back();
                     return;
                 }
-
-                // No modals, no history → minimize/exit
                 window.Capacitor.Plugins.App.minimizeApp();
             });
         }
+        // Strategy 2: Document 'backbutton' event (Android WebView / Cordova-style fallback)
+        document.addEventListener('backbutton', (e) => {
+            e.preventDefault();
+            if (UI.modalStack && UI.modalStack.length > 0) {
+                window.history.back();
+                return;
+            }
+            if (window.history.state && window.history.state.isModal) {
+                window.history.back();
+                return;
+            }
+        }, false);
 
         // --- NATIVE WIDGET INITIAL SYNC ---
         document.addEventListener('visibilitychange', () => {

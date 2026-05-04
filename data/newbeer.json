@@ -27,7 +27,8 @@
     "barrel_aged": false,
     "community_rating": 2.6,
     "ingredients": "Standard",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "54064058"
   },
   {
     "title": "Orval Trappist",
@@ -40,7 +41,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes & Supermarchés",
     "barrel_aged": false,
-    "community_rating": 4.0,
+    "community_rating": 4,
     "ingredients": "Levures Sauvages (Brettanomyces)",
     "rarity_rank": "Mythique"
   },
@@ -72,7 +73,8 @@
     "barrel_aged": false,
     "community_rating": 3.9,
     "ingredients": "Pleine Lune (Marketing)",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5412983280020"
   },
   {
     "title": "Belle Vue Kriek Extra",
@@ -162,7 +164,8 @@
     "barrel_aged": false,
     "community_rating": 2.9,
     "ingredients": "Standard",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "5410228260646"
   },
   {
     "title": "Bourgogne Des Flandres Blonden Os",
@@ -192,7 +195,8 @@
     "barrel_aged": false,
     "community_rating": 4.1,
     "ingredients": "Standard Trappiste",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5412343201337"
   },
   {
     "title": "Lupulus Blonde",
@@ -235,7 +239,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 2.0,
+    "community_rating": 2,
     "ingredients": "Sans alcool",
     "rarity_rank": "Base"
   },
@@ -250,7 +254,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
     "rarity_rank": "Base"
   },
@@ -267,7 +271,8 @@
     "barrel_aged": false,
     "community_rating": 2.6,
     "ingredients": "Standard",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "54064058"
   },
   {
     "title": "Petrus Red",
@@ -342,7 +347,8 @@
     "barrel_aged": false,
     "community_rating": 3.8,
     "ingredients": "Standard Trappiste",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5412343001166"
   },
   {
     "title": "Fourchette",
@@ -417,7 +423,8 @@
     "barrel_aged": false,
     "community_rating": 3.4,
     "ingredients": "Miel",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5411676100805"
   },
   {
     "title": "Floris Chocolat",
@@ -625,7 +632,7 @@
     "production_volume": "Industrielle",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -687,7 +694,8 @@
     "barrel_aged": false,
     "community_rating": 3.1,
     "ingredients": "Arômes Pêche",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5411551130392"
   },
   {
     "title": "Grimbergen Triple",
@@ -702,7 +710,8 @@
     "barrel_aged": false,
     "community_rating": 3.4,
     "ingredients": "Standard",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "3080216049601"
   },
   {
     "title": "Jupiler Canette",
@@ -762,7 +771,8 @@
     "barrel_aged": false,
     "community_rating": 3.1,
     "ingredients": "Epices",
-    "rarity_rank": "Saisonnière"
+    "rarity_rank": "Saisonnière",
+    "barcode": "3080216052434"
   },
   {
     "title": "St Bernardus Abt 12",
@@ -822,7 +832,8 @@
     "barrel_aged": false,
     "community_rating": 2.5,
     "ingredients": "Standard",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "5410971398016"
   },
   {
     "title": "Leute Bokbier",
@@ -882,7 +893,8 @@
     "barrel_aged": false,
     "community_rating": 3.2,
     "ingredients": "Coriandre, Ecorce d'orange",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5410228169604"
   },
   {
     "title": "Hapkin",
@@ -1015,7 +1027,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Cerises",
     "rarity_rank": "Commun"
   },
@@ -1180,7 +1192,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Mélange Lambic",
     "rarity_rank": "Commun"
   },
@@ -1272,7 +1284,8 @@
     "barrel_aged": false,
     "community_rating": 3.8,
     "ingredients": "Bio",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5410702000805"
   },
   {
     "title": "Bush Fram'Bush",
@@ -1422,7 +1435,8 @@
     "barrel_aged": false,
     "community_rating": 3.3,
     "ingredients": "Sucre candi",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5411223030067"
   },
   {
     "title": "Slaapmutske Double Sans Gluten",
@@ -1527,7 +1541,8 @@
     "barrel_aged": false,
     "community_rating": 3.4,
     "ingredients": "Standard",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "4002103000105"
   },
   {
     "title": "Floris Miel",
@@ -1677,7 +1692,8 @@
     "barrel_aged": false,
     "community_rating": 2.4,
     "ingredients": "Sans alcool",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "5410228260646"
   },
   {
     "title": "De Poes",
@@ -1735,7 +1751,7 @@
     "production_volume": "Industrielle",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Arômes Cerise",
     "rarity_rank": "Commun"
   },
@@ -1797,7 +1813,8 @@
     "barrel_aged": false,
     "community_rating": 3.6,
     "ingredients": "Standard",
-    "rarity_rank": "Super Rare"
+    "rarity_rank": "Super Rare",
+    "barcode": "5425031950011"
   },
   {
     "title": "Grimbergen Blond",
@@ -1962,7 +1979,8 @@
     "barrel_aged": false,
     "community_rating": 3.2,
     "ingredients": "Standard",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5411098700034"
   },
   {
     "title": "Omer",
@@ -1977,7 +1995,8 @@
     "barrel_aged": false,
     "community_rating": 3.6,
     "ingredients": "Standard",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5411858000077"
   },
   {
     "title": "Bush Tripel Blond",
@@ -2155,7 +2174,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
     "rarity_rank": "Base"
   },
@@ -2215,7 +2234,7 @@
     "production_volume": "Industrielle",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -2380,7 +2399,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": true,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Copeaux de chêne / Sans alcool",
     "rarity_rank": "Base"
   },
@@ -2755,7 +2774,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Cerises",
     "rarity_rank": "Rare"
   },
@@ -2890,7 +2909,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes & Supermarchés",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Sans alcool / Craft",
     "rarity_rank": "Rare"
   },
@@ -2965,7 +2984,7 @@
     "production_volume": "Régionale",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 4.0,
+    "community_rating": 4,
     "ingredients": "Standard Trappiste",
     "rarity_rank": "Rare"
   },
@@ -3070,7 +3089,7 @@
     "production_volume": "Industrielle",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -3177,7 +3196,8 @@
     "barrel_aged": false,
     "community_rating": 2.6,
     "ingredients": "Standard",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "8410655000010"
   },
   {
     "title": "Reinaert Triple",
@@ -3252,7 +3272,8 @@
     "barrel_aged": false,
     "community_rating": 3.7,
     "ingredients": "Houblons Amérisants",
-    "rarity_rank": "Super Rare"
+    "rarity_rank": "Super Rare",
+    "barcode": "5413963300011"
   },
   {
     "title": "Martins IPA",
@@ -3325,7 +3346,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 2.0,
+    "community_rating": 2,
     "ingredients": "Sans alcool",
     "rarity_rank": "Base"
   },
@@ -3447,7 +3468,8 @@
     "barrel_aged": false,
     "community_rating": 3.5,
     "ingredients": "Miel",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5410702001215"
   },
   {
     "title": "Estaminet 0°",
@@ -3505,7 +3527,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Mélange Lambic",
     "rarity_rank": "Commun"
   },
@@ -3657,7 +3679,8 @@
     "barrel_aged": false,
     "community_rating": 2.7,
     "ingredients": "Sans alcool",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5425012140011"
   },
   {
     "title": "Enigma Tamera Tripel",
@@ -3925,7 +3948,7 @@
     "production_volume": "Régionale",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Sans alcool",
     "rarity_rank": "Base"
   },
@@ -4135,7 +4158,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Jus de pêche",
     "rarity_rank": "Commun"
   },
@@ -4420,7 +4443,7 @@
     "production_volume": "Régionale",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
     "rarity_rank": "Base"
   },
@@ -4465,7 +4488,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Herbes de Gruut",
     "rarity_rank": "Base"
   },
@@ -4630,7 +4653,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Sans alcool",
     "rarity_rank": "Base"
   },
@@ -4855,7 +4878,7 @@
     "production_volume": "Industrielle",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Arômes Pêche",
     "rarity_rank": "Base"
   },
@@ -5065,7 +5088,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Sans alcool",
     "rarity_rank": "Rare"
   },
@@ -5170,7 +5193,7 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 2.0,
+    "community_rating": 2,
     "ingredients": "Sans alcool",
     "rarity_rank": "Base"
   },
@@ -5487,7 +5510,8 @@
     "barrel_aged": false,
     "community_rating": 2.5,
     "ingredients": "Standard",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "3800022701032"
   },
   {
     "title": "Black is Black and I want my baby back Black Rye IPA",
@@ -5577,7 +5601,8 @@
     "barrel_aged": false,
     "community_rating": 3.4,
     "ingredients": "Standard",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5411276200516"
   },
   {
     "title": "St Bernardus Pater 6",
@@ -5725,7 +5750,7 @@
     "production_volume": "Industrielle",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -5967,7 +5992,8 @@
     "barrel_aged": true,
     "community_rating": 3.6,
     "ingredients": "Vieille Brune",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5411858000077"
   },
   {
     "title": "Lindemans Cassis",
@@ -5982,7 +6008,8 @@
     "barrel_aged": false,
     "community_rating": 3.3,
     "ingredients": "Jus de cassis",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "5411223030098"
   },
   {
     "title": "Double Bie",
@@ -6145,7 +6172,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Sans alcool",
     "rarity_rank": "Rare"
   },
@@ -6295,7 +6322,7 @@
     "production_volume": "Batch unique",
     "distribution": "Vente directe/Limitée",
     "barrel_aged": false,
-    "community_rating": 4.0,
+    "community_rating": 4,
     "ingredients": "Vinaigre Balsamique",
     "rarity_rank": "Épique"
   },
@@ -6460,7 +6487,7 @@
     "production_volume": "Régionale",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Fruits Rouges",
     "rarity_rank": "Commun"
   },
@@ -6627,7 +6654,8 @@
     "barrel_aged": false,
     "community_rating": 3.5,
     "ingredients": "Houblonnage à cru",
-    "rarity_rank": "Super Rare"
+    "rarity_rank": "Super Rare",
+    "barcode": "5430001732108"
   },
   {
     "title": "Biere des Amis Redden 0°",
@@ -6867,7 +6895,8 @@
     "barrel_aged": false,
     "community_rating": 2.3,
     "ingredients": "Arômes Tequila",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "3119783007483"
   },
   {
     "title": "Flying Dutchman Tree Hugging Wood Chopping Mother Nature Loving IPA  (FI)",
@@ -6972,7 +7001,8 @@
     "barrel_aged": false,
     "community_rating": 3.4,
     "ingredients": "Cuit au feu de bois",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5425000540236"
   },
   {
     "title": "Buffalo Belgian Stout",
@@ -7240,7 +7270,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Sarrasin / Bio",
     "rarity_rank": "Rare"
   },
@@ -7300,7 +7330,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
     "rarity_rank": "Base"
   },
@@ -7405,7 +7435,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -7540,7 +7570,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Sans alcool",
     "rarity_rank": "Rare"
   },
@@ -7630,7 +7660,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": true,
-    "community_rating": 4.0,
+    "community_rating": 4,
     "ingredients": "Infusion Rhum",
     "rarity_rank": "Super Rare"
   },
@@ -7975,7 +8005,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes & Supermarchés",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Bio",
     "rarity_rank": "Commun"
   },
@@ -8260,7 +8290,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Sans alcool",
     "rarity_rank": "Rare"
   },
@@ -8472,7 +8502,8 @@
     "barrel_aged": true,
     "community_rating": 4.1,
     "ingredients": "Vieille Gueuze",
-    "rarity_rank": "Super Rare"
+    "rarity_rank": "Super Rare",
+    "barcode": "5412783052247"
   },
   {
     "title": "St Feuillien Brune",
@@ -8487,7 +8518,8 @@
     "barrel_aged": false,
     "community_rating": 3.6,
     "ingredients": "Standard",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5412138203317"
   },
   {
     "title": "Buffalo Anno 1907",
@@ -8607,7 +8639,8 @@
     "barrel_aged": false,
     "community_rating": 3.6,
     "ingredients": "Coriandre/Orange",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "54079052"
   },
   {
     "title": "Stuut Aloha IPA",
@@ -8695,7 +8728,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes experts",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Cerises / Sans alcool",
     "rarity_rank": "Rare"
   },
@@ -8740,7 +8773,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Fraises",
     "rarity_rank": "Rare"
   },
@@ -8770,7 +8803,7 @@
     "production_volume": "Batch unique",
     "distribution": "Cavistes experts",
     "barrel_aged": true,
-    "community_rating": 4.0,
+    "community_rating": 4,
     "ingredients": "Fût Vin Rouge",
     "rarity_rank": "Épique"
   },
@@ -8905,7 +8938,7 @@
     "production_volume": "Régionale",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Cerises",
     "rarity_rank": "Commun"
   },
@@ -9085,7 +9118,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Cerises",
     "rarity_rank": "Commun"
   },
@@ -9207,7 +9240,8 @@
     "barrel_aged": false,
     "community_rating": 3.2,
     "ingredients": "Pomme",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "5411223030036"
   },
   {
     "title": "Ename Double",
@@ -9415,7 +9449,7 @@
     "production_volume": "Régionale",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Fruits Rouges",
     "rarity_rank": "Commun"
   },
@@ -9430,7 +9464,7 @@
     "production_volume": "Régionale",
     "distribution": "Supermarché",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
     "rarity_rank": "Base"
   },
@@ -9520,7 +9554,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -9717,7 +9751,8 @@
     "barrel_aged": false,
     "community_rating": 3.2,
     "ingredients": "Standard",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5425031010340"
   },
   {
     "title": "Lupulus Organicus",
@@ -9762,7 +9797,8 @@
     "barrel_aged": false,
     "community_rating": 3.6,
     "ingredients": "Houblons Aromatiques",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5411283000017"
   },
   {
     "title": "Fagnes Blonde",
@@ -9777,7 +9813,8 @@
     "barrel_aged": false,
     "community_rating": 3.3,
     "ingredients": "Standard",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5425032451715"
   },
   {
     "title": "Ter Dolen Armand",
@@ -10180,7 +10217,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Sans alcool",
     "rarity_rank": "Rare"
   },
@@ -10345,9 +10382,10 @@
     "production_volume": "Industrielle",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 2.0,
+    "community_rating": 2,
     "ingredients": "Sans alcool",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "3119780273911"
   },
   {
     "title": "Lupulus Neipa  Blik",
@@ -10540,7 +10578,7 @@
     "production_volume": "Micro-brasserie",
     "distribution": "Cavistes spécialisés",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Sans alcool",
     "rarity_rank": "Rare"
   },
@@ -10632,7 +10670,8 @@
     "barrel_aged": false,
     "community_rating": 3.4,
     "ingredients": "Houblons US",
-    "rarity_rank": "Commun"
+    "rarity_rank": "Commun",
+    "barcode": "5412138391335"
   },
   {
     "title": "Passe Partout",
@@ -10932,7 +10971,8 @@
     "barrel_aged": false,
     "community_rating": 3.2,
     "ingredients": "Standard",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5430001998016"
   },
   {
     "title": "Surrealiste Calavera",
@@ -11127,7 +11167,8 @@
     "barrel_aged": false,
     "community_rating": 3.5,
     "ingredients": "Standard",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5411364151416"
   },
   {
     "title": "La Senne Bruxellensis",
@@ -11187,7 +11228,8 @@
     "barrel_aged": false,
     "community_rating": 3.4,
     "ingredients": "Standard",
-    "rarity_rank": "Super Rare"
+    "rarity_rank": "Super Rare",
+    "barcode": "5425036410015"
   },
   {
     "title": "Dekoninck Oude Gueuze",
@@ -11200,7 +11242,7 @@
     "production_volume": "Batch unique",
     "distribution": "Vente directe/Limitée",
     "barrel_aged": true,
-    "community_rating": 4.0,
+    "community_rating": 4,
     "ingredients": "Vieille Gueuze",
     "rarity_rank": "Ultra Légendaire"
   },
@@ -11277,7 +11319,8 @@
     "barrel_aged": false,
     "community_rating": 2.6,
     "ingredients": "Sans alcool",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "5415270100728"
   },
   {
     "title": "Ter Dolen Wit",
@@ -11532,7 +11575,8 @@
     "barrel_aged": false,
     "community_rating": 3.5,
     "ingredients": "Bio",
-    "rarity_rank": "Rare"
+    "rarity_rank": "Rare",
+    "barcode": "5425025122073"
   },
   {
     "title": "Kapittel Tripel Abt",
@@ -11575,7 +11619,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes & Supermarchés",
     "barrel_aged": true,
-    "community_rating": 4.0,
+    "community_rating": 4,
     "ingredients": "Vieille Kriek",
     "rarity_rank": "Rare"
   },
@@ -12715,7 +12759,7 @@
     "production_volume": "Régionale",
     "distribution": "Cavistes généralistes",
     "barrel_aged": false,
-    "community_rating": 3.0,
+    "community_rating": 3,
     "ingredients": "Standard",
     "rarity_rank": "Commun"
   },
@@ -13197,7 +13241,8 @@
     "barrel_aged": false,
     "community_rating": 2.9,
     "ingredients": "Maïs/Standard",
-    "rarity_rank": "Base"
+    "rarity_rank": "Base",
+    "barcode": "54055575"
   },
   {
     "title": "Cristal Canette",
