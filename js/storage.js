@@ -369,7 +369,9 @@ export async function exportDataAdvanced(options = { scope: 'all' }) {
                 });
                 await Plugins.Share.share({
                     title: 'Export Beerdex',
-                    url: writeResult.uri
+                    text: 'Voici mon fichier de sauvegarde Beerdex',
+                    url: writeResult.uri,
+                    dialogTitle: 'Sauvegarder les données Beerdex'
                 });
                 return (exportObj.ratings ? Object.keys(exportObj.ratings).length : 0) + (exportObj.customBeers ? exportObj.customBeers.length : 0);
             }

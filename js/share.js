@@ -483,21 +483,72 @@ export async function shareImage(blob, title, apiLink = null) {
         return;
     }
 
-    // 1. Force Download (Desktop/Mobile)
+    const filename = `beerdex_wrapped_${Date.now()}.png`;
+
+    // --- CAPACITOR NATIVE BRIDGE ---
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+        try {
+            const Plugins = window.Capacitor.Plugins;
+            if (Plugins && Plugins.Filesystem && Plugins.Share) {
+                // Convert blob to base64
+                const reader = new FileReader();
+                reader.readAsDataURL(blob);
+                reader.onloadend = async () => {
+                    const base64data = reader.result.split(',')[1];
+                    
+                    try {
+                        const writeResult = await Plugins.Filesystem.writeFile({
+                            path: filename,
+                            data: base64data,
+                            directory: 'CACHE'
+                        });
+                        
+                        await Plugins.Share.share({
+                            title: title || 'Beerdex Wrapped',
+                            url: writeResult.uri,
+                            dialogTitle: 'Partager mon Beerdex'
+                        });
+                    } catch (e) {
+                        console.error("Capacitor Share Error", e);
+                        createFullscreenPreview(blob, apiLink);
+                    }
+                };
+                return;
+            }
+        } catch (e) {
+            console.warn("Native bridge Share failed", e);
+        }
+    }
+
+    // Web Share API (Mobile Web)
+    const file = new File([blob], filename, { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+            await navigator.share({
+                files: [file],
+                title: title || 'Beerdex',
+            });
+            return; // Success
+        } catch (err) {
+            if (err.name !== 'AbortError') console.warn("Web Share failed", err);
+        }
+    }
+
+    // 1. Force Download (Desktop)
     try {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `beerdex-${Date.now()}.png`;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        // keep url alive for preview
+        setTimeout(() => URL.revokeObjectURL(url), 100);
     } catch (e) {
         console.warn("Download failed, proceeding to preview", e);
     }
 
-    // 2. Show Preview (with API Link if provided)
+    // 2. Show Preview
     createFullscreenPreview(blob, apiLink);
 }
 
