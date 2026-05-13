@@ -539,10 +539,20 @@ export function logManualBAC(bacValue) {
     const gender = Storage.getPreference('bac_gender', 'M');
     const r = gender === 'M' ? MEN_R : (gender === 'F' ? WOMEN_R : AVERAGE_R);
 
-    const gramsNeeded = (bacValue * weightKg * r) || 0;
+    // Match the same absorption time the simulation uses
+    const drinkDurationMin = parseInt(Storage.getPreference('bac_drink_duration', 0)) || 0;
+    const ABSORPTION_MINS = 45 + drinkDurationMin;
+    const ELIMINATION_PER_MIN = ELIMINATION_RATE / 60; // g/L per minute
+    const BAC_PER_GRAM = 1 / (weightKg * r);
 
-    // Back-date the drink by 45 mins so that it is already fully absorbed "now"
-    const ABSORPTION_MINS = 45;
+    // The simulation applies constant elimination each minute during absorption:
+    //   Each minute: BAC += (grams/A) * BAC_PER_GRAM  then  BAC -= ELIMINATION_PER_MIN
+    //   After A minutes: finalBAC = grams * BAC_PER_GRAM - ELIMINATION_PER_MIN * A
+    // Solving for grams: grams = (targetBAC + ELIMINATION_PER_MIN * A) / BAC_PER_GRAM
+    const totalEliminated = ELIMINATION_PER_MIN * ABSORPTION_MINS;
+    const gramsNeeded = ((bacValue + totalEliminated) / BAC_PER_GRAM) || 0;
+
+    // Back-date the drink by the full absorption time so it is fully absorbed "now"
     const pastTime = new Date().getTime() - (ABSORPTION_MINS * 60 * 1000);
 
     const drink = {

@@ -195,7 +195,16 @@ function focusTrap(e) {
 
 export const modalStack = [];
 
+// Flag to prevent popstate from interfering when we programmatically close a modal
+let _closingModalProgrammatically = false;
+
 window.addEventListener('popstate', (e) => {
+    // If we triggered this popstate ourselves via closeModal -> history.back(), skip it
+    if (_closingModalProgrammatically) {
+        _closingModalProgrammatically = false;
+        return;
+    }
+
     // Priority 1: Close modals
     if (modalStack.length > 0) {
         const topModalClose = modalStack.pop();
@@ -232,6 +241,7 @@ export function closeModal(fromPopState = false) {
     
     // If this wasn't triggered by native back, keep history stack clean
     if (fromPopState !== true && window.history.state && window.history.state.isModal) {
+        _closingModalProgrammatically = true;
         window.history.back();
     }
     
@@ -1544,15 +1554,13 @@ export function renderBeerDetail(beer, onSave) {
                 `;
 
     // --- Custom Beer Actions ---
-    let customActions = '';
-    if (beer.id.startsWith('CUSTOM_')) {
-        customActions = `
-            <div style="margin-top:20px; border-top:1px solid #333; padding-top:20px; display:flex; gap:10px;">
-                <button id="btn-edit-beer" class="form-input" style="flex:1;">${i18n.t('detail_btn_edit')}</button>
-                <button id="btn-delete-beer" class="form-input" style="flex:1; color:var(--danger); border-color:var(--danger);">${i18n.t('detail_btn_delete')}</button>
-            </div>
-        `;
-    }
+    // Always render the container; buttons are injected dynamically
+    const customActionsHtml = beer.id.startsWith('CUSTOM_') ? `
+        <div id="custom-actions-container" style="margin-top:20px; border-top:1px solid #333; padding-top:20px; display:flex; gap:10px;">
+            <button id="btn-edit-beer" class="form-input" style="flex:1;">${i18n.t('detail_btn_edit')}</button>
+            <button id="btn-delete-beer" class="form-input" style="flex:1; color:var(--danger); border-color:var(--danger);">${i18n.t('detail_btn_delete')}</button>
+        </div>
+    ` : `<div id="custom-actions-container"></div>`;
 
     // --- Rarity Logic Definition ---
     // Moved logic here: Reveal state is now tied to consumption (count > 0)
@@ -1764,7 +1772,7 @@ export function renderBeerDetail(beer, onSave) {
                     ✨ ${i18n.t('info_btn_custom_story')}
                 </button>
 
-                ${customActions}
+                ${customActionsHtml}
                 `;
 
     // Volume Presets Logic
@@ -1925,6 +1933,33 @@ export function renderBeerDetail(beer, onSave) {
             // 4. IMPORTANT: We must signal the app to reload the list because we added a beer
             // We can dispatch event, but current view might not update instantly if we don't force it.
             window.dispatchEvent(new CustomEvent('beerdex-action'));
+
+            // 5. Inject Edit/Delete buttons now that it's a CUSTOM_ beer
+            const actionsContainer = wrapper.querySelector('#custom-actions-container');
+            if (actionsContainer && !actionsContainer.querySelector('#btn-edit-beer')) {
+                actionsContainer.innerHTML = `
+                    <button id="btn-edit-beer" class="form-input" style="flex:1;">${i18n.t('detail_btn_edit')}</button>
+                    <button id="btn-delete-beer" class="form-input" style="flex:1; color:var(--danger); border-color:var(--danger);">${i18n.t('detail_btn_delete')}</button>
+                `;
+                actionsContainer.style.cssText = 'margin-top:20px; border-top:1px solid #333; padding-top:20px; display:flex; gap:10px;';
+                actionsContainer.querySelector('#btn-delete-beer').onclick = async () => {
+                    if (await showConfirmModal(i18n.t('modal_confirm_delete_beer'))) {
+                        Storage.deleteCustomBeer(beer.id);
+                        closeModal();
+                        showToast(i18n.t('toast_beer_deleted'));
+                        setTimeout(() => location.reload(), 500);
+                    }
+                };
+                actionsContainer.querySelector('#btn-edit-beer').onclick = () => {
+                    closeModal();
+                    setTimeout(() => {
+                        renderAddBeerForm((updatedBeer) => {
+                            showToast(i18n.t('toast_beer_modified'));
+                            setTimeout(() => location.reload(), 500);
+                        }, beer);
+                    }, 60);
+                };
+            }
         }
 
         const wasLocked = !existingData.count || existingData.count === 0;
@@ -2132,9 +2167,11 @@ export function renderBeerDetail(beer, onSave) {
         }
     };
 
-    // Binding for Custom Actions
-    if (customActions) {
-        wrapper.querySelector('#btn-delete-beer').onclick = async () => {
+    // Binding for Custom Actions (only if buttons already exist, i.e. beer was CUSTOM_ from the start)
+    const existingEditBtn = wrapper.querySelector('#btn-edit-beer');
+    const existingDeleteBtn = wrapper.querySelector('#btn-delete-beer');
+    if (existingDeleteBtn) {
+        existingDeleteBtn.onclick = async () => {
             if (await showConfirmModal(i18n.t('modal_confirm_delete_beer'))) {
                 Storage.deleteCustomBeer(beer.id);
                 closeModal();
@@ -2142,13 +2179,16 @@ export function renderBeerDetail(beer, onSave) {
                 setTimeout(() => location.reload(), 500);
             }
         };
-
-        wrapper.querySelector('#btn-edit-beer').onclick = () => {
+    }
+    if (existingEditBtn) {
+        existingEditBtn.onclick = () => {
             closeModal();
-            renderAddBeerForm((updatedBeer) => {
-                showToast(i18n.t('toast_beer_modified'));
-                setTimeout(() => location.reload(), 500);
-            }, beer);
+            setTimeout(() => {
+                renderAddBeerForm((updatedBeer) => {
+                    showToast(i18n.t('toast_beer_modified'));
+                    setTimeout(() => location.reload(), 500);
+                }, beer);
+            }, 60);
         };
     }
 
@@ -2192,12 +2232,40 @@ export function renderBeerDetail(beer, onSave) {
             delete newBeer.fromAPI;
             Storage.saveCustomBeer(newBeer);
             beer.id = newBeer.id; // Switch ref
+            beer.fromAPI = false;
 
             // Now save the rating with new ID
             Storage.saveBeerRating(newBeer.id, data);
 
             window.dispatchEvent(new CustomEvent('beerdex-action'));
             showToast(i18n.t('toast_beer_note_saved'));
+
+            // Inject Edit/Delete buttons now that it's a CUSTOM_ beer
+            const actionsContainer = wrapper.querySelector('#custom-actions-container');
+            if (actionsContainer && !actionsContainer.querySelector('#btn-edit-beer')) {
+                actionsContainer.innerHTML = `
+                    <button id="btn-edit-beer" class="form-input" style="flex:1;">${i18n.t('detail_btn_edit')}</button>
+                    <button id="btn-delete-beer" class="form-input" style="flex:1; color:var(--danger); border-color:var(--danger);">${i18n.t('detail_btn_delete')}</button>
+                `;
+                actionsContainer.style.cssText = 'margin-top:20px; border-top:1px solid #333; padding-top:20px; display:flex; gap:10px;';
+                actionsContainer.querySelector('#btn-delete-beer').onclick = async () => {
+                    if (await showConfirmModal(i18n.t('modal_confirm_delete_beer'))) {
+                        Storage.deleteCustomBeer(beer.id);
+                        closeModal();
+                        showToast(i18n.t('toast_beer_deleted'));
+                        setTimeout(() => location.reload(), 500);
+                    }
+                };
+                actionsContainer.querySelector('#btn-edit-beer').onclick = () => {
+                    closeModal();
+                    setTimeout(() => {
+                        renderAddBeerForm((updatedBeer) => {
+                            showToast(i18n.t('toast_beer_modified'));
+                            setTimeout(() => location.reload(), 500);
+                        }, beer);
+                    }, 60);
+                };
+            }
         } else {
             showToast(i18n.t('toast_rating_saved'));
         }

@@ -588,14 +588,17 @@ function setupEventListeners() {
                             e.stopPropagation();
                             UI.closeModal();
                             const prefill = product || {};
-                            UI.renderAddBeerForm((newBeer) => {
-                                Storage.saveCustomBeer(newBeer);
-                                state.beers.unshift(newBeer);
-                                Achievements.checkAchievements(state.beers);
-                                renderCurrentView();
-                                UI.closeModal();
-                                UI.showToast(i18n.t('toast_beer_added'));
-                            }, null, prefill);
+                            // Delay to let closeModal's history.back() popstate settle
+                            setTimeout(() => {
+                                UI.renderAddBeerForm((newBeer) => {
+                                    Storage.saveCustomBeer(newBeer);
+                                    state.beers.unshift(newBeer);
+                                    Achievements.checkAchievements(state.beers);
+                                    renderCurrentView();
+                                    UI.closeModal();
+                                    UI.showToast(i18n.t('toast_beer_added'));
+                                }, null, prefill);
+                            }, 60);
                         }, { once: true });
                     }, 100);
                     return 5000;
