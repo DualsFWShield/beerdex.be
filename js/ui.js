@@ -3812,145 +3812,121 @@ function renderRequestBeerForm(allBeers = []) {
     wrapper.style.maxHeight = '85vh';
     wrapper.style.overflowY = 'auto';
 
+    const sectionStyle = `background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px;margin-bottom:2px;`;
+    const sectionTitle = (icon, text) => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><span style="font-size:1.1rem;">${icon}</span><strong style="color:var(--accent-gold);font-size:0.85rem;text-transform:uppercase;letter-spacing:0.5px;">${text}</strong></div>`;
+    const reqStar = `<span style="color:#f44336;margin-left:2px;">*</span>`;
+
     wrapper.innerHTML = `
-        <div style="text-align:center; margin-bottom:20px;">
-            <div style="font-size:2.5rem; margin-bottom:8px;">🍺</div>
-            <h2 style="color:var(--accent-gold); margin-bottom:4px;">${i18n.t('request_beer_title')}</h2>
-            <p style="font-size:0.85rem; color:#888;">${i18n.t('request_beer_subtitle')}</p>
+        <div style="text-align:center;margin-bottom:18px;">
+            <div style="font-size:2.8rem;margin-bottom:6px;filter:drop-shadow(0 2px 8px rgba(245,158,11,0.4));">🍺</div>
+            <h2 style="color:var(--accent-gold);margin-bottom:4px;font-size:1.3rem;">${i18n.t('request_beer_title')}</h2>
+            <p style="font-size:0.8rem;color:#666;">${i18n.t('request_beer_subtitle')}</p>
         </div>
 
-        <div style="background: rgba(255,152,0,0.1); padding: 10px 12px; border-radius: 8px; margin-bottom: 16px; text-align: left; border: 1px solid rgba(255,152,0,0.25);">
-            <span style="font-size:0.8rem; color: #ff9800; line-height:1.4;">${i18n.t('request_beer_search_first')}</span>
+        <div style="background:linear-gradient(135deg,rgba(255,152,0,0.08),rgba(255,152,0,0.03));padding:10px 14px;border-radius:10px;margin-bottom:16px;text-align:left;border:1px solid rgba(255,152,0,0.15);">
+            <span style="font-size:0.78rem;color:#ffb74d;line-height:1.5;">${i18n.t('request_beer_search_first')}</span>
         </div>
 
-        <form id="request-beer-form" style="display:flex; flex-direction:column; gap:12px;">
-            <!-- User Identity -->
-            <div style="display:flex; gap:10px;">
-                <div class="form-group" style="flex:1;">
-                    <label class="form-label" style="display:flex; align-items:center; gap:5px;">
-                        ${i18n.t('request_beer_firstname')} <span style="color:#f44336;">*</span>
+        <form id="request-beer-form" style="display:flex;flex-direction:column;gap:10px;">
+
+            <!-- Section 1: Identity -->
+            <div style="${sectionStyle}">
+                ${sectionTitle('👤', i18n.t('request_beer_firstname').split(' ')[0] === 'First' ? 'Your Info' : 'Vos Infos')}
+                <div style="display:flex;gap:8px;margin-bottom:10px;">
+                    <div style="flex:1;">
+                        <label class="form-label" style="font-size:0.78rem;display:flex;align-items:center;gap:3px;">${i18n.t('request_beer_firstname')}${reqStar}</label>
+                        <input type="text" class="form-input" name="firstname" required placeholder="${i18n.t('request_beer_firstname_placeholder')}" style="padding:10px;font-size:0.9rem;">
+                    </div>
+                    <div style="flex:1;">
+                        <label class="form-label" style="font-size:0.78rem;display:flex;align-items:center;gap:3px;">${i18n.t('request_beer_lastname')}${reqStar}</label>
+                        <input type="text" class="form-input" name="lastname" required placeholder="${i18n.t('request_beer_lastname_placeholder')}" style="padding:10px;font-size:0.9rem;">
+                    </div>
+                </div>
+                <div>
+                    <label class="form-label" style="font-size:0.78rem;display:flex;align-items:center;gap:3px;">📧 ${i18n.t('request_beer_email_label')}${reqStar}</label>
+                    <input type="email" class="form-input" name="user_email" required placeholder="${i18n.t('request_beer_email_placeholder_v2')}" style="padding:10px;font-size:0.9rem;">
+                </div>
+            </div>
+
+            <!-- Section 2: Beer Info -->
+            <div style="${sectionStyle}">
+                ${sectionTitle('🍻', i18n.t('request_beer_name').split(' ')[0] === 'Beer' ? 'Beer Details' : 'Détails Bière')}
+                <div style="margin-bottom:10px;">
+                    <label class="form-label" style="font-size:0.78rem;display:flex;align-items:center;gap:3px;">${i18n.t('request_beer_name')}${reqStar}</label>
+                    <input type="text" class="form-input" name="beer_name" required placeholder="${i18n.t('request_beer_name_placeholder')}" style="padding:10px;font-size:0.9rem;">
+                </div>
+                <div style="margin-bottom:10px;">
+                    <label class="form-label" style="font-size:0.78rem;">${i18n.t('request_beer_brewery')}</label>
+                    <input type="text" class="form-input" name="brewery" placeholder="${i18n.t('request_beer_brewery_placeholder')}" style="padding:10px;font-size:0.9rem;">
+                </div>
+                <div style="display:flex;gap:8px;margin-bottom:10px;">
+                    <div style="flex:1;">
+                        <label class="form-label" style="font-size:0.78rem;">${i18n.t('request_beer_type')}</label>
+                        <input type="text" class="form-input" name="beer_type" placeholder="${i18n.t('request_beer_type_placeholder')}" style="padding:10px;font-size:0.9rem;">
+                    </div>
+                    <div style="flex:0.5;">
+                        <label class="form-label" style="font-size:0.78rem;">${i18n.t('request_beer_alcohol')}</label>
+                        <input type="text" class="form-input" name="alcohol" placeholder="${i18n.t('request_beer_alcohol_placeholder')}" style="padding:10px;font-size:0.9rem;">
+                    </div>
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <div style="flex:1;">
+                        <label class="form-label" style="font-size:0.78rem;">${i18n.t('request_beer_volume')}</label>
+                        <input type="text" class="form-input" name="volume" placeholder="${i18n.t('request_beer_volume_placeholder')}" style="padding:10px;font-size:0.9rem;">
+                    </div>
+                    <div style="flex:1;">
+                        <label class="form-label" style="font-size:0.78rem;">${i18n.t('request_beer_country')}</label>
+                        <input type="text" class="form-input" name="country" placeholder="${i18n.t('request_beer_country_placeholder')}" style="padding:10px;font-size:0.9rem;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Extra Details -->
+            <div style="${sectionStyle}">
+                ${sectionTitle('📋', i18n.t('request_beer_region').split(' ')[0] === 'Region' ? 'Extra Details' : 'Détails Supplémentaires')}
+                <div style="margin-bottom:10px;">
+                    <label class="form-label" style="font-size:0.78rem;">${i18n.t('request_beer_region')}</label>
+                    <input type="text" class="form-input" name="region" placeholder="${i18n.t('request_beer_region_placeholder')}" style="padding:10px;font-size:0.9rem;">
+                </div>
+                <div style="display:flex;gap:8px;margin-bottom:10px;">
+                    <div style="flex:1;">
+                        <label class="form-label" style="font-size:0.78rem;">${i18n.t('request_beer_distribution')}</label>
+                        <select class="form-select" name="distribution" style="padding:10px;font-size:0.9rem;">
+                            <option value="">${i18n.t('request_beer_dist_unknown')}</option>
+                            <option value="Partout">${i18n.t('form_dist_partout')}</option>
+                            <option value="Supermarché">${i18n.t('form_dist_supermarket')}</option>
+                            <option value="Cavistes">${i18n.t('form_dist_cavistes')}</option>
+                            <option value="Cavistes spécialisés">${i18n.t('form_dist_cavistes_spec')}</option>
+                            <option value="À la brasserie">${i18n.t('form_dist_brewery')}</option>
+                        </select>
+                    </div>
+                    <div style="flex:1;">
+                        <label class="form-label" style="font-size:0.78rem;">${i18n.t('request_beer_barcode')}</label>
+                        <input type="text" class="form-input" name="barcode" inputmode="numeric" placeholder="${i18n.t('request_beer_barcode_placeholder')}" style="padding:10px;font-size:0.9rem;">
+                    </div>
+                </div>
+                <div style="margin-bottom:10px;">
+                    <label class="form-label" style="font-size:0.78rem;">${i18n.t('request_beer_ingredients')}</label>
+                    <input type="text" class="form-input" name="ingredients" placeholder="${i18n.t('request_beer_ingredients_placeholder')}" style="padding:10px;font-size:0.9rem;">
+                </div>
+                <div style="display:flex;gap:16px;padding:6px 0;margin-bottom:10px;">
+                    <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text-secondary);cursor:pointer;">
+                        <input type="checkbox" name="barrel_aged" style="width:18px;height:18px;accent-color:var(--accent-gold);">
+                        ${i18n.t('request_beer_barrel')}
                     </label>
-                    <input type="text" class="form-input" name="firstname" required
-                        placeholder="${i18n.t('request_beer_firstname_placeholder')}">
-                </div>
-                <div class="form-group" style="flex:1;">
-                    <label class="form-label" style="display:flex; align-items:center; gap:5px;">
-                        ${i18n.t('request_beer_lastname')} <span style="color:#f44336;">*</span>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:var(--text-secondary);cursor:pointer;">
+                        <input type="checkbox" name="seasonal" style="width:18px;height:18px;accent-color:var(--accent-gold);">
+                        ${i18n.t('request_beer_seasonal')}
                     </label>
-                    <input type="text" class="form-input" name="lastname" required
-                        placeholder="${i18n.t('request_beer_lastname_placeholder')}">
                 </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label" style="display:flex; align-items:center; gap:5px;">
-                    ${i18n.t('request_beer_email_label')} <span style="color:#f44336;">*</span>
-                </label>
-                <input type="email" class="form-input" name="user_email" required
-                    placeholder="${i18n.t('request_beer_email_placeholder_v2')}">
-            </div>
-
-            <div style="border-top:1px dashed #333; margin:4px 0;"></div>
-
-            <!-- Beer Name (Required) -->
-            <div class="form-group">
-                <label class="form-label" style="display:flex; align-items:center; gap:5px;">
-                    ${i18n.t('request_beer_name')} <span style="color:#f44336;">*</span>
-                </label>
-                <input type="text" class="form-input" name="beer_name" required
-                    placeholder="${i18n.t('request_beer_name_placeholder')}">
-            </div>
-
-            <!-- Brewery -->
-            <div class="form-group">
-                <label class="form-label">${i18n.t('request_beer_brewery')}</label>
-                <input type="text" class="form-input" name="brewery"
-                    placeholder="${i18n.t('request_beer_brewery_placeholder')}">
-            </div>
-
-            <!-- Type & ABV (side by side) -->
-            <div style="display:flex; gap:10px;">
-                <div class="form-group" style="flex:1;">
-                    <label class="form-label">${i18n.t('request_beer_type')}</label>
-                    <input type="text" class="form-input" name="beer_type"
-                        placeholder="${i18n.t('request_beer_type_placeholder')}">
-                </div>
-                <div class="form-group" style="flex:0.6;">
-                    <label class="form-label">${i18n.t('request_beer_alcohol')}</label>
-                    <input type="text" class="form-input" name="alcohol"
-                        placeholder="${i18n.t('request_beer_alcohol_placeholder')}">
+                <div>
+                    <label class="form-label" style="font-size:0.78rem;">🔗 ${i18n.t('request_beer_link')}</label>
+                    <input type="url" class="form-input" name="link" placeholder="${i18n.t('request_beer_link_placeholder')}" style="padding:10px;font-size:0.9rem;">
                 </div>
             </div>
 
-            <!-- Volume & Country (side by side) -->
-            <div style="display:flex; gap:10px;">
-                <div class="form-group" style="flex:1;">
-                    <label class="form-label">${i18n.t('request_beer_volume')}</label>
-                    <input type="text" class="form-input" name="volume"
-                        placeholder="${i18n.t('request_beer_volume_placeholder')}">
-                </div>
-                <div class="form-group" style="flex:1;">
-                    <label class="form-label">${i18n.t('request_beer_country')}</label>
-                    <input type="text" class="form-input" name="country"
-                        placeholder="${i18n.t('request_beer_country_placeholder')}">
-                </div>
-            </div>
-
-            <!-- Region -->
-            <div class="form-group">
-                <label class="form-label">${i18n.t('request_beer_region')}</label>
-                <input type="text" class="form-input" name="region"
-                    placeholder="${i18n.t('request_beer_region_placeholder')}">
-            </div>
-
-            <!-- Distribution -->
-            <div class="form-group">
-                <label class="form-label">${i18n.t('request_beer_distribution')}</label>
-                <select class="form-select" name="distribution">
-                    <option value="">${i18n.t('request_beer_dist_unknown')}</option>
-                    <option value="Partout">${i18n.t('form_dist_partout')}</option>
-                    <option value="Supermarché">${i18n.t('form_dist_supermarket')}</option>
-                    <option value="Cavistes">${i18n.t('form_dist_cavistes')}</option>
-                    <option value="Cavistes spécialisés">${i18n.t('form_dist_cavistes_spec')}</option>
-                    <option value="À la brasserie">${i18n.t('form_dist_brewery')}</option>
-                </select>
-            </div>
-
-            <!-- Ingredients / Tasting Notes -->
-            <div class="form-group">
-                <label class="form-label">${i18n.t('request_beer_ingredients')}</label>
-                <input type="text" class="form-input" name="ingredients"
-                    placeholder="${i18n.t('request_beer_ingredients_placeholder')}">
-            </div>
-
-            <!-- Barcode -->
-            <div class="form-group">
-                <label class="form-label">${i18n.t('request_beer_barcode')}</label>
-                <input type="text" class="form-input" name="barcode" inputmode="numeric"
-                    placeholder="${i18n.t('request_beer_barcode_placeholder')}">
-            </div>
-
-            <!-- Barrel Aged & Seasonal (checkboxes side by side) -->
-            <div style="display:flex; gap:20px; padding:8px 0;">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <input type="checkbox" name="barrel_aged" id="req-barrel" style="width:18px; height:18px;">
-                    <label for="req-barrel" style="font-size:0.85rem; color:var(--text-secondary); margin:0;">${i18n.t('request_beer_barrel')}</label>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <input type="checkbox" name="seasonal" id="req-seasonal" style="width:18px; height:18px;">
-                    <label for="req-seasonal" style="font-size:0.85rem; color:var(--text-secondary); margin:0;">${i18n.t('request_beer_seasonal')}</label>
-                </div>
-            </div>
-
-            <!-- Web Link -->
-            <div class="form-group">
-                <label class="form-label">${i18n.t('request_beer_link')}</label>
-                <input type="url" class="form-input" name="link"
-                    placeholder="${i18n.t('request_beer_link_placeholder')}">
-            </div>
-
-            <!-- Submit -->
             <button type="submit" id="btn-submit-request" class="btn-primary"
-                style="background: linear-gradient(135deg, #f59e0b, #d97706); color:#000; font-weight:bold; margin-top:5px; box-shadow: 0 4px 15px rgba(245,158,11,0.3);">
+                style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;font-weight:bold;margin-top:4px;padding:14px;font-size:1rem;border-radius:12px;box-shadow:0 4px 20px rgba(245,158,11,0.35);transition:transform 0.15s,box-shadow 0.15s;letter-spacing:0.3px;">
                 ${i18n.t('request_beer_submit')}
             </button>
         </form>
@@ -3964,79 +3940,94 @@ function renderRequestBeerForm(allBeers = []) {
     form.onsubmit = async (e) => {
         e.preventDefault();
 
-        const firstname = form.querySelector('[name="firstname"]').value.trim();
-        const lastname = form.querySelector('[name="lastname"]').value.trim();
-        const userEmail = form.querySelector('[name="user_email"]').value.trim();
+        // --- Rate limiting (60s cooldown) ---
+        const lastSent = parseInt(localStorage.getItem('beerdex_req_ts') || '0', 10);
+        const cooldown = 60000;
+        if (Date.now() - lastSent < cooldown) {
+            const secs = Math.ceil((cooldown - (Date.now() - lastSent)) / 1000);
+            showToast(`⏳ ${secs}s`, 'error');
+            return;
+        }
+
+        // --- Sanitize helper ---
+        const clean = (v) => (v || '').trim().replace(/[<>]/g, '');
+
+        const firstname = clean(form.querySelector('[name="firstname"]').value);
+        const lastname = clean(form.querySelector('[name="lastname"]').value);
+        const userEmail = clean(form.querySelector('[name="user_email"]').value);
 
         if (!firstname || !lastname || !userEmail) {
             showToast(i18n.t('request_beer_identity_required'), 'error');
             return;
         }
 
-        const beerName = form.querySelector('[name="beer_name"]').value.trim();
+        // Email format check
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(userEmail)) {
+            showToast(i18n.t('request_beer_identity_required'), 'error');
+            return;
+        }
+
+        const beerName = clean(form.querySelector('[name="beer_name"]').value);
         if (!beerName) {
             showToast(i18n.t('request_beer_required'), 'error');
             return;
         }
 
-        // Duplicate check against existing beers
+        // --- Levenshtein distance for fuzzy matching ---
+        const levenshtein = (a, b) => {
+            const m = a.length, n = b.length;
+            if (!m) return n; if (!n) return m;
+            const d = Array.from({length: m + 1}, (_, i) => [i]);
+            for (let j = 1; j <= n; j++) d[0][j] = j;
+            for (let i = 1; i <= m; i++)
+                for (let j = 1; j <= n; j++)
+                    d[i][j] = Math.min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1]+(a[i-1]!==b[j-1]?1:0));
+            return d[m][n];
+        };
+
         if (allBeers && allBeers.length > 0) {
-            const searchNorm = beerName.toUpperCase().replace(/\s+/g, '');
+            const norm = (s) => (s||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+            const searchN = norm(beerName);
             const matches = allBeers.filter(b => {
                 if (!b || !b.title) return false;
-                const titleNorm = b.title.toUpperCase().replace(/\s+/g, '');
-                // Exact match or one contains the other
-                return titleNorm === searchNorm ||
-                       titleNorm.includes(searchNorm) ||
-                       searchNorm.includes(titleNorm);
+                const tn = norm(b.title);
+                if (tn === searchN || tn.includes(searchN) || searchN.includes(tn)) return true;
+                return searchN.length > 3 && levenshtein(tn, searchN) <= 3;
             }).slice(0, 5);
 
             if (matches.length > 0) {
-                const matchList = matches.map(b => `• ${b.title}${b.brewery ? ' (' + b.brewery + ')' : ''}`).join('\n');
-                const msg = `${i18n.t('request_beer_duplicate_warning')}\n\n${matchList}\n\n${i18n.t('request_beer_duplicate_confirm')}`;
-                const proceed = await showConfirmModal(msg, { danger: false, confirmText: i18n.t('request_beer_submit') });
-                if (!proceed) return;
+                const list = matches.map(b => `• ${b.title}${b.brewery ? ' ('+b.brewery+')' : ''}`).join('\n');
+                const msg = `${i18n.t('request_beer_duplicate_warning')}\n\n${list}\n\n${i18n.t('request_beer_duplicate_confirm')}`;
+                if (!await showConfirmModal(msg, { danger: false, confirmText: i18n.t('request_beer_submit') })) return;
             }
         }
 
         submitBtn.disabled = true;
         submitBtn.innerHTML = `<span class="spinner"></span> ${i18n.t('request_beer_sending')}`;
 
-        // Build DB-ready beer JSON
-        const brewery = form.querySelector('[name="brewery"]').value.trim();
-        const beerType = form.querySelector('[name="beer_type"]').value.trim();
-        const alcohol = form.querySelector('[name="alcohol"]').value.trim();
-        const volume = form.querySelector('[name="volume"]').value.trim();
-        const country = form.querySelector('[name="country"]').value.trim();
-        const region = form.querySelector('[name="region"]').value.trim();
+        const brewery = clean(form.querySelector('[name="brewery"]').value);
+        const beerType = clean(form.querySelector('[name="beer_type"]').value);
+        const alcohol = clean(form.querySelector('[name="alcohol"]').value);
+        const volume = clean(form.querySelector('[name="volume"]').value);
+        const country = clean(form.querySelector('[name="country"]').value);
+        const region = clean(form.querySelector('[name="region"]').value);
         const distribution = form.querySelector('[name="distribution"]').value;
-        const ingredients = form.querySelector('[name="ingredients"]').value.trim();
-        const barcode = form.querySelector('[name="barcode"]').value.trim();
+        const ingredients = clean(form.querySelector('[name="ingredients"]').value);
+        const barcode = clean(form.querySelector('[name="barcode"]').value);
         const barrelAged = form.querySelector('[name="barrel_aged"]').checked;
         const seasonal = form.querySelector('[name="seasonal"]').checked;
-        const link = form.querySelector('[name="link"]').value.trim();
+        const link = clean(form.querySelector('[name="link"]').value);
 
-        // Generate ID like existing beers: TITLE_TYPE_VOLUME
         const volNormalized = volume.replace(/[^0-9.]/g, '') || '0';
         const idBase = `${beerName}_${beerType}_${volNormalized}`
             .toUpperCase().replace(/\s+/g, '_').replace(/[^A-Z0-9_.]/g, '');
 
         const beerEntry = {
-            title: beerName.toUpperCase(),
-            brewery: brewery.toUpperCase() || '',
-            type: beerType || '',
-            volume: volume ? `${volNormalized.replace('.', '.')} L` : '',
-            alcohol: alcohol || '',
-            id: idBase,
-            image: '',
-            distribution: distribution || '',
-            barrel_aged: barrelAged,
-            community_rating: 0,
-            ingredients: ingredients || '',
-            isSeasonal: seasonal
+            title: beerName.toUpperCase(), brewery: brewery.toUpperCase() || '',
+            type: beerType || '', volume: volume ? `${volNormalized} L` : '',
+            alcohol: alcohol || '', id: idBase, image: '', distribution: distribution || '',
+            barrel_aged: barrelAged, community_rating: 0, ingredients: ingredients || '', isSeasonal: seasonal
         };
-
-        // Add optional fields
         if (region) beerEntry.province = region;
         if (country) beerEntry.country = country;
         if (barcode) beerEntry.barcode = barcode;
@@ -4060,6 +4051,7 @@ function renderRequestBeerForm(allBeers = []) {
             const result = await response.json();
 
             if (result.success) {
+                localStorage.setItem('beerdex_req_ts', Date.now().toString());
                 closeModal();
                 showToast(i18n.t('toast_request_beer_success'));
             } else {
@@ -5507,102 +5499,89 @@ export function renderExportModal(defaultScope = 'all') {
     wrapper.style.textAlign = 'center';
 
     let currentScope = defaultScope;
-    let currentMode = 'file'; // file | url | text
-    let selectedCustomIds = []; // For custom beer selection
-    let downloadMode = false; // For URL mode
+    let currentMode = 'file';
+    let selectedCustomIds = [];
+    let downloadMode = false;
 
-    // Pre-load custom beers status
     let allCustomBeers = [];
     if (Storage.getCustomBeers) {
         allCustomBeers = Storage.getCustomBeers();
-        selectedCustomIds = allCustomBeers.map(b => b.id); // Default select all
+        selectedCustomIds = allCustomBeers.map(b => b.id);
     }
+
+    const sec = `background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px;margin-bottom:14px;text-align:left;`;
+    const secHead = (icon, text) => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span style="font-size:1rem;">${icon}</span><strong style="color:var(--accent-gold);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.5px;">${text}</strong></div>`;
+    const mkScopeBtn = (val, label) => {
+        const a = currentScope === val;
+        return `<button class="btn-scope" data-scope="${val}" style="flex:1;padding:10px 6px;border-radius:10px;border:1px solid ${a?'var(--accent-gold)':'rgba(255,255,255,0.1)'};background:${a?'var(--accent-gold)':'rgba(255,255,255,0.04)'};color:${a?'#000':'#aaa'};font-size:0.8rem;font-weight:${a?'700':'500'};cursor:pointer;transition:all 0.2s;">${label}</button>`;
+    };
+    const mkModeBtn = (id, label, val) => {
+        const a = currentMode === val;
+        return `<button id="${id}" style="flex:1;padding:10px 6px;border-radius:10px;border:1px solid ${a?'var(--accent-gold)':'rgba(255,255,255,0.08)'};background:${a?'rgba(245,158,11,0.12)':'rgba(255,255,255,0.02)'};color:${a?'var(--accent-gold)':'#888'};font-size:0.78rem;font-weight:${a?'600':'400'};cursor:pointer;transition:all 0.2s;">${label}</button>`;
+    };
 
     const renderContent = () => {
         let customSelectionHTML = '';
         if (currentScope === 'custom' && allCustomBeers.length > 0) {
             customSelectionHTML = `
-                <div style="text-align:left; background:#111; padding:10px; border-radius:8px; margin-bottom:15px; max-height:150px; overflow-y:auto; border:1px solid #333;">
-                    <div style="font-size:0.75rem; color:#888; margin-bottom:5px;">Sélectionnez les bières :</div>
+                <div style="background:rgba(0,0,0,0.3);padding:10px;border-radius:8px;margin-top:10px;max-height:140px;overflow-y:auto;border:1px solid rgba(255,255,255,0.06);">
+                    <div style="font-size:0.72rem;color:#666;margin-bottom:6px;">${i18n.t('share_selection_desc')}</div>
                     ${allCustomBeers.map(b => `
-                        <label style="display:flex; align-items:center; gap:8px; padding:4px 0; cursor:pointer;">
-                            <input type="checkbox" class="cb-custom" value="${b.id}" ${selectedCustomIds.includes(b.id) ? 'checked' : ''}>
-                            <span style="font-size:0.85rem; color:#fff;">${b.title}</span>
+                        <label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;">
+                            <input type="checkbox" class="cb-custom" value="${b.id}" ${selectedCustomIds.includes(b.id) ? 'checked' : ''} style="accent-color:var(--accent-gold);">
+                            <span style="font-size:0.82rem;color:#ddd;">${b.title}</span>
                         </label>
                     `).join('')}
-                </div>
-            `;
+                </div>`;
         }
 
-        wrapper.innerHTML = `
-            <h2 data-i18n="export_title">${i18n.t('export_title')}</h2>
-            <p style="color:#888; margin-bottom:20px;" data-i18n="export_desc">${i18n.t('export_desc')}</p>
+        const modeDesc = currentMode === 'file' ? i18n.t('export_method_file_desc')
+            : currentMode === 'url' ? `<div style="margin-bottom:8px;">${i18n.t('export_url_type_label')}</div>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:5px;font-size:0.82rem;color:#ccc;">
+                    <input type="radio" name="urlTxType" class="rb-url-type" value="import" ${!downloadMode?'checked':''} style="accent-color:var(--accent-gold);"> ${i18n.t('export_url_import')}
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;color:#ccc;">
+                    <input type="radio" name="urlTxType" class="rb-url-type" value="download" ${downloadMode?'checked':''} style="accent-color:var(--accent-gold);"> ${i18n.t('export_url_download')}
+                </label>`
+            : i18n.t('export_method_text_desc');
 
-            <div style="margin-bottom:20px; text-align:left;">
-                <label style="display:block; color:var(--accent-gold); margin-bottom:8px;" data-i18n="export_scope_label">${i18n.t('export_scope_label')}</label>
-                <div class="scope-selector" style="display:flex; gap:10px; margin-bottom:10px;">
-                    <button class="btn-scope ${currentScope === 'all' ? 'active' : ''}" data-scope="all" style="flex:1; padding:10px; border-radius:8px; border:1px solid #444; background:${currentScope === 'all' ? 'var(--accent-gold)' : '#222'}; color:${currentScope === 'all' ? 'black' : '#fff'};" data-i18n="export_scope_all">
-                        ${i18n.t('export_scope_all')}
-                    </button>
-                    <button class="btn-scope ${currentScope === 'custom' ? 'active' : ''}" data-scope="custom" style="flex:1; padding:10px; border-radius:8px; border:1px solid #444; background:${currentScope === 'custom' ? 'var(--accent-gold)' : '#222'}; color:${currentScope === 'custom' ? 'black' : '#fff'};" data-i18n="export_scope_custom">
-                        ${i18n.t('export_scope_custom')}
-                    </button>
-                    <button class="btn-scope ${currentScope === 'ratings' ? 'active' : ''}" data-scope="ratings" style="flex:1; padding:10px; border-radius:8px; border:1px solid #444; background:${currentScope === 'ratings' ? 'var(--accent-gold)' : '#222'}; color:${currentScope === 'ratings' ? 'black' : '#fff'};" data-i18n="export_scope_ratings">
-                        ${i18n.t('export_scope_ratings')}
-                    </button>
+        wrapper.innerHTML = `
+            <div style="text-align:center;margin-bottom:18px;">
+                <div style="font-size:2.4rem;margin-bottom:6px;filter:drop-shadow(0 2px 8px rgba(245,158,11,0.3));">💾</div>
+                <h2 style="color:var(--accent-gold);font-size:1.3rem;margin-bottom:4px;">${i18n.t('export_title')}</h2>
+                <p style="font-size:0.8rem;color:#666;">${i18n.t('export_desc')}</p>
+            </div>
+
+            <div style="${sec}">
+                ${secHead('📦', i18n.t('export_scope_label'))}
+                <div style="display:flex;gap:8px;">
+                    ${mkScopeBtn('all', i18n.t('export_scope_all'))}
+                    ${mkScopeBtn('custom', i18n.t('export_scope_custom'))}
+                    ${mkScopeBtn('ratings', i18n.t('export_scope_ratings'))}
                 </div>
                 ${customSelectionHTML}
             </div>
 
-            <div style="margin-bottom:20px; text-align:left;">
-                <label style="display:block; color:var(--accent-gold); margin-bottom:8px;" data-i18n="export_method_label">${i18n.t('export_method_label')}</label>
-                
-                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:5px; margin-bottom:15px;">
-                    <button id="mode-file" class="btn-primary" style="font-size:0.75rem; padding:8px; background:${currentMode === 'file' ? '#333' : '#111'}; color:#fff; border:1px solid ${currentMode === 'file' ? 'var(--accent-gold)' : '#444'}; opacity:${currentMode === 'file' ? 1 : 0.7};" data-i18n="export_method_file">
-                        ${i18n.t('export_method_file')}
-                    </button>
-                    <button id="mode-url" class="btn-primary" style="font-size:0.75rem; padding:8px; background:${currentMode === 'url' ? '#333' : '#111'}; color:#fff; border:1px solid ${currentMode === 'url' ? 'var(--accent-gold)' : '#444'}; opacity:${currentMode === 'url' ? 1 : 0.7};" data-i18n="export_method_url">
-                        ${i18n.t('export_method_url')}
-                    </button>
-                    <button id="mode-text" class="btn-primary" style="font-size:0.75rem; padding:8px; background:${currentMode === 'text' ? '#333' : '#111'}; color:#fff; border:1px solid ${currentMode === 'text' ? 'var(--accent-gold)' : '#444'}; opacity:${currentMode === 'text' ? 1 : 0.7};" data-i18n="export_method_text">
-                        ${i18n.t('export_method_text')}
-                    </button>
+            <div style="${sec}">
+                ${secHead('📤', i18n.t('export_method_label'))}
+                <div style="display:flex;gap:8px;margin-bottom:12px;">
+                    ${mkModeBtn('mode-file', i18n.t('export_method_file'), 'file')}
+                    ${mkModeBtn('mode-url', i18n.t('export_method_url'), 'url')}
+                    ${mkModeBtn('mode-text', i18n.t('export_method_text'), 'text')}
                 </div>
-
-                ${currentMode === 'file' ? `
-                    <div style="background:#222; padding:10px; border-radius:8px; font-size:0.85rem; color:#ccc;" data-i18n="export_method_file_desc">
-                        ${i18n.t('export_method_file_desc')}
-                    </div>
-                ` : currentMode === 'url' ? `
-                    <div style="background:#222; padding:10px; border-radius:8px; font-size:0.85rem; color:#ccc;">
-                        <div style="margin-bottom:10px;" data-i18n="export_url_type_label">${i18n.t('export_url_type_label')}</div>
-                        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; margin-bottom:5px;">
-                            <input type="radio" name="urlTxType" class="rb-url-type" value="import" ${!downloadMode ? 'checked' : ''}>
-                            <span data-i18n="export_url_import">${i18n.t('export_url_import')}</span>
-                        </label>
-                        <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-                            <input type="radio" name="urlTxType" class="rb-url-type" value="download" ${downloadMode ? 'checked' : ''}>
-                            <span data-i18n="export_url_download">${i18n.t('export_url_download')}</span>
-                        </label>
-                    </div>
-                ` : `
-                    <div style="background:#222; padding:10px; border-radius:8px; font-size:0.85rem; color:#ccc;" data-i18n="export_method_text_desc">
-                        ${i18n.t('export_method_text_desc')}
-                    </div>
-                `}
+                <div style="background:rgba(0,0,0,0.25);padding:10px 12px;border-radius:8px;font-size:0.8rem;color:#999;line-height:1.5;">
+                    ${modeDesc}
+                </div>
             </div>
 
-            <button id="btn-do-export" class="btn-primary" style="width:100%; margin-top:10px;">
+            <button id="btn-do-export" class="btn-primary" style="width:100%;margin-top:4px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;font-weight:bold;padding:14px;font-size:1rem;border-radius:12px;box-shadow:0 4px 20px rgba(245,158,11,0.3);letter-spacing:0.3px;">
                 ${currentMode === 'file' ? i18n.t('export_btn_download') : currentMode === 'url' ? i18n.t('export_btn_generate') : i18n.t('export_btn_view')}
             </button>
         `;
 
         // Bind Scope
         wrapper.querySelectorAll('.btn-scope').forEach(btn => {
-            btn.onclick = () => {
-                currentScope = btn.dataset.scope;
-                renderContent();
-            };
+            btn.onclick = () => { currentScope = btn.dataset.scope; renderContent(); };
         });
 
         // Bind Checkboxes
@@ -5623,9 +5602,7 @@ export function renderExportModal(defaultScope = 'all') {
 
         // Bind URL Type Radio
         wrapper.querySelectorAll('.rb-url-type').forEach(rb => {
-            rb.onchange = (e) => {
-                downloadMode = e.target.value === 'download';
-            };
+            rb.onchange = (e) => { downloadMode = e.target.value === 'download'; };
         });
 
         // Bind Action
@@ -5633,14 +5610,9 @@ export function renderExportModal(defaultScope = 'all') {
             const btn = wrapper.querySelector('#btn-do-export');
             const originalText = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '⏳ ...';
+            btn.innerHTML = '<span class="spinner" style="width:20px;height:20px;display:inline-block;vertical-align:middle;margin-right:8px;"></span> ...';
 
-            // Prepare IDs if custom
-            let idsToExport = null;
-            if (currentScope === 'custom') {
-                idsToExport = selectedCustomIds;
-            }
-            // NOTE: 'ratings' scope with specific IDs logic is supported in Storage but we don't expose checkbox UI for ratings (too many)
+            let idsToExport = currentScope === 'custom' ? selectedCustomIds : null;
 
             setTimeout(async () => {
                 if (currentMode === 'file') {
@@ -5650,8 +5622,7 @@ export function renderExportModal(defaultScope = 'all') {
                         closeModal();
                     } else {
                         showToast(i18n.t('toast_nothing_export'), "warning");
-                        btn.disabled = false;
-                        btn.innerHTML = originalText;
+                        btn.disabled = false; btn.innerHTML = originalText;
                     }
                 } else if (currentMode === 'url') {
                     const link = Storage.getShareableLink(currentScope, idsToExport, downloadMode);
@@ -5659,29 +5630,9 @@ export function renderExportModal(defaultScope = 'all') {
                         showLinkResult(link, currentScope);
                     } else {
                         showToast(i18n.t('toast_export_error'), "error");
-                        btn.disabled = false;
-                        btn.innerHTML = originalText;
+                        btn.disabled = false; btn.innerHTML = originalText;
                     }
                 } else if (currentMode === 'text') {
-                    // Get object
-                    // We need a helper in Storage to just get the object
-                    // getShareableLink gets compressed string.
-                    // triggerExportFile saves file.
-                    // exportDataAdvanced returns nothing useful for text display directly.
-                    // Let's implement a quick helper or reuse logic
-                    // Actually Storage.exportDataAdvanced is async and writes to file.
-
-                    // Helper:
-                    const dataStr = Storage.getExportDataString(currentScope === 'custom' ? false : true);
-                    // Wait, getExportDataString doesn't support scopes nicely.
-                    // Let's call a new helper or just manually use existing methods if possible.
-                    // Since Storage.getExportDataString exists, let's use it but it might include too much.
-
-                    // Better: Use `getShareableLink` logic but without compression? 
-                    // Or just `exportDataAdvanced` adapted? 
-                    // Let's modify renderContent to show text result using a hack:
-                    // We'll use `Storage.triggerExportFile`? No.
-
                     let exportObj = {};
                     if (currentScope === 'all' || currentScope === 'ratings') exportObj.ratings = Storage.getAllUserData();
                     if (currentScope === 'all' || currentScope === 'custom') {
@@ -5689,8 +5640,7 @@ export function renderExportModal(defaultScope = 'all') {
                         if (idsToExport) customs = customs.filter(b => idsToExport.includes(String(b.id)));
                         exportObj.customBeers = customs;
                     }
-                    const json = JSON.stringify(exportObj, null, 2);
-                    showLinkResult(json, currentScope, true); // true = text mode
+                    showLinkResult(JSON.stringify(exportObj, null, 2), currentScope, true);
                 }
             }, 300);
         };
@@ -5698,31 +5648,31 @@ export function renderExportModal(defaultScope = 'all') {
 
     const showLinkResult = (content, scopeName, isText = false) => {
         wrapper.innerHTML = `
-            <h2>${isText ? i18n.t('export_result_title_json') : i18n.t('export_result_title_link')}</h2>
-            <p style="font-size:0.85rem; color:#ccc; margin-bottom:15px;" data-i18n="${isText ? 'export_result_desc_json' : ''}">
-                ${isText ? i18n.t('export_result_desc_json') : i18n.t('export_result_desc_link', { scope: scopeName })}
-            </p>
-            
-            <textarea id="result-area" readonly style="width:100%; height:150px; background:#111; color:#0f0; border:1px solid #333; border-radius:4px; font-family:monospace; font-size:0.7rem; padding:5px;">${content}</textarea>
-            
-            <button id="btn-copy-result" class="btn-primary" style="width:100%; margin-top:10px;" data-i18n="match_btn_copy">
+            <div style="text-align:center;margin-bottom:18px;">
+                <div style="font-size:2rem;margin-bottom:6px;">${isText ? '📝' : '🔗'}</div>
+                <h2 style="color:var(--accent-gold);font-size:1.2rem;margin-bottom:4px;">${isText ? i18n.t('export_result_title_json') : i18n.t('export_result_title_link')}</h2>
+                <p style="font-size:0.8rem;color:#888;">
+                    ${isText ? i18n.t('export_result_desc_json') : i18n.t('export_result_desc_link', { scope: scopeName })}
+                </p>
+            </div>
+
+            <div style="${sec}">
+                <textarea id="result-area" readonly style="width:100%;height:140px;background:rgba(0,0,0,0.4);color:#4caf50;border:1px solid rgba(255,255,255,0.06);border-radius:8px;font-family:monospace;font-size:0.72rem;padding:10px;resize:none;">${content}</textarea>
+            </div>
+
+            <button id="btn-copy-result" class="btn-primary" style="width:100%;background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;font-weight:bold;padding:14px;font-size:1rem;border-radius:12px;box-shadow:0 4px 20px rgba(245,158,11,0.3);">
                 ${i18n.t('match_btn_copy')}
             </button>
-            
-            <button id="btn-back" class="btn-primary" style="margin-top:15px; background:transparent; border:1px solid #444; color:#fff;" data-i18n="btn_back">${i18n.t('btn_back')}</button>
+            <button id="btn-back" style="width:100%;margin-top:10px;padding:12px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#888;font-size:0.9rem;cursor:pointer;transition:all 0.2s;">
+                ${i18n.t('btn_back')}
+            </button>
         `;
 
         wrapper.querySelector('#btn-copy-result').onclick = () => {
-            const area = wrapper.querySelector('#result-area');
-            area.select();
-            navigator.clipboard.writeText(content).then(() => {
-                showToast(i18n.t('toast_copied'), "success");
-            });
+            wrapper.querySelector('#result-area').select();
+            navigator.clipboard.writeText(content).then(() => showToast(i18n.t('toast_copied'), "success"));
         };
-
-        wrapper.querySelector('#btn-back').onclick = () => {
-            renderContent();
-        };
+        wrapper.querySelector('#btn-back').onclick = () => renderContent();
     };
 
     renderContent();
