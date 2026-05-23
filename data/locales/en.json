@@ -1064,5 +1064,18 @@
   "request_beer_sending": "Sending...",
   "toast_request_beer_success": "Request sent successfully! 🎉",
   "toast_request_beer_error": "Error sending request. Try again later.",
-  "request_beer_required": "Beer name is required."
+  "request_beer_required": "Beer name is required.",
+  "settings_bac_hide_wg_title": "Hide Weight & Sex",
+  "settings_bac_hide_wg_desc": "Hide the weight and sex fields in settings",
+  "settings_bac_privacy_notice": "🔒 Your data stays private — weight, sex, and all BAC settings are stored only on your device and are never sent anywhere.",
+  "request_beer_firstname": "First Name",
+  "request_beer_firstname_placeholder": "Your first name",
+  "request_beer_lastname": "Last Name",
+  "request_beer_lastname_placeholder": "Your last name",
+  "request_beer_email_label": "Email",
+  "request_beer_email_placeholder_v2": "your@email.com",
+  "request_beer_search_first": "⚠️ Before submitting, please search for this beer in the app to make sure it doesn't already exist.",
+  "request_beer_duplicate_warning": "A similar beer may already exist in the Beerdex:",
+  "request_beer_duplicate_confirm": "Send anyway?",
+  "request_beer_identity_required": "Please fill in your first name, last name, and email."
 }

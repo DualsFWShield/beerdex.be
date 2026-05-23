@@ -1064,5 +1064,18 @@
   "request_beer_sending": "Envoi en cours...",
   "toast_request_beer_success": "Demande envoyée avec succès ! 🎉",
   "toast_request_beer_error": "Erreur lors de l'envoi. Réessayez plus tard.",
-  "request_beer_required": "Le nom de la bière est obligatoire."
+  "request_beer_required": "Le nom de la bière est obligatoire.",
+  "settings_bac_hide_wg_title": "Masquer Poids & Sexe",
+  "settings_bac_hide_wg_desc": "Cache les champs de poids et sexe dans les paramètres",
+  "settings_bac_privacy_notice": "🔒 Vos données restent privées — poids, sexe et tous les réglages d'alcoolémie sont stockés uniquement sur votre appareil et ne sont jamais envoyés nulle part.",
+  "request_beer_firstname": "Prénom",
+  "request_beer_firstname_placeholder": "Votre prénom",
+  "request_beer_lastname": "Nom de famille",
+  "request_beer_lastname_placeholder": "Votre nom de famille",
+  "request_beer_email_label": "Email",
+  "request_beer_email_placeholder_v2": "votre@email.com",
+  "request_beer_search_first": "⚠️ Avant de soumettre, veuillez rechercher cette bière dans l'application pour vérifier qu'elle n'existe pas déjà.",
+  "request_beer_duplicate_warning": "Une bière similaire existe peut-être déjà dans le Beerdex :",
+  "request_beer_duplicate_confirm": "Envoyer quand même ?",
+  "request_beer_identity_required": "Veuillez remplir votre prénom, nom et email."
 }

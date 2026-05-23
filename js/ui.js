@@ -3116,7 +3116,11 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                         <span style="font-size:0.75rem; color: #ccc;">${i18n.t('settings_bac_config_desc', { country: i18n.t('country_' + (Storage.getPreference('bac_country', 'BE').toLowerCase())), limit: rules.sanctionThreshold })}</span>
                     </div>
 
-                    <div style="display:flex; gap:10px; margin-bottom:15px;">
+                    <div style="background: rgba(76,175,80,0.08); padding: 10px 12px; border-radius: 8px; margin-bottom: 15px; text-align: left; border: 1px solid rgba(76,175,80,0.2);">
+                        <span style="font-size:0.75rem; color: #81c784; line-height:1.4;">${i18n.t('settings_bac_privacy_notice')}</span>
+                    </div>
+
+                    <div id="bac-weight-gender-row" style="display:${Storage.getPreference('bac_hide_weight_gender', false) ? 'none' : 'flex'}; gap:10px; margin-bottom:15px;">
                         <div style="flex:1; text-align:left;">
                             <label style="font-size:0.8rem; color:#888; display:block; margin-bottom:5px;" data-i18n="settings_weight_label">${i18n.t('settings_weight_label')}</label>
                             <input type="number" id="input-bac-weight" class="form-input" value="${Storage.getPreference('bac_weight', '')}" placeholder="ex: 70" min="30" max="200" style="padding:8px;">
@@ -3130,6 +3134,17 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                                 <option value="X" ${Storage.getPreference('bac_gender', null) === 'X' ? 'selected' : ''}>${i18n.t('gender_other')}</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <div style="text-align:left;">
+                            <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">${i18n.t('settings_bac_hide_wg_title')}</strong>
+                            <span style="font-size:0.8rem; color:#888;">${i18n.t('settings_bac_hide_wg_desc')}</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-bac-hide-wg" ${Storage.getPreference('bac_hide_weight_gender', false) ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
                     </div>
 
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -3623,6 +3638,16 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
         };
     }
 
+    const toggleBacHideWg = container.querySelector('#toggle-bac-hide-wg');
+    if (toggleBacHideWg) {
+        toggleBacHideWg.onchange = (e) => {
+            const hide = e.target.checked;
+            Storage.savePreference('bac_hide_weight_gender', hide);
+            const row = container.querySelector('#bac-weight-gender-row');
+            if (row) row.style.display = hide ? 'none' : 'flex';
+        };
+    }
+
 
     const toggleBacManual = container.querySelector('#toggle-bac-manual');
     if (toggleBacManual) {
@@ -3725,7 +3750,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
         }, 500);
     };
 
-    container.querySelector('#btn-request-beer').onclick = () => renderRequestBeerForm();
+    container.querySelector('#btn-request-beer').onclick = () => renderRequestBeerForm(allBeers);
 
     // Granular Resets
     const confirmReset = async (msg, action) => {
@@ -3781,7 +3806,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     i18n.translateDOM(container);
 }
 
-function renderRequestBeerForm() {
+function renderRequestBeerForm(allBeers = []) {
     const wrapper = document.createElement('div');
     wrapper.className = 'modal-content';
     wrapper.style.maxHeight = '85vh';
@@ -3794,7 +3819,38 @@ function renderRequestBeerForm() {
             <p style="font-size:0.85rem; color:#888;">${i18n.t('request_beer_subtitle')}</p>
         </div>
 
+        <div style="background: rgba(255,152,0,0.1); padding: 10px 12px; border-radius: 8px; margin-bottom: 16px; text-align: left; border: 1px solid rgba(255,152,0,0.25);">
+            <span style="font-size:0.8rem; color: #ff9800; line-height:1.4;">${i18n.t('request_beer_search_first')}</span>
+        </div>
+
         <form id="request-beer-form" style="display:flex; flex-direction:column; gap:12px;">
+            <!-- User Identity -->
+            <div style="display:flex; gap:10px;">
+                <div class="form-group" style="flex:1;">
+                    <label class="form-label" style="display:flex; align-items:center; gap:5px;">
+                        ${i18n.t('request_beer_firstname')} <span style="color:#f44336;">*</span>
+                    </label>
+                    <input type="text" class="form-input" name="firstname" required
+                        placeholder="${i18n.t('request_beer_firstname_placeholder')}">
+                </div>
+                <div class="form-group" style="flex:1;">
+                    <label class="form-label" style="display:flex; align-items:center; gap:5px;">
+                        ${i18n.t('request_beer_lastname')} <span style="color:#f44336;">*</span>
+                    </label>
+                    <input type="text" class="form-input" name="lastname" required
+                        placeholder="${i18n.t('request_beer_lastname_placeholder')}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label" style="display:flex; align-items:center; gap:5px;">
+                    ${i18n.t('request_beer_email_label')} <span style="color:#f44336;">*</span>
+                </label>
+                <input type="email" class="form-input" name="user_email" required
+                    placeholder="${i18n.t('request_beer_email_placeholder_v2')}">
+            </div>
+
+            <div style="border-top:1px dashed #333; margin:4px 0;"></div>
+
             <!-- Beer Name (Required) -->
             <div class="form-group">
                 <label class="form-label" style="display:flex; align-items:center; gap:5px;">
@@ -3908,10 +3964,39 @@ function renderRequestBeerForm() {
     form.onsubmit = async (e) => {
         e.preventDefault();
 
+        const firstname = form.querySelector('[name="firstname"]').value.trim();
+        const lastname = form.querySelector('[name="lastname"]').value.trim();
+        const userEmail = form.querySelector('[name="user_email"]').value.trim();
+
+        if (!firstname || !lastname || !userEmail) {
+            showToast(i18n.t('request_beer_identity_required'), 'error');
+            return;
+        }
+
         const beerName = form.querySelector('[name="beer_name"]').value.trim();
         if (!beerName) {
             showToast(i18n.t('request_beer_required'), 'error');
             return;
+        }
+
+        // Duplicate check against existing beers
+        if (allBeers && allBeers.length > 0) {
+            const searchNorm = beerName.toUpperCase().replace(/\s+/g, '');
+            const matches = allBeers.filter(b => {
+                if (!b || !b.title) return false;
+                const titleNorm = b.title.toUpperCase().replace(/\s+/g, '');
+                // Exact match or one contains the other
+                return titleNorm === searchNorm ||
+                       titleNorm.includes(searchNorm) ||
+                       searchNorm.includes(titleNorm);
+            }).slice(0, 5);
+
+            if (matches.length > 0) {
+                const matchList = matches.map(b => `• ${b.title}${b.brewery ? ' (' + b.brewery + ')' : ''}`).join('\n');
+                const msg = `${i18n.t('request_beer_duplicate_warning')}\n\n${matchList}\n\n${i18n.t('request_beer_duplicate_confirm')}`;
+                const proceed = await showConfirmModal(msg, { danger: false, confirmText: i18n.t('request_beer_submit') });
+                if (!proceed) return;
+            }
         }
 
         submitBtn.disabled = true;
@@ -3960,8 +4045,9 @@ function renderRequestBeerForm() {
         const formData = {
             access_key: 'dc29b29d-99f5-4ea7-9a42-8c4f41ad1a14',
             subject: `🍺 Beer Request: ${beerName}`,
-            from_name: 'Beerdex App',
-            message: JSON.stringify(beerEntry, null, 2)
+            from_name: `${firstname} ${lastname}`,
+            replyto: userEmail,
+            message: `From: ${firstname} ${lastname} (${userEmail})\n\n${JSON.stringify(beerEntry, null, 2)}`
         };
 
         try {
