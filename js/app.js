@@ -430,6 +430,8 @@ function setupEventListeners() {
             }
 
             state.view = targetView;
+            window.scrollTo(0, 0); // Reset scroll to top
+            window.dispatchEvent(new CustomEvent('beerdex-close-search')); // Hide search bar automatically
             renderCurrentView();
         });
     });
@@ -834,6 +836,22 @@ function setupEventListeners() {
                 });
             }
         }
+    });
+
+    // Magical Search Bar: auto open on keypress (PC)
+    window.addEventListener('keydown', (e) => {
+        if (e.key.length !== 1 || e.ctrlKey || e.altKey || e.metaKey) return;
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        const modalContainer = document.getElementById('modal-container');
+        if (modalContainer && !modalContainer.classList.contains('hidden')) return;
+
+        const searchBar = document.getElementById('search-bar');
+        const searchInput = document.getElementById('search-input');
+        if (searchBar && searchBar.classList.contains('hidden')) {
+            searchBar.classList.remove('hidden');
+        }
+        if (searchInput) searchInput.focus();
     });
 }
 

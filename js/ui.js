@@ -1461,6 +1461,31 @@ export function renderBeerDetail(beer, onSave) {
     let imgPath = beer.image;
     if (!imgPath) imgPath = 'images/beer/default.png';
 
+    const renderHistoryPanel = (historyData) => {
+        const historyPanel = wrapper.querySelector('#beer-history-panel');
+        if (!historyPanel) return;
+        if (historyData && historyData.length > 0) {
+            const sortedHistory = [...historyData].sort((a, b) => new Date(b.date) - new Date(a.date));
+            let histHtml = `<h4 style="margin-bottom:10px; font-size:1rem; color:var(--accent-gold); text-align:left;">${i18n.t('detail_history')}</h4>`;
+            histHtml += `<div style="max-height:150px; overflow-y:auto; padding-right:5px; scrollbar-width:thin; font-size:0.85rem; text-align:left;">`;
+            sortedHistory.forEach(h => {
+                const dt = new Date(h.date);
+                const dateStr = dt.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+                const timeStr = dt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                histHtml += `
+                    <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding:8px 0;">
+                        <span>${dateStr} ${timeStr}</span>
+                        <span style="color:#aaa;">${h.volume ? h.volume + 'ml' : ''}</span>
+                    </div>
+                `;
+            });
+            histHtml += `</div>`;
+            historyPanel.innerHTML = histHtml;
+        } else {
+            historyPanel.innerHTML = '';
+        }
+    };
+
     // Build Dynamic Form
     let formFields = template.map(field => {
         const value = existingData[field.id] !== undefined ? existingData[field.id] : '';
@@ -1551,6 +1576,7 @@ export function renderBeerDetail(beer, onSave) {
                     <button id="btn-undrink" class="btn-primary" style="margin:0; background:var(--bg-card); border:1px solid #444; color:#aaa; width:auto;">${i18n.t('detail_btn_undrink')}</button>
                 </div>
                 <p style="font-size:0.75rem; color:#666; margin-top:10px;">${i18n.t('detail_drink_desc')}</p>
+                <div id="beer-history-panel" style="margin-top: 15px; margin-bottom: 15px;"></div>
                 `;
 
     // --- Custom Beer Actions ---
@@ -1983,6 +2009,7 @@ export function renderBeerDetail(beer, onSave) {
         // Update local object reference for immediate UI updates relying on it
         existingData.count = newData.count;
         wrapper.querySelector('#consumption-count').innerText = newData.count;
+        renderHistoryPanel(newData.history);
 
         showToast(i18n.t('toast_glou_glou', { vol: vol }));
 
@@ -2158,6 +2185,7 @@ export function renderBeerDetail(beer, onSave) {
 
             existingData.count = newData.count; // Update ref
             wrapper.querySelector('#consumption-count').innerText = newData.count;
+            renderHistoryPanel(newData.history);
             showToast(i18n.t('toast_drink_cancelled'));
 
             // Re-lock if count back to 0
@@ -2274,6 +2302,7 @@ export function renderBeerDetail(beer, onSave) {
         wrapper.querySelector('summary').innerHTML = "📝 Note de dégustation ✅";
     };
 
+    renderHistoryPanel(existingData.history);
     openModal(wrapper);
 }
 
@@ -2731,6 +2760,22 @@ export function renderStats(allBeers, userData, container) {
                     </div>
                     ` : ''}
 
+                    ${Storage.getPreference('bac_show_streak', true) ? `
+                    <div class="stat-card mt-20 text-center">
+                        <div id="streak-container">
+                            <div class="spinner"></div> ${i18n.t('loading_app')}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    ${Storage.getPreference('bac_show_history', true) || Storage.getPreference('bac_show_calendar', true) ? `
+                    <div class="stat-card mt-20 text-center">
+                        <div id="history-container">
+                            <div class="spinner"></div> ${i18n.t('loading_app')}
+                        </div>
+                    </div>
+                    ` : ''}
+
                     <div class="stat-card mt-20 text-center">
                         <div id="beer-map-container" style="min-height:200px;">
                             <span class="spinner"></span> ${i18n.t('stats_loading_map')}
@@ -2795,6 +2840,406 @@ export function renderStats(allBeers, userData, container) {
     if (Storage.getPreference('bac_enabled', true)) {
         setTimeout(() => renderBACStatsContent(container.querySelector('#bac-dynamic-content')), 50);
     }
+
+    // Render Streak
+    setTimeout(() => {
+        const streakCtn = container.querySelector('#streak-container');
+        if (streakCtn) renderStreakSection(streakCtn, allBeers, userData);
+    }, 60);
+
+    // Render History + Calendar
+    setTimeout(() => {
+        const histCtn = container.querySelector('#history-container');
+        if (histCtn) renderHistorySection(histCtn, allBeers, userData);
+    }, 70);
+}
+
+// ======================================= //
+// Streak Section                           //
+// ======================================= //
+
+function _localDateKey(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
+function _buildDayMap(allBeers, userData) {
+    const dayMap = {}; // { 'YYYY-MM-DD': count }
+    const ratings = userData || {};
+    Object.keys(ratings).forEach(ratingKey => {
+        const entry = ratings[ratingKey];
+        if (!entry || !entry.history) return;
+        entry.history.forEach(h => {
+            if (!h.date) return;
+            // Convert stored ISO date to local date key
+            const day = _localDateKey(new Date(h.date));
+            dayMap[day] = (dayMap[day] || 0) + 1;
+        });
+    });
+    return dayMap;
+}
+
+function renderStreakSection(container, allBeers, userData) {
+    const dayMap = _buildDayMap(allBeers, userData);
+    const streakMode = Storage.getPreference('streak_mode', 'sober'); // 'sober' or 'party'
+    const isSober = streakMode === 'sober';
+
+    // If no drink data at all, show 0
+    const hasDrinkData = Object.keys(dayMap).length > 0;
+    let currentStreak = 0;
+    let bestStreak = 0;
+
+    if (hasDrinkData) {
+        // Compute streaks using local dates
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        let streak = 0;
+
+        // Walk backward from today
+        for (let i = 0; i < 3650; i++) {
+            const d = new Date(today);
+            d.setDate(d.getDate() - i);
+            const key = _localDateKey(d);
+            const had = (dayMap[key] || 0) > 0;
+            const streakContinues = isSober ? !had : had;
+
+            if (i === 0 && !streakContinues) {
+                // Today broke the streak: current = 0
+                currentStreak = 0;
+                // Still count best going backward from yesterday
+                for (let j = 1; j < 3650; j++) {
+                    const d2 = new Date(today);
+                    d2.setDate(d2.getDate() - j);
+                    const k2 = _localDateKey(d2);
+                    const ok2 = isSober ? !(dayMap[k2] || 0) : (dayMap[k2] || 0) > 0;
+                    if (ok2) streak++; else break;
+                }
+                bestStreak = streak;
+                break;
+            }
+
+            if (streakContinues) {
+                currentStreak++;
+            } else {
+                break;
+            }
+        }
+
+        // For sobriety mode, cap current streak to days since first drink
+        if (isSober) {
+            const allDays = Object.keys(dayMap).sort();
+            if (allDays.length > 0) {
+                const firstDrinkDate = new Date(allDays[0]);
+                const daysSinceFirst = Math.floor((today - firstDrinkDate) / 86400000) + 1;
+                currentStreak = Math.min(currentStreak, daysSinceFirst);
+            }
+        }
+
+        // Best ever (full scan)
+        let runBest = 0;
+        const allDays = Object.keys(dayMap).sort();
+        if (allDays.length > 0) {
+            const first = new Date(allDays[0]);
+            const last = new Date();
+            let run = 0;
+            for (let d = new Date(first); d <= last; d.setDate(d.getDate() + 1)) {
+                const key = _localDateKey(d);
+                const had = (dayMap[key] || 0) > 0;
+                const ok = isSober ? !had : had;
+                if (ok) { run++; runBest = Math.max(runBest, run); }
+                else { run = 0; }
+            }
+        }
+        bestStreak = Math.max(bestStreak, runBest, currentStreak);
+    }
+
+    // Message
+    const prefix = isSober ? 'stats_streak_msg' : 'stats_streak_party_msg';
+    let msgKey;
+    if (currentStreak === 0) msgKey = `${prefix}_0`;
+    else if (currentStreak < 7) msgKey = `${prefix}_low`;
+    else if (currentStreak < 30) msgKey = `${prefix}_mid`;
+    else msgKey = `${prefix}_high`;
+
+    // Flame intensity
+    const flameSize = Math.min(3, 0.8 + currentStreak * 0.05);
+    const titleKey = isSober ? 'stats_streak_sober_title' : 'stats_streak_party_title';
+
+    container.innerHTML = `
+        <div class="streak-section">
+            <div class="streak-header">
+                <h4>${i18n.t(titleKey)}</h4>
+                <div class="streak-mode-toggle">
+                    <button class="streak-mode-btn ${isSober ? 'active' : ''}" data-mode="sober">${i18n.t('stats_streak_mode_sober')}</button>
+                    <button class="streak-mode-btn ${!isSober ? 'active' : ''}" data-mode="party">${i18n.t('stats_streak_mode_party')}</button>
+                </div>
+            </div>
+            <div class="streak-counter">
+                <div class="streak-flame" style="font-size:${flameSize}rem;">${isSober ? '🔥' : '🎉'}</div>
+                <div class="streak-number">${currentStreak}</div>
+                <div class="streak-label">${i18n.t('stats_streak_days')}</div>
+            </div>
+            <div class="streak-msg">${i18n.t(msgKey)}</div>
+            <div class="streak-best">
+                <span class="streak-best-label">${i18n.t('stats_streak_best')}:</span>
+                <span class="streak-best-value">${bestStreak} ${i18n.t('stats_streak_days')}</span>
+            </div>
+        </div>
+    `;
+
+    // Mode toggle handlers
+    container.querySelectorAll('.streak-mode-btn').forEach(btn => {
+        btn.onclick = () => {
+            Storage.savePreference('streak_mode', btn.dataset.mode);
+            renderStreakSection(container, allBeers, userData);
+        };
+    });
+}
+
+// ======================================= //
+// History & Calendar Section               //
+// ======================================= //
+
+function renderHistorySection(container, allBeers, userData) {
+    const showHistory = Storage.getPreference('bac_show_history', true);
+    const showCalendar = Storage.getPreference('bac_show_calendar', true);
+    const activeTab = Storage.getPreference('history_tab', showHistory ? 'list' : 'calendar');
+
+    let tabsHtml = '';
+    if (showHistory && showCalendar) {
+        tabsHtml = `
+            <div class="history-tabs">
+                <button class="history-tab-btn ${activeTab === 'list' ? 'active' : ''}" data-tab="list">${i18n.t('stats_history_tab_list')}</button>
+                <button class="history-tab-btn ${activeTab === 'calendar' ? 'active' : ''}" data-tab="calendar">${i18n.t('stats_history_tab_calendar')}</button>
+            </div>`;
+    }
+
+    container.innerHTML = `
+        <div class="history-section">
+            <h4>${i18n.t('stats_history_title')}</h4>
+            ${tabsHtml}
+            <div id="history-content"></div>
+        </div>
+    `;
+
+    const contentDiv = container.querySelector('#history-content');
+
+    if ((showHistory && activeTab === 'list') || (!showCalendar)) {
+        _renderHistoryList(contentDiv, allBeers, userData);
+    } else {
+        _renderCalendar(contentDiv, allBeers, userData);
+    }
+
+    container.querySelectorAll('.history-tab-btn').forEach(btn => {
+        btn.onclick = () => {
+            Storage.savePreference('history_tab', btn.dataset.tab);
+            renderHistorySection(container, allBeers, userData);
+        };
+    });
+}
+
+function _renderHistoryList(container, allBeers, userData) {
+    const ratings = userData || {};
+    const allDrinks = [];
+    Object.keys(ratings).forEach(ratingKey => {
+        const entry = ratings[ratingKey];
+        if (!entry || !entry.history) return;
+        const coreId = ratingKey.split('_')[0];
+        const beer = allBeers.find(b => b.id == coreId || b.id == ratingKey);
+        entry.history.forEach(h => {
+            if (!h.date) return;
+            allDrinks.push({ date: h.date, volume: h.volume || 330, beer: beer, beerId: ratingKey });
+        });
+    });
+
+    allDrinks.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    if (allDrinks.length === 0) {
+        container.innerHTML = `<div class="history-empty">${i18n.t('stats_history_no_data')}</div>`;
+        return;
+    }
+
+    const limit = 30;
+    const shown = allDrinks.slice(0, limit);
+    let html = '<div class="history-list">';
+    shown.forEach(d => {
+        const dt = new Date(d.date);
+        const dateStr = dt.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+        const timeStr = dt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+        const name = d.beer ? (d.beer.title || d.beerId) : d.beerId;
+        const vol = d.volume ? `${d.volume}ml` : '';
+        html += `
+            <div class="history-item" data-beer-id="${d.beerId}">
+                <div class="history-item-date"><span class="history-date">${dateStr}</span> <span class="history-time">${timeStr}</span></div>
+                <div class="history-item-info">
+                    <span class="history-beer-name">${name}</span>
+                    <span class="history-beer-vol">${vol}</span>
+                </div>
+            </div>`;
+    });
+    html += '</div>';
+
+    if (allDrinks.length > limit) {
+        html += `<button class="history-show-more" id="btn-history-more">${i18n.t('stats_history_show_more')} (${allDrinks.length - limit})</button>`;
+    }
+
+    container.innerHTML = html;
+
+    // Click on beer opens its detail
+    container.querySelectorAll('.history-item').forEach(el => {
+        el.onclick = () => {
+            const beerId = el.dataset.beerId;
+            const beer = allBeers.find(b => b.id == beerId || b.id == beerId.split('_')[0]);
+            if (beer) renderBeerDetail(beer, () => { location.reload(); });
+        };
+    });
+
+    const btnMore = container.querySelector('#btn-history-more');
+    if (btnMore) {
+        btnMore.onclick = () => {
+            // Show all
+            const listDiv = container.querySelector('.history-list');
+            allDrinks.slice(limit).forEach(d => {
+                const dt = new Date(d.date);
+                const dateStr = dt.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+                const timeStr = dt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                const name = d.beer ? (d.beer.title || d.beerId) : d.beerId;
+                const vol = d.volume ? `${d.volume}ml` : '';
+                const el = document.createElement('div');
+                el.className = 'history-item';
+                el.dataset.beerId = d.beerId;
+                el.innerHTML = `
+                    <div class="history-item-date"><span class="history-date">${dateStr}</span> <span class="history-time">${timeStr}</span></div>
+                    <div class="history-item-info">
+                        <span class="history-beer-name">${name}</span>
+                        <span class="history-beer-vol">${vol}</span>
+                    </div>`;
+                el.onclick = () => {
+                    const beer = allBeers.find(b => b.id == d.beerId || b.id == d.beerId.split('_')[0]);
+                    if (beer) renderBeerDetail(beer, () => { location.reload(); });
+                };
+                listDiv.appendChild(el);
+            });
+            btnMore.remove();
+        };
+    }
+}
+
+function _renderCalendar(container, allBeers, userData) {
+    const dayMap = _buildDayMap(allBeers, userData);
+    const calMonth = Storage.getPreference('cal_month', new Date().getMonth());
+    const calYear = Storage.getPreference('cal_year', new Date().getFullYear());
+
+    const now = new Date(calYear, calMonth, 1);
+    const monthName = now.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+    const firstDay = now.getDay() || 7; // Monday = 1
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+
+    // Max drinks in a day for color scaling
+    let maxDrinks = 1;
+    for (let d = 1; d <= daysInMonth; d++) {
+        const key = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        maxDrinks = Math.max(maxDrinks, dayMap[key] || 0);
+    }
+
+    // Day names header
+    const dayNames = [i18n.t('day_mon'), i18n.t('day_tue'), i18n.t('day_wed'), i18n.t('day_thu'), i18n.t('day_fri'), i18n.t('day_sat'), i18n.t('day_sun')];
+    let headerHtml = dayNames.map(n => `<div class="cal-day-name">${n}</div>`).join('');
+
+    // Build cells
+    let cellsHtml = '';
+    const offsetStart = (firstDay === 0 ? 6 : firstDay - 1);
+    for (let i = 0; i < offsetStart; i++) cellsHtml += '<div class="cal-cell cal-empty"></div>';
+
+    for (let d = 1; d <= daysInMonth; d++) {
+        const key = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        const count = dayMap[key] || 0;
+        const intensity = count > 0 ? Math.min(1, count / Math.max(maxDrinks, 1)) : 0;
+        // Color: transparent → green → yellow → orange → red
+        let bgColor = 'transparent';
+        if (count > 0) {
+            const h = Math.round(120 - (intensity * 120)); // 120=green, 0=red
+            bgColor = `hsla(${h}, 70%, 45%, ${0.3 + intensity * 0.55})`;
+        }
+        const isToday = d === new Date().getDate() && calMonth === new Date().getMonth() && calYear === new Date().getFullYear();
+        cellsHtml += `<div class="cal-cell ${isToday ? 'cal-today' : ''} ${count > 0 ? 'cal-has-drinks' : ''}" data-day="${key}" style="background:${bgColor};">
+            <span class="cal-day-num">${d}</span>
+            ${count > 0 ? `<span class="cal-count">${count}</span>` : ''}
+        </div>`;
+    }
+
+    container.innerHTML = `
+        <div class="calendar-section">
+            <div class="cal-nav">
+                <button id="cal-prev" class="cal-nav-btn">◀</button>
+                <span class="cal-month-name">${monthName}</span>
+                <button id="cal-next" class="cal-nav-btn">▶</button>
+            </div>
+            <div class="cal-grid">
+                ${headerHtml}
+                ${cellsHtml}
+            </div>
+            <div id="cal-day-detail"></div>
+        </div>
+    `;
+
+    // Navigation
+    container.querySelector('#cal-prev').onclick = () => {
+        let m = calMonth - 1, y = calYear;
+        if (m < 0) { m = 11; y--; }
+        Storage.savePreference('cal_month', m);
+        Storage.savePreference('cal_year', y);
+        _renderCalendar(container, allBeers, userData);
+    };
+    container.querySelector('#cal-next').onclick = () => {
+        let m = calMonth + 1, y = calYear;
+        if (m > 11) { m = 0; y++; }
+        Storage.savePreference('cal_month', m);
+        Storage.savePreference('cal_year', y);
+        _renderCalendar(container, allBeers, userData);
+    };
+
+    // Click on day
+    container.querySelectorAll('.cal-cell[data-day]').forEach(cell => {
+        cell.onclick = () => {
+            const dayKey = cell.dataset.day;
+            const detail = container.querySelector('#cal-day-detail');
+            // Find drinks for that day
+            const ratings = userData || {};
+            const drinks = [];
+            Object.keys(ratings).forEach(ratingKey => {
+                const entry = ratings[ratingKey];
+                if (!entry || !entry.history) return;
+                const coreId = ratingKey.split('_')[0];
+                const beer = allBeers.find(b => b.id == coreId || b.id == ratingKey);
+                entry.history.forEach(h => {
+                    if (h.date && _localDateKey(new Date(h.date)) === dayKey) {
+                        drinks.push({ beer, volume: h.volume || 330, date: h.date, beerId: ratingKey });
+                    }
+                });
+            });
+
+            if (drinks.length === 0) {
+                detail.innerHTML = `<div class="cal-detail-empty">${i18n.t('stats_history_no_data_day')}</div>`;
+            } else {
+                detail.innerHTML = drinks.map(d => {
+                    const name = d.beer ? (d.beer.title || d.beerId) : d.beerId;
+                    const time = new Date(d.date).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                    return `<div class="cal-detail-item" data-beer-id="${d.beerId}" style="cursor: pointer;"><span>${time}</span> <strong>${name}</strong> <span>${d.volume}ml</span></div>`;
+                }).join('');
+
+                detail.querySelectorAll('.cal-detail-item').forEach(el => {
+                    el.onclick = () => {
+                        const beerId = el.dataset.beerId;
+                        const beer = allBeers.find(b => b.id == beerId || b.id == beerId.split('_')[0]);
+                        if (beer) renderBeerDetail(beer, () => { location.reload(); });
+                    };
+                });
+            }
+        };
+    });
 }
 
 export function renderBACStatsContent(container) {
@@ -3052,6 +3497,52 @@ export function renderBACStatsContent(container) {
             ${bacStatus.symptoms ? `<div class="bac-symptoms" style="margin-top: 10px; font-size: 0.85rem; color: #ff9800; font-style: italic;">⚠️ ${bacStatus.symptoms}</div>` : ''}
         </div>
 
+        ${Storage.getPreference('bac_vehicle', 'voiture') === 'gamer' ? (() => {
+            const sim = BAC.simulateBAC();
+            const now = new Date().getTime();
+            const futureCurve = sim.curve.filter(p => p.time >= now);
+            const peakBac = futureCurve.length > 0 ? Math.max(...futureCurve.map(p => p.bac)) : currentBAC;
+            const peakVal = Math.max(currentBAC, peakBac);
+            const cur = BAC.getGamerStats(currentBAC);
+            const peak = BAC.getGamerStats(peakVal);
+            const statColor = cur.rankColor;
+
+            const statCard = (icon, label, curVal, peakV, unit = '') => `
+                <div class="gamer-stat-card">
+                    <div class="gamer-stat-icon">${icon}</div>
+                    <div class="gamer-stat-label">${label}</div>
+                    <div class="gamer-stat-values">
+                        <div class="gamer-stat-val"><span class="gamer-stat-tag">${i18n.t('bac_gamer_current')}</span>${curVal}${unit}</div>
+                        <div class="gamer-stat-val gamer-stat-peak"><span class="gamer-stat-tag">${i18n.t('bac_gamer_peak')}</span>${peakV}${unit}</div>
+                    </div>
+                </div>`;
+
+            return `
+            <div class="gamer-hud-container" style="margin-bottom: 20px;">
+                <div class="gamer-hud-title">${i18n.t('bac_gamer_hud_title')}</div>
+
+                <!-- Rank Badge -->
+                <div class="gamer-rank-badge" style="border-color: ${cur.rankColor}44; background: ${cur.rankColor}11;">
+                    <div class="gamer-rank-icon" style="color: ${cur.rankColor}; text-shadow: 0 0 15px ${cur.rankColor}66;">🏆</div>
+                    <div class="gamer-rank-name" style="color: ${cur.rankColor};">${i18n.t(cur.rankKey)}</div>
+                    <div class="gamer-rank-sub">${i18n.t(cur.rankSubKey)}</div>
+                    ${peakVal > currentBAC ? `<div class="gamer-rank-peak" style="color: ${peak.rankColor};">${i18n.t('bac_gamer_peak')}: ${i18n.t(peak.rankKey)}</div>` : ''}
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="gamer-stats-grid">
+                    ${statCard('📡', i18n.t('bac_gamer_ping'), cur.ping, peak.ping, i18n.t('bac_gamer_ping_unit'))}
+                    ${statCard('🖥️', i18n.t('bac_gamer_fps'), cur.fps, peak.fps, '')}
+                    ${statCard('🎯', i18n.t('bac_gamer_aim_assist'), cur.aimAssist, peak.aimAssist, '%')}
+                    ${statCard('👁️', i18n.t('bac_gamer_fov'), cur.fov, peak.fov, i18n.t('bac_gamer_fov_unit'))}
+                </div>
+                <div class="gamer-stats-grid gamer-stats-grid-wide">
+                    ${statCard('📺', i18n.t('bac_gamer_resolution'), i18n.t(cur.resolutionKey), i18n.t(peak.resolutionKey))}
+                    ${statCard('🖱️', i18n.t('bac_gamer_setup'), i18n.t(cur.setupKey), i18n.t(peak.setupKey))}
+                </div>
+            </div>`;
+        })() : ''}
+
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <button id="btn-bac-add-drink" class="btn-primary" style="margin: 0; padding: 10px; font-size: 0.9rem; background: #333;">
                 ${i18n.t('bac_btn_add')}
@@ -3189,6 +3680,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                                     <option value="moto" ${Storage.getPreference('bac_vehicle', 'voiture') === 'moto' ? 'selected' : ''}>${i18n.t('settings_bac_moto')}</option>
                                     <option value="velo" ${Storage.getPreference('bac_vehicle', 'voiture') === 'velo' ? 'selected' : ''}>${i18n.t('settings_bac_bike')}</option>
                                     <option value="pieton" ${Storage.getPreference('bac_vehicle', 'voiture') === 'pieton' ? 'selected' : ''}>${i18n.t('settings_bac_pedestrian')}</option>
+                                    <option value="gamer" ${Storage.getPreference('bac_vehicle', 'voiture') === 'gamer' ? 'selected' : ''}>🎮 ${i18n.t('settings_bac_gamer')}</option>
                                     <option value="ne_conduit_pas" ${Storage.getPreference('bac_vehicle', 'voiture') === 'ne_conduit_pas' ? 'selected' : ''}>${i18n.t('settings_bac_none')}</option>
                                 </select>
                             </div>
@@ -3208,6 +3700,45 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                             <option value="CO" ${Storage.getPreference('bac_country', 'BE') === 'CO' ? 'selected' : ''}>🇨🇴 ${i18n.t('country_co')}</option>
                             <option value="US" ${Storage.getPreference('bac_country', 'BE') === 'US' ? 'selected' : ''}>🇺🇸 ${i18n.t('country_us')}</option>
                         </select>
+                    </div>
+
+                    <div style="border-top:1px dashed #333; padding-top:15px; margin-top:5px;">
+                        <div style="text-align:left; margin-bottom:10px;">
+                            <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">${i18n.t('stats_history_title')}</strong>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <div style="text-align:left;">
+                                <strong style="color:var(--text-primary); display:block; margin-bottom:2px; font-size:0.85rem;">${i18n.t('settings_bac_show_history')}</strong>
+                                <span style="font-size:0.75rem; color:#888;">${i18n.t('settings_bac_show_history_desc')}</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-show-history" ${Storage.getPreference('bac_show_history', true) ? 'checked' : ''}>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                            <div style="text-align:left;">
+                                <strong style="color:var(--text-primary); display:block; margin-bottom:2px; font-size:0.85rem;">${i18n.t('settings_bac_show_calendar')}</strong>
+                                <span style="font-size:0.75rem; color:#888;">${i18n.t('settings_bac_show_calendar_desc')}</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-show-calendar" ${Storage.getPreference('bac_show_calendar', true) ? 'checked' : ''}>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div style="text-align:left;">
+                                <strong style="color:var(--text-primary); display:block; margin-bottom:2px; font-size:0.85rem;">${i18n.t('settings_bac_show_streak')}</strong>
+                                <span style="font-size:0.75rem; color:#888;">${i18n.t('settings_bac_show_streak_desc')}</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="toggle-show-streak" ${Storage.getPreference('bac_show_streak', true) ? 'checked' : ''}>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -3679,6 +4210,14 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
             showToast(i18n.t('toast_bac_rule_updated'));
         };
     }
+
+    // History / Calendar / Streak toggles
+    const toggleHistory = container.querySelector('#toggle-show-history');
+    if (toggleHistory) toggleHistory.onchange = (e) => { Storage.savePreference('bac_show_history', e.target.checked); showToast(i18n.t('toast_preference_saved')); };
+    const toggleCalendar = container.querySelector('#toggle-show-calendar');
+    if (toggleCalendar) toggleCalendar.onchange = (e) => { Storage.savePreference('bac_show_calendar', e.target.checked); showToast(i18n.t('toast_preference_saved')); };
+    const toggleStreak = container.querySelector('#toggle-show-streak');
+    if (toggleStreak) toggleStreak.onchange = (e) => { Storage.savePreference('bac_show_streak', e.target.checked); showToast(i18n.t('toast_preference_saved')); };
 
     container.querySelector('#btn-legal-tos').onclick = () => renderLegalPage('tos');
     container.querySelector('#btn-legal-privacy').onclick = () => renderLegalPage('privacy');
@@ -4671,6 +5210,7 @@ const TutorialSystem = {
                             <option value="moto" ${Storage.getPreference('bac_vehicle', 'voiture') === 'moto' ? 'selected' : ''}>🏍️ ${i18n.t('settings_bac_moto')}</option>
                             <option value="velo" ${Storage.getPreference('bac_vehicle', 'voiture') === 'velo' ? 'selected' : ''}>🚲 ${i18n.t('settings_bac_bike')}</option>
                             <option value="pieton" ${Storage.getPreference('bac_vehicle', 'voiture') === 'pieton' ? 'selected' : ''}>🚶 ${i18n.t('settings_bac_pedestrian')}</option>
+                            <option value="gamer" ${Storage.getPreference('bac_vehicle', 'voiture') === 'gamer' ? 'selected' : ''}>🎮 ${i18n.t('settings_bac_gamer')}</option>
                             <option value="ne_conduit_pas" ${Storage.getPreference('bac_vehicle', 'voiture') === 'ne_conduit_pas' ? 'selected' : ''}>❌ ${i18n.t('settings_bac_none')}</option>
                         </select>
                     </div>
@@ -5729,7 +6269,7 @@ export function applyRarityAnimations(container) {
 // Patchnotes System                        //
 // ======================================= //
 
-const CURRENT_VERSION = '2.8.0';
+const CURRENT_VERSION = '3.1.0';
 
 
 export function checkPatchnotes() {

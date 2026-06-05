@@ -57,75 +57,69 @@ export async function startScanner(elementId, onScanSuccess, onScanFailure) {
             }
         };
 
-        // Prefer back camera
-        const cameras = await Html5Qrcode.getCameras();
-        if (cameras && cameras.length > 0) {
-            // Use the last camera (usually back camera on mobile) or specific logic
-            const cameraId = cameras[cameras.length - 1].id;
-
-            await html5QrCode.start(
-                cameraId, 
-                config,
-                (decodedText, decodedResult) => {
-                    // Update feedback immediately
-                    if (window.UI && window.UI.setScannerFeedback) {
-                         window.UI.setScannerFeedback("⚡ Code détecté !", false);
-                    }
-                    console.log("[Scanner] Code detected:", decodedText);
-                    // Prevent multiple triggers if already processing
-                    if (html5QrCode.isProcessing) {
-                        console.log("[Scanner] Ignored - already processing");
-                        return;
-                    }
-                    html5QrCode.isProcessing = true;
-                    console.log("[Scanner] Processing...");
-
-                    // Pause on success to prevent multiple triggers while processing
-                    html5QrCode.pause();
-
-                    Promise.resolve(onScanSuccess(decodedText, decodedResult)).then((result) => {
-                        if (result === true) {
-                            console.log("[Scanner] Callback requested stop.");
-                            stopScanner();
-                        } else {
-                            const delay = typeof result === 'number' ? result : 0;
-                            
-                            if (delay > 0) {
-                                console.log(`[Scanner] Callback requested resume with delay: ${delay}ms`);
-                                // Do not overwrite app message immediately, let it stay during pause
-                                
-                                setTimeout(() => {
-                                    if (html5QrCode) {
-                                        console.log("[Scanner] Resuming after delay.");
-                                        html5QrCode.isProcessing = false;
-                                        html5QrCode.resume();
-                                        if (window.UI && window.UI.setScannerFeedback) {
-                                            window.UI.setScannerFeedback("🔍 Scan prêt", false);
-                                        }
-                                    }
-                                }, delay);
-                            } else {
-                                console.log("[Scanner] Callback requested immediate resume.");
-                                html5QrCode.isProcessing = false;
-                                html5QrCode.resume();
-                            }
-                        }
-                    }).catch(err => {
-                        console.error("Scanner callback error:", err);
-                        html5QrCode.isProcessing = false;
-                        html5QrCode.resume(); // Resume on error
-                    });
-                },
-                (errorMessage) => {
-                    // parse error, ignore mostly
-                    if (onScanFailure) onScanFailure(errorMessage);
+        // Prefer back camera directly using facingMode (most reliable on iOS)
+        await html5QrCode.start(
+            { facingMode: "environment" }, 
+            config,
+            (decodedText, decodedResult) => {
+                // Update feedback immediately
+                if (window.UI && window.UI.setScannerFeedback) {
+                     window.UI.setScannerFeedback("⚡ Code détecté !", false);
                 }
-            );
-        } else {
-            console.error("No cameras found.");
+                console.log("[Scanner] Code detected:", decodedText);
+                // Prevent multiple triggers if already processing
+                if (html5QrCode.isProcessing) {
+                    console.log("[Scanner] Ignored - already processing");
+                    return;
+                }
+                html5QrCode.isProcessing = true;
+                console.log("[Scanner] Processing...");
+
+                // Pause on success to prevent multiple triggers while processing
+                html5QrCode.pause();
+
+                Promise.resolve(onScanSuccess(decodedText, decodedResult)).then((result) => {
+                    if (result === true) {
+                        console.log("[Scanner] Callback requested stop.");
+                        stopScanner();
+                    } else {
+                        const delay = typeof result === 'number' ? result : 0;
+                        
+                        if (delay > 0) {
+                            console.log(`[Scanner] Callback requested resume with delay: ${delay}ms`);
+                            // Do not overwrite app message immediately, let it stay during pause
+                            
+                            setTimeout(() => {
+                                if (html5QrCode) {
+                                    console.log("[Scanner] Resuming after delay.");
+                                    html5QrCode.isProcessing = false;
+                                    html5QrCode.resume();
+                                    if (window.UI && window.UI.setScannerFeedback) {
+                                        window.UI.setScannerFeedback("🔍 Scan prêt", false);
+                                    }
+                                }
+                            }, delay);
+                        } else {
+                            console.log("[Scanner] Callback requested immediate resume.");
+                            html5QrCode.isProcessing = false;
+                            html5QrCode.resume();
+                        }
+                    }
+                }).catch(err => {
+                    console.error("Scanner callback error:", err);
+                    html5QrCode.isProcessing = false;
+                    html5QrCode.resume(); // Resume on error
+                });
+            },
+            (errorMessage) => {
+                // parse error, ignore mostly
+                if (onScanFailure) onScanFailure(errorMessage);
+            }
+        ).catch((err) => {
+            console.error("No cameras found or permission denied.", err);
             if (window.UI && window.UI.showAlertModal) window.UI.showAlertModal(i18n.t('error_no_camera'), { icon: '📷' });
-            else console.error("Aucune caméra trouvée.");
-        }
+            else console.error("Aucune caméra trouvée ou accès refusé.");
+        });
 
     } catch (err) {
         console.error("Error starting scanner:", err);

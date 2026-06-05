@@ -1,5 +1,6 @@
 import { calculateRarity } from './autoRarity.js';
 import { MAPS } from './map.js';
+import { i18n } from './i18n.js';
 
 const ALL_DATA_FILES = [
     'data/belgiumbeer.json',
@@ -86,7 +87,7 @@ export async function fetchAllBeers(files = ALL_DATA_FILES) {
             // Map the codes to human readable names from MAPS
             const mapObj = MAPS[countryCode.toLowerCase()];
             if (mapObj) {
-                searchCountry = mapObj.title; // e.g. "🇧🇪 Belgique"
+                searchCountry = `${mapObj.icon} ${i18n.t(mapObj.titleKey)}`; // e.g. "🇧🇪 Belgique"
                 if (mapObj.names && provinceCode) {
                     searchRegion = mapObj.names[provinceCode] || provinceCode;
                 }

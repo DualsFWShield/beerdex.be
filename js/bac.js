@@ -393,7 +393,7 @@ export function getBACStatus(simOverride = null) {
 
     // Vehicle type context for sanctions
     const vehicle = Storage.getPreference('bac_vehicle', 'voiture');
-    const isDriver = (vehicle !== 'pieton' && vehicle !== 'ne_conduit_pas' && vehicle !== 'none' && vehicle !== 'pedestrian');
+    const isDriver = (vehicle !== 'pieton' && vehicle !== 'ne_conduit_pas' && vehicle !== 'none' && vehicle !== 'pedestrian' && vehicle !== 'gamer');
     const isBike = vehicle === 'velo' || vehicle === 'moto';
     const isBicycle = vehicle === 'velo';
 
@@ -661,4 +661,48 @@ export function getSpeculativeDriveInfo(volumeMl, abv) {
         delta: spec.delta,
         peakBAC
     };
+}
+
+/**
+ * Computes gamer HUD stats from a BAC value.
+ * @param {number} bac - Blood alcohol content in g/L
+ * @returns {{ ping: number, fps: number, aimAssist: number, fov: number, resolution: string, resolutionKey: string, setup: string, setupKey: string, rank: string, rankKey: string, rankColor: string, rankSub: string, rankSubKey: string }}
+ */
+export function getGamerStats(bac) {
+    const ping = Math.round(200 + (bac * 150));
+    const fps = Math.max(10, Math.round(144 - (bac * 60)));
+    const aimAssist = Math.min(100, Math.round(bac * 50));
+    const fov = Math.max(60, Math.round(110 - (bac * 25)));
+
+    // Resolution tiers
+    let resolutionKey;
+    if (bac <= 0.20) resolutionKey = 'bac_gamer_res_4k';
+    else if (bac <= 0.60) resolutionKey = 'bac_gamer_res_1080';
+    else if (bac <= 1.10) resolutionKey = 'bac_gamer_res_720';
+    else if (bac <= 1.60) resolutionKey = 'bac_gamer_res_480';
+    else resolutionKey = 'bac_gamer_res_144';
+
+    // Setup tiers
+    let setupKey;
+    if (bac <= 0.30) setupKey = 'bac_gamer_setup_esport';
+    else if (bac <= 0.70) setupKey = 'bac_gamer_setup_wireless';
+    else if (bac <= 1.20) setupKey = 'bac_gamer_setup_drift';
+    else if (bac <= 1.70) setupKey = 'bac_gamer_setup_cheap';
+    else setupKey = 'bac_gamer_setup_trackpad';
+
+    // Competitive Rank
+    let rankKey, rankColor, rankSubKey;
+    if (bac <= 0.20) {
+        rankKey = 'bac_gamer_rank_global_elite'; rankColor = '#00e5ff'; rankSubKey = 'bac_gamer_sub_global_elite';
+    } else if (bac <= 0.50) {
+        rankKey = 'bac_gamer_rank_gold'; rankColor = '#ffb300'; rankSubKey = 'bac_gamer_sub_gold';
+    } else if (bac <= 1.00) {
+        rankKey = 'bac_gamer_rank_silver'; rankColor = '#b0bec5'; rankSubKey = 'bac_gamer_sub_silver';
+    } else if (bac <= 1.50) {
+        rankKey = 'bac_gamer_rank_bronze'; rankColor = '#cd7f32'; rankSubKey = 'bac_gamer_sub_bronze';
+    } else {
+        rankKey = 'bac_gamer_rank_wood'; rankColor = '#8d6e63'; rankSubKey = 'bac_gamer_sub_wood';
+    }
+
+    return { ping, fps, aimAssist, fov, resolutionKey, setupKey, rankKey, rankColor, rankSubKey };
 }
