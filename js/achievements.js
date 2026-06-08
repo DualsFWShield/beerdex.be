@@ -1,4 +1,4 @@
-﻿import { i18n } from './i18n.js';
+import { i18n } from './i18n.js';
 import * as Storage from './storage.js';
 
 // --- Achievement Definitions ---
@@ -141,6 +141,16 @@ const ACHIEVEMENTS = [
         rarity: ['X', 'Y', 'Z', 'Q', 'W'].includes(char) ? 'super_rare' : 'rare'
     })),
 
+    // --- TEMPS & SOBRIÉTÉ (Time & Sobriety) --- (6)
+    ...[
+        { id: 'time_matin', titleKey: 'ach_time_matin_title', descKey: 'ach_time_matin_desc', icon: '🌅', condition: (s) => s.timeMatin > 0, rarity: 'mythique' },
+        { id: 'time_midi', titleKey: 'ach_time_midi_title', descKey: 'ach_time_midi_desc', icon: '☀️', condition: (s) => s.timeMidi > 0, rarity: 'rare' },
+        { id: 'time_aprem', titleKey: 'ach_time_aprem_title', descKey: 'ach_time_aprem_desc', icon: '🌤️', condition: (s) => s.timeAprem > 0, rarity: 'commun' },
+        { id: 'time_soir', titleKey: 'ach_time_soir_title', descKey: 'ach_time_soir_desc', icon: '🌆', condition: (s) => s.timeSoir > 0, rarity: 'commun' },
+        { id: 'time_nuit', titleKey: 'ach_time_nuit_title', descKey: 'ach_time_nuit_desc', icon: '🦉', condition: (s) => s.timeNuit > 0, rarity: 'epique' },
+        { id: 'sobriety_tournee', titleKey: 'ach_sobriety_tournee_title', descKey: 'ach_sobriety_tournee_desc', icon: '💧', condition: (s) => s.tourneeMinerale, rarity: 'epique' }
+    ].map(a => ({ ...a, categoryKey: 'ach_cat_time' })),
+
     // --- UX & EXPLORATEUR --- (7)
     ...[
         { id: 'ux_tutorial', titleKey: 'ach_ux_tutorial_title', descKey: 'ach_ux_tutorial_desc', icon: '🎓', condition: (s) => s.prefs.tutorialCompleted, rarity: 'commun' },
@@ -180,6 +190,13 @@ export function checkAchievements(allBeers) {
         minDegree: 100,
         degrees: [],
         strongCount: 0, // >8%
+
+        timeMatin: 0,
+        timeMidi: 0,
+        timeAprem: 0,
+        timeSoir: 0,
+        timeNuit: 0,
+        tourneeMinerale: false,
 
         hasZeroRating: false,
         hasPerfectRating: false,
@@ -232,6 +249,8 @@ export function checkAchievements(allBeers) {
     // Correctly filter unique count for consumed beers only
     stats.uniqueCount = userIds.filter(id => (userData[id].count || 0) > 0 || userData[id].score !== undefined).length;
 
+    let allTimestamps = [];
+
     userIds.forEach(id => {
         const u = userData[id];
         const isConsumed = (u.count || 0) > 0 || (u.score !== undefined && u.score !== '');
@@ -266,6 +285,17 @@ export function checkAchievements(allBeers) {
                 const vol = h.volume || 0;
                 stats.totalLiters += vol / 1000;
                 stats.volumes.add(vol);
+
+                if (h.timestamp) {
+                    allTimestamps.push(h.timestamp);
+                    const d = new Date(h.timestamp);
+                    const h_val = d.getHours();
+                    if (h_val >= 5 && h_val < 11) stats.timeMatin++;
+                    else if (h_val >= 11 && h_val < 14) stats.timeMidi++;
+                    else if (h_val >= 14 && h_val < 18) stats.timeAprem++;
+                    else if (h_val >= 18 && h_val < 24) stats.timeSoir++;
+                    else if (h_val >= 0 && h_val < 5) stats.timeNuit++;
+                }
             });
         }
 
@@ -339,6 +369,24 @@ export function checkAchievements(allBeers) {
         }
     });
 
+    // Tournée Minérale logic (28 days gap)
+    if (allTimestamps.length > 0) {
+        allTimestamps.sort((a, b) => a - b);
+        let maxGap = 0;
+        // Check gaps between consecutive drinks
+        for (let i = 1; i < allTimestamps.length; i++) {
+            const gap = allTimestamps[i] - allTimestamps[i - 1];
+            if (gap > maxGap) maxGap = gap;
+        }
+        // Check gap from last drink to NOW
+        const gapToNow = Date.now() - allTimestamps[allTimestamps.length - 1];
+        if (gapToNow > maxGap) maxGap = gapToNow;
+
+        if (maxGap >= 28 * 24 * 60 * 60 * 1000) {
+            stats.tourneeMinerale = true;
+        }
+    }
+
     // 2. Check Conditions (Full Re-evaluation)
     let newUnlocks = [];
     let updatedUnlockList = [];
@@ -351,6 +399,11 @@ export function checkAchievements(allBeers) {
             }
         } catch (e) {
             console.warn("Achievement Check Failed", ach.id, e);
+        }
+
+        // Make UX achievements permanent
+        if (!isMet && ach.categoryKey === 'ach_cat_ux' && previouslyUnlocked.includes(ach.id)) {
+            isMet = true;
         }
 
         if (isMet) {

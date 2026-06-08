@@ -117,12 +117,10 @@ async function init() {
 
             // Run deduplicator later to save performance (only if enabled in Debug)
             setTimeout(() => {
-                if (Storage.getPreference('debug_deduplicator_enabled', false)) {
-                    state.migrationPrompts = Deduplicator.runCheck(state.beers);
-                    // If there are matches, re-render to show them
-                    if (state.migrationPrompts.length > 0 && state.view === 'home') {
-                        renderCurrentView();
-                    }
+                state.migrationPrompts = Deduplicator.runCheck(state.beers);
+                // If there are matches, re-render to show them
+                if (state.migrationPrompts.length > 0 && (state.view === 'home' || state.view === 'drunk')) {
+                    renderCurrentView();
                 }
             }, 5000);
         }, 1500);

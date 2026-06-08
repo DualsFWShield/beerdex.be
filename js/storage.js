@@ -181,7 +181,7 @@ export function parseVolumeToMl(volStr) {
     return val; // Assume ml
 }
 
-export function addConsumption(id, volumeStr) {
+export function addConsumption(id, volumeStr, customDate = null) {
     const data = getAllUserData();
     if (!data[id]) {
         data[id] = { count: 0, history: [] };
@@ -202,7 +202,7 @@ export function addConsumption(id, volumeStr) {
 
     if (!data[id].history) data[id].history = [];
     data[id].history.push({
-        date: new Date().toISOString(),
+        date: customDate ? new Date(customDate).toISOString() : new Date().toISOString(),
         volume: volMl
     });
 

@@ -1571,6 +1571,10 @@ export function renderBeerDetail(beer, onSave) {
                     <div id="custom-vol-container" style="display: none; transition: 0.3s; text-align: center;">
                         <input type="text" id="custom-vol-input" class="form-input" placeholder="ex: 12.5cl ou 330ml" style="text-align: center;">
                     </div>
+                    <div style="margin-top: 15px; margin-bottom: 15px;">
+                        <label class="form-label" style="margin-bottom:5px; font-size: 0.85rem; color:#888;">${i18n.t('tasting_date_override')}</label>
+                        <input type="datetime-local" id="consumption-date" class="form-input" style="text-align: center; background: var(--bg-dark); color: #fff; border: 1px solid #444; border-radius: 8px; color-scheme: dark; padding: 10px; width: 100%;">
+                    </div>
                     <input type="hidden" id="consumption-volume" value="${lastVolume}">
                 </div>
 
@@ -1994,7 +1998,8 @@ export function renderBeerDetail(beer, onSave) {
         const wasLocked = !existingData.count || existingData.count === 0;
 
         const vol = wrapper.querySelector('#consumption-volume').value;
-        const newData = Storage.addConsumption(beer.id, vol);
+        const dateOverride = wrapper.querySelector('#consumption-date') ? wrapper.querySelector('#consumption-date').value : null;
+        const newData = Storage.addConsumption(beer.id, vol, dateOverride);
 
         // --- BAC INTEGRATION ---
         if (Storage.getPreference('bac_enabled', true) && !Storage.getPreference('bac_manual_only', false)) {
@@ -4212,6 +4217,10 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                     ${i18n.t('request_beer_btn')}
                 </button>
 
+                <button id="btn-deduplicate-db" class="btn-primary text-white" style="background:#222; border:1px solid #444; width:100%; margin-bottom:15px;">
+                    🧹 ${i18n.t('settings_btn_dedup')}
+                </button>
+
                 <button id="btn-open-debug" class="btn-primary text-white" style="background:#222; border:1px solid #444; width:100%; margin-bottom:15px;">
                     ${i18n.t('settings_debug_btn') || 'Diagnostic & Debug'}
                 </button>
@@ -4702,6 +4711,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     };
 
     container.querySelector('#btn-request-beer').onclick = () => renderRequestBeerForm(allBeers);
+    container.querySelector('#btn-deduplicate-db').onclick = () => renderDeduplicationWizard(allBeers);
 
     // Granular Resets
     const confirmReset = async (msg, action) => {
@@ -4755,6 +4765,144 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     };
 
     i18n.translateDOM(container);
+}
+
+function renderDeduplicationWizard(allBeers) {
+    const matches = Deduplicator.runCheck(allBeers, true);
+    if (!matches || matches.length === 0) {
+        showToast(i18n.t('toast_nothing_found') || 'Aucun doublon trouvé.');
+        return;
+    }
+
+    let currentIndex = 0;
+
+    const showNext = () => {
+        if (currentIndex >= matches.length) {
+            modalContainer.style.display = '';
+            modalContainer.classList.add('hidden');
+            modalContainer.innerHTML = '';
+            showToast('Nettoyage terminé !');
+            renderSettings(allBeers, document.getElementById('main-content'));
+            return;
+        }
+
+        const match = matches[currentIndex];
+        const { customBeer, officialBeer, score } = match;
+        const userData = Storage.getAllUserData();
+        const customData = userData[customBeer.id] || {};
+        
+        const customImg = customBeer.image || 'images/beer/default.png';
+        const officialImg = officialBeer.image || 'images/beer/default.png';
+        const drinkCount = customData.count || 0;
+        const historyCount = (customData.history || []).length;
+        const hasRating = customData.score !== undefined;
+
+        const migrationTitleText = i18n.t('migration_title') || 'Transfert disponible';
+        const migrationSubtitleText = `${currentIndex + 1} / ${matches.length} - ${i18n.t('migration_subtitle') || 'Voulez-vous fusionner ces entrées ?'}`;
+        const migrationCustomLabel = i18n.t('migration_label_custom') || 'Personnalisée';
+        const migrationOfficialLabel = i18n.t('migration_label_official') || 'Officielle';
+        const migrationSimilarityText = i18n.t('migration_similarity') || 'Similarité :';
+        const migrationDrinksText = i18n.t('migration_drinks') || 'Consommations';
+        const migrationHistoryText = i18n.t('migration_history') || 'Historique';
+        const migrationEntriesText = i18n.t('migration_entries') || 'entrées';
+        const migrationRatingText = i18n.t('migration_rating') || 'Note';
+        const migrationDismissText = i18n.t('migration_btn_dismiss') || 'Ignorer';
+        const migrationTransferText = i18n.t('migration_btn_reconcile') || 'Fusionner et remplacer';
+
+        modalContainer.innerHTML = `
+            <div class="modal-overlay active" id="migration-overlay">
+                <div class="modal-content" style="max-width: 420px; border: 1px solid rgba(255,192,0,0.3); background: var(--bg-card);">
+                    <div style="text-align: center; padding: 20px 20px 10px;">
+                        <div style="font-size: 2rem; margin-bottom: 10px;">🧹</div>
+                        <h3 style="color: var(--accent-gold); font-family: 'Russo One', sans-serif; margin-bottom: 5px;">
+                            ${migrationTitleText}
+                        </h3>
+                        <p style="font-size: 0.8rem; color: #888; margin-bottom: 20px;">
+                            ${migrationSubtitleText}
+                        </p>
+                    </div>
+
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px; margin: 0 15px 15px;">
+                        <div style="text-align: center; flex: 1;">
+                            <img src="${customImg}" alt="" onerror="this.src='images/beer/default.png'" 
+                                 style="width: 60px; height: 60px; object-fit: contain; border-radius: 8px; background: #222; margin-bottom: 6px;">
+                            <div style="font-size: 0.75rem; color: #aaa; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 auto;">${customBeer.title}</div>
+                            <div style="font-size: 0.65rem; color: #666; margin-top: 2px;">${migrationCustomLabel}</div>
+                        </div>
+
+                        <div style="font-size: 1.5rem; color: var(--accent-gold);">→</div>
+
+                        <div style="text-align: center; flex: 1;">
+                            <img src="${officialImg}" alt="" onerror="this.src='images/beer/default.png'" 
+                                 style="width: 60px; height: 60px; object-fit: contain; border-radius: 8px; background: #222; margin-bottom: 6px;">
+                            <div style="font-size: 0.75rem; color: #fff; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 auto;">${officialBeer.title}</div>
+                            <div style="font-size: 0.65rem; color: var(--accent-gold); margin-top: 2px;">${migrationOfficialLabel}</div>
+                        </div>
+                    </div>
+
+                    <div style="padding: 0 15px 15px; font-size: 0.8rem; color: #aaa;">
+                        <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span>${migrationSimilarityText}</span>
+                                <span style="color: var(--accent-gold); font-weight: bold;">${score}%</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span>${migrationDrinksText}</span>
+                                <span style="color: #fff;">${drinkCount}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span>${migrationHistoryText}</span>
+                                <span style="color: #fff;">${historyCount} ${migrationEntriesText}</span>
+                            </div>
+                            ${hasRating ? `<div style="display: flex; justify-content: space-between;">
+                                <span>${migrationRatingText}</span>
+                                <span style="color: #fff;">${customData.score}/20</span>
+                            </div>` : ''}
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; padding: 0 15px 20px;">
+                        <button id="btn-wiz-dismiss" class="btn-primary" style="flex: 1; background: #222; border: 1px solid #444; color: #aaa; margin: 0;">
+                            ${migrationDismissText}
+                        </button>
+                        <button id="btn-wiz-confirm" class="btn-primary" style="flex: 1; background: var(--accent-gold); color: #000; font-weight: bold; margin: 0;">
+                            ${migrationTransferText}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        modalContainer.classList.remove('hidden');
+
+        const overlay = document.getElementById('migration-overlay');
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                modalContainer.style.display = '';
+                modalContainer.classList.add('hidden');
+                modalContainer.innerHTML = '';
+            }
+        });
+
+        document.getElementById('btn-wiz-dismiss').addEventListener('click', () => {
+            Deduplicator.dismissMatch(customBeer.id, officialBeer.id);
+            currentIndex++;
+            showNext();
+        });
+
+        document.getElementById('btn-wiz-confirm').addEventListener('click', () => {
+            const result = Storage.migrateBeerData(customBeer.id, officialBeer.id);
+            if (result.success) {
+                Feedback.playSuccess();
+            } else {
+                showToast(i18n.t('migration_error') || 'Erreur.', 'error');
+            }
+            currentIndex++;
+            showNext();
+        });
+    };
+
+    showNext();
 }
 
 function renderRequestBeerForm(allBeers = []) {
@@ -6904,7 +7052,7 @@ function _renderMigrationModal(match, allBeers, parentContainer, migrationPrompt
     const migrationEntriesText = i18n.t('migration_entries') || 'entrées';
     const migrationRatingText = i18n.t('migration_rating') || 'Note';
     const migrationDismissText = i18n.t('migration_btn_dismiss') || 'Ignorer';
-    const migrationTransferText = i18n.t('migration_btn_transfer') || 'Transférer';
+    const migrationTransferText = i18n.t('migration_btn_reconcile') || 'Fusionner et remplacer';
 
     modalContainer.innerHTML = `
         <div class="modal-overlay active" id="migration-overlay">
@@ -6970,13 +7118,15 @@ function _renderMigrationModal(match, allBeers, parentContainer, migrationPrompt
         </div>
     `;
 
-    modalContainer.style.display = 'block';
+    modalContainer.style.display = '';
+    modalContainer.classList.remove('hidden');
 
     // Close overlay
     const overlay = document.getElementById('migration-overlay');
     overlay.addEventListener('click', (e) => {
         if (e.target === overlay) {
-            modalContainer.style.display = 'none';
+            modalContainer.style.display = '';
+            modalContainer.classList.add('hidden');
             modalContainer.innerHTML = '';
         }
     });
@@ -6986,7 +7136,8 @@ function _renderMigrationModal(match, allBeers, parentContainer, migrationPrompt
         Deduplicator.dismissMatch(customBeer.id, officialBeer.id);
         const idx = migrationPrompts.findIndex(m => m.customBeer.id === customBeer.id && m.officialBeer.id === officialBeer.id);
         if (idx !== -1) migrationPrompts.splice(idx, 1);
-        modalContainer.style.display = 'none';
+        modalContainer.style.display = '';
+        modalContainer.classList.add('hidden');
         modalContainer.innerHTML = '';
         showToast(i18n.t('migration_dismissed') || 'Suggestion ignorée', 'info');
         // Re-render banner

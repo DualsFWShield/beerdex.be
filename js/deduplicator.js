@@ -60,6 +60,25 @@ function normalize(str) {
         .trim();
 }
 
+function parseDegree(deg) {
+    if (!deg) return 0;
+    const s = String(deg).replace(/[^0-9.,]/g, '').replace(',', '.');
+    return parseFloat(s) || 0;
+}
+
+function parseVolumeToMl(vol) {
+    if (!vol) return 0;
+    const s = String(vol).toLowerCase().replace(/\s/g, '').replace(',', '.');
+    const match = s.match(/([0-9.]+)([a-z]+)/);
+    if (!match) return 0;
+    let val = parseFloat(match[1]);
+    const unit = match[2];
+    if (unit === 'l') return val * 1000;
+    if (unit === 'cl') return val * 10;
+    if (unit === 'ml') return val;
+    return 0;
+}
+
 // ============================== //
 // Find Matches: Custom vs DB     //
 // ============================== //
@@ -73,11 +92,11 @@ function normalize(str) {
  * @param {number} threshold - Minimum similarity (0-1). Default 0.80.
  * @returns {Array<{customBeer, officialBeer, score}>}
  */
-export function findMatches(customBeers, officialBeers, threshold = 0.80) {
+export function findMatches(customBeers, officialBeers, threshold = 0.60, ignoreDismissed = false) {
     if (!customBeers || !officialBeers) return [];
 
     // Filter out already-dismissed matches
-    const dismissed = Storage.getPreference('dismissed_migrations', []);
+    const dismissed = ignoreDismissed ? [] : Storage.getPreference('dismissed_migrations', []);
     const dismissedSet = new Set(dismissed);
 
     const matches = [];
@@ -85,6 +104,8 @@ export function findMatches(customBeers, officialBeers, threshold = 0.80) {
     for (const custom of customBeers) {
         const customTitle = normalize(custom.title);
         const customBrewery = normalize(custom.brewery);
+        const customDeg = parseDegree(custom.degree);
+        const customVol = parseVolumeToMl(custom.volume);
 
         let bestMatch = null;
         let bestScore = 0;
@@ -95,9 +116,34 @@ export function findMatches(customBeers, officialBeers, threshold = 0.80) {
 
             const titleSim = similarity(customTitle, normalize(official.title));
             const brewerySim = similarity(customBrewery, normalize(official.brewery));
+            
+            const officialDeg = parseDegree(official.degree);
+            const degreeMatch = (customDeg > 0 && customDeg === officialDeg) ? 1 : 0;
 
-            // Weighted score: title is more important (70%) than brewery (30%)
-            const score = titleSim * 0.7 + brewerySim * 0.3;
+            const officialVol = parseVolumeToMl(official.volume);
+            const volumeMatch = (customVol > 0 && customVol === officialVol) ? 1 : 0;
+
+            let points = 0;
+            if (titleSim >= 0.5) points++;
+            if (brewerySim >= 0.5) points++;
+            if (degreeMatch) points++;
+            if (volumeMatch) points++;
+
+            // Weighted score
+            let score = (titleSim * 0.5) + (brewerySim * 0.2) + (degreeMatch * 0.15) + (volumeMatch * 0.15);
+
+            // If 2 or more elements correspond, ensure score meets threshold
+            // User feedback: degree + volume alone is too generic. Must include brewery or title.
+            let hasValidCombo = false;
+            if (titleSim >= 0.5 && points >= 2) {
+                hasValidCombo = true; // Title + something else
+            } else if (brewerySim >= 0.5 && degreeMatch && volumeMatch) {
+                hasValidCombo = true; // Brewery + Degree + Volume
+            }
+
+            if (hasValidCombo && score < threshold) {
+                score = threshold;
+            }
 
             if (score > bestScore) {
                 bestScore = score;
@@ -199,12 +245,12 @@ export function dismissMatch(customId, officialId) {
  * @param {Array} allBeers - Full beer list (custom + official)
  * @returns {Array} migration prompts
  */
-export function runCheck(allBeers) {
+export function runCheck(allBeers, ignoreDismissed = false) {
     const customBeers = Storage.getCustomBeers();
     const officialBeers = allBeers.filter(b => !String(b.id).startsWith('CUSTOM_'));
 
     // 1. Find custom → official matches
-    const matches = findMatches(customBeers, officialBeers);
+    const matches = findMatches(customBeers, officialBeers, 0.60, ignoreDismissed);
 
     if (matches.length > 0) {
         console.log(`[Deduplicator] Found ${matches.length} custom beer(s) matching official entries:`);
