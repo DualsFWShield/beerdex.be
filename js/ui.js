@@ -1,4 +1,4 @@
-﻿import { i18n } from './i18n.js';
+import { i18n } from './i18n.js';
 import * as Env from './env.js';
 import { Analytics } from './analytics.js';
 import * as Storage from './storage.js';
@@ -2695,6 +2695,57 @@ export function renderStats(allBeers, userData, container) {
     if (uniqueCount >= 250) userRank = { name: i18n.t('stats_rank_master'), color: "#E91E63", nextRankThresh: 500 };
     if (uniqueCount >= 500) userRank = { name: i18n.t('stats_rank_legend'), color: "var(--accent-gold)", nextRankThresh: 1000 };
 
+    // --- Calculate Achievements for Badge Evolution ---
+    let allAch = [];
+    let unlockedIds = [];
+    
+    if (typeof Achievements !== 'undefined') {
+        allAch = Achievements.getAllAchievements();
+        unlockedIds = Achievements.getUnlockedAchievements();
+    }
+    
+    const unlockedAch = allAch.filter(a => unlockedIds.includes(a.id));
+    const achPct = allAch.length > 0 ? (unlockedAch.length / allAch.length) * 100 : 0;
+    
+    let trophies = { bronze: 0, silver: 0, gold: 0, plat: 0 };
+    unlockedAch.forEach(a => {
+        if (a.rarity === 'commun') trophies.bronze++;
+        else if (['rare', 'super_rare'].includes(a.rarity)) trophies.silver++;
+        else if (['epique', 'mythique'].includes(a.rarity)) trophies.gold++;
+        else if (['legendaire', 'ultra_legendaire'].includes(a.rarity)) trophies.plat++;
+    });
+    // Le Graal (Platinum) for 100%
+    if (achPct >= 100 && allAch.length > 0) trophies.plat++;
+
+    // --- Valorant Badge Evolution ---
+    let badgeGlow = "0 0 10px rgba(0,0,0,0)";
+    let badgeStroke = userRank.color;
+    let rankColor = userRank.color;
+    let badgeFx = "";
+    
+    if (achPct >= 20 && achPct < 40) {
+        badgeStroke = "url(#grad-bronze)";
+        rankColor = "#cd7f32";
+        badgeGlow = "0 0 15px rgba(205,127,50,0.5)";
+    } else if (achPct >= 40 && achPct < 60) {
+        badgeStroke = "url(#grad-silver)";
+        rankColor = "#c0c0c0";
+        badgeGlow = "0 0 20px rgba(192,192,192,0.6)";
+    } else if (achPct >= 60 && achPct < 80) {
+        badgeStroke = "url(#grad-gold)";
+        rankColor = "var(--accent-gold)";
+        badgeGlow = "0 0 25px rgba(255,215,0,0.7)";
+    } else if (achPct >= 80 && achPct < 100) {
+        badgeStroke = "url(#grad-diamond)";
+        rankColor = "#00ffff";
+        badgeGlow = "0 0 30px rgba(0,255,255,0.8)";
+    } else if (achPct >= 100) {
+        badgeStroke = "url(#grad-radiant)";
+        rankColor = "#ff00ff";
+        badgeFx = "animation: pulse-radiant 2s infinite;";
+        badgeGlow = "0 0 40px rgba(255,0,255,1)";
+    }
+
     let totalVolumeMl = 0;
     let totalAlcoholMl = 0;
 
@@ -2717,19 +2768,47 @@ export function renderStats(allBeers, userData, container) {
 
     const blocks = {
         'progression': `
-            <!-- SVG Donut Chart -->
-            <div style="width:160px; height:160px; margin:0 auto; position:relative;">
+            <style>
+            @keyframes pulse-radiant {
+                0% { filter: drop-shadow(0 0 20px #ff00ff) drop-shadow(0 0 40px #00ffff); }
+                50% { filter: drop-shadow(0 0 40px #ff00ff) drop-shadow(0 0 20px #00ffff); }
+                100% { filter: drop-shadow(0 0 20px #ff00ff) drop-shadow(0 0 40px #00ffff); }
+            }
+            </style>
+            <svg width="0" height="0">
+                <defs>
+                    <linearGradient id="grad-bronze" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#cd7f32" /><stop offset="100%" stop-color="#8a5a22" /></linearGradient>
+                    <linearGradient id="grad-silver" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#e6e6e6" /><stop offset="100%" stop-color="#808080" /></linearGradient>
+                    <linearGradient id="grad-gold" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffd700" /><stop offset="100%" stop-color="#b8860b" /></linearGradient>
+                    <linearGradient id="grad-diamond" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#00ffff" /><stop offset="100%" stop-color="#00008b" /></linearGradient>
+                    <linearGradient id="grad-radiant" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#ff00ff"><animate attributeName="stop-color" values="#ff00ff;#00ffff;#ff00ff" dur="3s" repeatCount="indefinite"/></stop>
+                        <stop offset="100%" stop-color="#00ffff"><animate attributeName="stop-color" values="#00ffff;#ff00ff;#00ffff" dur="3s" repeatCount="indefinite"/></stop>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <!-- SVG Donut Chart with Valorant Evolution -->
+            <div style="width:160px; height:160px; margin:0 auto; position:relative; border-radius:50%; box-shadow:${badgeGlow}; ${badgeFx}">
                 <svg viewBox="0 0 36 36" style="width:100%; height:100%; transform: rotate(-90deg);">
                     <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#333" stroke-width="3" stroke-dasharray="100, 100" />
-                    <path class="circle" stroke-dasharray="${percentage}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="${userRank.color}" stroke-width="3" style="transition: stroke-dasharray 1s ease-out;" />
+                    <path class="circle" stroke-dasharray="${percentage}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="${badgeStroke}" stroke-width="3" style="transition: stroke-dasharray 1s ease-out;" />
                 </svg>
                 <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center;">
-                    <span style="font-size:2rem; font-family:'Russo One', sans-serif; color:${userRank.color}; text-shadow:0 0 10px ${userRank.color}66;">${uniqueCount}</span>
+                    <span style="font-size:2rem; font-family:'Russo One', sans-serif; color:${rankColor}; text-shadow:0 0 10px ${rankColor}66;">${uniqueCount}</span>
                     <span style="display:block; font-size:0.75rem; color:#888; text-transform:uppercase; letter-spacing:1px; margin-top:-5px;">${i18n.t('stats_label_uniques')}</span>
                 </div>
             </div>
-            <h2 style="color:${userRank.color}; margin-top:15px; font-family:'Russo One', sans-serif; letter-spacing:1px; text-shadow:0 0 10px ${userRank.color}33;">${userRank.name}</h2>
+            
+            <h2 style="color:${rankColor}; margin-top:20px; font-family:'Russo One', sans-serif; letter-spacing:1px; text-shadow:0 0 10px ${rankColor}33;">${userRank.name}</h2>
             <p style="font-size:0.85rem; color:#888; margin-top:5px;">${i18n.t('stats_next_rank_desc', { count: Math.max(0, userRank.nextRankThresh - uniqueCount) })}</p>
+
+            <!-- PlayStation Trophies Summary -->
+            <div style="display:flex; justify-content:center; align-items:center; gap:12px; margin-top:15px; background:rgba(0,0,0,0.2); padding:10px 15px; border-radius:20px; border:1px solid rgba(255,255,255,0.05); width:fit-content; margin-inline:auto;">
+                ${trophies.plat > 0 ? `<div style="display:flex; align-items:center; gap:5px; color:#ff00ff; text-shadow:0 0 8px #ff00ff; font-weight:bold;">🏆 ${trophies.plat}</div>` : ''}
+                <div style="display:flex; align-items:center; gap:5px; color:var(--accent-gold); font-weight:bold;">🟡 ${trophies.gold}</div>
+                <div style="display:flex; align-items:center; gap:5px; color:#c0c0c0; font-weight:bold;">⚪ ${trophies.silver}</div>
+                <div style="display:flex; align-items:center; gap:5px; color:#cd7f32; font-weight:bold;">🟤 ${trophies.bronze}</div>
+            </div>
             
             <div style="margin-top:20px; text-align:center; padding:15px; background:var(--bg-card); border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
                 <div style="font-size:0.85rem; color:#aaa; margin-bottom:5px; text-transform:uppercase; font-weight:bold;">${i18n.t('stats_app_count_label')}</div>
@@ -4235,6 +4314,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
             const code = Theme.exportTheme();
             try {
                 await navigator.clipboard.writeText(code);
+                Storage.savePreference('theme_shared', true);
                 showToast(i18n.t('toast_theme_exported') || 'Code thème copié dans le presse-papiers !', 'success');
             } catch {
                 prompt(i18n.t('toast_theme_export_manual') || 'Copiez ce code :', code);

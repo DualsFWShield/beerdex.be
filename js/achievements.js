@@ -1,4 +1,4 @@
-import { i18n } from './i18n.js';
+﻿import { i18n } from './i18n.js';
 import * as Storage from './storage.js';
 
 // --- Achievement Definitions ---
@@ -141,6 +141,17 @@ const ACHIEVEMENTS = [
         rarity: ['X', 'Y', 'Z', 'Q', 'W'].includes(char) ? 'super_rare' : 'rare'
     })),
 
+    // --- UX & EXPLORATEUR --- (7)
+    ...[
+        { id: 'ux_tutorial', titleKey: 'ach_ux_tutorial_title', descKey: 'ach_ux_tutorial_desc', icon: '🎓', condition: (s) => s.prefs.tutorialCompleted, rarity: 'commun' },
+        { id: 'ux_bac', titleKey: 'ach_ux_bac_title', descKey: 'ach_ux_bac_desc', icon: '🩸', condition: (s) => s.prefs.bacUsed, rarity: 'commun' },
+        { id: 'ux_theme', titleKey: 'ach_ux_theme_title', descKey: 'ach_ux_theme_desc', icon: '🎨', condition: (s) => s.prefs.themeChanged, rarity: 'commun' },
+        { id: 'ux_share', titleKey: 'ach_ux_share_title', descKey: 'ach_ux_share_desc', icon: '📤', condition: (s) => s.prefs.themeShared, rarity: 'rare' },
+        { id: 'ux_museum', titleKey: 'ach_ux_museum_title', descKey: 'ach_ux_museum_desc', icon: '🏛️', condition: (s) => s.prefs.museumUsed, rarity: 'rare' },
+        { id: 'ux_dedup', titleKey: 'ach_ux_dedup_title', descKey: 'ach_ux_dedup_desc', icon: '🧹', condition: (s) => s.prefs.dedupUsed, rarity: 'rare' },
+        { id: 'ux_support', titleKey: 'ach_ux_support_title', descKey: 'ach_ux_support_desc', icon: '☕', condition: (s) => s.prefs.supportedDev, rarity: 'epique', hidden: true },
+    ].map(a => ({ ...a, categoryKey: 'ach_cat_ux' })),
+
     // Filler to reach count
     ...[
         { id: 'fill_1', titleKey: 'ach_fill_1_title', descKey: 'ach_fill_1_desc', icon: '👶', condition: (s) => s.hasVolume(250), rarity: 'commun' },
@@ -203,7 +214,18 @@ export function checkAchievements(allBeers) {
         volumes: new Set(),
         hasLowAlcoholString: false, 
 
-        hasGlitch: false
+        hasGlitch: false,
+        
+        // UX & Preferences
+        prefs: {
+            tutorialCompleted: Storage.getPreference('tutorial_completed', false),
+            bacUsed: Storage.getPreference('stats_bac_used', false),
+            themeChanged: Storage.getPreference('theme_preset', 'default') !== 'default' || Storage.getPreference('theme_custom', null) !== null,
+            themeShared: Storage.getPreference('theme_shared', false),
+            museumUsed: Storage.getPreference('museumThemeEnabled', false),
+            dedupUsed: Storage.getPreference('dedup_manually_triggered', false),
+            supportedDev: Storage.getPreference('supported_dev', false)
+        }
     };
 
     const userIds = Object.keys(userData);
