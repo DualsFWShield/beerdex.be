@@ -13,6 +13,9 @@ import * as Wrapped from './wrapped.js';
 import { EventSystem } from './event-system.js';
 import { i18n } from './i18n.js';
 import { updateWidgetData } from './widget-bridge.js';
+import * as CrashLogger from './crashLogger.js';
+import * as Deduplicator from './deduplicator.js';
+import * as Theme from './theme.js';
 
 window.Share = Share;
 window.Wrapped = Wrapped;
@@ -31,6 +34,9 @@ window.savePlayedAnims = () => {
     sessionStorage.setItem('beerdex_played_anims', JSON.stringify([...window.__playedAnims]));
 };
 
+// Init crash logger FIRST so it catches all errors from boot
+CrashLogger.init();
+
 // App State
 const state = {
     beers: [],
@@ -45,7 +51,8 @@ const state = {
         hasMore: true
     },
     observer: null, // Store observer to disconnect if needed
-    initialView: 'home' // Track the view at app launch for back navigation
+    initialView: 'home', // Track the view at app launch for back navigation
+    migrationPrompts: [] // Deduplicator results
 };
 
 // Initialize Wrapped
@@ -71,7 +78,8 @@ async function init() {
         // Re-check network status after translation to ensure badge text is correct and visible
         if (window.handleStatusChange) window.handleStatusChange();
 
-        // Apply Theme
+        // Apply Theme (Theme Engine + Museum)
+        Theme.init();
         applyTheme();
 
         // Show skeleton loading immediately
@@ -106,6 +114,17 @@ async function init() {
                 // We don't forcefully re-render to avoid jumping, but next paginate will include them.
                 // If user is searching right now, they'll show up on next input.
             }
+
+            // Run deduplicator later to save performance (only if enabled in Debug)
+            setTimeout(() => {
+                if (Storage.getPreference('debug_deduplicator_enabled', false)) {
+                    state.migrationPrompts = Deduplicator.runCheck(state.beers);
+                    // If there are matches, re-render to show them
+                    if (state.migrationPrompts.length > 0 && state.view === 'home') {
+                        renderCurrentView();
+                    }
+                }
+            }, 5000);
         }, 1500);
 
         // Setup Event Listeners
@@ -238,6 +257,11 @@ export function applyTheme() {
     // Always default to dark
     document.documentElement.removeAttribute('data-theme');
 
+    // Apply custom theme colors from Theme Engine (before museum overrides)
+    if (!museumThemeEnabled) {
+        Theme.init();
+    }
+
     // Toggle Stylesheet
     const museumLink = document.getElementById('css-museum');
     if (museumLink) {
@@ -251,8 +275,9 @@ export function applyTheme() {
         document.body.classList.remove('theme-museum');
     }
 
-    // Update Meta Theme Color (Light mode not needed)
-    let themeColor = museumThemeEnabled ? '#C9A84C' : '#FFC000';
+    // Update Meta Theme Color using active theme accent
+    const activeColors = Theme.getActiveColors();
+    let themeColor = museumThemeEnabled ? '#C9A84C' : (activeColors['--accent-gold'] || '#FFC000');
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
 
     // Handle Curtain Animation (only if actually playing)
@@ -1149,7 +1174,9 @@ function renderCurrentView() {
         }
 
         if (isDiscovery) {
-            UI.renderUnratedBanner(state.beers, mainContent);
+            if (Storage.getPreference('feat_reminders_enabled', true)) {
+                UI.renderUnratedBanner(state.beers, mainContent, state.migrationPrompts);
+            }
         }
 
     } else if (state.view === 'drunk') {
@@ -1166,7 +1193,9 @@ function renderCurrentView() {
         loadMoreBeers(mainContent, false, false, false);
 
         // Unrated banner on drunk view
-        UI.renderUnratedBanner(state.beers, mainContent);
+        if (Storage.getPreference('feat_reminders_enabled', true)) {
+            UI.renderUnratedBanner(state.beers, mainContent, state.migrationPrompts);
+        }
 
     } else if (state.view === 'stats') {
         const isDiscovery = Storage.getPreference('discoveryMode', false);

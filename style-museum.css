@@ -1,16 +1,16 @@
-:root {
+body.theme-museum {
     /* 🏛️ Museum / Art Gallery Palette */
-    --bg-dark: #1a1510;
-    --bg-card: #2a2318;
-    --bg-card-hover: #3a3228;
-    --text-primary: #f0e6d2;
-    --text-secondary: #b8a88a;
-    --accent-gold: #C9A84C;
-    --accent-amber: #B8860B;
-    --accent-foam: #F5F0E8;
-    --border-color: #8B7349;
-    --success: #2ecc71;
-    --danger: #c0392b;
+    --bg-dark: #1a1510 !important;
+    --bg-card: #2a2318 !important;
+    --bg-card-hover: #3a3228 !important;
+    --text-primary: #f0e6d2 !important;
+    --text-secondary: #b8a88a !important;
+    --accent-gold: #C9A84C !important;
+    --accent-amber: #B8860B !important;
+    --accent-foam: #F5F0E8 !important;
+    --border-color: #8B7349 !important;
+    --success: #2ecc71 !important;
+    --danger: #c0392b !important;
 
     /* Museum-specific */
     --frame-gold: #C9A84C;
@@ -3240,4 +3240,50 @@ body.modal-open {
 .view-toggle-btn.active {
     color: var(--frame-gold-light);
     border-color: var(--frame-gold);
-}
+}
+/* ======================================= */
+/* v4.0.0 Updates - Settings & Order Stats */
+/* ======================================= */
+
+/* Mute the theme settings since Museum mode forces its own colors */
+.theme-museum #theme-presets-grid,
+.theme-museum #theme-custom-colors {
+    opacity: 0.5;
+    pointer-events: none;
+    filter: grayscale(80%);
+    position: relative;
+}
+
+/* Custom Stats Ordering List */
+.theme-museum #stats-order-list {
+    background: var(--mahogany);
+    border: 2px solid var(--frame-gold-dark);
+    padding: 15px;
+    border-radius: 4px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+}
+
+.theme-museum #stats-order-list > div {
+    background: linear-gradient(145deg, #2c2418, #241e14) !important;
+    border: 1px solid var(--frame-gold-dark) !important;
+    border-radius: 2px !important;
+    color: var(--frame-gold-light) !important;
+    font-family: 'Playfair Display', serif;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.5) !important;
+}
+
+/* Up/Down buttons in drag list */
+.theme-museum .btn-move-up,
+.theme-museum .btn-move-down {
+    background: var(--bg-dark) !important;
+    border: 1px solid var(--frame-gold) !important;
+    color: var(--frame-gold-light) !important;
+    border-radius: 2px !important;
+    font-family: 'Playfair Display', serif !important;
+}
+
+.theme-museum .btn-move-up:active,
+.theme-museum .btn-move-down:active {
+    background: var(--frame-gold-dark) !important;
+    color: #fff !important;
+}

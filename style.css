@@ -1015,7 +1015,7 @@ ul::-webkit-scrollbar-thumb:hover {
 body {
     background-color: var(--bg-dark);
     color: var(--text-primary);
-    font-family: 'Outfit', sans-serif;
+    font-family: var(--font-family-primary, 'Outfit', sans-serif);
     overflow: hidden;
     /* App-like feel */
     height: 100vh;
@@ -1275,7 +1275,7 @@ body.keyboard-open #main-content {
     background: none;
     border: none;
     color: var(--text-secondary);
-    font-family: 'Outfit', sans-serif;
+    font-family: var(--font-family-primary, 'Outfit', sans-serif);
     font-size: 0.7rem;
     display: flex;
     flex-direction: column;
@@ -2139,7 +2139,7 @@ body.modal-open {
 }
 
 .legal-body p {
-    font-family: 'Outfit', sans-serif !important;
+    font-family: var(--font-family-primary, 'Outfit', sans-serif) !important;
     color: #ddd;
     line-height: 1.7;
     margin: 0;
@@ -2162,7 +2162,7 @@ body.modal-open {
     font-weight: bold;
     cursor: pointer;
     transition: all 0.2s;
-    font-family: 'Outfit', sans-serif;
+    font-family: var(--font-family-primary, 'Outfit', sans-serif);
 }
 
 .legal-actions .btn-outline:hover {
@@ -3328,7 +3328,7 @@ body.modal-open {
     padding: 5px 12px;
     cursor: pointer;
     transition: all 0.25s ease;
-    font-family: 'Outfit', sans-serif;
+    font-family: var(--font-family-primary, 'Outfit', sans-serif);
     font-weight: 600;
 }
 
@@ -3426,7 +3426,7 @@ body.modal-open {
     padding: 8px 14px;
     cursor: pointer;
     transition: all 0.25s ease;
-    font-family: 'Outfit', sans-serif;
+    font-family: var(--font-family-primary, 'Outfit', sans-serif);
     font-weight: 600;
 }
 
@@ -3536,7 +3536,7 @@ body.modal-open {
     font-weight: 600;
     cursor: pointer;
     transition: background 0.2s;
-    font-family: 'Outfit', sans-serif;
+    font-family: var(--font-family-primary, 'Outfit', sans-serif);
 }
 
 .history-show-more:hover {

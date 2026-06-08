@@ -91,6 +91,78 @@ export function deleteCustomBeer(id) {
     autoBackup();
 }
 
+/**
+ * Migrate all user data (ratings, history, count, favorites, aromas)
+ * from a custom beer (oldId) to an official beer (newId).
+ * If the official beer already has data, histories are MERGED and counts ADDED.
+ * The custom beer is deleted after migration.
+ * 
+ * @param {string} oldId - The custom beer's ID
+ * @param {string} newId - The official beer's ID
+ * @returns {{ success: boolean, transferred: object }}
+ */
+export function migrateBeerData(oldId, newId) {
+    const data = getAllUserData();
+    const oldData = data[oldId];
+
+    if (!oldData) {
+        return { success: false, transferred: null };
+    }
+
+    // Get or init the target entry
+    if (!data[newId]) {
+        data[newId] = { count: 0, history: [] };
+    }
+
+    const target = data[newId];
+
+    // Merge counts
+    target.count = (target.count || 0) + (oldData.count || 0);
+
+    // Merge histories
+    const oldHistory = oldData.history || [];
+    const newHistory = target.history || [];
+    target.history = [...newHistory, ...oldHistory].sort((a, b) => 
+        new Date(a.date) - new Date(b.date)
+    );
+
+    // Transfer rating data (only if target doesn't have one)
+    if (oldData.score !== undefined && target.score === undefined) {
+        target.score = oldData.score;
+    }
+    if (oldData.comment && !target.comment) {
+        target.comment = oldData.comment;
+    }
+
+    // Transfer favorite
+    if (oldData.favorite) {
+        target.favorite = true;
+    }
+
+    // Transfer aromas / custom fields
+    if (oldData.aromas && !target.aromas) {
+        target.aromas = oldData.aromas;
+    }
+
+    // Transfer timestamp (keep earliest)
+    if (oldData.timestamp) {
+        if (!target.timestamp || new Date(oldData.timestamp) < new Date(target.timestamp)) {
+            target.timestamp = oldData.timestamp;
+        }
+    }
+
+    // Remove old entry from ratings
+    delete data[oldId];
+    localStorage.setItem(STORAGE_KEY_RATINGS, JSON.stringify(data));
+
+    // Remove from custom beers list
+    deleteCustomBeer(oldId);
+
+    autoBackup();
+
+    return { success: true, transferred: { count: oldData.count || 0, history: oldHistory.length } };
+}
+
 // --- Consumption Logic ---
 
 export function parseVolumeToMl(volStr) {

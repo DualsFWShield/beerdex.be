@@ -1,4 +1,4 @@
-import { i18n } from './i18n.js';
+﻿import { i18n } from './i18n.js';
 import * as Env from './env.js';
 import { Analytics } from './analytics.js';
 import * as Storage from './storage.js';
@@ -13,6 +13,9 @@ import { Feedback } from './feedback.js';
 import * as BAC from './bac.js';
 import * as Achievements from './achievements.js';
 import { AromaWheel } from './aroma-wheel.js';
+import * as CrashLogger from './crashLogger.js';
+import * as Deduplicator from './deduplicator.js';
+import * as Theme from './theme.js';
 
 let editModeBeer = null;
 // We assume global libs: QRCode, Html5QrcodeScanner (handled via CDN)
@@ -2692,128 +2695,151 @@ export function renderStats(allBeers, userData, container) {
     if (uniqueCount >= 250) userRank = { name: i18n.t('stats_rank_master'), color: "#E91E63", nextRankThresh: 500 };
     if (uniqueCount >= 500) userRank = { name: i18n.t('stats_rank_legend'), color: "var(--accent-gold)", nextRankThresh: 1000 };
 
-    // Stats section (Donut + Text)
-    container.innerHTML = `
-        <div class="stats-view-wrapper" style="max-width: 600px; margin: 0 auto; width: 100%;">
-                <div class="text-center p-20">
-                    <!-- SVG Donut Chart -->
-                    <div style="width:160px; height:160px; margin:0 auto; position:relative;">
-                        <svg viewBox="0 0 36 36" style="width:100%; height:100%; transform: rotate(-90deg);">
-                            <path class="circle-bg"
-                                d="M18 2.0845
-                                a 15.9155 15.9155 0 0 1 0 31.831
-                                a 15.9155 15.9155 0 0 1 0 -31.831"
-                                fill="none"
-                                stroke="#333"
-                                stroke-width="3"
-                                stroke-dasharray="100, 100" />
-                            <path class="circle"
-                                stroke-dasharray="${percentage}, 100"
-                                d="M18 2.0845
-                                a 15.9155 15.9155 0 0 1 0 31.831
-                                a 15.9155 15.9155 0 0 1 0 -31.831"
-                                fill="none"
-                                stroke="${userRank.color}"
-                                stroke-width="3"
-                                style="transition: stroke-dasharray 1s ease-out;" />
-                        </svg>
-                        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center;">
-                            <span style="font-size:2rem; font-family:'Russo One', sans-serif; color:${userRank.color}; text-shadow:0 0 10px ${userRank.color}66;">${uniqueCount}</span>
-                            <span style="display:block; font-size:0.75rem; color:#888; text-transform:uppercase; letter-spacing:1px; margin-top:-5px;">${i18n.t('stats_label_uniques')}</span>
-                        </div>
-                    </div>
-                    <h2 style="color:${userRank.color}; margin-top:15px; font-family:'Russo One', sans-serif; letter-spacing:1px; text-shadow:0 0 10px ${userRank.color}33;">${userRank.name}</h2>
-                    <p style="font-size:0.85rem; color:#888; margin-top:5px;">${i18n.t('stats_next_rank_desc', { count: Math.max(0, userRank.nextRankThresh - uniqueCount) })}</p>
-                    
-                    <div style="margin-top:20px; text-align:center; padding:15px; background:var(--bg-card); border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
-                        <div style="font-size:0.85rem; color:#aaa; margin-bottom:5px; text-transform:uppercase; font-weight:bold;">${i18n.t('stats_app_count_label')}</div>
-                        <div class="stats-total-app-count" style="font-size:1.5rem; font-weight:bold; color:#FFF;">${totalBeers.toLocaleString()}</div>
-                        <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:10px; font-size:0.75rem;">
-                             <div class="stat-badge stat-badge-json"><span style="font-weight:bold;">${jsonBeersCount}</span> JSON</div>
-                             <div class="stat-badge stat-badge-api"><span style="font-weight:bold;">${apiBeersCount}</span> API</div>
-                             <div class="stat-badge stat-badge-custom"><span style="font-weight:bold;">${customBeersCount}</span> Custom</div>
-                        </div>
-                    </div>
+    let totalVolumeMl = 0;
+    let totalAlcoholMl = 0;
 
-                    <div style="margin-top: 25px; padding: 20px; background: linear-gradient(135deg, rgba(30,30,30,0.8), rgba(15,15,15,0.9)); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.3); text-align: center;">
-                        <div style="font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
-                            ${i18n.t('stats_volume_total')} 
-                        </div>
-                        <div style="font-size: 2.2rem; font-family: 'Russo One', sans-serif; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-                            ${totalDrunkCount} <span style="font-size: 1rem; color: #888; font-family: sans-serif; font-weight: normal;">${i18n.t('stats_beers_count')}</span>
-                        </div>
-                    </div>
+    Object.keys(userData).forEach(id => {
+        const user = userData[id];
+        if (user.history) {
+            user.history.forEach(h => {
+                totalVolumeMl += h.volume;
+                // Find beer data for alcohol
+                const beer = allBeers.find(b => b.id === id);
+                if (beer && beer.alcohol) {
+                    const degree = parseFloat(beer.alcohol.replace('%', '').replace('°', ''));
+                    if (!isNaN(degree)) {
+                        totalAlcoholMl += h.volume * (degree / 100);
+                    }
+                }
+            });
+        }
+    });
 
-                    ${renderAdvancedStats(allBeers, userData)}
-
-                    ${Storage.getPreference('bac_enabled', true) ? `
-                    <!-- BAC Section -->
-                    <div class="stat-card mt-20 text-center" id="bac-stats-container" style="border-top: 2px solid var(--accent-gold);">
-                        <h3 style="margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:8px;">
-                            ${i18n.t('settings_bac_title')} <span style="font-size: 0.8rem; background: #333; padding: 2px 6px; border-radius: 10px; font-weight: normal;">${Storage.getPreference('bac_country', 'BE')}</span>
-                        </h3>
-                        
-                        <div id="bac-dynamic-content">
-                            <!-- Injected by renderBACStatsContent -->
-                            <div class="spinner"></div> ${i18n.t('loading_app')}
-                        </div>
-                    </div>
-                    ` : ''}
-
-                    ${Storage.getPreference('bac_show_streak', true) ? `
-                    <div class="stat-card mt-20 text-center">
-                        <div id="streak-container">
-                            <div class="spinner"></div> ${i18n.t('loading_app')}
-                        </div>
-                    </div>
-                    ` : ''}
-
-                    ${Storage.getPreference('bac_show_history', true) || Storage.getPreference('bac_show_calendar', true) ? `
-                    <div class="stat-card mt-20 text-center">
-                        <div id="history-container">
-                            <div class="spinner"></div> ${i18n.t('loading_app')}
-                        </div>
-                    </div>
-                    ` : ''}
-
-                    <div class="stat-card mt-20 text-center">
-                        <div id="beer-map-container" style="min-height:200px;">
-                            <span class="spinner"></span> ${i18n.t('stats_loading_map')}
-                        </div>
-                    </div>
-
-                    <div id="card-achievements" class="stat-card mt-20 text-center">
-                        <h3 style="margin-bottom:15px;">${i18n.t('stats_achievements_title')}</h3>
-                        ${renderAchievementsList()}
-                    </div>
-
-                    <div class="stat-card mt-20 text-center">
-                        <h3 style="margin-bottom:10px;">${i18n.t('stats_match_title')}</h3>
-                        <p style="font-size:0.8rem; color:#888; margin-bottom:15px;" data-i18n="stats_match_desc">${i18n.t('stats_match_desc')}</p>
-                        <button type="button" id="btn-match" class="btn-primary" style="background:#222; border:1px solid var(--accent-gold); color:var(--accent-gold);">
-                            ${i18n.t('stats_match_btn')}
-                        </button>
-                    </div>
-
-
-
-                    <div style="background: linear-gradient(135deg, #111, #222); padding: 15px; border-radius: 12px; border: 1px solid var(--accent-gold); margin-bottom: 20px; text-align: center; margin-top: 20px;">
-                        <div style="font-size: 2rem; margin-bottom: 5px;">🎬</div>
-                        <h3 style="margin: 0 0 10px 0; color: var(--accent-gold); font-family: 'Russo One', sans-serif;">Beerdex Wrapped</h3>
-                        <p style="font-size: 0.85rem; color: #ccc; margin-bottom: 15px;">${i18n.t('wrapped_subtitle')}</p>
-                        <button id="btn-open-wrapped" class="btn-primary" style="background: var(--accent-gold); color: black; font-weight: bold; width: 100%;">
-                            ${i18n.t('wrapped_btn_start')}
-                        </button>
-                    </div>
+    const blocks = {
+        'progression': `
+            <!-- SVG Donut Chart -->
+            <div style="width:160px; height:160px; margin:0 auto; position:relative;">
+                <svg viewBox="0 0 36 36" style="width:100%; height:100%; transform: rotate(-90deg);">
+                    <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#333" stroke-width="3" stroke-dasharray="100, 100" />
+                    <path class="circle" stroke-dasharray="${percentage}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="${userRank.color}" stroke-width="3" style="transition: stroke-dasharray 1s ease-out;" />
+                </svg>
+                <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center;">
+                    <span style="font-size:2rem; font-family:'Russo One', sans-serif; color:${userRank.color}; text-shadow:0 0 10px ${userRank.color}66;">${uniqueCount}</span>
+                    <span style="display:block; font-size:0.75rem; color:#888; text-transform:uppercase; letter-spacing:1px; margin-top:-5px;">${i18n.t('stats_label_uniques')}</span>
                 </div>
             </div>
-                `;
+            <h2 style="color:${userRank.color}; margin-top:15px; font-family:'Russo One', sans-serif; letter-spacing:1px; text-shadow:0 0 10px ${userRank.color}33;">${userRank.name}</h2>
+            <p style="font-size:0.85rem; color:#888; margin-top:5px;">${i18n.t('stats_next_rank_desc', { count: Math.max(0, userRank.nextRankThresh - uniqueCount) })}</p>
+            
+            <div style="margin-top:20px; text-align:center; padding:15px; background:var(--bg-card); border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+                <div style="font-size:0.85rem; color:#aaa; margin-bottom:5px; text-transform:uppercase; font-weight:bold;">${i18n.t('stats_app_count_label')}</div>
+                <div class="stats-total-app-count" style="font-size:1.5rem; font-weight:bold; color:#FFF;">${totalBeers.toLocaleString()}</div>
+                <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:10px; font-size:0.75rem;">
+                     <div class="stat-badge stat-badge-json"><span style="font-weight:bold;">${jsonBeersCount}</span> JSON</div>
+                     <div class="stat-badge stat-badge-api"><span style="font-weight:bold;">${apiBeersCount}</span> API</div>
+                     <div class="stat-badge stat-badge-custom"><span style="font-weight:bold;">${customBeersCount}</span> Custom</div>
+                </div>
+            </div>
 
-    // Match
+            <div style="margin-top: 25px; padding: 20px; background: linear-gradient(135deg, rgba(30,30,30,0.8), rgba(15,15,15,0.9)); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.3); text-align: center;">
+                <div style="font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
+                    ${i18n.t('stats_volume_total')} 
+                </div>
+                <div style="font-size: 2.2rem; font-family: 'Russo One', sans-serif; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                    ${totalDrunkCount} <span style="font-size: 1rem; color: #888; font-family: sans-serif; font-weight: normal;">${i18n.t('stats_beers_count')}</span>
+                </div>
+            </div>
+
+            ${renderAdvancedStats(totalVolumeMl, totalAlcoholMl)}
+        `,
+        'equivalences': Storage.getPreference('feat_equivalences_enabled', true) ? `
+            ${renderEquivalences(totalVolumeMl, totalAlcoholMl)}
+        ` : '',
+        'bac': Storage.getPreference('bac_enabled', true) ? `
+            <!-- BAC Section -->
+            <div class="stat-card mt-20 text-center" id="bac-stats-container" style="border-top: 2px solid var(--accent-gold);">
+                <h3 style="margin-bottom:15px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                    ${i18n.t('settings_bac_title')} <span style="font-size: 0.8rem; background: #333; padding: 2px 6px; border-radius: 10px; font-weight: normal;">${Storage.getPreference('bac_country', 'BE')}</span>
+                </h3>
+                
+                <div id="bac-dynamic-content">
+                    <div class="spinner"></div> ${i18n.t('loading_app')}
+                </div>
+            </div>` : '',
+        'streak': Storage.getPreference('bac_show_streak', true) ? `
+            <div class="stat-card mt-20 text-center">
+                <div id="streak-container">
+                    <div class="spinner"></div> ${i18n.t('loading_app')}
+                </div>
+            </div>` : '',
+        'history': `
+            <div class="stat-card mt-20 text-center">
+                <h3 style="margin-bottom:15px;">${i18n.t('stats_block_history') || "Historique des consos"}</h3>
+                <div id="history-only-container">
+                    <div class="spinner"></div> ${i18n.t('loading_app')}
+                </div>
+            </div>
+        `,
+        'calendar': `
+            <div class="stat-card mt-20 text-center">
+                <h3 style="margin-bottom:15px;">${i18n.t('stats_block_calendar') || "Calendrier de l'Avent"}</h3>
+                <div id="calendar-only-container">
+                    <div class="spinner"></div> ${i18n.t('loading_app')}
+                </div>
+            </div>
+        `,
+        'achievements': `
+            <div id="card-achievements" class="stat-card mt-20 text-center">
+                <h3 style="margin-bottom:15px;">${i18n.t('stats_achievements_title')}</h3>
+                ${renderAchievementsList()}
+            </div>
+        `,
+        'map': Storage.getPreference('feat_map_enabled', true) ? `
+            <div class="stat-card mt-20 text-center">
+                <div id="beer-map-container" style="min-height:200px;">
+                    <span class="spinner"></span> ${i18n.t('stats_loading_map')}
+                </div>
+            </div>
+        ` : ''
+    };
+
+    const currentOrder = Storage.getPreference('stats_order', ['progression', 'equivalences', 'bac', 'streak', 'history', 'calendar', 'achievements', 'map']);
+
+    const matchBlock = Storage.getPreference('feat_beermatch_enabled', true) ? `
+        <div class="stat-card mt-20 text-center">
+            <h3 style="margin-bottom:10px;">${i18n.t('stats_match_title')}</h3>
+            <p style="font-size:0.8rem; color:#888; margin-bottom:15px;" data-i18n="stats_match_desc">${i18n.t('stats_match_desc')}</p>
+            <button type="button" id="btn-match" class="btn-primary" style="background:#222; border:1px solid var(--accent-gold); color:var(--accent-gold);">
+                ${i18n.t('stats_match_btn')}
+            </button>
+        </div>
+    ` : '';
+
+    const wrappedBlock = Storage.getPreference('feat_wrapped_enabled', true) ? `
+        <div style="background: linear-gradient(135deg, #111, #222); padding: 15px; border-radius: 12px; border: 1px solid var(--accent-gold); margin-bottom: 20px; text-align: center; margin-top: 20px;">
+            <div style="font-size: 2rem; margin-bottom: 5px;">🎬</div>
+            <h3 style="margin: 0 0 10px 0; color: var(--accent-gold); font-family: 'Russo One', sans-serif;">Beerdex Wrapped</h3>
+            <p style="font-size: 0.85rem; color: #ccc; margin-bottom: 15px;">${i18n.t('wrapped_subtitle')}</p>
+            <button id="btn-open-wrapped" class="btn-primary" style="background: var(--accent-gold); color: black; font-weight: bold; width: 100%;">
+                ${i18n.t('wrapped_btn_start')}
+            </button>
+        </div>
+    ` : '';
+
+    container.innerHTML = `
+        <div class="stats-view-wrapper" style="max-width: 600px; margin: 0 auto; width: 100%;">
+            <div class="text-center p-20">
+                ${currentOrder.map(key => blocks[key] || '').join('')}
+                ${matchBlock}
+                ${wrappedBlock}
+            </div>
+        </div>
+    `;
+
+    // Hook up events
     const btnMatch = container.querySelector('#btn-match');
     if (btnMatch) btnMatch.onclick = () => renderMatchModal(allBeers);
 
-    // Wrapped
     const btnWrapped = container.querySelector('#btn-open-wrapped');
     if (btnWrapped) {
         btnWrapped.onclick = () => window.Wrapped.start();
@@ -2847,11 +2873,17 @@ export function renderStats(allBeers, userData, container) {
         if (streakCtn) renderStreakSection(streakCtn, allBeers, userData);
     }, 60);
 
-    // Render History + Calendar
+    // Render History
     setTimeout(() => {
-        const histCtn = container.querySelector('#history-container');
-        if (histCtn) renderHistorySection(histCtn, allBeers, userData);
+        const histCtn = container.querySelector('#history-only-container');
+        if (histCtn) _renderHistoryList(histCtn, allBeers, userData);
     }, 70);
+
+    // Render Calendar
+    setTimeout(() => {
+        const calCtn = container.querySelector('#calendar-only-container');
+        if (calCtn) _renderCalendar(calCtn, allBeers, userData);
+    }, 80);
 }
 
 // ======================================= //
@@ -3743,6 +3775,69 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                 </div>
             </div>
 
+            <!-- 1.5 Theme / Appearance -->
+            <div class="stat-card mt-20">
+                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;">🎨 ${i18n.t('settings_theme_title') || 'Thème & Couleurs'}</h4>
+                
+                <!-- Preset Selector -->
+                <div style="text-align:left; margin-bottom:12px;">
+                    <strong style="color:var(--text-primary); display:block; margin-bottom:8px; font-size:0.85rem;">${i18n.t('settings_theme_preset') || 'Preset'}</strong>
+                    <div id="theme-presets-grid" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px;">
+                        ${Object.entries(Theme.THEME_PRESETS).map(([key, preset]) => {
+                            const isActive = Theme.getActivePreset() === key;
+                            return `<button class="theme-preset-btn form-input" data-preset="${key}" style="font-size:0.75rem; padding:10px 6px; text-align:center; ${isActive ? 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 8px rgba(255,192,0,0.3);' : ''}">
+                                <div style="font-size:1.2rem; margin-bottom:3px;">${preset.emoji}</div>
+                                ${preset.name}
+                            </button>`;
+                        }).join('')}
+                        <button class="theme-preset-btn form-input" data-preset="custom" style="font-size:0.75rem; padding:10px 6px; text-align:center; ${Theme.getActivePreset() === 'custom' ? 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 8px rgba(255,192,0,0.3);' : ''}">
+                            <div style="font-size:1.2rem; margin-bottom:3px;">✏️</div>
+                            Custom
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Color Pickers (visible when custom) -->
+                <div id="theme-custom-colors" style="display:${Theme.getActivePreset() === 'custom' ? 'block' : 'none'}; border-top:1px dashed #333; padding-top:12px; margin-top:5px;">
+                    <strong style="color:var(--text-primary); display:block; margin-bottom:10px; font-size:0.85rem;">${i18n.t('settings_theme_colors') || 'Couleurs personnalisées'}</strong>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        ${Theme.THEME_VARS.map(v => {
+                            const currentColors = Theme.getActiveColors();
+                            return `<div style="display:flex; align-items:center; gap:8px;">
+                                <input type="color" class="theme-color-input" data-var="${v.key}" value="${currentColors[v.key] || v.default}" style="width:32px; height:32px; border:none; background:none; cursor:pointer; padding:0; border-radius:6px;">
+                                <span style="font-size:0.7rem; color:#888;">${i18n.t(v.label) || v.key.replace('--', '')}</span>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>
+
+                <!-- Import / Export Theme -->
+                <div style="border-top:1px dashed #333; padding-top:12px; margin-top:12px;">
+                    <strong style="color:var(--text-primary); display:block; margin-bottom:8px; font-size:0.85rem;">${i18n.t('settings_theme_share') || 'Partager le thème'}</strong>
+                    <div style="display:flex; gap:8px; margin-bottom:8px;">
+                        <button id="btn-theme-export" class="btn-primary" style="flex:1; background:#222; border:1px solid var(--accent-gold); color:var(--accent-gold); margin:0; font-size:0.8rem;">
+                            📤 ${i18n.t('settings_theme_export') || 'Exporter'}
+                        </button>
+                        <button id="btn-theme-import" class="btn-primary" style="flex:1; background:#222; border:1px solid #444; color:#aaa; margin:0; font-size:0.8rem;">
+                            📥 ${i18n.t('settings_theme_import') || 'Importer'}
+                        </button>
+                    </div>
+                    <button id="btn-theme-reset" class="btn-primary" style="background:rgba(255,0,0,0.08); color:#ff6b6b; border:1px solid rgba(255,0,0,0.2); width:100%; margin:0; font-size:0.75rem;">
+                        ↩️ ${i18n.t('settings_theme_reset') || 'Réinitialiser le thème'}
+                    </button>
+                </div>
+                
+                <!-- Police d'écriture -->
+                <div style="border-top:1px dashed #333; padding-top:12px; margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <strong style="color:var(--text-primary); font-size:0.85rem;">${i18n.t('settings_font_title') || "Police d'écriture"}</strong>
+                    <select id="select-font-family" class="form-select" style="padding:8px; width:140px;">
+                        ${Object.keys(Theme.FONTS).map(fontKey => {
+                            return `<option value="${fontKey}" ${Theme.getActiveFont() === fontKey ? 'selected' : ''}>${Theme.FONTS[fontKey].label}</option>`;
+                        }).join('')}
+                    </select>
+                </div>
+            </div>
+
             <!-- 2. Interface -->
             <div class="stat-card mt-20">
                 <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;" data-i18n="settings_interface_title">🎨 Interface</h4>
@@ -3794,6 +3889,61 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                         <button id="btn-preset-tristan" class="form-input" style="font-size:0.8rem; padding:8px; ${Storage.getPreference('activePreset') === 'tristan' ? 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 5px rgba(255,192,0,0.3);' : ''}">${i18n.t('preset_tristan')}</button>
                         <button id="btn-preset-noah" class="form-input" style="font-size:0.8rem; padding:8px; grid-column:span 2; ${Storage.getPreference('activePreset') === 'noah' ? 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 5px rgba(255,192,0,0.3);' : ''}">${i18n.t('preset_noah')}</button>
                      </div>
+                </div>
+            </div>
+
+            <!-- 1.1 Fonctionnalités (Toggles) -->
+            <div class="stat-card mt-20">
+                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;">${i18n.t('settings_group_features') || '⚙️ Fonctionnalités'}</h4>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <div style="text-align:left;">
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">${i18n.t('settings_toggle_map') || 'Afficher la carte (Map)'}</strong>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-feat-map" ${Storage.getPreference('feat_map_enabled', true) ? 'checked' : ''}>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <div style="text-align:left;">
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">${i18n.t('settings_toggle_reminders') || 'Rappels (Notation & Duplications)'}</strong>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-feat-reminders" ${Storage.getPreference('feat_reminders_enabled', true) ? 'checked' : ''}>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <div style="text-align:left;">
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">${i18n.t('settings_toggle_equivalences') || 'Équivalences alcool'}</strong>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-feat-equivalences" ${Storage.getPreference('feat_equivalences_enabled', true) ? 'checked' : ''}>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <div style="text-align:left;">
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">${i18n.t('settings_toggle_beermatch') || 'Beer Match'}</strong>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-feat-beermatch" ${Storage.getPreference('feat_beermatch_enabled', true) ? 'checked' : ''}>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="text-align:left;">
+                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">${i18n.t('settings_toggle_wrapped') || 'Beerdex Wrapped'}</strong>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-feat-wrapped" ${Storage.getPreference('feat_wrapped_enabled', true) ? 'checked' : ''}>
+                        <span class="slider round"></span>
+                    </label>
                 </div>
             </div>
 
@@ -3903,7 +4053,52 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                 </div>
             </div>
 
-            <!-- 3. Alcoolémie section moved to top -->
+            <!-- 3. Ordre des Statistiques -->
+            <div class="stat-card mt-20">
+                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;">${i18n.t('settings_group_stats_order') || '🔄 Ordre des Statistiques'}</h4>
+                <div id="stats-order-list" style="display:flex; flex-direction:column; gap:12px;">
+                    ${(() => {
+                        const defaultOrder = ['progression', 'equivalences', 'bac', 'streak', 'history', 'calendar', 'achievements', 'map'];
+                        let currentOrder = Storage.getPreference('stats_order', defaultOrder);
+                        
+                        // Migration fallback for old "donut" block and missing keys
+                        if (currentOrder.includes('donut')) {
+                            currentOrder = defaultOrder;
+                        } else {
+                            defaultOrder.forEach(k => {
+                                if (!currentOrder.includes(k)) {
+                                    currentOrder.push(k);
+                                }
+                            });
+                            currentOrder = currentOrder.filter(k => defaultOrder.includes(k));
+                        }
+                        Storage.savePreference('stats_order', currentOrder);
+
+                        const labels = {
+                            'progression': i18n.t('stats_block_progression') || "Progression",
+                            'bac': i18n.t('stats_block_bac') || "Taux d'alcool (BAC)",
+                            'streak': i18n.t('stats_block_streak') || "Série (Streak)",
+                            'equivalences': i18n.t('stats_block_equivalences') || "Équivalences",
+                            'history': i18n.t('stats_block_history') || "Historique des consos",
+                            'calendar': i18n.t('stats_block_calendar') || "Calendrier de dégustation",
+                            'achievements': i18n.t('stats_block_achievements') || "Succès et Badges",
+                            'map': i18n.t('stats_block_map') || "Carte de Dégustation"
+                        };
+
+                        return currentOrder.map((key, index) => {
+                            return `
+                                <div class="stats-order-item" data-key="${key}" style="display:flex; justify-content:space-between; align-items:center; background:#222; padding:10px; border-radius:8px; border:1px solid #333;">
+                                    <span style="color:#ddd; font-size:0.9rem;">${labels[key] || key}</span>
+                                    <div style="display:flex; gap:5px;">
+                                        <button class="btn-stat-move-up" data-index="${index}" style="background:#333; color:var(--text-primary); border:none; padding:5px 10px; border-radius:4px; cursor:pointer; ${index === 0 ? 'opacity:0.3;' : ''}" ${index === 0 ? 'disabled' : ''}>↑</button>
+                                        <button class="btn-stat-move-down" data-index="${index}" style="background:#333; color:var(--text-primary); border:none; padding:5px 10px; border-radius:4px; cursor:pointer; ${index === currentOrder.length - 1 ? 'opacity:0.3;' : ''}" ${index === currentOrder.length - 1 ? 'disabled' : ''}>↓</button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    })()}
+                </div>
+            </div>
 
             <!-- 4. Données -->
             <div class="stat-card mt-20">
@@ -3936,6 +4131,10 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
 
                 <button id="btn-request-beer" class="btn-primary" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; width:100%; margin-bottom:15px; font-weight:bold; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);">
                     ${i18n.t('request_beer_btn')}
+                </button>
+
+                <button id="btn-open-debug" class="btn-primary text-white" style="background:#222; border:1px solid #444; width:100%; margin-bottom:15px;">
+                    ${i18n.t('settings_debug_btn') || 'Diagnostic & Debug'}
                 </button>
                 
                 <details style="border-top:1px solid #333; padding-top:10px;">
@@ -4003,6 +4202,87 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
 
     // --- Handlers ---
 
+    // --- Theme Handlers ---
+    container.querySelectorAll('.theme-preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const preset = btn.dataset.preset;
+            if (preset === 'custom') {
+                // Show color pickers
+                const customDiv = container.querySelector('#theme-custom-colors');
+                if (customDiv) customDiv.style.display = 'block';
+                Storage.savePreference('theme_preset', 'custom');
+                Theme.applyColors(Theme.getActiveColors());
+            } else {
+                Theme.applyPreset(preset);
+                const customDiv = container.querySelector('#theme-custom-colors');
+                if (customDiv) customDiv.style.display = 'none';
+            }
+            showToast(i18n.t('toast_theme_applied') || 'Thème appliqué !', 'success');
+            // Re-render to refresh active state
+            renderSettings(allBeers, userData, container, isDiscovery, discoveryCallback);
+        });
+    });
+
+    container.querySelectorAll('.theme-color-input').forEach(input => {
+        input.addEventListener('input', (e) => {
+            Theme.setCustomColor(e.target.dataset.var, e.target.value);
+        });
+    });
+
+    const btnThemeExport = container.querySelector('#btn-theme-export');
+    if (btnThemeExport) {
+        btnThemeExport.addEventListener('click', async () => {
+            const code = Theme.exportTheme();
+            try {
+                await navigator.clipboard.writeText(code);
+                showToast(i18n.t('toast_theme_exported') || 'Code thème copié dans le presse-papiers !', 'success');
+            } catch {
+                prompt(i18n.t('toast_theme_export_manual') || 'Copiez ce code :', code);
+            }
+        });
+    }
+
+    const btnThemeImport = container.querySelector('#btn-theme-import');
+    if (btnThemeImport) {
+        btnThemeImport.addEventListener('click', () => {
+            const code = prompt(i18n.t('settings_theme_import_prompt') || 'Collez le code du thème (THEME_...) :');
+            if (code) {
+                const result = Theme.importTheme(code.trim());
+                if (result.success) {
+                    showToast(result.message, 'success');
+                    renderSettings(allBeers, userData, container, isDiscovery, discoveryCallback);
+                } else {
+                    showToast(result.message, 'error');
+                }
+            }
+        });
+    }
+
+    const btnThemeReset = container.querySelector('#btn-theme-reset');
+    if (btnThemeReset) {
+        btnThemeReset.addEventListener('click', () => {
+            Theme.resetTheme();
+            showToast(i18n.t('toast_theme_reset') || 'Thème réinitialisé', 'info');
+            renderSettings(allBeers, userData, container, isDiscovery, discoveryCallback);
+        });
+    }
+
+    // --- Font Handler ---
+    const fontSelect = container.querySelector('#select-font-family');
+    if (fontSelect) {
+        fontSelect.addEventListener('change', (e) => {
+            Theme.applyFont(e.target.value);
+            showToast("Police d'écriture mise à jour");
+        });
+    }
+
+    // --- Debug Handler ---
+    const btnDebug = container.querySelector('#btn-open-debug');
+    if (btnDebug) {
+        btnDebug.addEventListener('click', () => {
+            renderDebugModal();
+        });
+    }
 
     // Map Setting
     const mapSelect = container.querySelector('#select-default-map');
@@ -4017,6 +4297,24 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
             showToast(i18n.t('toast_map_updated'));
         };
     }
+
+    // --- Feature Toggles Handlers ---
+    const toggles = [
+        { id: '#toggle-feat-map', key: 'feat_map_enabled' },
+        { id: '#toggle-feat-reminders', key: 'feat_reminders_enabled' },
+        { id: '#toggle-feat-equivalences', key: 'feat_equivalences_enabled' },
+        { id: '#toggle-feat-beermatch', key: 'feat_beermatch_enabled' },
+        { id: '#toggle-feat-wrapped', key: 'feat_wrapped_enabled' }
+    ];
+
+    toggles.forEach(t => {
+        const el = container.querySelector(t.id);
+        if (el) {
+            el.addEventListener('change', (e) => {
+                Storage.savePreference(t.key, e.target.checked);
+            });
+        }
+    });
 
     // Config
     container.querySelector('#btn-template').onclick = () => renderTemplateEditor();
@@ -4052,6 +4350,35 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
             discoveryCallback(e.target.checked);
         };
     }
+
+    // --- Stats Order Handlers ---
+    container.querySelectorAll('.btn-stat-move-up').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const idx = parseInt(e.currentTarget.dataset.index);
+            if (idx > 0) {
+                const currentOrder = Storage.getPreference('stats_order', ['progression', 'equivalences', 'bac', 'streak', 'history', 'calendar', 'achievements', 'map']);
+                const temp = currentOrder[idx];
+                currentOrder[idx] = currentOrder[idx - 1];
+                currentOrder[idx - 1] = temp;
+                Storage.savePreference('stats_order', currentOrder);
+                renderSettings(allBeers, userData, container, isDiscovery, discoveryCallback);
+            }
+        });
+    });
+
+    container.querySelectorAll('.btn-stat-move-down').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const idx = parseInt(e.currentTarget.dataset.index);
+            const currentOrder = Storage.getPreference('stats_order', ['progression', 'equivalences', 'bac', 'streak', 'history', 'calendar', 'achievements', 'map']);
+            if (idx < currentOrder.length - 1) {
+                const temp = currentOrder[idx];
+                currentOrder[idx] = currentOrder[idx + 1];
+                currentOrder[idx + 1] = temp;
+                Storage.savePreference('stats_order', currentOrder);
+                renderSettings(allBeers, userData, container, isDiscovery, discoveryCallback);
+            }
+        });
+    });
 
     // Museum Theme Toggle
     const toggleMuseum = container.querySelector('#toggle-museum');
@@ -4222,6 +4549,11 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     container.querySelector('#btn-legal-tos').onclick = () => renderLegalPage('tos');
     container.querySelector('#btn-legal-privacy').onclick = () => renderLegalPage('privacy');
     container.querySelector('#btn-legal-copyright').onclick = () => renderLegalPage('copyright');
+
+    const btnOpenDebug = container.querySelector('#btn-open-debug');
+    if (btnOpenDebug) {
+        btnOpenDebug.onclick = () => renderDebugModal();
+    }
 
     const selectLanguage = container.querySelector('#select-language');
     if (selectLanguage) {
@@ -4797,30 +5129,25 @@ export function resizeImage(file, maxWidth, maxHeight, callback) {
     reader.readAsDataURL(file);
 }
 
-function renderAdvancedStats(allBeers, userData) {
-    let totalVolumeMl = 0;
-    let totalAlcoholMl = 0;
-
-    Object.keys(userData).forEach(id => {
-        const user = userData[id];
-        if (user.history) {
-            user.history.forEach(h => {
-                totalVolumeMl += h.volume;
-                // Find beer data for alcohol
-                const beer = allBeers.find(b => b.id === id);
-                if (beer && beer.alcohol) {
-                    const degree = parseFloat(beer.alcohol.replace('%', '').replace('°', ''));
-                    if (!isNaN(degree)) {
-                        totalAlcoholMl += h.volume * (degree / 100);
-                    }
-                }
-            });
-        }
-    });
-
+function renderAdvancedStats(totalVolumeMl, totalAlcoholMl) {
     const totalLiters = (totalVolumeMl / 1000).toFixed(1);
     const alcoholLiters = (totalAlcoholMl / 1000).toFixed(2);
 
+    return `
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px;">
+            <div style="padding:15px; background:linear-gradient(135deg, rgba(30,30,30,0.8), rgba(15,15,15,0.9)); border-radius:12px; border:1px solid rgba(255,255,255,0.05); box-shadow:0 4px 15px rgba(0,0,0,0.3); text-align:center; display:flex; flex-direction:column; justify-content:center;">
+                <div style="font-size:1.8rem; font-family:'Russo One', sans-serif; color:#fff; text-shadow:0 2px 4px rgba(0,0,0,0.5);">${totalLiters} L</div>
+                <div style="font-size:0.75rem; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-top:5px;">${i18n.t('stats_volume_total')}</div>
+            </div>
+            <div style="padding:15px; background:linear-gradient(135deg, rgba(30,30,30,0.8), rgba(15,15,15,0.9)); border-radius:12px; border:1px solid rgba(255,255,255,0.05); box-shadow:0 4px 15px rgba(0,0,0,0.3); text-align:center; display:flex; flex-direction:column; justify-content:center;">
+                <div style="font-size:1.8rem; font-family:'Russo One', sans-serif; color:#fff; text-shadow:0 2px 4px rgba(0,0,0,0.5);">${alcoholLiters} L</div>
+                <div style="font-size:0.75rem; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-top:5px;">${i18n.t('stats_pure_alcohol')}</div>
+            </div>
+        </div>
+    `;
+}
+
+function renderEquivalences(totalVolumeMl, totalAlcoholMl) {
     // Fun Comparisons logic (Volume)
     const comparisons = [
         { label: i18n.t('stats_label_pints'), vol: 500, icon: '🍺' },
@@ -4882,17 +5209,6 @@ function renderAdvancedStats(allBeers, userData) {
     }
 
     return `
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:15px;">
-            <div style="padding:15px; background:linear-gradient(135deg, rgba(30,30,30,0.8), rgba(15,15,15,0.9)); border-radius:12px; border:1px solid rgba(255,255,255,0.05); box-shadow:0 4px 15px rgba(0,0,0,0.3); text-align:center; display:flex; flex-direction:column; justify-content:center;">
-                <div style="font-size:1.8rem; font-family:'Russo One', sans-serif; color:#fff; text-shadow:0 2px 4px rgba(0,0,0,0.5);">${totalLiters} L</div>
-                <div style="font-size:0.75rem; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-top:5px;">${i18n.t('stats_volume_total')}</div>
-            </div>
-            <div style="padding:15px; background:linear-gradient(135deg, rgba(30,30,30,0.8), rgba(15,15,15,0.9)); border-radius:12px; border:1px solid rgba(255,255,255,0.05); box-shadow:0 4px 15px rgba(0,0,0,0.3); text-align:center; display:flex; flex-direction:column; justify-content:center;">
-                <div style="font-size:1.8rem; font-family:'Russo One', sans-serif; color:#fff; text-shadow:0 2px 4px rgba(0,0,0,0.5);">${alcoholLiters} L</div>
-                <div style="font-size:0.75rem; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-top:5px;">${i18n.t('stats_pure_alcohol')}</div>
-            </div>
-        </div>
-
         <div class="stat-card mt-20" style="padding:0; overflow:hidden; border:1px solid rgba(255,192,0,0.15); background:linear-gradient(180deg, rgba(20,20,20,0.6) 0%, rgba(10,10,10,0.8) 100%);">
             <div style="background: linear-gradient(90deg, rgba(255,192,0,0.1), transparent); padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05);">
                 <h4 style="color:var(--accent-gold); margin:0; display:flex; align-items:center; gap:8px;">
@@ -6390,7 +6706,7 @@ export function generateStarRatingHTML(currentValue = 0, beerId = '', maxStars =
 // Unrated Beer Banner/Carousel             //
 // ======================================= //
 
-export function renderUnratedBanner(allBeers, container) {
+export function renderUnratedBanner(allBeers, container, migrationPrompts = []) {
     const userData = Storage.getAllUserData();
     const consumedIds = Storage.getAllConsumedBeerIds();
 
@@ -6404,8 +6720,22 @@ export function renderUnratedBanner(allBeers, container) {
         }
     });
 
-    if (unratedBeers.length === 0) return ''; // Nothing to show
+    const hasMigrations = migrationPrompts && migrationPrompts.length > 0;
+    if (unratedBeers.length === 0 && !hasMigrations) return ''; // Nothing to show
 
+    // --- Migration chips (transfer suggestions) ---
+    const migrationChipsHtml = hasMigrations ? migrationPrompts.map(m => {
+        return `
+            <div class="migration-chip" data-custom-id="${m.customBeer.id}" data-official-id="${m.officialBeer.id}" 
+                 style="display: flex; align-items: center; gap: 8px; background: linear-gradient(135deg, rgba(255,192,0,0.12), rgba(255,153,0,0.08)); border: 1px solid rgba(255,192,0,0.3); padding: 5px 12px 5px 5px; border-radius: 24px; flex: 0 0 auto; cursor: pointer; backdrop-filter: blur(5px); box-shadow: 0 4px 10px rgba(255,192,0,0.1);">
+                <div style="width: 28px; height: 28px; border-radius: 50%; background: rgba(255,192,0,0.2); display: flex; align-items: center; justify-content: center; font-size: 14px;">🔄</div>
+                <span style="font-size: 0.75rem; font-weight: 600; color: var(--accent-gold); max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${m.customBeer.title}</span>
+                <span style="font-size: 0.6rem; color: #888; padding: 1px 5px; background: rgba(255,255,255,0.05); border-radius: 8px;">${m.score}%</span>
+            </div>
+        `;
+    }).join('') : '';
+
+    // --- Unrated chips ---
     const slidesHtml = unratedBeers.slice(0, 15).map(({ beer }) => {
         const fallbackImg = 'images/beer/default.png';
         const img = beer.image || fallbackImg;
@@ -6419,14 +6749,16 @@ export function renderUnratedBanner(allBeers, container) {
         `;
     }).join('');
 
+    const totalCount = unratedBeers.length + (migrationPrompts ? migrationPrompts.length : 0);
+
     const bannerHtml = `
         <div class="unrated-banner-modern" style="margin: 10px 15px 15px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <h4 style="font-size: 0.8rem; color: var(--accent-gold); margin: 0; display: flex; align-items: center; gap: 6px;">${i18n.t('unrated_banner_title')}</h4>
-                <span style="font-size: 0.7rem; color: #888; background: rgba(255, 255, 255, 0.06); padding: 2px 8px; border-radius: 10px;">${unratedBeers.length}</span>
+                <h4 style="font-size: 0.8rem; color: var(--accent-gold); margin: 0; display: flex; align-items: center; gap: 6px;">${hasMigrations ? (i18n.t('banner_actions_title') || '⚡ Actions') : i18n.t('unrated_banner_title')}</h4>
+                <span style="font-size: 0.7rem; color: #888; background: rgba(255, 255, 255, 0.06); padding: 2px 8px; border-radius: 10px;">${totalCount}</span>
             </div>
             <div style="display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 5px; -webkit-overflow-scrolling: touch;">
-                ${slidesHtml}
+                ${migrationChipsHtml}${slidesHtml}
             </div>
         </div>
     `;
@@ -6434,7 +6766,7 @@ export function renderUnratedBanner(allBeers, container) {
     // Insert at beginning of container
     container.insertAdjacentHTML('afterbegin', bannerHtml);
 
-    // Bind clicks to open the standard rating modal
+    // Bind clicks for unrated chips (open beer detail)
     const banner = container.querySelector('.unrated-banner-modern');
     if (banner) {
         banner.querySelectorAll('.unrated-chip').forEach(chip => {
@@ -6447,7 +6779,321 @@ export function renderUnratedBanner(allBeers, container) {
                 }
             });
         });
+
+        // Bind clicks for migration chips (open migration modal)
+        banner.querySelectorAll('.migration-chip').forEach(chip => {
+            chip.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const customId = chip.dataset.customId;
+                const officialId = chip.dataset.officialId;
+                const match = migrationPrompts.find(m => 
+                    m.customBeer.id === customId && m.officialBeer.id === officialId
+                );
+                if (match) {
+                    _renderMigrationModal(match, allBeers, container, migrationPrompts);
+                }
+            });
+        });
     }
 
     return bannerHtml;
+}
+
+// ======================================= //
+// Migration Modal                         //
+// ======================================= //
+
+function _renderMigrationModal(match, allBeers, parentContainer, migrationPrompts) {
+    const { customBeer, officialBeer, score } = match;
+    const userData = Storage.getAllUserData();
+    const customData = userData[customBeer.id] || {};
+    
+    const customImg = customBeer.image || 'images/beer/default.png';
+    const officialImg = officialBeer.image || 'images/beer/default.png';
+    const drinkCount = customData.count || 0;
+    const historyCount = (customData.history || []).length;
+    const hasRating = customData.score !== undefined;
+
+    const migrationTitleText = i18n.t('migration_title') || 'Transfert disponible';
+    const migrationSubtitleText = i18n.t('migration_subtitle') || 'Votre bière personnalisée correspond à une bière officielle.';
+    const migrationCustomLabel = i18n.t('migration_label_custom') || 'Personnalisée';
+    const migrationOfficialLabel = i18n.t('migration_label_official') || 'Officielle';
+    const migrationSimilarityText = i18n.t('migration_similarity') || 'Similarité';
+    const migrationDrinksText = i18n.t('migration_drinks') || 'Consommations';
+    const migrationHistoryText = i18n.t('migration_history') || 'Historique';
+    const migrationEntriesText = i18n.t('migration_entries') || 'entrées';
+    const migrationRatingText = i18n.t('migration_rating') || 'Note';
+    const migrationDismissText = i18n.t('migration_btn_dismiss') || 'Ignorer';
+    const migrationTransferText = i18n.t('migration_btn_transfer') || 'Transférer';
+
+    modalContainer.innerHTML = `
+        <div class="modal-overlay active" id="migration-overlay">
+            <div class="modal-content" style="max-width: 420px; border: 1px solid rgba(255,192,0,0.3); background: var(--bg-card);">
+                <div style="text-align: center; padding: 20px 20px 10px;">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">🔄</div>
+                    <h3 style="color: var(--accent-gold); font-family: 'Russo One', sans-serif; margin-bottom: 5px;">
+                        ${migrationTitleText}
+                    </h3>
+                    <p style="font-size: 0.8rem; color: #888; margin-bottom: 20px;">
+                        ${migrationSubtitleText}
+                    </p>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px; margin: 0 15px 15px;">
+                    <div style="text-align: center; flex: 1;">
+                        <img src="${customImg}" alt="" onerror="this.src='images/beer/default.png'" 
+                             style="width: 60px; height: 60px; object-fit: contain; border-radius: 8px; background: #222; margin-bottom: 6px;">
+                        <div style="font-size: 0.75rem; color: #aaa; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 auto;">${customBeer.title}</div>
+                        <div style="font-size: 0.65rem; color: #666; margin-top: 2px;">${migrationCustomLabel}</div>
+                    </div>
+
+                    <div style="font-size: 1.5rem; color: var(--accent-gold);">→</div>
+
+                    <div style="text-align: center; flex: 1;">
+                        <img src="${officialImg}" alt="" onerror="this.src='images/beer/default.png'" 
+                             style="width: 60px; height: 60px; object-fit: contain; border-radius: 8px; background: #222; margin-bottom: 6px;">
+                        <div style="font-size: 0.75rem; color: #fff; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 auto;">${officialBeer.title}</div>
+                        <div style="font-size: 0.65rem; color: var(--accent-gold); margin-top: 2px;">${migrationOfficialLabel}</div>
+                    </div>
+                </div>
+
+                <div style="padding: 0 15px 15px; font-size: 0.8rem; color: #aaa;">
+                    <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <span>${migrationSimilarityText}</span>
+                            <span style="color: var(--accent-gold); font-weight: bold;">${score}%</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <span>${migrationDrinksText}</span>
+                            <span style="color: #fff;">${drinkCount}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <span>${migrationHistoryText}</span>
+                            <span style="color: #fff;">${historyCount} ${migrationEntriesText}</span>
+                        </div>
+                        ${hasRating ? `<div style="display: flex; justify-content: space-between;">
+                            <span>${migrationRatingText}</span>
+                            <span style="color: #fff;">${customData.score}/20</span>
+                        </div>` : ''}
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; padding: 0 15px 20px;">
+                    <button id="btn-migration-dismiss" class="btn-primary" style="flex: 1; background: #222; border: 1px solid #444; color: #aaa; margin: 0;">
+                        ${migrationDismissText}
+                    </button>
+                    <button id="btn-migration-confirm" class="btn-primary" style="flex: 1; background: var(--accent-gold); color: #000; font-weight: bold; margin: 0;">
+                        ${migrationTransferText}
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    modalContainer.style.display = 'block';
+
+    // Close overlay
+    const overlay = document.getElementById('migration-overlay');
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            modalContainer.style.display = 'none';
+            modalContainer.innerHTML = '';
+        }
+    });
+
+    // Dismiss (never show again)
+    document.getElementById('btn-migration-dismiss').addEventListener('click', () => {
+        Deduplicator.dismissMatch(customBeer.id, officialBeer.id);
+        const idx = migrationPrompts.findIndex(m => m.customBeer.id === customBeer.id && m.officialBeer.id === officialBeer.id);
+        if (idx !== -1) migrationPrompts.splice(idx, 1);
+        modalContainer.style.display = 'none';
+        modalContainer.innerHTML = '';
+        showToast(i18n.t('migration_dismissed') || 'Suggestion ignorée', 'info');
+        // Re-render banner
+        const existingBanner = parentContainer.querySelector('.unrated-banner-modern');
+        if (existingBanner) existingBanner.remove();
+        renderUnratedBanner(allBeers, parentContainer, migrationPrompts);
+    });
+
+    // Confirm transfer
+    document.getElementById('btn-migration-confirm').addEventListener('click', () => {
+        const result = Storage.migrateBeerData(customBeer.id, officialBeer.id);
+        if (result.success) {
+            const idx = migrationPrompts.findIndex(m => m.customBeer.id === customBeer.id && m.officialBeer.id === officialBeer.id);
+            if (idx !== -1) migrationPrompts.splice(idx, 1);
+            modalContainer.style.display = 'none';
+            modalContainer.innerHTML = '';
+            showToast(i18n.t('migration_success') || `Transféré ! ${result.transferred.count} conso(s) et ${result.transferred.history} entrée(s) d'historique.`, 'success');
+            Feedback.playSuccess();
+            // Re-render banner
+            const existingBanner = parentContainer.querySelector('.unrated-banner-modern');
+            if (existingBanner) existingBanner.remove();
+            renderUnratedBanner(allBeers, parentContainer, migrationPrompts);
+        } else {
+            showToast(i18n.t('migration_error') || 'Erreur lors du transfert.', 'error');
+        }
+    });
+}
+
+// ======================================= //
+// Debug / Crash Report Modal              //
+// ======================================= //
+
+export function renderDebugModal() {
+    const report = CrashLogger.generateReport();
+    const device = CrashLogger.getDeviceInfo();
+    const logs = CrashLogger.getLogs();
+
+    const debugTitleText = i18n.t('debug_title') || 'Diagnostic & Debug';
+    const debugSubtitleText = i18n.t('debug_subtitle') || 'Informations techniques pour le support';
+    const debugDeviceText = i18n.t('debug_device_title') || 'Appareil';
+    const debugErrorsText = i18n.t('debug_errors_title') || 'Erreurs récentes';
+    const debugNoErrorsText = i18n.t('debug_no_errors') || 'Aucune erreur enregistrée.';
+    const debugCopyText = i18n.t('debug_btn_copy') || 'Copier le rapport';
+    const debugEmailText = i18n.t('debug_btn_email') || 'Envoyer par email';
+    const debugClearText = i18n.t('debug_btn_clear') || 'Effacer les logs';
+    const debugCloseText = i18n.t('btn_close') || 'Fermer';
+    const debugDownloadText = i18n.t('btn_download') || 'Télécharger';
+
+    modalContainer.innerHTML = `
+        <div class="modal-overlay active" id="debug-overlay">
+            <div class="modal-content" style="max-width: 500px; max-height: 85vh; overflow-y: auto; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.1);">
+                <div style="text-align: center; padding: 20px 20px 10px;">
+                    <div style="font-size: 2rem; margin-bottom: 10px;">🛠️</div>
+                    <h3 style="color: var(--accent-gold); font-family: 'Russo One', sans-serif; margin-bottom: 5px;">
+                        ${debugTitleText}
+                    </h3>
+                    <p style="font-size: 0.75rem; color: #888;">
+                        ${debugSubtitleText}
+                    </p>
+                </div>
+
+                <!-- Device Info -->
+                <div style="padding: 0 15px 10px;">
+                    <h4 style="font-size: 0.8rem; color: var(--accent-gold); margin-bottom: 8px;">📱 ${debugDeviceText}</h4>
+                    <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; font-size: 0.75rem; color: #aaa; font-family: monospace; line-height: 1.6;">
+                        <div><span style="color:#888;">Platform:</span> ${device.platform}</div>
+                        <div><span style="color:#888;">Screen:</span> ${device.screenResolution} (${device.pixelRatio}x)</div>
+                        <div><span style="color:#888;">Window:</span> ${device.windowSize}</div>
+                        <div><span style="color:#888;">RAM:</span> ${device.deviceMemory}</div>
+                        <div><span style="color:#888;">CPU:</span> ${device.hardwareConcurrency} cores</div>
+                        <div><span style="color:#888;">Storage:</span> ${device.storageUsed}</div>
+                        <div><span style="color:#888;">Online:</span> ${device.online ? '✅' : '❌'}</div>
+                        <div><span style="color:#888;">Standalone:</span> ${device.standalone ? '✅' : '❌'}</div>
+                        <div><span style="color:#888;">Capacitor:</span> ${device.capacitor ? '✅' : '❌'}</div>
+                        <div style="word-break: break-all; margin-top: 5px;"><span style="color:#888;">UA:</span> ${device.userAgent}</div>
+                    </div>
+                </div>
+
+                <!-- Error Logs -->
+                <div style="padding: 0 15px 10px;">
+                    <h4 style="font-size: 0.8rem; color: var(--accent-gold); margin-bottom: 8px;">🐛 ${debugErrorsText} (${logs.length})</h4>
+                    <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; max-height: 200px; overflow-y: auto; font-size: 0.7rem; color: #aaa; font-family: monospace; line-height: 1.5;">
+                        ${logs.length === 0 
+                            ? `<div style="text-align: center; color: #4CAF50; padding: 15px;">🎉 ${debugNoErrorsText}</div>`
+                            : logs.slice(-10).reverse().map((log) => `
+                                <div style="padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); ${log.type === 'error' || log.type === 'promise_rejection' ? 'color: #ff6b6b;' : ''}">
+                                    <div style="color: #666;">[${log.timestamp?.substring(11, 19) || '??'}] <span style="color: ${log.type === 'info' ? '#4CAF50' : log.type === 'console.error' ? '#ff9800' : '#ff6b6b'};">${log.type}</span></div>
+                                    <div style="word-break: break-all;">${(log.message || '(empty)').substring(0, 200)}</div>
+                                    ${log.source ? `<div style="color: #555;">${log.source}:${log.line}</div>` : ''}
+                                </div>
+                            `).join('')
+                        }
+                    </div>
+                </div>
+
+                <!-- Dev Settings -->
+                <div style="padding: 0 15px 10px;">
+                    <h4 style="font-size: 0.8rem; color: var(--accent-gold); margin-bottom: 8px;">⚙️ ${i18n.t('debug_dev_settings') || 'Developer Settings'}</h4>
+                    <div style="display:flex; justify-content:space-between; align-items:center; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px;">
+                        <span style="font-size:0.8rem; color:#aaa;">${i18n.t('debug_toggle_dedup') || 'Deduplicator Background Worker'}</span>
+                        <label class="switch" style="transform: scale(0.8);">
+                            <input type="checkbox" id="toggle-debug-dedup" ${Storage.getPreference('debug_deduplicator_enabled', false) ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; flex-direction: column; gap: 8px; padding: 0 15px 20px;">
+                    <button id="btn-debug-copy" class="btn-primary" style="background: var(--accent-gold); color: #000; font-weight: bold; margin: 0; width: 100%;">
+                        📋 ${debugCopyText}
+                    </button>
+                    <button id="btn-debug-download" class="btn-primary" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); margin: 0; width: 100%; color: #fff;">
+                        📥 ${debugDownloadText}
+                    </button>
+                    <a id="btn-debug-email" href="${CrashLogger.getMailtoLink()}" class="btn-primary" style="display: block; text-align: center; background: #222; border: 1px solid var(--accent-gold); color: var(--accent-gold); margin: 0; width: 100%; text-decoration: none; box-sizing: border-box;">
+                        ✉️ ${debugEmailText}
+                    </a>
+                    <button id="btn-debug-clear" class="btn-primary" style="background: rgba(255,0,0,0.1); color: #ff6b6b; border: 1px solid rgba(255,0,0,0.3); margin: 0; width: 100%; font-size: 0.8rem;">
+                        🗑️ ${debugClearText}
+                    </button>
+                    <button id="btn-debug-close" class="btn-primary" style="background: #333; color: #aaa; margin: 0; width: 100%;">
+                        ${debugCloseText}
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    modalContainer.classList.remove('hidden');
+
+    // Close overlay
+    const overlay = document.getElementById('debug-overlay');
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            modalContainer.classList.add('hidden');
+        }
+    });
+
+    document.getElementById('btn-debug-close').addEventListener('click', () => {
+        modalContainer.classList.add('hidden');
+    });
+
+    document.getElementById('toggle-debug-dedup').addEventListener('change', (e) => {
+        Storage.savePreference('debug_deduplicator_enabled', e.target.checked);
+        showToast(e.target.checked ? 'Deduplicator enabled (requires restart)' : 'Deduplicator disabled');
+    });
+
+    document.getElementById('btn-debug-copy').addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(report);
+            showToast(i18n.t('debug_copied') || 'Rapport copié !', 'success');
+        } catch {
+            // Fallback
+            const ta = document.createElement('textarea');
+            ta.value = report;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            ta.remove();
+            showToast(i18n.t('debug_copied') || 'Rapport copié !', 'success');
+        }
+    });
+
+    document.getElementById('btn-debug-clear').addEventListener('click', () => {
+        CrashLogger.clearLogs();
+        showToast(i18n.t('debug_cleared') || 'Logs effacés', 'info');
+        renderDebugModal(); // Re-render
+    });
+
+    document.getElementById('btn-debug-download').addEventListener('click', () => {
+        try {
+            const reportText = CrashLogger.generateReport();
+            const blob = new Blob([reportText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            const now = new Date();
+            const timestamp = now.toISOString().replace(/[:.]/g, '-');
+            a.download = "beerdex-debug-" + timestamp + ".txt";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Failed to download log file:', err);
+            showToast('Erreur lors du téléchargement');
+        }
+    });
 }
