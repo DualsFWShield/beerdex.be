@@ -106,7 +106,9 @@ export function migrateBeerData(oldId, newId) {
     const oldData = data[oldId];
 
     if (!oldData) {
-        return { success: false, transferred: null };
+        deleteCustomBeer(oldId);
+        autoBackup();
+        return { success: true, transferred: { count: 0, history: 0 } };
     }
 
     // Get or init the target entry

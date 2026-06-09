@@ -250,6 +250,16 @@ export function closeModal(fromPopState = false) {
     
     document.removeEventListener('keydown', focusTrap);
     
+    // Blur any active element inside the modal before hiding it
+    if (document.activeElement && modalContainer.contains(document.activeElement)) {
+        document.activeElement.blur();
+    }
+    
+    if (previousFocusElement) {
+        previousFocusElement.focus();
+        previousFocusElement = null;
+    }
+
     modalContainer.classList.add('hidden');
     modalContainer.setAttribute('aria-hidden', 'true');
     modalContainer.innerHTML = '';
@@ -257,11 +267,6 @@ export function closeModal(fromPopState = false) {
     // Only remove body class if no other modals are open
     if (modalStack.length === 0) {
         document.body.classList.remove('modal-open');
-    }
-    
-    if (previousFocusElement) {
-        previousFocusElement.focus();
-        previousFocusElement = null;
     }
 }
 
@@ -941,7 +946,7 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
 
         let badgesContainerHtml = '';
         if (cardStatsHtml) {
-            badgesContainerHtml = `<div class="card-badges-left">
+            badgesContainerHtml = `<div class="card-badges-left" style="position:absolute; top:5px; left:5px; z-index:2; display:flex; flex-direction:column; gap:4px; font-size:0.75rem;">
                 ${cardStatsHtml}
             </div>`;
         }
@@ -3697,44 +3702,324 @@ export function renderBACStatsContent(container) {
 
 export function renderSettings(allBeers, userData, container, isDiscovery = false, discoveryCallback = null) {
     const rules = BAC.getCurrentRules();
+    
+    // CSS pour les settings intégrés directement
+    const settingsCSS = `
+        <style>
+            /* Card UI Pattern */
+            .setting-group { margin-bottom: 25px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .setting-group h4 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent-gold); margin: 0; padding: 12px 16px; background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+            .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: transparent; border: none; border-bottom: 1px solid rgba(255, 255, 255, 0.05); margin: 0; transition: background 0.2s; }
+            .setting-row:last-child { border-bottom: none; }
+            .setting-row:hover { background: rgba(255, 255, 255, 0.02); }
+            
+            .setting-info { text-align: left; flex: 1; padding-right: 15px; }
+            .setting-title { color: #fff; display: block; margin-bottom: 4px; font-weight: 500; font-size: 1rem; }
+            .setting-desc { font-size: 0.8rem; color: #aaa; line-height: 1.4; display: block; }
+            
+            .setting-action { display: flex; align-items: center; justify-content: flex-end; min-width: 100px; }
+            .setting-action select { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff; border-radius: 8px; padding: 8px 12px; font-size: 0.9rem; margin: 0; }
+            .setting-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; text-align: center; width: 100%; }
+            .setting-btn:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); }
+            .setting-btn.danger { color: #ff3b30; border-color: rgba(255, 59, 48, 0.3); background: rgba(255, 59, 48, 0.1); }
+            .setting-btn.danger:hover { background: rgba(255, 59, 48, 0.2); }
+            .setting-btn.primary { color: #000; background: var(--accent-gold); border: none; font-weight: 600; }
+            .setting-btn.primary:hover { background: #ffca28; }
+            
+            /* Toggle Switch Styles */
+            input[type="checkbox"].toggle-switch {
+                appearance: none;
+                -webkit-appearance: none;
+                width: 46px;
+                height: 26px;
+                background: rgba(255, 255, 255, 0.15);
+                border-radius: 13px;
+                position: relative;
+                outline: none;
+                cursor: pointer;
+                transition: background 0.3s;
+                margin: 0;
+                flex-shrink: 0;
+            }
+            input[type="checkbox"].toggle-switch::after {
+                content: '';
+                position: absolute;
+                top: 2px;
+                left: 2px;
+                width: 22px;
+                height: 22px;
+                background: #fff;
+                border-radius: 50%;
+                transition: transform 0.3s;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            }
+            input[type="checkbox"].toggle-switch:checked { background: var(--accent-gold); }
+            input[type="checkbox"].toggle-switch:checked::after { transform: translateX(20px); }
+        </style>
+    `;
+
     container.innerHTML = `
-        <div class="text-center p-20">
+        ${settingsCSS}
+        <div class="text-center p-20" id="settings-container">
             <h2 class="mb-20" style="font-family:'Russo One'; color:var(--accent-gold);" data-i18n="settings_main_title">Paramètres & Données</h2>
 
-            <!-- 1. Alcoolémie (BAC) (Moved to TOP) -->
-            <div class="stat-card" style="${Storage.getPreference('bac_weight', '') !== '' ? '' : 'border: 2px solid var(--accent-gold);'}">
-                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left; ${Storage.getPreference('bac_weight', '') !== '' ? '' : 'color: var(--accent-gold);'}" data-i18n="settings_bac_title">${i18n.t('settings_bac_title')}</h4>
+            <!-- 1. Interface & Apparence -->
+            <div class="setting-group" data-group="interface">
+                <h4>🎨 Interface & Apparence</h4>
                 
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_bac_enable_title">${i18n.t('settings_bac_enable_title')}</strong>
-                        <span style="font-size:0.8rem; color:#888;" data-i18n="settings_bac_enable_desc">${i18n.t('settings_bac_enable_desc')}</span>
+                <div class="setting-row" data-keywords="langue language english français">
+                    <div class="setting-info">
+                        <span class="setting-title" data-i18n="settings_language">Langue</span>
+                        <span class="setting-desc" data-i18n="settings_language_desc">Choisir la langue d'affichage</span>
                     </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-bac-enabled" ${Storage.getPreference('bac_enabled', true) ? 'checked' : ''}>
-                        <span class="slider round"></span>
-                    </label>
+                    <div class="setting-action">
+                        <select id="select-language" class="form-select" style="padding:8px; width:100%;">
+                            <option value="fr" ${Storage.getPreference('app_language', 'fr') === 'fr' ? 'selected' : ''}>Français</option>
+                            <option value="en" ${Storage.getPreference('app_language', 'fr') === 'en' ? 'selected' : ''}>English</option>
+                        </select>
+                    </div>
                 </div>
 
-                <div id="bac-settings-group" style="display: ${Storage.getPreference('bac_enabled', true) ? 'block' : 'none'}; border-top: 1px dashed #333; padding-top: 15px; margin-top: 5px;">
-                    
-                    <div style="background: rgba(255,152,0,0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: left; display: ${Storage.getPreference('bac_weight', '') !== '' ? 'none' : 'block'};">
-                        <span style="font-size:0.8rem; color: #ff9800; display:block; margin-bottom:5px;">${i18n.t('settings_bac_config_req')}</span>
-                        <span style="font-size:0.75rem; color: #ccc;">${i18n.t('settings_bac_config_desc', { country: i18n.t('country_' + (Storage.getPreference('bac_country', 'BE').toLowerCase())), limit: rules.sanctionThreshold })}</span>
-                    </div>
-
-                    <div style="background: rgba(76,175,80,0.08); padding: 10px 12px; border-radius: 8px; margin-bottom: 15px; text-align: left; border: 1px solid rgba(76,175,80,0.2);">
-                        <span style="font-size:0.75rem; color: #81c784; line-height:1.4;">${i18n.t('settings_bac_privacy_notice')}</span>
-                    </div>
-
-                    <div id="bac-weight-gender-row" style="display:${Storage.getPreference('bac_hide_weight_gender', false) ? 'none' : 'flex'}; gap:10px; margin-bottom:15px;">
-                        <div style="flex:1; text-align:left;">
-                            <label style="font-size:0.8rem; color:#888; display:block; margin-bottom:5px;" data-i18n="settings_weight_label">${i18n.t('settings_weight_label')}</label>
-                            <input type="number" id="input-bac-weight" class="form-input" value="${Storage.getPreference('bac_weight', '')}" placeholder="ex: 70" min="30" max="200" style="padding:8px;">
+                <div class="setting-row" data-keywords="thème couleurs theme color preset custom">
+                    <div class="setting-info" style="width:100%;">
+                        <span class="setting-title">${i18n.t('settings_theme_preset') || 'Thème & Couleurs'}</span>
+                        <span class="setting-desc" data-i18n="settings_theme_desc">Personnalisez l'apparence de l'application</span>
+                        <div id="theme-presets-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:8px; margin-top:8px;">
+                            ${Object.entries(Theme.THEME_PRESETS).map(([key, preset]) => {
+                                const isActive = Theme.getActivePreset() === key;
+                                return `<button class="theme-preset-btn form-input" data-preset="${key}" style="font-size:0.85rem; padding:10px 14px; display:flex; align-items:center; gap:8px; justify-content:flex-start; ${isActive ? 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 8px rgba(255,192,0,0.3);' : ''}">
+                                    <div style="font-size:1.2rem;">${preset.emoji}</div>
+                                    <span>${preset.name}</span>
+                                </button>`;
+                            }).join('')}
+                            <button class="theme-preset-btn form-input" data-preset="custom" style="font-size:0.85rem; padding:10px 14px; display:flex; align-items:center; gap:8px; justify-content:flex-start; ${Theme.getActivePreset() === 'custom' ? 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 8px rgba(255,192,0,0.3);' : ''}">
+                                <div style="font-size:1.2rem;">✏️</div>
+                                <span>Custom</span>
+                            </button>
                         </div>
-                        <div style="flex:1; text-align:left;">
-                            <label style="font-size:0.8rem; color:#888; display:block; margin-bottom:5px;" data-i18n="settings_gender_label">${i18n.t('settings_gender_label')}</label>
-                            <select id="select-bac-gender" class="form-select" style="padding:8px;">
+
+                        <div id="theme-custom-colors" style="display:${Theme.getActivePreset() === 'custom' ? 'block' : 'none'}; border-top:1px dashed #333; padding-top:12px; margin-top:12px;">
+                            <strong style="color:var(--text-primary); display:block; margin-bottom:10px; font-size:0.85rem;">${i18n.t('settings_theme_colors') || 'Couleurs personnalisées'}</strong>
+                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                                ${Theme.THEME_VARS.map(v => {
+                                    const currentColors = Theme.getActiveColors();
+                                    return `<div style="display:flex; align-items:center; gap:8px;">
+                                        <input type="color" class="theme-color-input" data-var="${v.key}" value="${currentColors[v.key] || v.default}" style="width:32px; height:32px; border:none; background:none; cursor:pointer; padding:0; border-radius:6px;">
+                                        <span style="font-size:0.7rem; color:#888;">${i18n.t(v.label) || v.key.replace('--', '')}</span>
+                                    </div>`;
+                                }).join('')}
+                            </div>
+                        </div>
+
+                        <div style="display:flex; flex-direction:column; gap:8px; margin-top:12px;">
+                            <button id="btn-theme-export" class="setting-btn" style="display:flex; align-items:center; justify-content:center; gap:8px;">📤 ${i18n.t('settings_theme_export') || 'Exporter le thème'}</button>
+                            <button id="btn-theme-import" class="setting-btn" style="display:flex; align-items:center; justify-content:center; gap:8px;">📥 ${i18n.t('settings_theme_import') || 'Importer un thème'}</button>
+                            <button id="btn-theme-reset" class="setting-btn danger" style="display:flex; align-items:center; justify-content:center; gap:8px;">↩️ ${i18n.t('theme_btn_reset') || 'Réinitialiser le thème'}</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-row" data-keywords="police font écriture text">
+                    <div class="setting-info">
+                        <span class="setting-title">${i18n.t('settings_font_title') || "Police d'écriture"}</span>
+                        <span class="setting-desc" data-i18n="settings_font_desc">Choisissez la police d'écriture de l'application</span>
+                    </div>
+                    <div class="setting-action">
+                        <select id="select-font-family" class="form-select" style="padding:8px; width:100%;">
+                            ${Object.keys(Theme.FONTS).map(fontKey => {
+                                return `<option value="${fontKey}" ${Theme.getActiveFont() === fontKey ? 'selected' : ''}>${Theme.FONTS[fontKey].label}</option>`;
+                            }).join('')}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-row" data-keywords="découverte discovery exploration">
+                    <div class="setting-info">
+                        <span class="setting-title" data-i18n="settings_discovery_title">${i18n.t('settings_discovery_title')}</span>
+                        <span class="setting-desc" data-i18n="settings_discovery_desc">${i18n.t('settings_discovery_desc')}</span>
+                    </div>
+                    <div class="setting-action">
+                        <label class="switch">
+                            <input type="checkbox" class="toggle-switch" id="toggle-discovery" ${isDiscovery ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-row" data-keywords="musée museum 3d expo">
+                    <div class="setting-info">
+                        <span class="setting-title" data-i18n="settings_museum_title">${i18n.t('settings_museum_title')}</span>
+                        <span class="setting-desc" data-i18n="settings_museum_desc">${i18n.t('settings_museum_desc')}</span>
+                    </div>
+                    <div class="setting-action">
+                        <label class="switch">
+                            <input type="checkbox" class="toggle-switch" id="toggle-museum" ${Storage.getPreference('museumThemeEnabled', false) ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-row" style="flex-direction: column; align-items: stretch;" data-keywords="grille notation rating note template critère">
+                    <div class="setting-info" style="margin-bottom: 10px;">
+                        <span class="setting-title">Grille de notation</span>
+                        <span class="setting-desc">Personnalisez les critères de notation de vos bières.</span>
+                    </div>
+                    <button type="button" id="btn-template" class="setting-btn">
+                        ${i18n.t('settings_btn_configure_rating')}
+                    </button>
+                    <div style="display:flex; gap:8px; margin-top:8px;">
+                        <button id="btn-preset-default" class="setting-btn ${Storage.getPreference('activePreset') === 'default' ? 'primary' : ''}" style="flex:1;">${i18n.t('preset_default')}</button>
+                        <button id="btn-preset-tristan" class="setting-btn ${Storage.getPreference('activePreset') === 'tristan' ? 'primary' : ''}" style="flex:1;">${i18n.t('preset_tristan')}</button>
+                        <button id="btn-preset-noah" class="setting-btn ${Storage.getPreference('activePreset') === 'noah' ? 'primary' : ''}" style="flex:1;">${i18n.t('preset_noah')}</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Fonctionnalités & Immersion -->
+            <div class="setting-group" data-group="features">
+                <h4>⚙️ Fonctionnalités & Immersion</h4>
+
+                <div class="setting-row" data-keywords="carte map localisation soif">
+                    <div class="setting-info">
+                        <span class="setting-title">${i18n.t('settings_toggle_map') || 'Afficher la carte (Map)'}</span>
+                        <span class="setting-desc" data-i18n="settings_map_desc">Affiche une carte interactive de vos dégustations</span>
+                    </div>
+                    <div class="setting-action">
+                        <label class="switch">
+                            <input type="checkbox" class="toggle-switch" id="toggle-feat-map" ${Storage.getPreference('feat_map_enabled', true) ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-row" data-keywords="carte défaut pays default map country">
+                    <div class="setting-info">
+                        <span class="setting-title">${i18n.t('settings_map_default')}</span>
+                        <span class="setting-desc">${i18n.t('settings_map_default_desc')}</span>
+                    </div>
+                    <div class="setting-action">
+                        <select id="select-default-map" class="form-select" style="padding:8px; width:100%;">
+                            <option value="" ${!localStorage.getItem('defaultMapScope') ? 'selected' : ''}>${i18n.t('settings_map_auto')}</option>
+                            <option value="be" ${localStorage.getItem('defaultMapScope') === 'be' ? 'selected' : ''}>🇧🇪 ${i18n.t('country_be')}</option>
+                            <option value="fr" ${localStorage.getItem('defaultMapScope') === 'fr' ? 'selected' : ''}>🇫🇷 ${i18n.t('country_fr')}</option>
+                            <option value="de" ${localStorage.getItem('defaultMapScope') === 'de' ? 'selected' : ''}>🇩🇪 ${i18n.t('country_de')}</option>
+                            <option value="nl" ${localStorage.getItem('defaultMapScope') === 'nl' ? 'selected' : ''}>🇳🇱 ${i18n.t('country_nl')}</option>
+                            <option value="us" ${localStorage.getItem('defaultMapScope') === 'us' ? 'selected' : ''}>🇺🇸 ${i18n.t('country_us')}</option>
+                            <option value="co" ${localStorage.getItem('defaultMapScope') === 'co' ? 'selected' : ''}>🇨🇴 ${i18n.t('country_co')}</option>
+                            <option value="eu" ${localStorage.getItem('defaultMapScope') === 'eu' ? 'selected' : ''}>🇪🇺 ${i18n.t('map_scope_eu')}</option>
+                            <option value="wo" ${localStorage.getItem('defaultMapScope') === 'wo' ? 'selected' : ''}>🌍 ${i18n.t('map_scope_wo')}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="setting-row" data-keywords="rappels reminders notif">
+                    <div class="setting-info">
+                        <span class="setting-title">${i18n.t('settings_toggle_reminders') || 'Rappels (Notation & Duplications)'}</span>
+                        <span class="setting-desc" data-i18n="settings_reminders_desc">Notifications pour les bières non notées ou les doublons</span>
+                    </div>
+                    <div class="setting-action">
+                        <label class="switch">
+                            <input type="checkbox" class="toggle-switch" id="toggle-feat-reminders" ${Storage.getPreference('feat_reminders_enabled', true) ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-row" data-keywords="équivalences alcool">
+                    <div class="setting-info">
+                        <span class="setting-title">${i18n.t('settings_toggle_equivalences') || 'Équivalences alcool'}</span>
+                        <span class="setting-desc" data-i18n="settings_equivalences_desc">Affiche l'équivalent en verres standards (vin, shots)</span>
+                    </div>
+                    <div class="setting-action">
+                        <label class="switch">
+                            <input type="checkbox" class="toggle-switch" id="toggle-feat-equivalences" ${Storage.getPreference('feat_equivalences_enabled', true) ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-row" data-keywords="beer match tinder">
+                    <div class="setting-info">
+                        <span class="setting-title">${i18n.t('settings_toggle_beermatch') || 'Beer Match'}</span>
+                        <span class="setting-desc" data-i18n="settings_beermatch_desc">Découvrez de nouvelles bières avec des recommandations</span>
+                    </div>
+                    <div class="setting-action">
+                        <label class="switch">
+                            <input type="checkbox" class="toggle-switch" id="toggle-feat-beermatch" ${Storage.getPreference('feat_beermatch_enabled', true) ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-row" data-keywords="wrapped bilan spotify">
+                    <div class="setting-info">
+                        <span class="setting-title">${i18n.t('settings_toggle_wrapped') || 'Beerdex Wrapped'}</span>
+                        <span class="setting-desc" data-i18n="settings_wrapped_desc">Générez un bilan visuel annuel de vos dégustations</span>
+                    </div>
+                    <div class="setting-action">
+                        <label class="switch">
+                            <input type="checkbox" class="toggle-switch" id="toggle-feat-wrapped" ${Storage.getPreference('feat_wrapped_enabled', true) ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-row" data-keywords="son audio sound">
+                    <div class="setting-info">
+                        <span class="setting-title" data-i18n="settings_sound_title">${i18n.t('settings_sound_title')}</span>
+                        <span class="setting-desc" data-i18n="settings_sound_desc">${i18n.t('settings_sound_desc')}</span>
+                    </div>
+                    <div class="setting-action">
+                        <label class="switch">
+                            <input type="checkbox" class="toggle-switch" id="toggle-sound" ${Storage.getPreference('soundEnabled', true) ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-row" data-keywords="haptique vibrations retour haptics">
+                    <div class="setting-info">
+                        <span class="setting-title" data-i18n="settings_haptics_title">${i18n.t('settings_haptics_title')}</span>
+                        <span class="setting-desc" data-i18n="settings_haptics_desc">${i18n.t('settings_haptics_desc')}</span>
+                    </div>
+                    <div class="setting-action">
+                        <label class="switch">
+                            <input type="checkbox" class="toggle-switch" id="toggle-haptics" ${Storage.getPreference('hapticsEnabled', true) ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Suivi & Statistiques -->
+            <div class="setting-group" data-group="stats">
+                <h4>📊 Suivi & Statistiques</h4>
+
+                <!-- BAC Toggle -->
+                <div class="setting-row" data-keywords="bac alcoolémie sang blood alcohol">
+                    <div class="setting-info">
+                        <span class="setting-title" data-i18n="settings_bac_enable_title">${i18n.t('settings_bac_enable_title')}</span>
+                        <span class="setting-desc" data-i18n="settings_bac_enable_desc">${i18n.t('settings_bac_enable_desc')}</span>
+                    </div>
+                    <div class="setting-action">
+                        <label class="switch">
+                            <input type="checkbox" class="toggle-switch" id="toggle-bac-enabled" ${Storage.getPreference('bac_enabled', true) ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- BAC Config Sub-group -->
+                <div id="bac-settings-group" style="display: ${Storage.getPreference('bac_enabled', true) ? 'block' : 'none'}; border-left: 2px solid #333; padding-left: 10px; margin-bottom: 15px;">
+                    
+                    <div class="setting-row" id="bac-weight-gender-row" style="display:${Storage.getPreference('bac_hide_weight_gender', false) ? 'none' : 'flex'}; flex-wrap:wrap; gap:10px;" data-keywords="poids genre weight gender bac sexe">
+                        <div style="flex:1; min-width:120px;">
+                            <span class="setting-desc" style="margin-bottom:4px;" data-i18n="settings_weight_label">${i18n.t('settings_weight_label')}</span>
+                            <input type="number" id="input-bac-weight" class="form-input" value="${Storage.getPreference('bac_weight', '')}" placeholder="ex: 70" min="30" max="200" style="padding:8px; width:100%;">
+                        </div>
+                        <div style="flex:1; min-width:120px;">
+                            <span class="setting-desc" style="margin-bottom:4px;" data-i18n="settings_gender_label">${i18n.t('settings_gender_label')}</span>
+                            <select id="select-bac-gender" class="form-select" style="padding:8px; width:100%;">
                                 <option value="" ${!Storage.getPreference('bac_gender', null) ? 'selected' : ''}>${i18n.t('settings_gender_none')}</option>
                                 <option value="M" ${Storage.getPreference('bac_gender', null) === 'M' ? 'selected' : ''}>${i18n.t('gender_male')}</option>
                                 <option value="F" ${Storage.getPreference('bac_gender', null) === 'F' ? 'selected' : ''}>${i18n.t('gender_female')}</option>
@@ -3743,513 +4028,304 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                         </div>
                     </div>
 
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <div style="text-align:left;">
-                            <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">${i18n.t('settings_bac_hide_wg_title')}</strong>
-                            <span style="font-size:0.8rem; color:#888;">${i18n.t('settings_bac_hide_wg_desc')}</span>
+                    <div class="setting-row" data-keywords="cacher poids genre hide weight gender bac">
+                        <div class="setting-info">
+                            <span class="setting-title">${i18n.t('settings_bac_hide_wg_title')}</span>
                         </div>
-                        <label class="switch">
-                            <input type="checkbox" id="toggle-bac-hide-wg" ${Storage.getPreference('bac_hide_weight_gender', false) ? 'checked' : ''}>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <div style="text-align:left;">
-                            <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_show_home_title">${i18n.t('settings_show_home_title')}</strong>
-                            <span style="font-size:0.8rem; color:#888;" data-i18n="settings_show_home_desc">${i18n.t('settings_show_home_desc')}</span>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" id="toggle-bac-home" ${Storage.getPreference('bac_show_home', true) ? 'checked' : ''}>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <div style="text-align:left;">
-                            <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_manual_only_title">${i18n.t('settings_manual_only_title')}</strong>
-                            <span style="font-size:0.8rem; color:#888;" data-i18n="settings_manual_only_desc">${i18n.t('settings_manual_only_desc')}</span>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" id="toggle-bac-manual" ${Storage.getPreference('bac_manual_only', false) ? 'checked' : ''}>
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div style="border-top:1px dashed #333; padding-top:15px; margin-top:5px;">
-                        <div style="display:flex; gap:10px; margin-bottom:15px;">
-                            <div style="flex:1; text-align:left;">
-                                <label style="font-size:0.8rem; color:#888; display:block; margin-bottom:5px;" data-i18n="settings_bac_duration">${i18n.t('settings_bac_duration')}</label>
-                                <select id="select-bac-duration" class="form-select" style="padding:8px;">
-                                    <option value="0" ${Storage.getPreference('bac_drink_duration', '0') === '0' ? 'selected' : ''}>${i18n.t('settings_bac_instant')}</option>
-                                    <option value="15" ${Storage.getPreference('bac_drink_duration', '0') === '15' ? 'selected' : ''}>15 min</option>
-                                    <option value="30" ${Storage.getPreference('bac_drink_duration', '0') === '30' ? 'selected' : ''}>30 min</option>
-                                    <option value="45" ${Storage.getPreference('bac_drink_duration', '0') === '45' ? 'selected' : ''}>45 min</option>
-                                    <option value="60" ${Storage.getPreference('bac_drink_duration', '0') === '60' ? 'selected' : ''}>1 ${i18n.t('wrapped_time_unit_hours')}</option>
-                                </select>
-                            </div>
-                            <div style="flex:1; text-align:left;">
-                                <label style="font-size:0.8rem; color:#888; display:block; margin-bottom:5px;" data-i18n="settings_bac_vehicle">${i18n.t('settings_bac_vehicle')}</label>
-                                <select id="select-bac-vehicle" class="form-select" style="padding:8px;">
-                                    <option value="voiture" ${Storage.getPreference('bac_vehicle', 'voiture') === 'voiture' ? 'selected' : ''}>${i18n.t('settings_bac_car')}</option>
-                                    <option value="moto" ${Storage.getPreference('bac_vehicle', 'voiture') === 'moto' ? 'selected' : ''}>${i18n.t('settings_bac_moto')}</option>
-                                    <option value="velo" ${Storage.getPreference('bac_vehicle', 'voiture') === 'velo' ? 'selected' : ''}>${i18n.t('settings_bac_bike')}</option>
-                                    <option value="pieton" ${Storage.getPreference('bac_vehicle', 'voiture') === 'pieton' ? 'selected' : ''}>${i18n.t('settings_bac_pedestrian')}</option>
-                                    <option value="gamer" ${Storage.getPreference('bac_vehicle', 'voiture') === 'gamer' ? 'selected' : ''}>🎮 ${i18n.t('settings_bac_gamer')}</option>
-                                    <option value="ne_conduit_pas" ${Storage.getPreference('bac_vehicle', 'voiture') === 'ne_conduit_pas' ? 'selected' : ''}>${i18n.t('settings_bac_none')}</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="border-top:1px dashed #333; padding-top:15px; margin-top:5px;">
-                        <div style="text-align:left; margin-bottom:10px;">
-                            <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_bac_country">${i18n.t('settings_bac_country')}</strong>
-                            <span style="font-size:0.8rem; color:#888;" data-i18n="settings_bac_country_desc">${i18n.t('settings_bac_country_desc')}</span>
-                        </div>
-                        <select id="select-bac-country" class="form-input" style="width:100%; padding:8px; font-size:0.9rem; background:#111;">
-                            <option value="BE" ${Storage.getPreference('bac_country', 'BE') === 'BE' ? 'selected' : ''}>🇧🇪 ${i18n.t('country_be')}</option>
-                            <option value="FR" ${Storage.getPreference('bac_country', 'BE') === 'FR' ? 'selected' : ''}>🇫🇷 ${i18n.t('country_fr')}</option>
-                            <option value="DE" ${Storage.getPreference('bac_country', 'BE') === 'DE' ? 'selected' : ''}>🇩🇪 ${i18n.t('country_de')}</option>
-                            <option value="NL" ${Storage.getPreference('bac_country', 'BE') === 'NL' ? 'selected' : ''}>🇳🇱 ${i18n.t('country_nl')}</option>
-                            <option value="CO" ${Storage.getPreference('bac_country', 'BE') === 'CO' ? 'selected' : ''}>🇨🇴 ${i18n.t('country_co')}</option>
-                            <option value="US" ${Storage.getPreference('bac_country', 'BE') === 'US' ? 'selected' : ''}>🇺🇸 ${i18n.t('country_us')}</option>
-                        </select>
-                    </div>
-
-                    <div style="border-top:1px dashed #333; padding-top:15px; margin-top:5px;">
-                        <div style="text-align:left; margin-bottom:10px;">
-                            <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">${i18n.t('stats_history_title')}</strong>
-                        </div>
-
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                            <div style="text-align:left;">
-                                <strong style="color:var(--text-primary); display:block; margin-bottom:2px; font-size:0.85rem;">${i18n.t('settings_bac_show_history')}</strong>
-                                <span style="font-size:0.75rem; color:#888;">${i18n.t('settings_bac_show_history_desc')}</span>
-                            </div>
+                        <div class="setting-action">
                             <label class="switch">
-                                <input type="checkbox" id="toggle-show-history" ${Storage.getPreference('bac_show_history', true) ? 'checked' : ''}>
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                            <div style="text-align:left;">
-                                <strong style="color:var(--text-primary); display:block; margin-bottom:2px; font-size:0.85rem;">${i18n.t('settings_bac_show_calendar')}</strong>
-                                <span style="font-size:0.75rem; color:#888;">${i18n.t('settings_bac_show_calendar_desc')}</span>
-                            </div>
-                            <label class="switch">
-                                <input type="checkbox" id="toggle-show-calendar" ${Storage.getPreference('bac_show_calendar', true) ? 'checked' : ''}>
-                                <span class="slider round"></span>
-                            </label>
-                        </div>
-
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <div style="text-align:left;">
-                                <strong style="color:var(--text-primary); display:block; margin-bottom:2px; font-size:0.85rem;">${i18n.t('settings_bac_show_streak')}</strong>
-                                <span style="font-size:0.75rem; color:#888;">${i18n.t('settings_bac_show_streak_desc')}</span>
-                            </div>
-                            <label class="switch">
-                                <input type="checkbox" id="toggle-show-streak" ${Storage.getPreference('bac_show_streak', true) ? 'checked' : ''}>
+                                <input type="checkbox" class="toggle-switch" id="toggle-bac-hide-wg" ${Storage.getPreference('bac_hide_weight_gender', false) ? 'checked' : ''}>
                                 <span class="slider round"></span>
                             </label>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- 1.5 Theme / Appearance -->
-            <div class="stat-card mt-20">
-                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;">🎨 ${i18n.t('settings_theme_title') || 'Thème & Couleurs'}</h4>
-                
-                <!-- Preset Selector -->
-                <div style="text-align:left; margin-bottom:12px;">
-                    <strong style="color:var(--text-primary); display:block; margin-bottom:8px; font-size:0.85rem;">${i18n.t('settings_theme_preset') || 'Preset'}</strong>
-                    <div id="theme-presets-grid" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px;">
-                        ${Object.entries(Theme.THEME_PRESETS).map(([key, preset]) => {
-                            const isActive = Theme.getActivePreset() === key;
-                            return `<button class="theme-preset-btn form-input" data-preset="${key}" style="font-size:0.75rem; padding:10px 6px; text-align:center; ${isActive ? 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 8px rgba(255,192,0,0.3);' : ''}">
-                                <div style="font-size:1.2rem; margin-bottom:3px;">${preset.emoji}</div>
-                                ${preset.name}
-                            </button>`;
-                        }).join('')}
-                        <button class="theme-preset-btn form-input" data-preset="custom" style="font-size:0.75rem; padding:10px 6px; text-align:center; ${Theme.getActivePreset() === 'custom' ? 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 8px rgba(255,192,0,0.3);' : ''}">
-                            <div style="font-size:1.2rem; margin-bottom:3px;">✏️</div>
-                            Custom
-                        </button>
+                    <div class="setting-row" data-keywords="pays rules bac law">
+                        <div class="setting-info">
+                            <span class="setting-title">${i18n.t('settings_bac_country')}</span>
+                            <span class="setting-desc">${i18n.t('settings_bac_country_desc')}</span>
+                        </div>
+                        <div class="setting-action">
+                            <select id="select-bac-country" class="form-select" style="padding:8px; width:100%;">
+                                <option value="BE" ${Storage.getPreference('bac_country', 'BE') === 'BE' ? 'selected' : ''}>🇧🇪 BE</option>
+                                <option value="FR" ${Storage.getPreference('bac_country', 'BE') === 'FR' ? 'selected' : ''}>🇫🇷 FR</option>
+                                <option value="DE" ${Storage.getPreference('bac_country', 'BE') === 'DE' ? 'selected' : ''}>🇩🇪 DE</option>
+                                <option value="NL" ${Storage.getPreference('bac_country', 'BE') === 'NL' ? 'selected' : ''}>🇳🇱 NL</option>
+                                <option value="CO" ${Storage.getPreference('bac_country', 'BE') === 'CO' ? 'selected' : ''}>🇨🇴 CO</option>
+                                <option value="US" ${Storage.getPreference('bac_country', 'BE') === 'US' ? 'selected' : ''}>🇺🇸 US</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-
-                <!-- Color Pickers (visible when custom) -->
-                <div id="theme-custom-colors" style="display:${Theme.getActivePreset() === 'custom' ? 'block' : 'none'}; border-top:1px dashed #333; padding-top:12px; margin-top:5px;">
-                    <strong style="color:var(--text-primary); display:block; margin-bottom:10px; font-size:0.85rem;">${i18n.t('settings_theme_colors') || 'Couleurs personnalisées'}</strong>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                        ${Theme.THEME_VARS.map(v => {
-                            const currentColors = Theme.getActiveColors();
-                            return `<div style="display:flex; align-items:center; gap:8px;">
-                                <input type="color" class="theme-color-input" data-var="${v.key}" value="${currentColors[v.key] || v.default}" style="width:32px; height:32px; border:none; background:none; cursor:pointer; padding:0; border-radius:6px;">
-                                <span style="font-size:0.7rem; color:#888;">${i18n.t(v.label) || v.key.replace('--', '')}</span>
-                            </div>`;
-                        }).join('')}
-                    </div>
-                </div>
-
-                <!-- Import / Export Theme -->
-                <div style="border-top:1px dashed #333; padding-top:12px; margin-top:12px;">
-                    <strong style="color:var(--text-primary); display:block; margin-bottom:8px; font-size:0.85rem;">${i18n.t('settings_theme_share') || 'Partager le thème'}</strong>
-                    <div style="display:flex; gap:8px; margin-bottom:8px;">
-                        <button id="btn-theme-export" class="btn-primary" style="flex:1; background:#222; border:1px solid var(--accent-gold); color:var(--accent-gold); margin:0; font-size:0.8rem;">
-                            📤 ${i18n.t('settings_theme_export') || 'Exporter'}
-                        </button>
-                        <button id="btn-theme-import" class="btn-primary" style="flex:1; background:#222; border:1px solid #444; color:#aaa; margin:0; font-size:0.8rem;">
-                            📥 ${i18n.t('settings_theme_import') || 'Importer'}
-                        </button>
-                    </div>
-                    <button id="btn-theme-reset" class="btn-primary" style="background:rgba(255,0,0,0.08); color:#ff6b6b; border:1px solid rgba(255,0,0,0.2); width:100%; margin:0; font-size:0.75rem;">
-                        ↩️ ${i18n.t('settings_theme_reset') || 'Réinitialiser le thème'}
-                    </button>
-                </div>
-                
-                <!-- Police d'écriture -->
-                <div style="border-top:1px dashed #333; padding-top:12px; margin-top:12px; display:flex; justify-content:space-between; align-items:center;">
-                    <strong style="color:var(--text-primary); font-size:0.85rem;">${i18n.t('settings_font_title') || "Police d'écriture"}</strong>
-                    <select id="select-font-family" class="form-select" style="padding:8px; width:140px;">
-                        ${Object.keys(Theme.FONTS).map(fontKey => {
-                            return `<option value="${fontKey}" ${Theme.getActiveFont() === fontKey ? 'selected' : ''}>${Theme.FONTS[fontKey].label}</option>`;
-                        }).join('')}
-                    </select>
-                </div>
-            </div>
-
-            <!-- 2. Interface -->
-            <div class="stat-card mt-20">
-                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;" data-i18n="settings_interface_title">🎨 Interface</h4>
-                
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_language">Langue</strong>
-                        <span style="font-size:0.8rem; color:#888;" data-i18n="settings_language_desc">Choisir la langue d'affichage</span>
-                    </div>
-                    <select id="select-language" class="form-select" style="padding:8px; width:120px;">
-                        <option value="fr" ${Storage.getPreference('app_language', 'fr') === 'fr' ? 'selected' : ''}>Français</option>
-                        <option value="en" ${Storage.getPreference('app_language', 'fr') === 'en' ? 'selected' : ''}>English</option>
-                    </select>
-                </div>
-                
-
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_discovery_title">${i18n.t('settings_discovery_title')}</strong>
-                        <span style="font-size:0.8rem; color:#888;" data-i18n="settings_discovery_desc">${i18n.t('settings_discovery_desc')}</span>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-discovery" ${isDiscovery ? 'checked' : ''}>
-                        <span class="slider round"></span>
-                    </label>
-                </div>
-
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_museum_title">${i18n.t('settings_museum_title')}</strong>
-                        <span style="font-size:0.8rem; color:#888;" data-i18n="settings_museum_desc">${i18n.t('settings_museum_desc')}</span>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-museum" ${Storage.getPreference('museumThemeEnabled', false) ? 'checked' : ''}>
-                        <span class="slider round"></span>
-                    </label>
-                </div>
-
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                     <button type="button" id="btn-template" class="btn-primary text-white" style="background:#222; border:1px solid #444; width:100%; margin:0;">
-                        ${i18n.t('settings_btn_configure_rating')}
-                    </button>
-                </div>
-                
-                <div style="margin-top:15px; border-top:1px solid #333; padding-top:15px;">
-                     <h5 style="color:#aaa; font-size:0.8rem; margin-bottom:10px; text-align:left;">${i18n.t('settings_rating_presets')}</h5>
-                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
-                        <button id="btn-preset-default" class="form-input" style="font-size:0.8rem; padding:8px; ${Storage.getPreference('activePreset') === 'default' ? 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 5px rgba(255,192,0,0.3);' : ''}">${i18n.t('preset_default')}</button>
-                        <button id="btn-preset-tristan" class="form-input" style="font-size:0.8rem; padding:8px; ${Storage.getPreference('activePreset') === 'tristan' ? 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 5px rgba(255,192,0,0.3);' : ''}">${i18n.t('preset_tristan')}</button>
-                        <button id="btn-preset-noah" class="form-input" style="font-size:0.8rem; padding:8px; grid-column:span 2; ${Storage.getPreference('activePreset') === 'noah' ? 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 5px rgba(255,192,0,0.3);' : ''}">${i18n.t('preset_noah')}</button>
-                     </div>
-                </div>
-            </div>
-
-            <!-- 1.1 Fonctionnalités (Toggles) -->
-            <div class="stat-card mt-20">
-                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;">${i18n.t('settings_group_features') || '⚙️ Fonctionnalités'}</h4>
-                
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">${i18n.t('settings_toggle_map') || 'Afficher la carte (Map)'}</strong>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-feat-map" ${Storage.getPreference('feat_map_enabled', true) ? 'checked' : ''}>
-                        <span class="slider round"></span>
-                    </label>
-                </div>
-
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">${i18n.t('settings_toggle_reminders') || 'Rappels (Notation & Duplications)'}</strong>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-feat-reminders" ${Storage.getPreference('feat_reminders_enabled', true) ? 'checked' : ''}>
-                        <span class="slider round"></span>
-                    </label>
-                </div>
-
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">${i18n.t('settings_toggle_equivalences') || 'Équivalences alcool'}</strong>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-feat-equivalences" ${Storage.getPreference('feat_equivalences_enabled', true) ? 'checked' : ''}>
-                        <span class="slider round"></span>
-                    </label>
-                </div>
-
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">${i18n.t('settings_toggle_beermatch') || 'Beer Match'}</strong>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-feat-beermatch" ${Storage.getPreference('feat_beermatch_enabled', true) ? 'checked' : ''}>
-                        <span class="slider round"></span>
-                    </label>
-                </div>
-
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">${i18n.t('settings_toggle_wrapped') || 'Beerdex Wrapped'}</strong>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-feat-wrapped" ${Storage.getPreference('feat_wrapped_enabled', true) ? 'checked' : ''}>
-                        <span class="slider round"></span>
-                    </label>
-                </div>
-            </div>
-
-            <!-- 1.2 Carte (Map) -->
-            <div class="stat-card mt-20">
-                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;">${i18n.t('settings_map_thirst')}</h4>
-                
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;">${i18n.t('settings_map_default')}</strong>
-                        <span style="font-size:0.8rem; color:#888;">${i18n.t('settings_map_default_desc')}</span>
-                    </div>
-                </div>
-                <div>
-                   <select id="select-default-map" class="form-input" style="width:100%; padding:8px; font-size:0.9rem; background:#111;">
-                       <option value="" ${!localStorage.getItem('defaultMapScope') ? 'selected' : ''}>${i18n.t('settings_map_auto')}</option>
-                       <option value="be" ${localStorage.getItem('defaultMapScope') === 'be' ? 'selected' : ''}>🇧🇪 ${i18n.t('country_be')}</option>
-                       <option value="fr" ${localStorage.getItem('defaultMapScope') === 'fr' ? 'selected' : ''}>🇫🇷 ${i18n.t('country_fr')}</option>
-                       <option value="de" ${localStorage.getItem('defaultMapScope') === 'de' ? 'selected' : ''}>🇩🇪 ${i18n.t('country_de')}</option>
-                       <option value="nl" ${localStorage.getItem('defaultMapScope') === 'nl' ? 'selected' : ''}>🇳🇱 ${i18n.t('country_nl')}</option>
-                       <option value="us" ${localStorage.getItem('defaultMapScope') === 'us' ? 'selected' : ''}>🇺🇸 ${i18n.t('country_us')}</option>
-                       <option value="co" ${localStorage.getItem('defaultMapScope') === 'co' ? 'selected' : ''}>🇨🇴 ${i18n.t('country_co')}</option>
-                       <option value="eu" ${localStorage.getItem('defaultMapScope') === 'eu' ? 'selected' : ''}>🇪🇺 ${i18n.t('map_scope_eu')}</option>
-                       <option value="wo" ${localStorage.getItem('defaultMapScope') === 'wo' ? 'selected' : ''}>🌍 ${i18n.t('map_scope_wo')}</option>
-                   </select>
-                </div>
-            </div>
-
-            <!-- 1.5 Immersion (Audio/Haptics) -->
-            <div class="stat-card mt-20">
-                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;" data-i18n="settings_group_immersion">${i18n.t('settings_group_immersion')}</h4>
-                
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_sound_title">${i18n.t('settings_sound_title')}</strong>
-                        <span style="font-size:0.8rem; color:#888;" data-i18n="settings_sound_desc">${i18n.t('settings_sound_desc')}</span>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-sound" ${Storage.getPreference('soundEnabled', true) ? 'checked' : ''}>
-                        <span class="slider round"></span>
-                    </label>
-                </div>
-
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_haptics_title">${i18n.t('settings_haptics_title')}</strong>
-                        <span style="font-size:0.8rem; color:#888;" data-i18n="settings_haptics_desc">${i18n.t('settings_haptics_desc')}</span>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-haptics" ${Storage.getPreference('hapticsEnabled', true) ? 'checked' : ''}>
-                        <span class="slider round"></span>
-                    </label>
-                </div>
-            </div>
-
-            <!-- 2. Rareté (New) -->
-            <div class="stat-card mt-20">
-                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;" data-i18n="settings_group_rarity">${i18n.t('settings_group_rarity')}</h4>
-                
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_reveal_rarity_title">${i18n.t('settings_reveal_rarity_title')}</strong>
-                        <span style="font-size:0.8rem; color:#888;" data-i18n="settings_reveal_rarity_desc">${i18n.t('settings_reveal_rarity_desc')}</span>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="check-reveal-rarity" ${Storage.getPreference('revealRarity', false) ? 'checked' : ''}>
-                        <span class="slider round"></span>
-                    </label>
-                </div>
-
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_anim_once_title">${i18n.t('settings_anim_once_title')}</strong>
-                        <span style="font-size:0.8rem; color:#888;" data-i18n="settings_anim_once_desc">${i18n.t('settings_anim_once_desc')}</span>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="check-anim-once" ${Storage.getPreference('anim_only_once', false) ? 'checked' : ''}>
-                        <span class="slider round"></span>
-                    </label>
-                </div>
-            </div>
-
-            <!-- 2b. Card Stats Overlay -->
-            <div class="stat-card mt-20">
-                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;" data-i18n="settings_card_stats_title">${i18n.t('settings_card_stats_title')}</h4>
-                
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_card_stats_count_title">${i18n.t('settings_card_stats_count_title')}</strong>
-                        <span style="font-size:0.8rem; color:#888;" data-i18n="settings_card_stats_count_desc">${i18n.t('settings_card_stats_count_desc')}</span>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-card-stat-count" ${Storage.getPreference('card_stat_count', false) ? 'checked' : ''}>
-                        <span class="slider round"></span>
-                    </label>
-                </div>
-
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="text-align:left;">
-                        <strong style="color:var(--text-primary); display:block; margin-bottom:4px;" data-i18n="settings_card_stats_volume_title">${i18n.t('settings_card_stats_volume_title')}</strong>
-                        <span style="font-size:0.8rem; color:#888;" data-i18n="settings_card_stats_volume_desc">${i18n.t('settings_card_stats_volume_desc')}</span>
-                    </div>
-                    <label class="switch">
-                        <input type="checkbox" id="toggle-card-stat-volume" ${Storage.getPreference('card_stat_volume', false) ? 'checked' : ''}>
-                        <span class="slider round"></span>
-                    </label>
-                </div>
-            </div>
-
-            <!-- 3. Ordre des Statistiques -->
-            <div class="stat-card mt-20">
-                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;">${i18n.t('settings_group_stats_order') || '🔄 Ordre des Statistiques'}</h4>
-                <div id="stats-order-list" style="display:flex; flex-direction:column; gap:12px;">
-                    ${(() => {
-                        const defaultOrder = ['progression', 'equivalences', 'bac', 'streak', 'history', 'calendar', 'achievements', 'map'];
-                        let currentOrder = Storage.getPreference('stats_order', defaultOrder);
-                        
-                        // Migration fallback for old "donut" block and missing keys
-                        if (currentOrder.includes('donut')) {
-                            currentOrder = defaultOrder;
-                        } else {
-                            defaultOrder.forEach(k => {
-                                if (!currentOrder.includes(k)) {
-                                    currentOrder.push(k);
-                                }
-                            });
-                            currentOrder = currentOrder.filter(k => defaultOrder.includes(k));
-                        }
-                        Storage.savePreference('stats_order', currentOrder);
-
-                        const labels = {
-                            'progression': i18n.t('stats_block_progression') || "Progression",
-                            'bac': i18n.t('stats_block_bac') || "Taux d'alcool (BAC)",
-                            'streak': i18n.t('stats_block_streak') || "Série (Streak)",
-                            'equivalences': i18n.t('stats_block_equivalences') || "Équivalences",
-                            'history': i18n.t('stats_block_history') || "Historique des consos",
-                            'calendar': i18n.t('stats_block_calendar') || "Calendrier de dégustation",
-                            'achievements': i18n.t('stats_block_achievements') || "Succès et Badges",
-                            'map': i18n.t('stats_block_map') || "Carte de Dégustation"
-                        };
-
-                        return currentOrder.map((key, index) => {
-                            return `
-                                <div class="stats-order-item" data-key="${key}" style="display:flex; justify-content:space-between; align-items:center; background:#222; padding:10px; border-radius:8px; border:1px solid #333;">
-                                    <span style="color:#ddd; font-size:0.9rem;">${labels[key] || key}</span>
-                                    <div style="display:flex; gap:5px;">
-                                        <button class="btn-stat-move-up" data-index="${index}" style="background:#333; color:var(--text-primary); border:none; padding:5px 10px; border-radius:4px; cursor:pointer; ${index === 0 ? 'opacity:0.3;' : ''}" ${index === 0 ? 'disabled' : ''}>↑</button>
-                                        <button class="btn-stat-move-down" data-index="${index}" style="background:#333; color:var(--text-primary); border:none; padding:5px 10px; border-radius:4px; cursor:pointer; ${index === currentOrder.length - 1 ? 'opacity:0.3;' : ''}" ${index === currentOrder.length - 1 ? 'disabled' : ''}>↓</button>
-                                    </div>
+                    
+                    <div class="setting-row" data-keywords="manuel home accueil bac show manual">
+                        <div class="setting-info" style="display:flex; flex-direction:column; gap:8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div style="display:flex; flex-direction:column;">
+                                    <span class="setting-title">${i18n.t('settings_show_home_title')}</span>
+                                    <span class="setting-desc" data-i18n="settings_show_home_desc">Permet d'ajouter un widget sur votre écran d'accueil</span>
                                 </div>
-                            `;
-                        }).join('');
-                    })()}
-                </div>
-            </div>
-
-            <!-- 4. Données -->
-            <div class="stat-card mt-20">
-                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;" data-i18n="settings_group_data">${i18n.t('settings_group_data')}</h4>
-
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
-                    <button id="btn-manage-export" class="btn-primary" style="background:var(--accent-gold); color:black; margin:0;">
-                         ${i18n.t('export_btn_submit')}
-                    </button>
-                    <button id="btn-manage-import" class="btn-primary" style="background:#222; border:1px solid var(--accent-gold); color:var(--accent-gold); margin:0;">
-                         ${i18n.t('import_title')}
-                    </button>
-                </div>
-                <p style="font-size:0.75rem; color:#666; text-align:center;" data-i18n="settings_data_desc">
-                    ${i18n.t('settings_data_desc')}
-                </p>
-            </div>
-
-            <!-- 3. System -->
-            <div class="stat-card mt-20">
-                <h4 style="border-bottom:1px solid #333; padding-bottom:10px; margin-bottom:15px; text-align:left;" data-i18n="settings_group_system">${i18n.t('settings_group_system')}</h4>
-
-                <button id="btn-check-update" class="btn-primary text-white" style="background:#222; border:1px solid #444; width:100%; margin-bottom:15px;">
-                    ${i18n.t('settings_check_update')}
-                </button>
-
-                <button id="btn-restart-tuto" class="btn-primary text-white" style="background:#222; border:1px solid #444; width:100%; margin-bottom:15px;">
-                    ${i18n.t('settings_restart_tuto')}
-                </button>
-
-                <button id="btn-request-beer" class="btn-primary" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; width:100%; margin-bottom:15px; font-weight:bold; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);">
-                    ${i18n.t('request_beer_btn')}
-                </button>
-
-                <button id="btn-deduplicate-db" class="btn-primary text-white" style="background:#222; border:1px solid #444; width:100%; margin-bottom:15px;">
-                    🧹 ${i18n.t('settings_btn_dedup')}
-                </button>
-
-                <button id="btn-open-debug" class="btn-primary text-white" style="background:#222; border:1px solid #444; width:100%; margin-bottom:15px;">
-                    ${i18n.t('settings_debug_btn') || 'Diagnostic & Debug'}
-                </button>
-                
-                <details style="border-top:1px solid #333; padding-top:10px;">
-                    <summary style="cursor:pointer; color:#888; font-size:0.8rem; text-align:left;" data-i18n="settings_danger_zone">${i18n.t('settings_danger_zone')}</summary>
-                    <div style="margin-top:15px;">
-                        <h5 style="color:#aaa; font-size:0.75rem; margin-bottom:5px; text-align:left;" data-i18n="settings_reset_partial">${i18n.t('settings_reset_partial')}</h5>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:15px;">
-                            <button id="btn-reset-ratings" class="btn-primary" style="background:#331; color:#fa0; border:1px solid #540; font-size:0.7rem; padding:8px;">
-                                ${i18n.t('settings_reset_ratings')}
-                            </button>
-                            <button id="btn-reset-custom" class="btn-primary" style="background:#331; color:#fa0; border:1px solid #540; font-size:0.7rem; padding:8px;">
-                                ${i18n.t('settings_reset_custom')}
-                            </button>
-                            <button id="btn-reset-history" class="btn-primary" style="background:#331; color:#fa0; border:1px solid #540; font-size:0.7rem; padding:8px;">
-                                ${i18n.t('settings_reset_history')}
-                            </button>
-                             <button id="btn-reset-fav" class="btn-primary" style="background:#331; color:#fa0; border:1px solid #540; font-size:0.7rem; padding:8px;">
-                                ${i18n.t('settings_reset_favs')}
-                            </button>
+                                <label class="switch">
+                                    <input type="checkbox" class="toggle-switch" id="toggle-bac-home" ${Storage.getPreference('bac_show_home', true) ? 'checked' : ''}>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div style="display:flex; flex-direction:column;">
+                                    <span class="setting-title">${i18n.t('settings_manual_only_title')}</span>
+                                    <span class="setting-desc" data-i18n="settings_manual_only_desc">Seules les bières ajoutées manuellement impactent l'alcoolémie</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" class="toggle-switch" id="toggle-bac-manual" ${Storage.getPreference('bac_manual_only', false) ? 'checked' : ''}>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
                         </div>
-
-                        <h5 style="color:red; font-size:0.75rem; margin-bottom:5px; text-align:left;" data-i18n="settings_reset_total">${i18n.t('settings_reset_total')}</h5>
-                        <button id="btn-reset-app" class="btn-primary" style="background:rgba(255,0,0,0.1); color:red; border:1px solid red; width:100%;">
-                            ${i18n.t('settings_reset_app')}
-                        </button>
                     </div>
-                </details>
+
+                    <div class="setting-row" style="flex-wrap:wrap; gap:10px;" data-keywords="durée véhicule duration vehicle bac">
+                        <div style="flex:1; min-width:120px;">
+                            <span class="setting-desc" style="margin-bottom:4px;">${i18n.t('settings_bac_duration')}</span>
+                            <select id="select-bac-duration" class="form-select" style="padding:8px; width:100%;">
+                                <option value="0" ${Storage.getPreference('bac_drink_duration', '0') === '0' ? 'selected' : ''}>${i18n.t('settings_bac_instant')}</option>
+                                <option value="15" ${Storage.getPreference('bac_drink_duration', '0') === '15' ? 'selected' : ''}>15 min</option>
+                                <option value="30" ${Storage.getPreference('bac_drink_duration', '0') === '30' ? 'selected' : ''}>30 min</option>
+                                <option value="45" ${Storage.getPreference('bac_drink_duration', '0') === '45' ? 'selected' : ''}>45 min</option>
+                                <option value="60" ${Storage.getPreference('bac_drink_duration', '0') === '60' ? 'selected' : ''}>1h</option>
+                            </select>
+                        </div>
+                        <div style="flex:1; min-width:120px;">
+                            <span class="setting-desc" style="margin-bottom:4px;">${i18n.t('settings_bac_vehicle')}</span>
+                            <select id="select-bac-vehicle" class="form-select" style="padding:8px; width:100%;">
+                                <option value="voiture" ${Storage.getPreference('bac_vehicle', 'voiture') === 'voiture' ? 'selected' : ''}>🚗</option>
+                                <option value="moto" ${Storage.getPreference('bac_vehicle', 'voiture') === 'moto' ? 'selected' : ''}>🏍️</option>
+                                <option value="velo" ${Storage.getPreference('bac_vehicle', 'voiture') === 'velo' ? 'selected' : ''}>🚲</option>
+                                <option value="pieton" ${Storage.getPreference('bac_vehicle', 'voiture') === 'pieton' ? 'selected' : ''}>🚶</option>
+                                <option value="gamer" ${Storage.getPreference('bac_vehicle', 'voiture') === 'gamer' ? 'selected' : ''}>🎮</option>
+                                <option value="ne_conduit_pas" ${Storage.getPreference('bac_vehicle', 'voiture') === 'ne_conduit_pas' ? 'selected' : ''}>🚫</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-row" data-keywords="historique calendrier série history calendar streak bac show">
+                        <div class="setting-info" style="display:flex; flex-direction:column; gap:8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div style="display:flex; flex-direction:column;">
+                                    <span class="setting-title" style="font-size:0.85rem;">${i18n.t('settings_bac_show_history')}</span>
+                                    <span class="setting-desc" data-i18n="settings_bac_show_history_desc">Affiche vos récentes dégustations sur la page d'accueil</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" class="toggle-switch" id="toggle-show-history" ${Storage.getPreference('bac_show_history', true) ? 'checked' : ''}>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div style="display:flex; flex-direction:column;">
+                                    <span class="setting-title" style="font-size:0.85rem;">${i18n.t('settings_bac_show_calendar')}</span>
+                                    <span class="setting-desc" data-i18n="settings_bac_show_calendar_desc">Affiche vos jours de consommation sous forme de calendrier</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" class="toggle-switch" id="toggle-show-calendar" ${Storage.getPreference('bac_show_calendar', true) ? 'checked' : ''}>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div style="display:flex; flex-direction:column;">
+                                    <span class="setting-title" style="font-size:0.85rem;">${i18n.t('settings_bac_show_streak')}</span>
+                                    <span class="setting-desc" data-i18n="settings_bac_show_streak_desc">Affiche le nombre de jours consécutifs sans alcool</span>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" class="toggle-switch" id="toggle-show-streak" ${Storage.getPreference('bac_show_streak', true) ? 'checked' : ''}>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-row" data-keywords="rareté spoil anim reveal rarity animation">
+                    <div class="setting-info" style="display:flex; flex-direction:column; gap:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:flex; flex-direction:column;">
+                                <span class="setting-title">${i18n.t('settings_reveal_rarity_title')}</span>
+                                <span class="setting-desc" data-i18n="settings_reveal_rarity_desc">Cache la rareté des bières non goûtées</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" class="toggle-switch" id="check-reveal-rarity" ${Storage.getPreference('revealRarity', false) ? 'checked' : ''}>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:flex; flex-direction:column;">
+                                <span class="setting-title">${i18n.t('settings_anim_once_title')}</span>
+                                <span class="setting-desc" data-i18n="settings_anim_once_desc">L'animation de rareté ne joue que la première fois</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" class="toggle-switch" id="check-anim-once" ${Storage.getPreference('anim_only_once', false) ? 'checked' : ''}>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-row" data-keywords="cartes stats overlay volume compteur count card">
+                    <div class="setting-info" style="display:flex; flex-direction:column; gap:8px;">
+                        <span class="setting-title" style="color:var(--accent-gold); margin-bottom:4px;">${i18n.t('settings_card_stats_title')}</span>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:flex; flex-direction:column;">
+                                <span class="setting-title" style="font-size:0.85rem;">${i18n.t('settings_card_stats_count_title')}</span>
+                                <span class="setting-desc">${i18n.t('settings_card_stats_count_desc')}</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" class="toggle-switch" id="toggle-card-stat-count" ${Storage.getPreference('card_stat_count', false) ? 'checked' : ''}>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:flex; flex-direction:column;">
+                                <span class="setting-title" style="font-size:0.85rem;">${i18n.t('settings_card_stats_volume_title')}</span>
+                                <span class="setting-desc">${i18n.t('settings_card_stats_volume_desc')}</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" class="toggle-switch" id="toggle-card-stat-volume" ${Storage.getPreference('card_stat_volume', false) ? 'checked' : ''}>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-row" style="flex-direction: column; align-items: stretch;" data-keywords="ordre tri stats order sort position">
+                    <div class="setting-info" style="margin-bottom: 10px;">
+                        <span class="setting-title">${i18n.t('settings_group_stats_order') || '🔄 Ordre des Statistiques'}</span>
+                        <span class="setting-desc" data-i18n="settings_group_stats_order_desc">Personnalisez l'ordre d'affichage des blocs sur la page Stats</span>
+                    </div>
+                    <div id="stats-order-list" style="display:flex; flex-direction:column; gap:8px;">
+                        ${(() => {
+                            const defaultOrder = ['progression', 'equivalences', 'bac', 'streak', 'history', 'calendar', 'achievements', 'map'];
+                            let currentOrder = Storage.getPreference('stats_order', defaultOrder);
+                            
+                            if (currentOrder.includes('donut')) {
+                                currentOrder = defaultOrder;
+                            } else {
+                                defaultOrder.forEach(k => {
+                                    if (!currentOrder.includes(k)) {
+                                        currentOrder.push(k);
+                                    }
+                                });
+                                currentOrder = currentOrder.filter(k => defaultOrder.includes(k));
+                            }
+                            Storage.savePreference('stats_order', currentOrder);
+
+                            const labels = {
+                                'progression': i18n.t('stats_block_progression') || "Progression",
+                                'bac': i18n.t('stats_block_bac') || "Taux d'alcool (BAC)",
+                                'streak': i18n.t('stats_block_streak') || "Série (Streak)",
+                                'equivalences': i18n.t('stats_block_equivalences') || "Équivalences",
+                                'history': i18n.t('stats_block_history') || "Historique des consos",
+                                'calendar': i18n.t('stats_block_calendar') || "Calendrier de dégustation",
+                                'achievements': i18n.t('stats_block_achievements') || "Succès et Badges",
+                                'map': i18n.t('stats_block_map') || "Carte de Dégustation"
+                            };
+
+                            return currentOrder.map((key, index) => {
+                                return `
+                                    <div class="stats-order-item" data-key="${key}" style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.2); padding:8px 10px; border-radius:6px; border:1px solid #333;">
+                                        <span style="color:#ddd; font-size:0.85rem;">${labels[key] || key}</span>
+                                        <div style="display:flex; gap:5px;">
+                                            <button class="btn-stat-move-up setting-btn" data-index="${index}" style="padding:4px 10px; width:auto; ${index === 0 ? 'opacity:0.3;' : ''}" ${index === 0 ? 'disabled' : ''}>↑</button>
+                                            <button class="btn-stat-move-down setting-btn" data-index="${index}" style="padding:4px 10px; width:auto; ${index === currentOrder.length - 1 ? 'opacity:0.3;' : ''}" ${index === currentOrder.length - 1 ? 'disabled' : ''}>↓</button>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('');
+                        })()}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Données & Sauvegarde -->
+            <div class="setting-group" data-group="data">
+                <h4>💾 Données & Sauvegarde</h4>
+
+                <div class="setting-row" data-keywords="exporter importer données json export import data save">
+                    <div class="setting-info" style="margin-bottom: 0;">
+                        <span class="setting-title">${i18n.t('settings_group_data') || 'Gestion des données'}</span>
+                        <span class="setting-desc" style="margin-bottom:10px;">${i18n.t('settings_data_desc')}</span>
+                        <div style="display:flex; gap:8px;">
+                            <button id="btn-manage-export" class="setting-btn primary" style="flex:1;">📤 ${i18n.t('export_btn_submit')}</button>
+                            <button id="btn-manage-import" class="setting-btn" style="flex:1;">📥 ${i18n.t('import_title')}</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="setting-row" data-keywords="réinitialiser supprimer reset clear effacer delete">
+                    <div class="setting-info" style="width:100%;">
+                        <span class="setting-title" style="color:#ff6b6b;">${i18n.t('settings_danger_zone')}</span>
+                        <span class="setting-desc" style="margin-bottom:10px;">Suppression définitive des données</span>
+                        
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;">
+                            <button id="btn-reset-ratings" class="setting-btn" style="font-size:0.75rem;">${i18n.t('settings_reset_ratings')}</button>
+                            <button id="btn-reset-custom" class="setting-btn" style="font-size:0.75rem;">${i18n.t('settings_reset_custom')}</button>
+                            <button id="btn-reset-history" class="setting-btn" style="font-size:0.75rem;">${i18n.t('settings_reset_history')}</button>
+                            <button id="btn-reset-fav" class="setting-btn" style="font-size:0.75rem;">${i18n.t('settings_reset_favs')}</button>
+                        </div>
+                        <button id="btn-reset-app" class="setting-btn danger">🔥 ${i18n.t('settings_reset_app')}</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Système & Support -->
+            <div class="setting-group" data-group="system">
+                <h4>🛠️ Système & Support</h4>
+
+                <div class="setting-row" data-keywords="mise à jour update actualiser version">
+                    <div class="setting-info">
+                        <span class="setting-title">${i18n.t('settings_check_update') || 'Vérifier les mises à jour'}</span>
+                        <span class="setting-desc" data-i18n="settings_check_update_desc">Forcer la recherche de la dernière version de l'application</span>
+                    </div>
+                    <div class="setting-action">
+                        <button id="btn-check-update" class="setting-btn">🔄 Actualiser</button>
+                    </div>
+                </div>
+
+                <div class="setting-row" data-keywords="tutoriel guide aide tutorial tuto">
+                    <div class="setting-info">
+                        <span class="setting-title">${i18n.t('settings_restart_tuto') || 'Refaire le tutoriel'}</span>
+                        <span class="setting-desc" data-i18n="settings_restart_tuto_desc">Relancer le guide de démarrage interactif</span>
+                    </div>
+                    <div class="setting-action">
+                        <button id="btn-restart-tuto" class="setting-btn">🎓 Lancer</button>
+                    </div>
+                </div>
+
+                <div class="setting-row" data-keywords="demander ajouter bière request beer">
+                    <div class="setting-info">
+                        <span class="setting-title">${i18n.t('request_beer_btn') || 'Demander une Bière'}</span>
+                        <span class="setting-desc" data-i18n="settings_request_beer_desc">Soumettre une bière manquante pour ajout à la base</span>
+                    </div>
+                    <div class="setting-action">
+                        <button id="btn-request-beer" class="setting-btn primary">🍺 Demander</button>
+                    </div>
+                </div>
+
+                <div class="setting-row" data-keywords="nettoyer doublons deduplicate clean">
+                    <div class="setting-info">
+                        <span class="setting-title">${i18n.t('settings_btn_dedup') || 'Nettoyer les doublons'}</span>
+                        <span class="setting-desc" data-i18n="settings_dedup_desc">Fusionner vos bières personnalisées avec les bières officielles</span>
+                    </div>
+                    <div class="setting-action">
+                        <button id="btn-deduplicate-db" class="setting-btn">🧹 Nettoyer</button>
+                    </div>
+                </div>
+
+                <div class="setting-row" data-keywords="diagnostic debug log admin développeur console">
+                    <div class="setting-info">
+                        <span class="setting-title" data-i18n="debug_dev_settings">${i18n.t('debug_dev_settings') || 'Diagnostic & Debug'}</span>
+                        <span class="setting-desc" data-i18n="settings_debug_desc">Outils avancés pour la réparation et le test</span>
+                    </div>
+                    <div class="setting-action">
+                        <button id="btn-open-debug" class="setting-btn">⚙️ Ouvrir</button>
+                    </div>
+                </div>
             </div>
            
             <div class="mt-40 text-center">
@@ -4289,13 +4365,12 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     `;
 
     // --- Handlers ---
-
+    
     // --- Theme Handlers ---
     container.querySelectorAll('.theme-preset-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const preset = btn.dataset.preset;
             if (preset === 'custom') {
-                // Show color pickers
                 const customDiv = container.querySelector('#theme-custom-colors');
                 if (customDiv) customDiv.style.display = 'block';
                 Storage.savePreference('theme_preset', 'custom');
@@ -4306,7 +4381,6 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                 if (customDiv) customDiv.style.display = 'none';
             }
             showToast(i18n.t('toast_theme_applied') || 'Thème appliqué !', 'success');
-            // Re-render to refresh active state
             renderSettings(allBeers, userData, container, isDiscovery, discoveryCallback);
         });
     });
@@ -4356,7 +4430,6 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
         });
     }
 
-    // --- Font Handler ---
     const fontSelect = container.querySelector('#select-font-family');
     if (fontSelect) {
         fontSelect.addEventListener('change', (e) => {
@@ -4365,7 +4438,6 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
         });
     }
 
-    // --- Debug Handler ---
     const btnDebug = container.querySelector('#btn-open-debug');
     if (btnDebug) {
         btnDebug.addEventListener('click', () => {
@@ -4373,21 +4445,16 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
         });
     }
 
-    // Map Setting
     const mapSelect = container.querySelector('#select-default-map');
     if (mapSelect) {
         mapSelect.onchange = (e) => {
             const val = e.target.value;
-            if (val) {
-                localStorage.setItem('defaultMapScope', val);
-            } else {
-                localStorage.removeItem('defaultMapScope');
-            }
+            if (val) localStorage.setItem('defaultMapScope', val);
+            else localStorage.removeItem('defaultMapScope');
             showToast(i18n.t('toast_map_updated'));
         };
     }
 
-    // --- Feature Toggles Handlers ---
     const toggles = [
         { id: '#toggle-feat-map', key: 'feat_map_enabled' },
         { id: '#toggle-feat-reminders', key: 'feat_reminders_enabled' },
@@ -4405,7 +4472,6 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
         }
     });
 
-    // Config
     container.querySelector('#btn-template').onclick = () => renderTemplateEditor();
 
     container.querySelector('#btn-preset-default').onclick = async () => {
@@ -4413,7 +4479,6 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
             Storage.resetRatingTemplate();
             Storage.savePreference('activePreset', 'default');
             showToast(i18n.t('toast_preset_std_applied'));
-            container.querySelector('#btn-preset-default').style = 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 5px rgba(255,192,0,0.3); padding:8px; font-size:0.8rem;';
             renderSettings(allBeers, userData, container, isDiscovery, discoveryCallback);
         }
     };
@@ -4440,7 +4505,6 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
         };
     }
 
-    // --- Stats Order Handlers ---
     container.querySelectorAll('.btn-stat-move-up').forEach(btn => {
         btn.addEventListener('click', (e) => {
             const idx = parseInt(e.currentTarget.dataset.index);
@@ -4469,39 +4533,27 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
         });
     });
 
-    // Museum Theme Toggle
     const toggleMuseum = container.querySelector('#toggle-museum');
     if (toggleMuseum) {
         toggleMuseum.onchange = (e) => {
             const enabled = e.target.checked;
             Storage.savePreference('museumThemeEnabled', enabled);
-
             const museumLink = document.getElementById('css-museum');
-            if (museumLink) {
-                museumLink.disabled = !enabled;
-            }
-
-            // Target body for specificity/class-based overrides
+            if (museumLink) museumLink.disabled = !enabled;
             if (enabled) {
                 document.body.classList.add('theme-museum');
-                // Trigger curtain animation if not already played in this session?
-                // Or maybe always play it on manual toggle for the "wow" effect?
                 const curtainOverlay = document.getElementById('curtain-overlay');
                 if (curtainOverlay) {
                     curtainOverlay.style.display = 'flex';
-                    setTimeout(() => {
-                        curtainOverlay.style.display = 'none';
-                    }, 3500);
+                    setTimeout(() => { curtainOverlay.style.display = 'none'; }, 3500);
                 }
             } else {
                 document.body.classList.remove('theme-museum');
             }
-
             showToast(enabled ? i18n.t('toast_museum_on') : i18n.t('toast_museum_off'));
         };
     }
 
-    // Immersion Toggles
     container.querySelector('#toggle-sound').onchange = (e) => {
         Storage.savePreference('soundEnabled', e.target.checked);
         Feedback.reloadSettings();
@@ -4514,43 +4566,18 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
         if (e.target.checked) Feedback.impactMedium();
     };
 
-    // --- Bindings ---
-
-    // Reveal Rarity
     const checkRarity = container.querySelector('#check-reveal-rarity');
-    if (checkRarity) {
-        checkRarity.onchange = (e) => {
-            Storage.savePreference('revealRarity', e.target.checked);
-            showToast(i18n.t('toast_preference_saved'));
-        };
-    }
+    if (checkRarity) checkRarity.onchange = (e) => { Storage.savePreference('revealRarity', e.target.checked); showToast(i18n.t('toast_preference_saved')); };
 
-    // Play Once
     const checkAnimOnce = container.querySelector('#check-anim-once');
-    if (checkAnimOnce) {
-        checkAnimOnce.onchange = (e) => {
-            Storage.savePreference('anim_only_once', e.target.checked);
-            showToast(i18n.t('toast_preference_saved'));
-        };
-    }
+    if (checkAnimOnce) checkAnimOnce.onchange = (e) => { Storage.savePreference('anim_only_once', e.target.checked); showToast(i18n.t('toast_preference_saved')); };
 
-    // Card Stats Overlay
     const toggleCardStatCount = container.querySelector('#toggle-card-stat-count');
-    if (toggleCardStatCount) {
-        toggleCardStatCount.onchange = (e) => {
-            Storage.savePreference('card_stat_count', e.target.checked);
-            showToast(i18n.t('toast_preference_saved'));
-        };
-    }
-    const toggleCardStatVolume = container.querySelector('#toggle-card-stat-volume');
-    if (toggleCardStatVolume) {
-        toggleCardStatVolume.onchange = (e) => {
-            Storage.savePreference('card_stat_volume', e.target.checked);
-            showToast(i18n.t('toast_preference_saved'));
-        };
-    }
+    if (toggleCardStatCount) toggleCardStatCount.onchange = (e) => { Storage.savePreference('card_stat_count', e.target.checked); showToast(i18n.t('toast_preference_saved')); };
 
-    // BAC Settings
+    const toggleCardStatVolume = container.querySelector('#toggle-card-stat-volume');
+    if (toggleCardStatVolume) toggleCardStatVolume.onchange = (e) => { Storage.savePreference('card_stat_volume', e.target.checked); showToast(i18n.t('toast_preference_saved')); };
+
     const toggleBac = container.querySelector('#toggle-bac-enabled');
     if (toggleBac) {
         toggleBac.onchange = (e) => {
@@ -4563,27 +4590,13 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     }
 
     const inputWeight = container.querySelector('#input-bac-weight');
-    if (inputWeight) {
-        inputWeight.onchange = (e) => {
-            let val = parseInt(e.target.value);
-            if (isNaN(val) || val < 30) val = 30;
-            Storage.savePreference('bac_weight', val);
-        };
-    }
+    if (inputWeight) inputWeight.onchange = (e) => { let val = parseInt(e.target.value); if (isNaN(val) || val < 30) val = 30; Storage.savePreference('bac_weight', val); };
 
     const selectGender = container.querySelector('#select-bac-gender');
-    if (selectGender) {
-        selectGender.onchange = (e) => {
-            Storage.savePreference('bac_gender', e.target.value);
-        };
-    }
+    if (selectGender) selectGender.onchange = (e) => { Storage.savePreference('bac_gender', e.target.value); };
 
     const toggleBacHome = container.querySelector('#toggle-bac-home');
-    if (toggleBacHome) {
-        toggleBacHome.onchange = (e) => {
-            Storage.savePreference('bac_show_home', e.target.checked);
-        };
-    }
+    if (toggleBacHome) toggleBacHome.onchange = (e) => { Storage.savePreference('bac_show_home', e.target.checked); };
 
     const toggleBacHideWg = container.querySelector('#toggle-bac-hide-wg');
     if (toggleBacHideWg) {
@@ -4595,39 +4608,18 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
         };
     }
 
-
     const toggleBacManual = container.querySelector('#toggle-bac-manual');
-    if (toggleBacManual) {
-        toggleBacManual.onchange = (e) => {
-            Storage.savePreference('bac_manual_only', e.target.checked);
-        };
-    }
+    if (toggleBacManual) toggleBacManual.onchange = (e) => { Storage.savePreference('bac_manual_only', e.target.checked); };
 
     const selectBacDuration = container.querySelector('#select-bac-duration');
-    if (selectBacDuration) {
-        selectBacDuration.onchange = (e) => {
-            Storage.savePreference('bac_drink_duration', e.target.value);
-            showToast(i18n.t('toast_bac_duration_updated'));
-        };
-    }
+    if (selectBacDuration) selectBacDuration.onchange = (e) => { Storage.savePreference('bac_drink_duration', e.target.value); showToast(i18n.t('toast_bac_duration_updated')); };
 
     const selectBacVehicle = container.querySelector('#select-bac-vehicle');
-    if (selectBacVehicle) {
-        selectBacVehicle.onchange = (e) => {
-            Storage.savePreference('bac_vehicle', e.target.value);
-            showToast(i18n.t('toast_bac_vehicle_updated'));
-        };
-    }
+    if (selectBacVehicle) selectBacVehicle.onchange = (e) => { Storage.savePreference('bac_vehicle', e.target.value); showToast(i18n.t('toast_bac_vehicle_updated')); };
 
     const selectBacCountry = container.querySelector('#select-bac-country');
-    if (selectBacCountry) {
-        selectBacCountry.onchange = (e) => {
-            Storage.savePreference('bac_country', e.target.value);
-            showToast(i18n.t('toast_bac_rule_updated'));
-        };
-    }
+    if (selectBacCountry) selectBacCountry.onchange = (e) => { Storage.savePreference('bac_country', e.target.value); showToast(i18n.t('toast_bac_rule_updated')); };
 
-    // History / Calendar / Streak toggles
     const toggleHistory = container.querySelector('#toggle-show-history');
     if (toggleHistory) toggleHistory.onchange = (e) => { Storage.savePreference('bac_show_history', e.target.checked); showToast(i18n.t('toast_preference_saved')); };
     const toggleCalendar = container.querySelector('#toggle-show-calendar');
@@ -4639,23 +4631,16 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     container.querySelector('#btn-legal-privacy').onclick = () => renderLegalPage('privacy');
     container.querySelector('#btn-legal-copyright').onclick = () => renderLegalPage('copyright');
 
-    const btnOpenDebug = container.querySelector('#btn-open-debug');
-    if (btnOpenDebug) {
-        btnOpenDebug.onclick = () => renderDebugModal();
-    }
-
     const selectLanguage = container.querySelector('#select-language');
     if (selectLanguage) {
         selectLanguage.onchange = async (e) => {
             const { i18n } = await import('./i18n.js');
             await i18n.setLanguage(e.target.value);
             showToast(i18n.t('toast_lang_updated'));
-            // Re-render settings to refresh all dynamic templates
             renderSettings(allBeers, userData, container, isDiscovery, discoveryCallback);
         };
     }
 
-    // Patchnote visibility tracking — mark as seen when scrolled to
     const patchnoteEl = container.querySelector('.patchnote-section[data-new="true"]');
     if (patchnoteEl) {
         const observer = new IntersectionObserver((entries) => {
@@ -4672,24 +4657,16 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     container.querySelector('#btn-manage-import').onclick = () => renderImportModal();
     container.querySelector('#btn-manage-export').onclick = () => renderExportModal();
 
-    // Granular Resets are bound below using confirmReset
-    // System
     container.querySelector('#btn-check-update').onclick = async () => {
         if ('serviceWorker' in navigator) {
             showToast(i18n.t('toast_forcing_update'), "info");
-
             try {
                 const registrations = await navigator.serviceWorker.getRegistrations();
-                for (let registration of registrations) {
-                    await registration.unregister();
-                }
+                for (let registration of registrations) await registration.unregister();
                 const cacheKeys = await caches.keys();
                 await Promise.all(cacheKeys.map(key => caches.delete(key)));
                 showToast(i18n.t('toast_caches_cleared'), "success");
-                setTimeout(() => {
-                    window.location.reload(true);
-                }, 1500);
-
+                setTimeout(() => window.location.reload(true), 1500);
             } catch (e) {
                 console.error("Update failed", e);
                 showToast(i18n.t('toast_update_error', { err: e.message }));
@@ -4700,20 +4677,14 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     };
 
     container.querySelector('#btn-restart-tuto').onclick = () => {
-        // Go to Home first
         const homeBtn = document.querySelector('.nav-item[data-view="home"]');
         if (homeBtn) homeBtn.click();
-
-        // Wait for view transition
-        setTimeout(() => {
-            TutorialSystem.start();
-        }, 500);
+        setTimeout(() => TutorialSystem.start(), 500);
     };
 
     container.querySelector('#btn-request-beer').onclick = () => renderRequestBeerForm(allBeers);
     container.querySelector('#btn-deduplicate-db').onclick = () => renderDeduplicationWizard(allBeers);
 
-    // Granular Resets
     const confirmReset = async (msg, action) => {
         if (await showConfirmModal(msg)) {
             action();
@@ -4724,36 +4695,16 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     };
 
     const btnResetRatings = container.querySelector('#btn-reset-ratings');
-    if (btnResetRatings) {
-        btnResetRatings.onclick = () => confirmReset(
-            i18n.t('modal_confirm_delete_ratings'),
-            Storage.resetRatingsOnly
-        );
-    }
+    if (btnResetRatings) btnResetRatings.onclick = () => confirmReset(i18n.t('modal_confirm_delete_ratings'), Storage.resetRatingsOnly);
 
     const btnResetCustom = container.querySelector('#btn-reset-custom');
-    if (btnResetCustom) {
-        btnResetCustom.onclick = () => confirmReset(
-            i18n.t('modal_confirm_delete_custom'),
-            Storage.resetCustomBeersOnly
-        );
-    }
+    if (btnResetCustom) btnResetCustom.onclick = () => confirmReset(i18n.t('modal_confirm_delete_custom'), Storage.resetCustomBeersOnly);
 
     const btnResetHistory = container.querySelector('#btn-reset-history');
-    if (btnResetHistory) {
-        btnResetHistory.onclick = () => confirmReset(
-            i18n.t('modal_confirm_delete_history'),
-            Storage.resetConsumptionHistoryOnly
-        );
-    }
+    if (btnResetHistory) btnResetHistory.onclick = () => confirmReset(i18n.t('modal_confirm_delete_history'), Storage.resetConsumptionHistoryOnly);
 
     const btnResetFav = container.querySelector('#btn-reset-fav');
-    if (btnResetFav) {
-        btnResetFav.onclick = () => confirmReset(
-            i18n.t('modal_confirm_delete_favs'),
-            Storage.resetFavoritesOnly
-        );
-    }
+    if (btnResetFav) btnResetFav.onclick = () => confirmReset(i18n.t('modal_confirm_delete_favs'), Storage.resetFavoritesOnly);
 
     container.querySelector('#btn-reset-app').onclick = async () => {
         if (await showConfirmModal(i18n.t('modal_confirm_reset_app'))) {
@@ -4767,10 +4718,10 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
     i18n.translateDOM(container);
 }
 
-function renderDeduplicationWizard(allBeers) {
+export function renderDeduplicationWizard(allBeers) {
     const matches = Deduplicator.runCheck(allBeers, true);
     if (!matches || matches.length === 0) {
-        showToast(i18n.t('toast_nothing_found') || 'Aucun doublon trouvé.');
+        showToast(i18n.t('toast_nothing_found') || 'Aucun doublon trouvÃ©.');
         return;
     }
 
@@ -4782,7 +4733,7 @@ function renderDeduplicationWizard(allBeers) {
             modalContainer.classList.add('hidden');
             modalContainer.innerHTML = '';
             showToast('Nettoyage terminé !');
-            renderSettings(allBeers, document.getElementById('main-content'));
+            renderSettings(allBeers, Storage.getAllUserData(), document.getElementById('main-content'));
             return;
         }
 
@@ -6874,14 +6825,8 @@ export function renderExportModal() {
                         btn.disabled = false; btn.innerHTML = originalText;
                     }
                 } else if (currentMode === 'text') {
-                    let exportObj = {};
-                    if (currentScope === 'all' || currentScope === 'ratings') exportObj.ratings = Storage.getAllUserData();
-                    if (currentScope === 'all' || currentScope === 'custom') {
-                        let customs = Storage.getCustomBeers();
-                        if (idsToExport) customs = customs.filter(b => idsToExport.includes(String(b.id)));
-                        exportObj.customBeers = customs;
-                    }
-                    showLinkResult(JSON.stringify(exportObj, null, 2), currentScope, true);
+                    let exportObj = Storage.generateExportObject(finalOptions);
+                    showLinkResult(JSON.stringify(exportObj, null, 2), 'all', true);
                 }
             }, 300);
         };
@@ -7396,7 +7341,7 @@ export function renderDebugModal() {
                     <div style="display:flex; justify-content:space-between; align-items:center; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px;">
                         <span style="font-size:0.8rem; color:#aaa;">${i18n.t('debug_toggle_dedup') || 'Deduplicator Background Worker'}</span>
                         <label class="switch" style="transform: scale(0.8);">
-                            <input type="checkbox" id="toggle-debug-dedup" ${Storage.getPreference('debug_deduplicator_enabled', false) ? 'checked' : ''}>
+                            <input type="checkbox" class="toggle-switch" id="toggle-debug-dedup" ${Storage.getPreference('debug_deduplicator_enabled', false) ? 'checked' : ''}>
                             <span class="slider round"></span>
                         </label>
                     </div>
@@ -7483,5 +7428,35 @@ export function renderDebugModal() {
             console.error('Failed to download log file:', err);
             showToast('Erreur lors du téléchargement');
         }
+    });
+}
+export function filterSettings(query) {
+    const container = document.getElementById('settings-container');
+    if (!container) return;
+
+    query = query ? query.toLowerCase().trim() : '';
+
+    const groups = container.querySelectorAll('.setting-group');
+    
+    groups.forEach(group => {
+        let hasVisibleRow = false;
+        const rows = group.querySelectorAll('.setting-row');
+        
+        rows.forEach(row => {
+            const keywords = (row.dataset.keywords || '').toLowerCase();
+            const text = row.innerText.toLowerCase();
+            
+            if (!query || keywords.includes(query) || text.includes(query)) {
+                // If it's a special row like bac-settings-group, we might need a different display.
+                // But most are .setting-row which is flex.
+                row.style.display = row.style.flexDirection === 'column' ? 'flex' : 'flex'; // Actually, just empty to restore CSS or 'flex'
+                row.style.display = 'flex';
+                hasVisibleRow = true;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        group.style.display = hasVisibleRow ? 'block' : 'none';
     });
 }

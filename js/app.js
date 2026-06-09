@@ -758,7 +758,15 @@ function setupEventListeners() {
     searchInput.addEventListener('input', (e) => {
         state.filter = e.target.value;
         clearTimeout(searchDebounceTimer);
-        searchDebounceTimer = setTimeout(() => renderCurrentView(), 200);
+        searchDebounceTimer = setTimeout(() => {
+            if (state.view === 'settings') {
+                if (UI && typeof UI.filterSettings === 'function') {
+                    UI.filterSettings(state.filter);
+                }
+            } else {
+                renderCurrentView();
+            }
+        }, 200);
     });
 
     // Filter Toggle
