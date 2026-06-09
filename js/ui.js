@@ -4349,7 +4349,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                 </div>
                 
                 <div style="margin-top:30px; font-size:0.7rem; color:#444; border-top:1px solid #222; padding-top:15px; width:50%; margin-left:auto; margin-right:auto;">
-                    Beerdex v2.5 &copy; 2026
+                    Beerdex v4.1 &copy; 2026
                     <!-- Légal -->
                     <div style="border-top:1px dashed #333; padding-top:20px; margin-top:20px;">
                         <h4 style="color:#888; margin-bottom:12px; font-size:0.85rem; text-transform:uppercase; letter-spacing:1px;" data-i18n="settings_legal_section">${i18n.t('settings_legal_section')}</h4>

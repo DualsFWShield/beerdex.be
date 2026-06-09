@@ -1217,6 +1217,7 @@
     "patchnote_4.1.0_item_5": "🏆 Achievements Backup: Your precious unlocked achievements are now fully included in the export and import system!",
     "patchnote_4.1.0_item_6": "🏅 New Challenges: Brand new achievements have arrived! UI-related challenges, time-based drinking challenges, and the 'Mineral Tour' (sober) achievement.",
     "patchnote_4.1.0_item_7": "💎 Badge Overhaul: Visual upgrade and display of achievement counts by type. Bonus: the rarity (Common, Epic...) of each achievement is now proudly displayed in its detail modal, even when locked!",
+    "patchnote_4.1.0_item_8": "⚙️ Settings Clarity: Revamped the settings page with detailed descriptions for all options and features.",
     "patchnote_4.0.0_date": "June 8, 2026",
     "patchnote_4.0.0_item_5": "⚙️ Advanced Diagnostic Mode: Integration of a new developer panel allowing the download of full logs into a .txt file, making technical support and bug fixing much easier.",
     "patchnote_4.0.0_item_6": "⚡ Lightning Fast Startup \u0026 Localization: The deduplication engine now runs silently in the background, ensuring nearly instantaneous startup. Moreover, the seamless English/French bilingual support has been fully perfected.",
