@@ -355,49 +355,91 @@ export function triggerExportFile(scope = 'all', ids = null) {
     return exportDataAdvanced({ scope: scope, ids: ids });
 }
 
-export async function exportDataAdvanced(options = { scope: 'all' }) {
+export function generateExportObject(options = {}) {
+    const isLegacyAll = !options.exportCustom && !options.exportRatings && !options.exportHistory && 
+                        !options.exportTheme && !options.exportBac && !options.exportPrefs && !options.exportTemplate;
+    const scope = options.scope || 'all'; // Legacy support
+
     const exportObj = {
-        ratingTemplate: getRatingTemplate(),
-        preferences: {}, 
         exportDate: new Date().toISOString(),
-        version: 4
+        version: 4,
+        preferences: {}
     };
 
-    // Include all beerdex_pref_ keys
+    // 1. Template
+    if (isLegacyAll || options.exportTemplate) {
+        exportObj.ratingTemplate = getRatingTemplate();
+    }
+
+    // 2. Preferences, Theme, BAC
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key && key.startsWith('beerdex_pref_')) {
             const prefKey = key.replace('beerdex_pref_', '');
-            exportObj.preferences[prefKey] = getPreference(prefKey);
+            
+            let shouldExport = false;
+            if (isLegacyAll) shouldExport = true;
+            else if (prefKey === 'theme' && options.exportTheme) shouldExport = true;
+            else if (prefKey.startsWith('bac') && options.exportBac) shouldExport = true;
+            else if (prefKey !== 'theme' && !prefKey.startsWith('bac') && options.exportPrefs) shouldExport = true;
+
+            if (shouldExport) {
+                exportObj.preferences[prefKey] = getPreference(prefKey);
+            }
         }
     }
 
-    const scope = options.scope;
     const ids = options.ids; // Array of string IDs or null
 
-    // SCOPE LOGIC
-    if (scope === 'all' || scope === 'ratings') {
+    // 3. Ratings & History
+    if (isLegacyAll || scope === 'ratings' || options.exportRatings || options.exportHistory) {
         const allRatings = getAllUserData();
-        if (ids && ids.length > 0) {
-            // Filter by IDs
-            exportObj.ratings = {};
-            ids.forEach(id => {
-                if (allRatings[id]) exportObj.ratings[id] = allRatings[id];
-            });
-        } else {
-            exportObj.ratings = allRatings;
-        }
+        exportObj.ratings = {};
+        
+        const filterIds = ids && ids.length > 0;
+        
+        Object.keys(allRatings).forEach(id => {
+            if (filterIds && !ids.includes(id)) return;
+            
+            const localData = allRatings[id];
+            const exportItem = {};
+            let hasData = false;
+
+            if (isLegacyAll || options.exportRatings) {
+                if (localData.score !== undefined) {
+                    exportItem.score = localData.score;
+                    exportItem.comment = localData.comment;
+                    hasData = true;
+                }
+            }
+            if (isLegacyAll || options.exportHistory) {
+                if (localData.count !== undefined) exportItem.count = localData.count;
+                if (localData.history !== undefined) exportItem.history = localData.history;
+                hasData = true;
+            }
+
+            if (hasData) {
+                exportObj.ratings[id] = exportItem;
+            }
+        });
     }
 
-    if (scope === 'all' || scope === 'custom') {
+    // 4. Custom Beers
+    if (isLegacyAll || scope === 'custom' || options.exportCustom) {
         const allCustoms = getCustomBeers();
         if (ids && ids.length > 0) {
-            // Filter custom beers
             exportObj.customBeers = allCustoms.filter(b => ids.includes(String(b.id)));
         } else {
             exportObj.customBeers = allCustoms;
         }
     }
+
+    return exportObj;
+}
+
+export async function exportDataAdvanced(options = {}) {
+    const exportObj = generateExportObject(options);
+    const scope = options.scope || 'all';
 
     // Check if we have anything
     if ((!exportObj.ratings || Object.keys(exportObj.ratings).length === 0) &&
@@ -498,28 +540,19 @@ export function downloadRawJSON(jsonString, filename) {
     URL.revokeObjectURL(url);
 }
 
-export function getShareableLink(scope = 'all', ids = null, downloadMode = false) {
-    const exportObj = {};
+export function getShareableLink(options = {}, downloadMode = false) {
+    let scope = 'all';
+    let ids = null;
+    
+    // Backwards compatibility for old calls: getShareableLink('scope', ids)
+    if (typeof options === 'string') {
+        scope = options;
+        ids = arguments[1] || null;
+        downloadMode = arguments[2] || false;
+        options = { scope: scope, ids: ids };
+    }
 
-    if (scope === 'all' || scope === 'ratings') {
-        const allRatings = getAllUserData();
-        if (ids && ids.length > 0) {
-            exportObj.ratings = {};
-            ids.forEach(id => {
-                if (allRatings[id]) exportObj.ratings[id] = allRatings[id];
-            });
-        } else {
-            exportObj.ratings = allRatings;
-        }
-    }
-    if (scope === 'all' || scope === 'custom') {
-        const allCustoms = getCustomBeers();
-        if (ids && ids.length > 0) {
-            exportObj.customBeers = allCustoms.filter(b => ids.includes(String(b.id)));
-        } else {
-            exportObj.customBeers = allCustoms;
-        }
-    }
+    const exportObj = generateExportObject(options);
 
     // Minimal overhead
     const jsonStr = JSON.stringify(exportObj);
@@ -648,36 +681,13 @@ export async function shareBeer(beer) {
 
 // --- Text / Backup Helpers ---
 
-export function getExportDataString(includeCustom = true) {
-    const exportObj = {
-        ratings: getAllUserData(),
-        ratingTemplate: getRatingTemplate(),
-        preferences: {},
-        exportDate: new Date().toISOString(),
-        version: 4
-    };
-
-    // Include all extra metadata and preferences
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (!key) continue;
-
-        // Skip the big ones already handled
-        if (key === STORAGE_KEY_RATINGS || key === STORAGE_KEY_CUSTOM || key === 'beerdex_rating_template' || key === 'beerdex_auto_backup') continue;
-
-        if (key.startsWith('beerdex_') || key === 'defaultMapScope') {
-            const raw = localStorage.getItem(key);
-            try {
-                exportObj.preferences[key] = JSON.parse(raw);
-            } catch {
-                exportObj.preferences[key] = raw;
-            }
-        }
+export function getExportDataString(options = {}) {
+    // Backwards compatibility for includeCustom = true/false
+    if (typeof options === 'boolean') {
+        options = options ? { scope: 'all' } : { scope: 'ratings' };
     }
 
-    if (includeCustom) {
-        exportObj.customBeers = getCustomBeers();
-    }
+    const exportObj = generateExportObject(options);
     return JSON.stringify(exportObj, null, 2);
 }
 
@@ -714,56 +724,185 @@ export function exportData() {
     return exportDataAdvanced({ scope: 'all' });
 }
 
-export function mergeUserData(importedData) {
+export function analyzeImportData(jsonString) {
+    const result = {
+        isValid: false, isSingleShare: false, exportDate: null,
+        hasCustom: false, hasRatings: false, hasHistory: false,
+        hasTheme: false, hasBac: false, hasPrefs: false, hasTemplate: false,
+        customConflicts: 0, parsedData: null
+    };
+
+    try {
+        const data = JSON.parse(jsonString);
+        if (!data) return result;
+
+        result.parsedData = data;
+        result.isValid = true;
+
+        if (data.type === 'single_beer_share') {
+            result.isSingleShare = true;
+            return result;
+        }
+
+        if (data.exportDate) result.exportDate = data.exportDate;
+        
+        if (data.customBeers && data.customBeers.length > 0) {
+            result.hasCustom = true;
+            const localCustoms = getCustomBeers();
+            data.customBeers.forEach(cb => {
+                if (localCustoms.some(lb => lb.id === cb.id)) {
+                    result.customConflicts++;
+                }
+            });
+        }
+
+        if (data.ratings && Object.keys(data.ratings).length > 0) {
+            // Check if ratings have score and/or history
+            const keys = Object.keys(data.ratings);
+            for (let k of keys) {
+                const r = data.ratings[k];
+                if (r.score !== undefined) result.hasRatings = true;
+                if (r.history !== undefined || r.count !== undefined) result.hasHistory = true;
+                if (result.hasRatings && result.hasHistory) break;
+            }
+        }
+
+        if (data.ratingTemplate) result.hasTemplate = true;
+
+        if (data.preferences && Object.keys(data.preferences).length > 0) {
+            const prefKeys = Object.keys(data.preferences);
+            if (prefKeys.includes('theme')) result.hasTheme = true;
+            if (prefKeys.some(k => k.startsWith('bac'))) result.hasBac = true;
+            if (prefKeys.some(k => k !== 'theme' && !k.startsWith('bac'))) result.hasPrefs = true;
+        }
+
+        return result;
+    } catch (e) {
+        return result;
+    }
+}
+
+export function mergeUserData(importedData, options = {}) {
+    const isLegacy = Object.keys(options).length === 0;
+    const opt = {
+        importCustom: isLegacy ? true : options.importCustom,
+        importRatings: isLegacy ? true : options.importRatings,
+        importHistory: isLegacy ? true : options.importHistory,
+        importTheme: isLegacy ? true : options.importTheme,
+        importBac: isLegacy ? true : options.importBac,
+        importPrefs: isLegacy ? true : options.importPrefs,
+        importTemplate: isLegacy ? true : options.importTemplate,
+        overwriteMode: isLegacy ? false : options.overwriteMode
+    };
+
     // 1. Merge Custom Beers
-    if (importedData.customBeers) {
+    if (importedData.customBeers && opt.importCustom) {
         const localCustoms = getCustomBeers();
         const newCustoms = [...localCustoms];
 
         importedData.customBeers.forEach(importedBeer => {
-            const exists = localCustoms.some(b => b.id === importedBeer.id);
-            if (!exists) {
-                newCustoms.unshift(importedBeer);
+            const existingIndex = localCustoms.findIndex(b => b.id === importedBeer.id);
+            if (existingIndex === -1) {
+                newCustoms.unshift(importedBeer); // Add new
+            } else if (opt.overwriteMode) {
+                // Completely overwrite existing custom beer
+                newCustoms[existingIndex] = importedBeer;
             }
         });
         localStorage.setItem(STORAGE_KEY_CUSTOM, JSON.stringify(newCustoms));
     }
 
     // 2. Merge Ratings / Consumptions
-    if (importedData.ratings) {
+    if (importedData.ratings && (opt.importRatings || opt.importHistory)) {
         const localRatings = getAllUserData();
 
-        // Loop through imported ratings
         Object.keys(importedData.ratings).forEach(beerId => {
+            const importedR = importedData.ratings[beerId];
             if (!localRatings[beerId]) {
-                localRatings[beerId] = importedData.ratings[beerId];
+                localRatings[beerId] = {};
+            }
+            const localR = localRatings[beerId];
+
+            if (opt.overwriteMode) {
+                // Overwrite mode: replace fields if they exist in imported
+                if (opt.importRatings && importedR.score !== undefined) {
+                    localR.score = importedR.score;
+                    localR.comment = importedR.comment;
+                }
+                if (opt.importHistory && (importedR.history !== undefined || importedR.count !== undefined)) {
+                    localR.count = importedR.count;
+                    localR.history = importedR.history;
+                }
             } else {
-                // AddITIVE merge for counts??
-                // No, just keep local for now to be safe.
-                // Could implement smarter merge later.
+                // Merge mode
+                if (opt.importRatings && importedR.score !== undefined) {
+                    // Only set if we don't have one
+                    if (localR.score === undefined) {
+                        localR.score = importedR.score;
+                        localR.comment = importedR.comment;
+                    }
+                }
+                if (opt.importHistory && (importedR.history || importedR.count)) {
+                    // Additive merge for history
+                    let localHistory = localR.history || [];
+                    if (!localR.history && localR.count > 0) {
+                        // Legacy data might have count but no history. Just keep count or fake history.
+                        // For safety, we just merge arrays if both exist.
+                    }
+                    
+                    const importedHistory = importedR.history || [];
+                    const combined = [...localHistory];
+                    
+                    importedHistory.forEach(dateStr => {
+                        if (!combined.includes(dateStr)) combined.push(dateStr);
+                    });
+                    
+                    combined.sort((a,b) => new Date(b) - new Date(a));
+                    localR.history = combined;
+                    localR.count = combined.length || (localR.count || 0) + (importedR.count || 0); // fallback to count sum if no history
+                }
+            }
+            
+            // Clean up if somehow empty
+            if (localR.score === undefined && !localR.count && (!localR.history || localR.history.length === 0)) {
+                delete localRatings[beerId];
             }
         });
         localStorage.setItem(STORAGE_KEY_RATINGS, JSON.stringify(localRatings));
     }
 
     // 3. Template
-    if (importedData.ratingTemplate) {
+    if (importedData.ratingTemplate && opt.importTemplate) {
         localStorage.setItem('beerdex_rating_template', JSON.stringify(importedData.ratingTemplate));
     }
 
     // 4. Preferences & Extra State
     if (importedData.preferences) {
         Object.keys(importedData.preferences).forEach(key => {
-            const value = importedData.preferences[key];
-            const storageKey = key.startsWith('beerdex_') || key === 'defaultMapScope' ? key : `beerdex_pref_${key}`;
-            localStorage.setItem(storageKey, JSON.stringify(value));
+            const isTheme = key === 'theme';
+            const isBac = key.startsWith('bac');
+            const isPref = !isTheme && !isBac;
+            
+            let shouldImport = false;
+            if (isTheme && opt.importTheme) shouldImport = true;
+            if (isBac && opt.importBac) shouldImport = true;
+            if (isPref && opt.importPrefs) shouldImport = true;
+
+            if (shouldImport) {
+                const value = importedData.preferences[key];
+                const storageKey = key.startsWith('beerdex_') || key === 'defaultMapScope' ? key : `beerdex_pref_${key}`;
+                localStorage.setItem(storageKey, JSON.stringify(value));
+            }
         });
     }
 }
 
-export function importData(jsonString) {
+export function importData(jsonString, options = {}) {
     try {
-        const data = JSON.parse(jsonString);
+        const analysis = analyzeImportData(jsonString);
+        if (!analysis.isValid) return false;
+
+        const data = analysis.parsedData;
 
         // CASE 1: Single Beer Share
         if (data.type === 'single_beer_share' && data.beer) {
@@ -775,13 +914,17 @@ export function importData(jsonString) {
                 const exists = customs.find(b => b.id === sharedBeer.id);
                 if (!exists) {
                     saveCustomBeer(sharedBeer);
+                } else if (options.overwriteMode) {
+                    const idx = customs.findIndex(b => b.id === sharedBeer.id);
+                    customs[idx] = sharedBeer;
+                    localStorage.setItem(STORAGE_KEY_CUSTOM, JSON.stringify(customs));
                 }
             }
 
-            // Import Rating only if we don't have one
+            // Import Rating only if we don't have one, or if overwrite
             if (sharedRating) {
                 const currentRatings = getAllUserData();
-                if (!currentRatings[sharedBeer.id]) {
+                if (!currentRatings[sharedBeer.id] || options.overwriteMode) {
                     saveBeerRating(sharedBeer.id, sharedRating);
                 }
             }
@@ -789,9 +932,8 @@ export function importData(jsonString) {
         }
 
         // CASE 2: Full Backup (Smart Merge)
-        // Check if structure matches export
-        if (data.ratings || data.customBeers) {
-            mergeUserData(data);
+        if (data.ratings || data.customBeers || data.preferences || data.ratingTemplate) {
+            mergeUserData(data, options);
             return true;
         }
 

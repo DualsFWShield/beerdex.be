@@ -6460,64 +6460,167 @@ export function renderMatchModal(allBeers) {
 export function renderImportModal() {
     const wrapper = document.createElement('div');
     wrapper.className = 'modal-content';
-    // Ensure Flex Column for layout stability
-    wrapper.style.display = 'flex';
-    wrapper.style.flexDirection = 'column';
-    wrapper.style.height = 'auto';
-    wrapper.style.maxHeight = '80vh';
+    wrapper.style.textAlign = 'center';
+
+    let importOptions = {
+        importCustom: true,
+        importRatings: true,
+        importHistory: true,
+        importTheme: true,
+        importBac: true,
+        importPrefs: true,
+        importTemplate: true,
+        overwriteMode: false
+    };
+
+    let currentAnalysis = null;
+
+    const sec = `background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px;margin-bottom:14px;text-align:left;`;
+    const secHead = (icon, text) => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span style="font-size:1rem;">${icon}</span><strong style="color:var(--accent-gold);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.5px;">${text}</strong></div>`;
 
     wrapper.innerHTML = `
-        <h2 style="margin-bottom:20px;" data-i18n="import_title">${i18n.t('import_title')}</h2>
-        <p style="color:#888; font-size:0.85rem; margin-bottom:20px;" data-i18n="import_desc">
-            ${i18n.t('import_desc')}
-        </p>
-
-        <textarea id="import-area" class="form-textarea" rows="5" placeholder='${i18n.t('import_placeholder')}'></textarea>
-
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-            <button id="btn-paste" class="text-btn">${i18n.t('import_btn_paste')}</button>
-            <label class="text-btn" style="cursor:pointer; display:flex; align-items:center; gap:5px;">
-                ${i18n.t('import_btn_file')}
-                <input type="file" id="import-file-input" accept=".json, .txt" style="display:none;">
-            </label>
+        <div style="text-align:center;margin-bottom:18px;">
+            <div style="font-size:2.4rem;margin-bottom:6px;filter:drop-shadow(0 2px 8px rgba(245,158,11,0.3));">📥</div>
+            <h2 style="color:var(--accent-gold);font-size:1.3rem;margin-bottom:4px;">${i18n.t('import_title')}</h2>
+            <p style="font-size:0.8rem;color:#666;">${i18n.t('import_desc')}</p>
         </div>
 
-        <button id="btn-do-import" class="btn-primary" style="margin-top:20px; background:var(--accent-gold); color:black;">
+        <div style="${sec}">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <label class="text-btn" style="cursor:pointer; display:flex; align-items:center; gap:5px; padding:8px 12px; background:rgba(255,255,255,0.05); border-radius:8px;">
+                    📁 ${i18n.t('import_btn_file')}
+                    <input type="file" id="import-file-input" accept=".json, .txt" style="display:none;">
+                </label>
+                <button id="btn-paste" class="text-btn" style="padding:8px 12px; background:rgba(255,255,255,0.05); border-radius:8px;">📋 ${i18n.t('import_btn_paste')}</button>
+            </div>
+            <textarea id="import-area" class="form-textarea" rows="3" placeholder="${i18n.t('import_placeholder')}" style="font-size:0.75rem; color:#888; background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.1);"></textarea>
+        </div>
+
+        <div id="import-dynamic-section" style="display:none;">
+            <div id="import-save-date-alert" style="display:none; padding:10px; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:8px; color:var(--accent-gold); font-size:0.8rem; margin-bottom:14px; text-align:center;"></div>
+            <div id="import-conflict-alert" style="display:none; padding:10px; background:rgba(255,50,50,0.1); border:1px solid rgba(255,50,50,0.3); border-radius:8px; color:#ffaaaa; font-size:0.8rem; margin-bottom:14px;"></div>
+            
+            <div id="import-scope-container" style="${sec}">
+                ${secHead('📦', i18n.t('import_scope_label'))}
+                <div id="import-checkboxes" style="display:flex;flex-direction:column;gap:2px;"></div>
+            </div>
+
+            <div style="${sec}">
+                ${secHead('⚙️', i18n.t('import_mode_label'))}
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:10px;">
+                    <input type="radio" name="importMode" value="merge" checked style="accent-color:var(--accent-gold);width:16px;height:16px;">
+                    <div>
+                        <div style="font-size:0.85rem;color:#ddd;">${i18n.t('import_mode_merge')}</div>
+                        <div style="font-size:0.7rem;color:#888;">${i18n.t('import_mode_merge_desc')}</div>
+                    </div>
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                    <input type="radio" name="importMode" value="overwrite" style="accent-color:var(--accent-gold);width:16px;height:16px;">
+                    <div>
+                        <div style="font-size:0.85rem;color:#ddd;">${i18n.t('import_mode_overwrite')}</div>
+                        <div style="font-size:0.7rem;color:#888;">${i18n.t('import_mode_overwrite_desc')}</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <button id="btn-do-import" class="btn-primary" style="width:100%;background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;font-weight:bold;padding:14px;font-size:1rem;border-radius:12px;box-shadow:0 4px 20px rgba(245,158,11,0.3);letter-spacing:0.3px; opacity:0.5; pointer-events:none;">
             ${i18n.t('import_btn_submit')}
         </button>
     `;
 
     const textarea = wrapper.querySelector('#import-area');
+    const dynamicSection = wrapper.querySelector('#import-dynamic-section');
+    const btnDoImport = wrapper.querySelector('#btn-do-import');
+    const chkContainer = wrapper.querySelector('#import-checkboxes');
+    const scopeContainer = wrapper.querySelector('#import-scope-container');
+    const conflictAlert = wrapper.querySelector('#import-conflict-alert');
+    const saveDateAlert = wrapper.querySelector('#import-save-date-alert');
 
-    // Auto-Focus
-    setTimeout(() => textarea.focus(), 100);
+    const mkCheckbox = (key, label) => `
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;">
+            <input type="checkbox" class="cb-import-opt" data-key="${key}" ${importOptions[key] ? 'checked' : ''} style="accent-color:var(--accent-gold);width:16px;height:16px;">
+            <span style="font-size:0.85rem;color:#ddd;">${label}</span>
+        </label>
+    `;
+
+    const processJson = (text) => {
+        if (!text || !text.trim()) {
+            dynamicSection.style.display = 'none';
+            btnDoImport.style.opacity = '0.5';
+            btnDoImport.style.pointerEvents = 'none';
+            return;
+        }
+
+        currentAnalysis = Storage.analyzeImportData(text);
+
+        if (!currentAnalysis.isValid) {
+            dynamicSection.style.display = 'none';
+            btnDoImport.style.opacity = '0.5';
+            btnDoImport.style.pointerEvents = 'none';
+            return;
+        }
+
+        // It's valid JSON for Beerdex
+        dynamicSection.style.display = 'block';
+        btnDoImport.style.opacity = '1';
+        btnDoImport.style.pointerEvents = 'auto';
+
+        if (currentAnalysis.exportDate) {
+            saveDateAlert.style.display = 'block';
+            saveDateAlert.innerHTML = `<strong>${i18n.t('import_save_date')}</strong> ${new Date(currentAnalysis.exportDate).toLocaleString()}`;
+        } else {
+            saveDateAlert.style.display = 'none';
+        }
+
+        if (currentAnalysis.customConflicts > 0) {
+            conflictAlert.style.display = 'block';
+            const template = i18n.t('import_conflict_warning') || "⚠️ Attention, {count} bières personnalisées existent déjà.";
+            conflictAlert.innerHTML = template.replace('{count}', currentAnalysis.customConflicts);
+        } else {
+            conflictAlert.style.display = 'none';
+        }
+
+        if (currentAnalysis.isSingleShare) {
+            scopeContainer.style.display = 'none';
+        } else {
+            scopeContainer.style.display = 'block';
+            chkContainer.innerHTML = '';
+            let html = '';
+            if (currentAnalysis.hasCustom) html += mkCheckbox('importCustom', i18n.t('export_opt_custom'));
+            if (currentAnalysis.hasRatings) html += mkCheckbox('importRatings', i18n.t('export_opt_ratings'));
+            if (currentAnalysis.hasHistory) html += mkCheckbox('importHistory', i18n.t('export_opt_history'));
+            if (currentAnalysis.hasBac) html += mkCheckbox('importBac', i18n.t('export_opt_bac'));
+            if (currentAnalysis.hasTheme) html += mkCheckbox('importTheme', i18n.t('export_opt_theme'));
+            if (currentAnalysis.hasPrefs) html += mkCheckbox('importPrefs', i18n.t('export_opt_prefs'));
+            if (currentAnalysis.hasTemplate) html += mkCheckbox('importTemplate', i18n.t('export_opt_template'));
+            
+            chkContainer.innerHTML = html;
+
+            // Bind events for dynamically created checkboxes
+            wrapper.querySelectorAll('.cb-import-opt').forEach(cb => {
+                cb.onchange = (e) => {
+                    importOptions[e.target.dataset.key] = e.target.checked;
+                };
+            });
+        }
+    };
+
+    textarea.addEventListener('input', (e) => processJson(e.target.value));
 
     // Paste Button
     wrapper.querySelector('#btn-paste').onclick = async () => {
         try {
             const text = await navigator.clipboard.readText();
-            if (text) textarea.value = text;
-            else showToast(i18n.t('toast_clipboard_empty'));
+            if (text) {
+                textarea.value = text;
+                processJson(text);
+            } else {
+                showToast(i18n.t('toast_clipboard_empty'));
+            }
         } catch (e) {
             showToast(i18n.t('toast_clipboard_denied'));
             textarea.focus();
-        }
-    };
-
-    // Import Button
-    wrapper.querySelector('#btn-do-import').onclick = () => {
-        const text = textarea.value;
-        if (!text.trim()) {
-            showToast(i18n.t('toast_import_empty'));
-            return;
-        }
-
-        if (Storage.importData(text)) {
-            closeModal();
-            showToast(i18n.t('toast_import_success'));
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            showToast(i18n.t('toast_import_invalid'));
         }
     };
 
@@ -6530,9 +6633,39 @@ export function renderImportModal() {
         reader.onload = (ev) => {
             const content = ev.target.result;
             textarea.value = content;
+            processJson(content);
             showToast(i18n.t('toast_file_loaded'));
         };
         reader.readAsText(file);
+    };
+
+    // Mode Radios
+    wrapper.querySelectorAll('input[name="importMode"]').forEach(rb => {
+        rb.onchange = (e) => {
+            importOptions.overwriteMode = e.target.value === 'overwrite';
+        };
+    });
+
+    // Import Button
+    wrapper.querySelector('#btn-do-import').onclick = () => {
+        if (!currentAnalysis || !currentAnalysis.isValid) return;
+
+        const btn = wrapper.querySelector('#btn-do-import');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner" style="width:20px;height:20px;display:inline-block;vertical-align:middle;margin-right:8px;"></span> ...';
+
+        setTimeout(() => {
+            if (Storage.importData(textarea.value, importOptions)) {
+                closeModal();
+                showToast(i18n.t('toast_import_success'), "success");
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast(i18n.t('toast_import_invalid'), "error");
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }, 100);
     };
 
     openModal(wrapper);
@@ -6577,17 +6710,26 @@ export function renderAdvancedShareModal(beer, userRating) {
 }
 
 // --- NEW EXPORT MODAL ---
-export function renderExportModal(defaultScope = 'all') {
+export function renderExportModal() {
     const wrapper = document.createElement('div');
     wrapper.className = 'modal-content';
     wrapper.style.textAlign = 'center';
 
-    let currentScope = defaultScope;
     let currentMode = 'file';
-    let selectedCustomIds = [];
     let downloadMode = false;
 
+    let exportOptions = {
+        exportCustom: true,
+        exportRatings: true,
+        exportHistory: true,
+        exportTheme: true,
+        exportBac: true,
+        exportPrefs: true,
+        exportTemplate: true
+    };
+
     let allCustomBeers = [];
+    let selectedCustomIds = [];
     if (Storage.getCustomBeers) {
         allCustomBeers = Storage.getCustomBeers();
         selectedCustomIds = allCustomBeers.map(b => b.id);
@@ -6595,10 +6737,14 @@ export function renderExportModal(defaultScope = 'all') {
 
     const sec = `background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px;margin-bottom:14px;text-align:left;`;
     const secHead = (icon, text) => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span style="font-size:1rem;">${icon}</span><strong style="color:var(--accent-gold);font-size:0.8rem;text-transform:uppercase;letter-spacing:0.5px;">${text}</strong></div>`;
-    const mkScopeBtn = (val, label) => {
-        const a = currentScope === val;
-        return `<button class="btn-scope" data-scope="${val}" style="flex:1;padding:10px 6px;border-radius:10px;border:1px solid ${a?'var(--accent-gold)':'rgba(255,255,255,0.1)'};background:${a?'var(--accent-gold)':'rgba(255,255,255,0.04)'};color:${a?'#000':'#aaa'};font-size:0.8rem;font-weight:${a?'700':'500'};cursor:pointer;transition:all 0.2s;">${label}</button>`;
-    };
+    
+    const mkCheckbox = (key, label) => `
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;">
+            <input type="checkbox" class="cb-export-opt" data-key="${key}" ${exportOptions[key] ? 'checked' : ''} style="accent-color:var(--accent-gold);width:16px;height:16px;">
+            <span style="font-size:0.85rem;color:#ddd;">${label}</span>
+        </label>
+    `;
+
     const mkModeBtn = (id, label, val) => {
         const a = currentMode === val;
         return `<button id="${id}" style="flex:1;padding:10px 6px;border-radius:10px;border:1px solid ${a?'var(--accent-gold)':'rgba(255,255,255,0.08)'};background:${a?'rgba(245,158,11,0.12)':'rgba(255,255,255,0.02)'};color:${a?'var(--accent-gold)':'#888'};font-size:0.78rem;font-weight:${a?'600':'400'};cursor:pointer;transition:all 0.2s;">${label}</button>`;
@@ -6606,9 +6752,9 @@ export function renderExportModal(defaultScope = 'all') {
 
     const renderContent = () => {
         let customSelectionHTML = '';
-        if (currentScope === 'custom' && allCustomBeers.length > 0) {
+        if (exportOptions.exportCustom && allCustomBeers.length > 0) {
             customSelectionHTML = `
-                <div style="background:rgba(0,0,0,0.3);padding:10px;border-radius:8px;margin-top:10px;max-height:140px;overflow-y:auto;border:1px solid rgba(255,255,255,0.06);">
+                <div style="background:rgba(0,0,0,0.3);padding:10px;border-radius:8px;margin-top:5px;max-height:140px;overflow-y:auto;border:1px solid rgba(255,255,255,0.06);margin-left:24px;">
                     <div style="font-size:0.72rem;color:#666;margin-bottom:6px;">${i18n.t('share_selection_desc')}</div>
                     ${allCustomBeers.map(b => `
                         <label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;">
@@ -6619,16 +6765,6 @@ export function renderExportModal(defaultScope = 'all') {
                 </div>`;
         }
 
-        const modeDesc = currentMode === 'file' ? i18n.t('export_method_file_desc')
-            : currentMode === 'url' ? `<div style="margin-bottom:8px;">${i18n.t('export_url_type_label')}</div>
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:5px;font-size:0.82rem;color:#ccc;">
-                    <input type="radio" name="urlTxType" class="rb-url-type" value="import" ${!downloadMode?'checked':''} style="accent-color:var(--accent-gold);"> ${i18n.t('export_url_import')}
-                </label>
-                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.82rem;color:#ccc;">
-                    <input type="radio" name="urlTxType" class="rb-url-type" value="download" ${downloadMode?'checked':''} style="accent-color:var(--accent-gold);"> ${i18n.t('export_url_download')}
-                </label>`
-            : i18n.t('export_method_text_desc');
-
         wrapper.innerHTML = `
             <div style="text-align:center;margin-bottom:18px;">
                 <div style="font-size:2.4rem;margin-bottom:6px;filter:drop-shadow(0 2px 8px rgba(245,158,11,0.3));">💾</div>
@@ -6638,12 +6774,16 @@ export function renderExportModal(defaultScope = 'all') {
 
             <div style="${sec}">
                 ${secHead('📦', i18n.t('export_scope_label'))}
-                <div style="display:flex;gap:8px;">
-                    ${mkScopeBtn('all', i18n.t('export_scope_all'))}
-                    ${mkScopeBtn('custom', i18n.t('export_scope_custom'))}
-                    ${mkScopeBtn('ratings', i18n.t('export_scope_ratings'))}
+                <div style="display:flex;flex-direction:column;gap:2px;">
+                    ${mkCheckbox('exportCustom', i18n.t('export_opt_custom'))}
+                    ${customSelectionHTML}
+                    ${mkCheckbox('exportRatings', i18n.t('export_opt_ratings'))}
+                    ${mkCheckbox('exportHistory', i18n.t('export_opt_history'))}
+                    ${mkCheckbox('exportBac', i18n.t('export_opt_bac'))}
+                    ${mkCheckbox('exportTheme', i18n.t('export_opt_theme'))}
+                    ${mkCheckbox('exportPrefs', i18n.t('export_opt_prefs'))}
+                    ${mkCheckbox('exportTemplate', i18n.t('export_opt_template'))}
                 </div>
-                ${customSelectionHTML}
             </div>
 
             <div style="${sec}">
@@ -6653,9 +6793,6 @@ export function renderExportModal(defaultScope = 'all') {
                     ${mkModeBtn('mode-url', i18n.t('export_method_url'), 'url')}
                     ${mkModeBtn('mode-text', i18n.t('export_method_text'), 'text')}
                 </div>
-                <div style="background:rgba(0,0,0,0.25);padding:10px 12px;border-radius:8px;font-size:0.8rem;color:#999;line-height:1.5;">
-                    ${modeDesc}
-                </div>
             </div>
 
             <button id="btn-do-export" class="btn-primary" style="width:100%;margin-top:4px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;font-weight:bold;padding:14px;font-size:1rem;border-radius:12px;box-shadow:0 4px 20px rgba(245,158,11,0.3);letter-spacing:0.3px;">
@@ -6663,12 +6800,16 @@ export function renderExportModal(defaultScope = 'all') {
             </button>
         `;
 
-        // Bind Scope
-        wrapper.querySelectorAll('.btn-scope').forEach(btn => {
-            btn.onclick = () => { currentScope = btn.dataset.scope; renderContent(); };
+        // Bind Option Checkboxes
+        wrapper.querySelectorAll('.cb-export-opt').forEach(cb => {
+            cb.onchange = (e) => {
+                const key = e.target.dataset.key;
+                exportOptions[key] = e.target.checked;
+                if (key === 'exportCustom') renderContent(); // re-render to show/hide sub-list
+            };
         });
 
-        // Bind Checkboxes
+        // Bind Custom Beer Checkboxes
         wrapper.querySelectorAll('.cb-custom').forEach(cb => {
             cb.onchange = (e) => {
                 if (e.target.checked) {
@@ -6684,11 +6825,6 @@ export function renderExportModal(defaultScope = 'all') {
         wrapper.querySelector('#mode-url').onclick = () => { currentMode = 'url'; renderContent(); };
         wrapper.querySelector('#mode-text').onclick = () => { currentMode = 'text'; renderContent(); };
 
-        // Bind URL Type Radio
-        wrapper.querySelectorAll('.rb-url-type').forEach(rb => {
-            rb.onchange = (e) => { downloadMode = e.target.value === 'download'; };
-        });
-
         // Bind Action
         wrapper.querySelector('#btn-do-export').onclick = async () => {
             const btn = wrapper.querySelector('#btn-do-export');
@@ -6696,22 +6832,20 @@ export function renderExportModal(defaultScope = 'all') {
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner" style="width:20px;height:20px;display:inline-block;vertical-align:middle;margin-right:8px;"></span> ...';
 
-            let idsToExport = currentScope === 'custom' ? selectedCustomIds : null;
+            // Build options object
+            const finalOptions = { ...exportOptions };
+            finalOptions.ids = finalOptions.exportCustom ? selectedCustomIds : null;
 
             setTimeout(async () => {
                 if (currentMode === 'file') {
-                    const count = Storage.triggerExportFile(currentScope, idsToExport);
-                    if (count > 0) {
-                        showToast(i18n.t('toast_export_success'), "success");
-                        closeModal();
-                    } else {
-                        showToast(i18n.t('toast_nothing_export'), "warning");
-                        btn.disabled = false; btn.innerHTML = originalText;
-                    }
+                    // triggerExportFile uses options now
+                    Storage.exportDataAdvanced(finalOptions);
+                    showToast(i18n.t('toast_export_success'), "success");
+                    closeModal();
                 } else if (currentMode === 'url') {
-                    const link = Storage.getShareableLink(currentScope, idsToExport, downloadMode);
+                    const link = Storage.getShareableLink(finalOptions, downloadMode);
                     if (link) {
-                        showLinkResult(link, currentScope);
+                        showLinkResult(link, 'all');
                     } else {
                         showToast(i18n.t('toast_export_error'), "error");
                         btn.disabled = false; btn.innerHTML = originalText;
