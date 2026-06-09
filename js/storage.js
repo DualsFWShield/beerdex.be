@@ -371,10 +371,18 @@ export function generateExportObject(options = {}) {
         exportObj.ratingTemplate = getRatingTemplate();
     }
 
-    // 2. Preferences, Theme, BAC
+    // 2. Preferences, Theme, BAC, Achievements, Stats Order, etc.
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('beerdex_pref_')) {
+        if (!key) continue;
+
+        if (key === 'beerdex_achievements' && (isLegacyAll || options.exportAchievements)) {
+            exportObj.preferences[key] = JSON.parse(localStorage.getItem(key) || '[]');
+        } else if (key === 'beerdex_stats_order' && (isLegacyAll || options.exportPrefs)) {
+            exportObj.preferences[key] = JSON.parse(localStorage.getItem(key) || '[]');
+        } else if (key === 'defaultMapScope' && (isLegacyAll || options.exportPrefs)) {
+            exportObj.preferences[key] = localStorage.getItem(key);
+        } else if (key.startsWith('beerdex_pref_')) {
             const prefKey = key.replace('beerdex_pref_', '');
             
             let shouldExport = false;
@@ -728,7 +736,7 @@ export function analyzeImportData(jsonString) {
     const result = {
         isValid: false, isSingleShare: false, exportDate: null,
         hasCustom: false, hasRatings: false, hasHistory: false,
-        hasTheme: false, hasBac: false, hasPrefs: false, hasTemplate: false,
+        hasTheme: false, hasBac: false, hasPrefs: false, hasTemplate: false, hasAchievements: false,
         customConflicts: 0, parsedData: null
     };
 
@@ -772,8 +780,9 @@ export function analyzeImportData(jsonString) {
         if (data.preferences && Object.keys(data.preferences).length > 0) {
             const prefKeys = Object.keys(data.preferences);
             if (prefKeys.includes('theme')) result.hasTheme = true;
+            if (prefKeys.includes('beerdex_achievements')) result.hasAchievements = true;
             if (prefKeys.some(k => k.startsWith('bac'))) result.hasBac = true;
-            if (prefKeys.some(k => k !== 'theme' && !k.startsWith('bac'))) result.hasPrefs = true;
+            if (prefKeys.some(k => k !== 'theme' && !k.startsWith('bac') && k !== 'beerdex_achievements')) result.hasPrefs = true;
         }
 
         return result;
@@ -792,6 +801,7 @@ export function mergeUserData(importedData, options = {}) {
         importBac: isLegacy ? true : options.importBac,
         importPrefs: isLegacy ? true : options.importPrefs,
         importTemplate: isLegacy ? true : options.importTemplate,
+        importAchievements: isLegacy ? true : options.importAchievements,
         overwriteMode: isLegacy ? false : options.overwriteMode
     };
 
@@ -881,17 +891,36 @@ export function mergeUserData(importedData, options = {}) {
         Object.keys(importedData.preferences).forEach(key => {
             const isTheme = key === 'theme';
             const isBac = key.startsWith('bac');
-            const isPref = !isTheme && !isBac;
+            const isAchievement = key === 'beerdex_achievements';
+            const isPref = !isTheme && !isBac && !isAchievement;
             
             let shouldImport = false;
             if (isTheme && opt.importTheme) shouldImport = true;
             if (isBac && opt.importBac) shouldImport = true;
             if (isPref && opt.importPrefs) shouldImport = true;
+            if (isAchievement && opt.importAchievements) shouldImport = true;
 
             if (shouldImport) {
                 const value = importedData.preferences[key];
-                const storageKey = key.startsWith('beerdex_') || key === 'defaultMapScope' ? key : `beerdex_pref_${key}`;
-                localStorage.setItem(storageKey, JSON.stringify(value));
+                
+                // For achievements, handle merge vs overwrite
+                if (isAchievement) {
+                    if (opt.overwriteMode) {
+                        localStorage.setItem(key, JSON.stringify(value));
+                    } else {
+                        // Merge achievements
+                        const localAch = JSON.parse(localStorage.getItem(key) || '[]');
+                        const importedAch = value || [];
+                        const merged = [...localAch];
+                        importedAch.forEach(id => {
+                            if (!merged.includes(id)) merged.push(id);
+                        });
+                        localStorage.setItem(key, JSON.stringify(merged));
+                    }
+                } else {
+                    const storageKey = key.startsWith('beerdex_') || key === 'defaultMapScope' ? key : `beerdex_pref_${key}`;
+                    localStorage.setItem(storageKey, JSON.stringify(value));
+                }
             }
         });
     }

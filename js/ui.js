@@ -5511,7 +5511,7 @@ function renderAchievementsList() {
 
             return `
         <div class="ach-item ${rarityClass}" style="opacity:${opacity}; filter:${filter}; position:relative; cursor:pointer;"
-    onclick="UI.showAchievementDetails('${safeTitle}', '${safeDesc}', '${safeIcon}', ${isUnlocked})" >
+    onclick="UI.showAchievementDetails('${safeTitle}', '${safeDesc}', '${safeIcon}', ${isUnlocked}, '${ach.rarity || ''}')" >
         <div class="ach-icon">${ach.icon}</div>
                     </div>`;
         }).join('');
@@ -6129,14 +6129,33 @@ function applyNoahPreset() {
     Storage.savePreference('activePreset', 'noah');
 }
 
-export function showAchievementDetails(title, desc, icon, isUnlocked) {
+export function showAchievementDetails(title, desc, icon, isUnlocked, rarity) {
     const wrapper = document.createElement('div');
     wrapper.className = 'modal-content text-center';
 
+    let rarityHTML = '';
+    if (rarity) {
+        let rarityKey = '';
+        let rarityColor = '#ccc';
+        if (rarity === 'commun') { rarityColor = '#2ecc71'; rarityKey = 'rarity_commun'; }
+        else if (rarity === 'rare') { rarityColor = '#3498db'; rarityKey = 'rarity_rare'; }
+        else if (rarity === 'super_rare') { rarityColor = '#00bcd4'; rarityKey = 'rarity_super_rare'; }
+        else if (rarity === 'epique') { rarityColor = '#9b59b6'; rarityKey = 'rarity_epique'; }
+        else if (rarity === 'mythique') { rarityColor = '#e74c3c'; rarityKey = 'rarity_mythique'; }
+        else if (rarity === 'legendaire') { rarityColor = '#f1c40f'; rarityKey = 'rarity_legendaire'; }
+        else if (rarity === 'ultra_legendaire') { rarityColor = '#ff00cc'; rarityKey = 'rarity_ultra_legendaire'; }
+
+        const rarityTranslated = i18n.t(rarityKey) || rarity;
+        rarityHTML = `<div style="display:inline-block; font-size:0.75rem; font-weight:800; color:${rarityColor}; background:rgba(255,255,255,0.05); padding:4px 12px; border-radius:20px; margin-bottom:15px; text-transform:uppercase; letter-spacing:1px; border:1px solid ${rarityColor}40;">${rarityTranslated}</div>`;
+    }
+
+    const iconFilter = isUnlocked ? 'drop-shadow(0 4px 12px rgba(255,255,255,0.1))' : 'grayscale(100%) opacity(50%) drop-shadow(0 4px 12px rgba(255,255,255,0.05))';
+
     wrapper.innerHTML = `
-        <div style="font-size:4rem; margin-bottom:20px; filter:${isUnlocked ? 'none' : 'grayscale(100%)'}; opacity:${isUnlocked ? '1' : '0.5'};">${icon}</div>
-        <h2 style="color:var(--accent-gold); margin-bottom:10px; font-family:'Russo One';">${title}</h2>
-        <p style="font-size:1.1rem; color:#ddd; margin-bottom:30px; line-height:1.5;">
+        <div style="font-size:4rem; margin-bottom:20px; filter:${iconFilter};">${icon}</div>
+        <h2 style="color:var(--accent-gold); margin-bottom:8px; font-family:'Russo One';">${title}</h2>
+        ${rarityHTML}
+        <p style="font-size:1.05rem; color:#ccc; margin-bottom:25px; line-height:1.5; padding:0 10px;">
             ${desc}
         </p>
         <button class="btn-primary" onclick="UI.closeModal()">${i18n.t('btn_close')}</button>
@@ -6470,6 +6489,7 @@ export function renderImportModal() {
         importBac: true,
         importPrefs: true,
         importTemplate: true,
+        importAchievements: true,
         overwriteMode: false
     };
 
@@ -6587,13 +6607,14 @@ export function renderImportModal() {
             scopeContainer.style.display = 'block';
             chkContainer.innerHTML = '';
             let html = '';
-            if (currentAnalysis.hasCustom) html += mkCheckbox('importCustom', i18n.t('export_opt_custom'));
-            if (currentAnalysis.hasRatings) html += mkCheckbox('importRatings', i18n.t('export_opt_ratings'));
-            if (currentAnalysis.hasHistory) html += mkCheckbox('importHistory', i18n.t('export_opt_history'));
-            if (currentAnalysis.hasBac) html += mkCheckbox('importBac', i18n.t('export_opt_bac'));
-            if (currentAnalysis.hasTheme) html += mkCheckbox('importTheme', i18n.t('export_opt_theme'));
-            if (currentAnalysis.hasPrefs) html += mkCheckbox('importPrefs', i18n.t('export_opt_prefs'));
-            if (currentAnalysis.hasTemplate) html += mkCheckbox('importTemplate', i18n.t('export_opt_template'));
+            if (currentAnalysis.hasCustom) html += mkCheckbox('importCustom', i18n.t('export_opt_custom') || 'Bières Personnalisées');
+            if (currentAnalysis.hasRatings) html += mkCheckbox('importRatings', i18n.t('export_opt_ratings') || 'Notes');
+            if (currentAnalysis.hasHistory) html += mkCheckbox('importHistory', i18n.t('export_opt_history') || 'Historique');
+            if (currentAnalysis.hasBac) html += mkCheckbox('importBac', i18n.t('export_opt_bac') || 'Profil Alcoolémie');
+            if (currentAnalysis.hasTheme) html += mkCheckbox('importTheme', i18n.t('export_opt_theme') || 'Thème');
+            if (currentAnalysis.hasPrefs) html += mkCheckbox('importPrefs', i18n.t('export_opt_prefs') || 'Préférences');
+            if (currentAnalysis.hasTemplate) html += mkCheckbox('importTemplate', i18n.t('export_opt_template') || 'Modèle Notation');
+            if (currentAnalysis.hasAchievements) html += mkCheckbox('importAchievements', i18n.t('export_opt_achievements') || 'Succès');
             
             chkContainer.innerHTML = html;
 
@@ -6725,7 +6746,8 @@ export function renderExportModal() {
         exportTheme: true,
         exportBac: true,
         exportPrefs: true,
-        exportTemplate: true
+        exportTemplate: true,
+        exportAchievements: true
     };
 
     let allCustomBeers = [];
@@ -6775,14 +6797,15 @@ export function renderExportModal() {
             <div style="${sec}">
                 ${secHead('📦', i18n.t('export_scope_label'))}
                 <div style="display:flex;flex-direction:column;gap:2px;">
-                    ${mkCheckbox('exportCustom', i18n.t('export_opt_custom'))}
+                    ${mkCheckbox('exportCustom', i18n.t('export_opt_custom') || 'Bières Personnalisées')}
                     ${customSelectionHTML}
-                    ${mkCheckbox('exportRatings', i18n.t('export_opt_ratings'))}
-                    ${mkCheckbox('exportHistory', i18n.t('export_opt_history'))}
-                    ${mkCheckbox('exportBac', i18n.t('export_opt_bac'))}
-                    ${mkCheckbox('exportTheme', i18n.t('export_opt_theme'))}
-                    ${mkCheckbox('exportPrefs', i18n.t('export_opt_prefs'))}
-                    ${mkCheckbox('exportTemplate', i18n.t('export_opt_template'))}
+                    ${mkCheckbox('exportRatings', i18n.t('export_opt_ratings') || 'Notes')}
+                    ${mkCheckbox('exportHistory', i18n.t('export_opt_history') || 'Historique')}
+                    ${mkCheckbox('exportBac', i18n.t('export_opt_bac') || 'Profil Alcoolémie')}
+                    ${mkCheckbox('exportTheme', i18n.t('export_opt_theme') || 'Thème')}
+                    ${mkCheckbox('exportPrefs', i18n.t('export_opt_prefs') || 'Préférences')}
+                    ${mkCheckbox('exportTemplate', i18n.t('export_opt_template') || 'Modèle Notation')}
+                    ${mkCheckbox('exportAchievements', i18n.t('export_opt_achievements') || 'Succès')}
                 </div>
             </div>
 
