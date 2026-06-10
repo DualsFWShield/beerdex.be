@@ -601,6 +601,11 @@
     "patchnote_3.0.0_item_5": "🔧 Enrichment Script: Automated barcode fetching tool from OpenFoodFacts for the entire beer database.",
     "patchnote_3.0.0_title": "v3.0 — Offline Scanning \u0026 Community",
     "patchnote_versions": "4.1.0,4.0.0,3.1.0,3.0.0,2.9.0,2.8.0,2.7.0,2.6.0,2.5.0,2.1.0",
+
+    "migration_error": "Transfer error.",
+    "migration_success": "Migration completed successfully!",
+    "toast_migration_error": "Transfer error.",
+    "toast_migration_success": "Migration completed successfully!",
     "preset_comment": "Comment",
     "preset_default": "Standard",
     "preset_global_score": "Global Rating (/20)",

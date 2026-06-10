@@ -3364,6 +3364,8 @@ function _renderCalendar(container, allBeers, userData) {
 }
 
 export function renderBACStatsContent(container) {
+    Storage.savePreference('stats_bac_used', true);
+    window.dispatchEvent(new Event('beerdex-action'));
     if (!container) return;
     const rules = BAC.getCurrentRules() || { sanctionThreshold: 0.5, withdrawThreshold: 0.8 };
     const bacStatus = BAC.getBACStatus();
@@ -4398,6 +4400,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
             try {
                 await navigator.clipboard.writeText(code);
                 Storage.savePreference('theme_shared', true);
+                window.dispatchEvent(new Event('beerdex-action'));
                 showToast(i18n.t('toast_theme_exported') || 'Code thème copié dans le presse-papiers !', 'success');
             } catch {
                 prompt(i18n.t('toast_theme_export_manual') || 'Copiez ce code :', code);
@@ -4538,6 +4541,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
         toggleMuseum.onchange = (e) => {
             const enabled = e.target.checked;
             Storage.savePreference('museumThemeEnabled', enabled);
+            window.dispatchEvent(new Event('beerdex-action'));
             const museumLink = document.getElementById('css-museum');
             if (museumLink) museumLink.disabled = !enabled;
             if (enabled) {
@@ -4845,6 +4849,7 @@ export function renderDeduplicationWizard(allBeers) {
             const result = Storage.migrateBeerData(customBeer.id, officialBeer.id);
             if (result.success) {
                 Feedback.playSuccess();
+                setTimeout(() => window.location.reload(), 1500);
             } else {
                 showToast(i18n.t('migration_error') || 'Erreur.', 'error');
             }
@@ -5974,6 +5979,8 @@ const TutorialSystem = {
     },
 
     finish() {
+        Storage.savePreference('tutorial_completed', true);
+        window.dispatchEvent(new Event('beerdex-action'));
         this.panes.forEach(p => p.style.opacity = '0');
         this.spotlight.style.opacity = '0';
         this.tooltip.style.opacity = '0';
@@ -6915,7 +6922,7 @@ export function applyRarityAnimations(container) {
 // Patchnotes System                        //
 // ======================================= //
 
-const CURRENT_VERSION = '3.1.0';
+const CURRENT_VERSION = '4.1.0';
 
 
 export function checkPatchnotes() {
@@ -7252,6 +7259,8 @@ function _renderMigrationModal(match, allBeers, parentContainer, migrationPrompt
     document.getElementById('btn-migration-confirm').addEventListener('click', () => {
         const result = Storage.migrateBeerData(customBeer.id, officialBeer.id);
         if (result.success) {
+            Storage.savePreference('dedup_manually_triggered', true);
+            window.dispatchEvent(new Event('beerdex-action'));
             const idx = migrationPrompts.findIndex(m => m.customBeer.id === customBeer.id && m.officialBeer.id === officialBeer.id);
             if (idx !== -1) migrationPrompts.splice(idx, 1);
             modalContainer.style.display = 'none';
@@ -7262,6 +7271,9 @@ function _renderMigrationModal(match, allBeers, parentContainer, migrationPrompt
             const existingBanner = parentContainer.querySelector('.unrated-banner-modern');
             if (existingBanner) existingBanner.remove();
             renderUnratedBanner(allBeers, parentContainer, migrationPrompts);
+            
+            // Reload to apply state change
+            setTimeout(() => window.location.reload(), 1500);
         } else {
             showToast(i18n.t('migration_error') || 'Erreur lors du transfert.', 'error');
         }

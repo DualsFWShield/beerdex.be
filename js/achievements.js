@@ -286,9 +286,10 @@ export function checkAchievements(allBeers) {
                 stats.totalLiters += vol / 1000;
                 stats.volumes.add(vol);
 
-                if (h.timestamp) {
-                    allTimestamps.push(h.timestamp);
-                    const d = new Date(h.timestamp);
+                const ts = h.timestamp || h.date;
+                if (ts) {
+                    allTimestamps.push(new Date(ts).getTime());
+                    const d = new Date(ts);
                     const h_val = d.getHours();
                     if (h_val >= 5 && h_val < 11) stats.timeMatin++;
                     else if (h_val >= 11 && h_val < 14) stats.timeMidi++;
