@@ -843,7 +843,15 @@ export function mergeUserData(importedData, options = {}) {
                 }
                 if (opt.importHistory && (importedR.history !== undefined || importedR.count !== undefined)) {
                     localR.count = importedR.count;
-                    localR.history = importedR.history;
+                    if (importedR.history) {
+                        const normalized = importedR.history.map(item => 
+                            typeof item === 'string' ? { date: item, volume: 330 } : item
+                        );
+                        normalized.sort((a,b) => new Date(b.date) - new Date(a.date));
+                        localR.history = normalized;
+                    } else {
+                        localR.history = importedR.history;
+                    }
                 }
             } else {
                 // Merge mode
@@ -857,21 +865,36 @@ export function mergeUserData(importedData, options = {}) {
                 if (opt.importHistory && (importedR.history || importedR.count)) {
                     // Additive merge for history
                     let localHistory = localR.history || [];
-                    if (!localR.history && localR.count > 0) {
-                        // Legacy data might have count but no history. Just keep count or fake history.
-                        // For safety, we just merge arrays if both exist.
-                    }
-                    
                     const importedHistory = importedR.history || [];
+                    
                     const combined = [...localHistory];
                     
-                    importedHistory.forEach(dateStr => {
-                        if (!combined.includes(dateStr)) combined.push(dateStr);
+                    importedHistory.forEach(item => {
+                        // Normalize item to object format
+                        const normItem = typeof item === 'string' ? { date: item, volume: 330 } : item;
+                        
+                        // Check if an entry with the exact same date already exists
+                        const exists = combined.some(existing => {
+                            const existingDate = typeof existing === 'string' ? existing : existing.date;
+                            // Compare timestamps to handle minor formatting differences
+                            return new Date(existingDate).getTime() === new Date(normItem.date).getTime();
+                        });
+                        
+                        if (!exists) {
+                            combined.push(normItem);
+                        }
                     });
                     
-                    combined.sort((a,b) => new Date(b) - new Date(a));
-                    localR.history = combined;
-                    localR.count = combined.length || (localR.count || 0) + (importedR.count || 0); // fallback to count sum if no history
+                    // Normalize all entries in combined just in case localHistory had strings
+                    const normalizedCombined = combined.map(item => 
+                        typeof item === 'string' ? { date: item, volume: 330 } : item
+                    );
+                    
+                    // Sort by date descending
+                    normalizedCombined.sort((a,b) => new Date(b.date) - new Date(a.date));
+                    
+                    localR.history = normalizedCombined;
+                    localR.count = normalizedCombined.length || (localR.count || 0) + (importedR.count || 0); // fallback to count sum if no history
                 }
             }
             
