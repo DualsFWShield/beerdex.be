@@ -218,6 +218,7 @@ function applyHeatmap(svg, stats, tooltip, mapConfig) {
             p.style.fill = fill;
             p.style.stroke = '#FFF';
             p.style.strokeWidth = '1.5px';
+            p.style.fillRule = 'evenodd'; // Fix potential filled holes in SVG
             p.parentNode.appendChild(p);
 
             const showTooltip = (e) => {
@@ -259,4 +260,10 @@ function applyHeatmap(svg, stats, tooltip, mapConfig) {
             };
         }
     });
+
+    // Ensure Brussels (enclave) is always drawn on top of Flemish Brabant
+    const bruPath = svg.querySelector('#BE-BRU');
+    if (bruPath && stats['BE-BRU']) {
+        bruPath.parentNode.appendChild(bruPath);
+    }
 }
