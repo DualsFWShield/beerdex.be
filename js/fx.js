@@ -7,9 +7,12 @@ export class FX {
         const xNorm = x / window.innerWidth;
         const yNorm = y / window.innerHeight;
 
+        const isMobile = window.innerWidth < 768;
+        const pCount = isMobile ? 20 : 50;
+
         if (window.confetti) {
             confetti({
-                particleCount: 50,
+                particleCount: pCount,
                 spread: 70,
                 origin: { x: xNorm, y: yNorm },
                 colors: [color, '#ffffff'],
@@ -21,14 +24,15 @@ export class FX {
 
     static confetti() {
         if (window.confetti) {
-            // premium skew
-            var duration = 3000;
+            const isMobile = window.innerWidth < 768;
+            var duration = isMobile ? 1000 : 3000;
             var end = Date.now() + duration;
+            var pCount = isMobile ? 2 : 5;
 
             (function frame() {
                 // launch a few confetti from the left edge
                 confetti({
-                    particleCount: 5,
+                    particleCount: pCount,
                     angle: 60,
                     spread: 55,
                     origin: { x: 0 },
@@ -36,7 +40,7 @@ export class FX {
                 });
                 // and launch a few from the right edge
                 confetti({
-                    particleCount: 5,
+                    particleCount: pCount,
                     angle: 120,
                     spread: 55,
                     origin: { x: 1 },
@@ -83,7 +87,9 @@ export class FX {
         document.body.appendChild(wrapper);
 
         // Add 3D Tilt & Gyroscope support for premium foils
-        if (typeof VanillaTilt !== 'undefined') {
+        // Only on non-touch devices
+        const isTouchPrimary = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+        if (!isTouchPrimary && typeof VanillaTilt !== 'undefined') {
             VanillaTilt.init(div, {
                 max: 15,
                 speed: 400,
@@ -132,6 +138,9 @@ export class FX {
         }, duration);
     }
     static particleExplosion(canvas, color, count = 100) {
+        const isMobile = window.innerWidth < 768;
+        const finalCount = isMobile ? Math.min(count, 30) : count;
+        
         const ctx = canvas.getContext('2d');
         const resize = () => {
             canvas.width = window.innerWidth;
@@ -165,7 +174,7 @@ export class FX {
             }
         }
 
-        for (let i = 0; i < count; i++) {
+        for (let i = 0; i < finalCount; i++) {
             particles.push(new Particle());
         }
 

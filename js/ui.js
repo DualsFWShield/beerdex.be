@@ -948,9 +948,9 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
 
     // Initialize premium 3D tilt effects — lazy, only on non-touch desktop
     // On mobile, VanillaTilt adds expensive touch/gyro listeners to every card.
-    // Only init on desktop (width > 768px).
-    const isMobile = window.innerWidth < 768;
-    if (!isMobile && typeof VanillaTilt !== 'undefined') {
+    // Only init on devices where hover is supported and primary pointer is fine.
+    const isTouchPrimary = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+    if (!isTouchPrimary && typeof VanillaTilt !== 'undefined') {
         setTimeout(() => {
             const cards = grid.querySelectorAll('.beer-card.drunk');
             VanillaTilt.init(cards, {
@@ -2094,7 +2094,8 @@ export function renderBeerDetail(beer, onSave) {
 
                 // Initialize Tilt on Reveal
                 setTimeout(() => {
-                    if (typeof VanillaTilt !== 'undefined') {
+                    const isTouchPrimary = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+                    if (!isTouchPrimary && typeof VanillaTilt !== 'undefined') {
                         VanillaTilt.init(overlay.querySelector('.reveal-card-wrapper'), {
                             max: 15,
                             speed: 400,

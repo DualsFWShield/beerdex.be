@@ -3678,3 +3678,64 @@ body.modal-open {
     color: #888;
     font-size: 0.68rem;
 }
+
+/* ======================================= */
+/* Mobile Performance Optimizations        */
+/* ======================================= */
+
+/* Add will-change to heavy animated elements to force GPU acceleration */
+.card-anim-ultra_legendary,
+.card-anim-ultra_legendary::before,
+.card-rarity-mythique::before,
+.card-rarity-mythique::after,
+.card-rarity-legendaire::before,
+.card-rarity-legendaire::after,
+.card-rarity-epique::before,
+.card-rarity-epique::after,
+.card-rarity-super_rare::before,
+.card-rarity-super_rare::after,
+.card-rarity-rare::before,
+.card-rarity-rare::after,
+.card-rarity-commun::after {
+    will-change: transform, opacity;
+}
+
+@media (max-width: 1024px) {
+    /* Disable expensive blend modes on mobile/tablets */
+    .card-anim-ultra_legendary::before,
+    .card-rarity-mythique::before,
+    .card-rarity-mythique::after,
+    .card-rarity-legendaire::before,
+    .card-rarity-legendaire::after,
+    .card-rarity-epique::before,
+    .card-rarity-epique::after,
+    .card-rarity-super_rare::before,
+    .card-rarity-super_rare::after,
+    .card-rarity-rare::before,
+    .card-rarity-rare::after,
+    .card-rarity-commun::after {
+        mix-blend-mode: normal !important;
+    }
+    
+    /* Reduce or remove heavy animated box-shadows/glows */
+    .card-anim-ultra_legendary {
+        animation: ultra-glow 3s ease-in-out infinite !important; /* Remove background-position animation */
+    }
+    .card-rarity-mythique {
+        box-shadow: none !important;
+    }
+    .card-rarity-epique {
+        box-shadow: none !important;
+    }
+    .card-rarity-legendaire {
+        box-shadow: none !important;
+    }
+    
+    /* Simplify keyframe animations by applying opacity instead of heavy calculations */
+    .card-rarity-mythique::before,
+    .card-rarity-mythique::after,
+    .card-rarity-epique::before,
+    .card-rarity-super_rare::before {
+        opacity: 0.5;
+    }
+}
