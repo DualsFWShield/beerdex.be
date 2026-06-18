@@ -350,7 +350,7 @@ export function triggerExportFile(scope = 'all', ids = null) {
 
 export function generateExportObject(options = {}) {
     const isLegacyAll = !options.exportCustom && !options.exportRatings && !options.exportHistory && 
-                        !options.exportTheme && !options.exportBac && !options.exportPrefs && !options.exportTemplate;
+                        !options.exportTheme && !options.exportBac && !options.exportPrefs && !options.exportTemplate && !options.exportAchievements;
     const scope = options.scope || 'all'; // Legacy support
 
     const exportObj = {
@@ -390,17 +390,12 @@ export function generateExportObject(options = {}) {
         }
     }
 
-    const ids = options.ids; // Array of string IDs or null
-
     // 3. Ratings & History
     if (isLegacyAll || scope === 'ratings' || options.exportRatings || options.exportHistory) {
         const allRatings = getAllUserData();
         exportObj.ratings = {};
         
-        const filterIds = ids && ids.length > 0;
-        
         Object.keys(allRatings).forEach(id => {
-            if (filterIds && !ids.includes(id)) return;
             
             const localData = allRatings[id];
             const exportItem = {};
@@ -410,6 +405,18 @@ export function generateExportObject(options = {}) {
                 if (localData.score !== undefined) {
                     exportItem.score = localData.score;
                     exportItem.comment = localData.comment;
+                    hasData = true;
+                }
+                if (localData.favorite !== undefined) {
+                    exportItem.favorite = localData.favorite;
+                    hasData = true;
+                }
+                if (localData.aromas !== undefined) {
+                    exportItem.aromas = localData.aromas;
+                    hasData = true;
+                }
+                if (localData.timestamp !== undefined) {
+                    exportItem.timestamp = localData.timestamp;
                     hasData = true;
                 }
             }
@@ -425,11 +432,12 @@ export function generateExportObject(options = {}) {
         });
     }
 
-    // 4. Custom Beers
+    // 4. Custom Beers (customIds only applies to custom beers, not ratings)
     if (isLegacyAll || scope === 'custom' || options.exportCustom) {
         const allCustoms = getCustomBeers();
-        if (ids && ids.length > 0) {
-            exportObj.customBeers = allCustoms.filter(b => ids.includes(String(b.id)));
+        const customIds = options.customIds; // Array of custom beer IDs or null
+        if (customIds && customIds.length > 0) {
+            exportObj.customBeers = allCustoms.filter(b => customIds.includes(String(b.id)));
         } else {
             exportObj.customBeers = allCustoms;
         }
@@ -832,6 +840,15 @@ export function mergeUserData(importedData, options = {}) {
                     localR.score = importedR.score;
                     localR.comment = importedR.comment;
                 }
+                if (opt.importRatings && importedR.favorite !== undefined) {
+                    localR.favorite = importedR.favorite;
+                }
+                if (opt.importRatings && importedR.aromas !== undefined) {
+                    localR.aromas = importedR.aromas;
+                }
+                if (opt.importRatings && importedR.timestamp !== undefined) {
+                    localR.timestamp = importedR.timestamp;
+                }
                 if (opt.importHistory && (importedR.history !== undefined || importedR.count !== undefined)) {
                     localR.count = importedR.count;
                     if (importedR.history) {
@@ -851,6 +868,20 @@ export function mergeUserData(importedData, options = {}) {
                     if (localR.score === undefined) {
                         localR.score = importedR.score;
                         localR.comment = importedR.comment;
+                    }
+                }
+                if (opt.importRatings && importedR.favorite !== undefined) {
+                    // Favorite: imported true wins over local
+                    if (importedR.favorite) localR.favorite = true;
+                }
+                if (opt.importRatings && importedR.aromas !== undefined) {
+                    // Aromas: only set if we don't have them
+                    if (!localR.aromas) localR.aromas = importedR.aromas;
+                }
+                if (opt.importRatings && importedR.timestamp !== undefined) {
+                    // Timestamp: keep earliest
+                    if (!localR.timestamp || new Date(importedR.timestamp) < new Date(localR.timestamp)) {
+                        localR.timestamp = importedR.timestamp;
                     }
                 }
                 if (opt.importHistory && (importedR.history || importedR.count)) {
@@ -889,8 +920,8 @@ export function mergeUserData(importedData, options = {}) {
                 }
             }
             
-            // Clean up if somehow empty
-            if (localR.score === undefined && !localR.count && (!localR.history || localR.history.length === 0)) {
+            // Clean up if somehow empty (preserve entries with favorites or aromas)
+            if (localR.score === undefined && !localR.count && (!localR.history || localR.history.length === 0) && !localR.favorite && !localR.aromas) {
                 delete localRatings[beerId];
             }
         });
