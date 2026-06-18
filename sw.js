@@ -23,6 +23,12 @@ const ASSETS = [
     './js/scanner.js',
     './js/share.js',
     './js/wrapped.js',
+    './js/widget-bridge.js',
+    './js/crashLogger.js',
+    './js/deduplicator.js',
+    './js/theme.js',
+    './js/utils.js',
+    './js/scanHandler.js',
     './js/vendor/lz-string.min.js',
     './js/vendor/qrcode.min.js',
     './js/vendor/html5-qrcode.min.js',
@@ -81,11 +87,8 @@ self.addEventListener('activate', event => {
 // Fetch Event
 self.addEventListener('fetch', event => {
     const url = new URL(event.request.url);
-    const isJS = url.pathname.endsWith('.js');
-    const isCSS = url.pathname.endsWith('.css');
     const isJSON = url.pathname.endsWith('.json') || url.search.includes('.json');
     const isImage = url.pathname.match(/\.(png|jpg|jpeg|gif|svg|webp|ico)$/i);
-    const isAppFile = ASSETS.some(a => url.pathname.endsWith(a.replace('./', '')));
     const isRoot = url.pathname === '/' || url.pathname === '/index.html';
     const isGoogleFont = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
 

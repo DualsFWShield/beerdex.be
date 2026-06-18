@@ -1,4 +1,5 @@
 import * as Storage from './storage.js';
+import * as Utils from './utils.js';
 
 // --- BAC (Blood Alcohol Content) Calculator ---
 // Uses the Widmark formula: 
@@ -35,31 +36,7 @@ export function getCurrentRules() {
     return BAC_RULES[country] || BAC_RULES[defaultCountry];
 }
 
-/**
- * Parses volume string (e.g. "33cl", "330 ml", "33") to ml
- */
-function parseVolumeToMl(volStr) {
-    if (!volStr) return 0;
-    if (typeof volStr === 'number') return volStr;
-    const str = String(volStr).toLowerCase().replace(',', '.');
-    const match = str.match(/([0-9.]+)/);
-    if (!match) return 0;
-    let val = parseFloat(match[1]);
 
-    // Explicit cases based on standard user patterns
-    if (str.includes('ml')) {
-        return val;
-    } else if (str.includes('cl')) {
-        return val * 10;
-    } else if (str.includes('l')) {
-        return val * 1000;
-    }
-
-    // Fallbacks if no unit is given
-    if (val > 0 && val < 5) return val * 1000;      // e.g. "0.33", "0.5" -> Liters
-    if (val >= 5 && val < 100) return val * 10;     // e.g. "25", "33", "50" -> Centiliters
-    return val; // Assume ML if > 100
-}
 
 /**
  * Parses ABV string (e.g. "8.5%", "8,5°", "8.5") to float
@@ -79,7 +56,7 @@ function parseAbv(abvStr) {
  * @param {number|string} abv Alcohol By Volume (percentage 0-100)
  */
 export function calculateAlcoholGrams(volumeMl, abv) {
-    const v = parseVolumeToMl(volumeMl);
+    const v = Utils.parseVolumeToMl(volumeMl);
     const a = parseAbv(abv);
     // formula: Volume (ml) * (ABV / 100) * 0.8 (density of alcohol)
     return v * (a / 100) * 0.8;
@@ -91,7 +68,7 @@ export function calculateAlcoholGrams(volumeMl, abv) {
 export function addDrinkToBAC(volumeMl, abv) {
     if (!Storage.getPreference('bac_enabled', true)) return null;
 
-    const vMl = parseVolumeToMl(volumeMl);
+    const vMl = Utils.parseVolumeToMl(volumeMl);
     const aPct = parseAbv(abv);
 
     if (vMl <= 0 || aPct <= 0) return null; // Invalid drink
@@ -119,7 +96,7 @@ export function addDrinkToBAC(volumeMl, abv) {
 export function removeDrinkFromBAC(volumeMl, abv) {
     if (!Storage.getPreference('bac_enabled', true)) return null;
 
-    const vMl = parseVolumeToMl(volumeMl);
+    const vMl = Utils.parseVolumeToMl(volumeMl);
     const aPct = parseAbv(abv);
 
     if (vMl <= 0 || aPct <= 0) return null;
@@ -574,7 +551,7 @@ export function logManualBAC(bacValue) {
 export function getSpeculativeBAC(volumeMl, abv) {
     if (!Storage.getPreference('bac_enabled', true)) return null;
 
-    const vMl = parseVolumeToMl(volumeMl);
+    const vMl = Utils.parseVolumeToMl(volumeMl);
     const aPct = parseAbv(abv);
     if (vMl <= 0 || aPct <= 0) return null;
 

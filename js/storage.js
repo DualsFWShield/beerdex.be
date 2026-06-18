@@ -1,10 +1,23 @@
+import * as Utils from './utils.js';
+
 const STORAGE_KEY_RATINGS = 'beerdex_ratings';
 const STORAGE_KEY_CUSTOM = 'beerdex_custom_beers';
 
+let _ratingsCache = null;
+let _ratingsCacheDirty = true;
+
+function _invalidateCache() {
+    _ratingsCacheDirty = true;
+}
+
 // Get all ratings/notes
 export function getAllUserData() {
-    const data = localStorage.getItem(STORAGE_KEY_RATINGS);
-    return data ? JSON.parse(data) : {};
+    if (_ratingsCacheDirty || !_ratingsCache) {
+        const data = localStorage.getItem(STORAGE_KEY_RATINGS);
+        _ratingsCache = data ? JSON.parse(data) : {};
+        _ratingsCacheDirty = false;
+    }
+    return _ratingsCache;
 }
 
 // Get specific beer rating
@@ -31,6 +44,7 @@ export function saveBeerRating(id, ratingData) {
     }
 
     localStorage.setItem(STORAGE_KEY_RATINGS, JSON.stringify(data));
+    _invalidateCache();
     autoBackup();
 }
 
@@ -53,6 +67,7 @@ export function toggleFavorite(id) {
 
     data[id].favorite = !data[id].favorite;
     localStorage.setItem(STORAGE_KEY_RATINGS, JSON.stringify(data));
+    _invalidateCache();
     autoBackup();
     return data[id].favorite;
 }
@@ -156,6 +171,7 @@ export function migrateBeerData(oldId, newId) {
     // Remove old entry from ratings
     delete data[oldId];
     localStorage.setItem(STORAGE_KEY_RATINGS, JSON.stringify(data));
+    _invalidateCache();
 
     // Remove from custom beers list
     deleteCustomBeer(oldId);
@@ -166,22 +182,6 @@ export function migrateBeerData(oldId, newId) {
 }
 
 // --- Consumption Logic ---
-
-export function parseVolumeToMl(volStr) {
-    if (!volStr) return 330; // Default
-    let str = volStr.toLowerCase().replace(',', '.').replace(/\s/g, '');
-    let val = parseFloat(str);
-    if (isNaN(val)) return 330;
-
-    if (str.includes('ml')) return val;
-    if (str.includes('cl')) return val * 10;
-    if (str.includes('l')) return val * 1000;
-
-    // Fallback based on magnitude
-    if (val < 10) return val * 1000; // Assume Liters
-    if (val < 100) return val * 10; // Assume cl
-    return val; // Assume ml
-}
 
 export function addConsumption(id, volumeStr, customDate = null) {
     const data = getAllUserData();
@@ -200,7 +200,7 @@ export function addConsumption(id, volumeStr, customDate = null) {
 
     data[id].count = (data[id].count || 0) + 1;
 
-    const volMl = parseVolumeToMl(volumeStr);
+    const volMl = Utils.parseVolumeToMl(volumeStr) || 330;
 
     if (!data[id].history) data[id].history = [];
     data[id].history.push({
@@ -209,6 +209,8 @@ export function addConsumption(id, volumeStr, customDate = null) {
     });
 
     localStorage.setItem(STORAGE_KEY_RATINGS, JSON.stringify(data));
+    _invalidateCache();
+    window.dispatchEvent(new Event('beerdex-data-updated'));
     autoBackup();
     return data[id];
 }
@@ -228,6 +230,8 @@ export function removeConsumption(id) {
             data[id].count = 0;
         }
         localStorage.setItem(STORAGE_KEY_RATINGS, JSON.stringify(data));
+        _invalidateCache();
+        window.dispatchEvent(new Event('beerdex-data-updated'));
         autoBackup();
         return data[id];
     }
@@ -267,6 +271,7 @@ export function resetRatingsOnly() {
         }
     });
     localStorage.setItem(STORAGE_KEY_RATINGS, JSON.stringify(data));
+    _invalidateCache();
 }
 
 export function resetFavoritesOnly() {
@@ -277,6 +282,7 @@ export function resetFavoritesOnly() {
         }
     });
     localStorage.setItem(STORAGE_KEY_RATINGS, JSON.stringify(data));
+    _invalidateCache();
 }
 
 export function resetConsumptionHistoryOnly() {
@@ -290,6 +296,7 @@ export function resetConsumptionHistoryOnly() {
         }
     });
     localStorage.setItem(STORAGE_KEY_RATINGS, JSON.stringify(data));
+    _invalidateCache();
 }
 
 export function resetCustomBeersOnly() {
@@ -302,25 +309,9 @@ export function resetAllData() {
             localStorage.removeItem(key);
         }
     });
+    _invalidateCache();
 }
 
-// --- Specific Clears (Used by UI Danger Zone) ---
-
-export function clearRatings() {
-    resetRatingsOnly();
-}
-
-export function clearCustomBeers() {
-    resetCustomBeersOnly();
-}
-
-export function clearHistory() {
-    resetConsumptionHistoryOnly();
-}
-
-export function clearFavorites() {
-    resetFavoritesOnly();
-}
 
 // --- Generic Preferences ---
 export function getPreference(key, defaultValue) {
@@ -904,6 +895,7 @@ export function mergeUserData(importedData, options = {}) {
             }
         });
         localStorage.setItem(STORAGE_KEY_RATINGS, JSON.stringify(localRatings));
+        _invalidateCache();
     }
 
     // 3. Template

@@ -11,10 +11,6 @@ import { Analytics } from './analytics.js';
 
 let _allBeersProvider = null;
 
-export function init() {
-    // This is called on load, but we might wait for start() to actually process complex actions
-    // Simple actions like 'import' can be handled if dependencies are ready
-}
 
 /**
  * Main entry point called by app.js when data is ready

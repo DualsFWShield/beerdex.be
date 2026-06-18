@@ -16,6 +16,7 @@ import { AromaWheel } from './aroma-wheel.js';
 import * as CrashLogger from './crashLogger.js';
 import * as Deduplicator from './deduplicator.js';
 import * as Theme from './theme.js';
+import * as Utils from './utils.js';
 
 let editModeBeer = null;
 // We assume global libs: QRCode, Html5QrcodeScanner (handled via CDN)
@@ -880,7 +881,7 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
 
         // Stats Badges
         const abv = beer.alcohol ? `<span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px; font-size:0.7rem;">${beer.alcohol}</span>` : '';
-        const vol = beer.volume ? `<span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px; font-size:0.7rem;">${beer.volume}</span>` : '';
+        const vol = beer.volume ? `<span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px; font-size:0.7rem;">${Utils.formatVolume(beer.volume)}</span>` : '';
         const typeBadge = beer.type ? `<span style="background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px; font-size:0.7rem;">${beer.type}</span>` : '';
 
         // Determine correct fallback/default image based on volume
@@ -1101,7 +1102,7 @@ function createApiBeerCard(beer) {
             <h3 class="beer-title">${beer.title}</h3>
             <p class="beer-brewery">${beer.brewery}</p>
             <div style="display:flex; gap:5px; justify-content:center; margin-top:5px; color:#aaa; flex-wrap:wrap;">
-                <span>${beer.alcohol}</span> <span>${beer.volume}</span>
+                <span>${beer.alcohol}</span> <span>${Utils.formatVolume(beer.volume)}</span>
             </div>
             <button class="btn-add-api" style="width:100%; margin-top:10px; font-size:0.8rem; padding:5px; background:#333; color:#fff; border:1px solid #555;">${i18n.t('btn_add_api')}</button>
         </div>
@@ -1542,7 +1543,7 @@ export function renderBeerDetail(beer, onSave) {
     consumptionWrapper.style.cssText = 'background:var(--bg-card); padding:15px; border-radius:12px; margin-bottom:20px; text-align:center;';
 
     // Default Volume logic: always use the beer's own volume
-    let defaultVol = beer.volume || '33cl';
+    let defaultVol = Utils.formatVolume(beer.volume) || '33cl';
     // For kegs (>1L), default to 50cl since nobody drinks 20L at once
     const volStr = defaultVol.toLowerCase();
     const numericVol = parseFloat(volStr) || 0;
@@ -1681,7 +1682,7 @@ export function renderBeerDetail(beer, onSave) {
                         <p style="color: #888;">${beer.brewery} - ${beer.type}</p>
                         <div style="display: flex; justify-content: center; gap: 15px; margin-top: 5px; font-size: 0.8rem; color: #aaa;">
                             <span>${beer.alcohol || '?'}</span>
-                            <span>${beer.volume || '?'}</span>
+                            <span>${Utils.formatVolume(beer.volume) || '?'}</span>
                         </div>
                         <div id="rarity-badge-container" style="margin-top:10px; display:flex; justify-content:center; gap:5px; flex-wrap:wrap;">
                             <!-- Auto-injected by JS logic below -->
@@ -2188,7 +2189,7 @@ export function renderBeerDetail(beer, onSave) {
 
     wrapper.querySelector('#btn-undrink').onclick = () => {
         const volInput = wrapper.querySelector('#consumption-volume');
-        const vol = volInput ? volInput.value : beer.volume;
+        const vol = Utils.formatVolume(volInput ? volInput.value : beer.volume);
         const newData = Storage.removeConsumption(beer.id);
         if (newData) {
             // --- BAC INTEGRATION ---

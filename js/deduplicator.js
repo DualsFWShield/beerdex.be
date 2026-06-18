@@ -6,78 +6,9 @@
  */
 
 import * as Storage from './storage.js';
+import * as Utils from './utils.js';
 
-// ============================== //
-// Levenshtein Distance           //
-// ============================== //
 
-function levenshtein(a, b) {
-    if (!a || !b) return Math.max((a || '').length, (b || '').length);
-    
-    const la = a.length;
-    const lb = b.length;
-    const dp = Array.from({ length: la + 1 }, () => new Array(lb + 1).fill(0));
-
-    for (let i = 0; i <= la; i++) dp[i][0] = i;
-    for (let j = 0; j <= lb; j++) dp[0][j] = j;
-
-    for (let i = 1; i <= la; i++) {
-        for (let j = 1; j <= lb; j++) {
-            const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-            dp[i][j] = Math.min(
-                dp[i - 1][j] + 1,      // Deletion
-                dp[i][j - 1] + 1,      // Insertion
-                dp[i - 1][j - 1] + cost // Substitution
-            );
-        }
-    }
-    return dp[la][lb];
-}
-
-/**
- * Compute similarity ratio between two strings (0 to 1).
- */
-function similarity(a, b) {
-    if (!a && !b) return 1;
-    if (!a || !b) return 0;
-    const dist = levenshtein(a, b);
-    const maxLen = Math.max(a.length, b.length);
-    return maxLen === 0 ? 1 : 1 - dist / maxLen;
-}
-
-/**
- * Normalize a beer name for comparison.
- * Lowercases, strips accents, removes extra whitespace & special chars.
- */
-function normalize(str) {
-    if (!str) return '';
-    return str
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '') // Strip accents
-        .replace(/[^a-z0-9\s]/g, '')     // Remove special chars
-        .replace(/\s+/g, ' ')            // Collapse spaces
-        .trim();
-}
-
-function parseDegree(deg) {
-    if (!deg) return 0;
-    const s = String(deg).replace(/[^0-9.,]/g, '').replace(',', '.');
-    return parseFloat(s) || 0;
-}
-
-function parseVolumeToMl(vol) {
-    if (!vol) return 0;
-    const s = String(vol).toLowerCase().replace(/\s/g, '').replace(',', '.');
-    const match = s.match(/([0-9.]+)([a-z]+)/);
-    if (!match) return 0;
-    let val = parseFloat(match[1]);
-    const unit = match[2];
-    if (unit === 'l') return val * 1000;
-    if (unit === 'cl') return val * 10;
-    if (unit === 'ml') return val;
-    return 0;
-}
 
 // ============================== //
 // Find Matches: Custom vs DB     //
@@ -102,10 +33,10 @@ export function findMatches(customBeers, officialBeers, threshold = 0.60, ignore
     const matches = [];
 
     for (const custom of customBeers) {
-        const customTitle = normalize(custom.title);
-        const customBrewery = normalize(custom.brewery);
-        const customDeg = parseDegree(custom.degree);
-        const customVol = parseVolumeToMl(custom.volume);
+        const customTitle = Utils.normalize(custom.title);
+        const customBrewery = Utils.normalize(custom.brewery);
+        const customDeg = Utils.parseDegree(custom.degree);
+        const customVol = Utils.parseVolumeToMl(custom.volume);
 
         let bestMatch = null;
         let bestScore = 0;
@@ -114,13 +45,13 @@ export function findMatches(customBeers, officialBeers, threshold = 0.60, ignore
             // Skip if the official beer is itself a custom beer
             if (String(official.id).startsWith('CUSTOM_')) continue;
 
-            const titleSim = similarity(customTitle, normalize(official.title));
-            const brewerySim = similarity(customBrewery, normalize(official.brewery));
+            const titleSim = Utils.similarity(customTitle, Utils.normalize(official.title));
+            const brewerySim = Utils.similarity(customBrewery, Utils.normalize(official.brewery));
             
-            const officialDeg = parseDegree(official.degree);
+            const officialDeg = Utils.parseDegree(official.degree);
             const degreeMatch = (customDeg > 0 && customDeg === officialDeg) ? 1 : 0;
 
-            const officialVol = parseVolumeToMl(official.volume);
+            const officialVol = Utils.parseVolumeToMl(official.volume);
             const volumeMatch = (customVol > 0 && customVol === officialVol) ? 1 : 0;
 
             let points = 0;
@@ -196,8 +127,8 @@ export function findOfficialDuplicates(officialBeers) {
                 continue;
             }
 
-            const titleSim = similarity(normalize(beers[i].title), normalize(beers[j].title));
-            const brewerySim = similarity(normalize(beers[i].brewery), normalize(beers[j].brewery));
+            const titleSim = Utils.similarity(Utils.normalize(beers[i].title), Utils.normalize(beers[j].title));
+            const brewerySim = Utils.similarity(Utils.normalize(beers[i].brewery), Utils.normalize(beers[j].brewery));
             const combined = titleSim * 0.7 + brewerySim * 0.3;
 
             if (combined > 0.90) {

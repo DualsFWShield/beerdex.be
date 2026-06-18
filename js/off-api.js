@@ -86,7 +86,7 @@ function mapProductToBeer(product) {
     const categories = (product.categories || '') + ' ' + (product.categories_tags || []).join(' ');
 
     // 0. Beer Validation (Reject non-beers)
-    const validKeywords = /bi[eè]re|beer|bier|cerveza|birra|pivo|ipa|ale|stout|porter|lager|pils|lambic|gueuze|trappist|abbaye|brewery|brasserie|brauerei|cidre/i;
+    const validKeywords = /bi[eè]re|beer|bier|cerveza|birra|pivo|ipa|ale|stout|porter|lager|pils|lambic|gueuze|trappist|abbaye|brewery|brasserie|brauerei/i;
     const validationText = (rawTitle + ' ' + categories + ' ' + brands).toLowerCase();
 
     let isValidBeer = true;
@@ -98,10 +98,7 @@ function mapProductToBeer(product) {
 
     // 2. Data Cleaning
     rawTitle = rawTitle
-        .replace(/_/g, ' ') // Remove underscores from start
-        .replace(/BLE DUVEL V/i, 'Duvel') // Specific User Fix
-        .replace(/\bBLE\b/i, '') // Remove "BLE" orphan
-        .replace(/\bV\b/i, ''); // Remove "V" orphan
+        .replace(/_/g, ' '); // Remove underscores from start
 
     // Regex explanation:
     // \b\d+(?:\.|,)?\d*\s*(?:cl|ml|l)\b : Volume (33cl, 0.5l)
