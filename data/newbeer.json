@@ -13333,21 +13333,6 @@
         "alcohol":  "0°"
     },
     {
-        "id":  "PAIX_DIEU_TRIPEL_33CL",
-        "rarity_rank":  "Commun",
-        "volume":  "33cl",
-        "barrel_aged":  false,
-        "title":  "Paix Dieu Tripel - 33cl",
-        "ingredients":  "",
-        "type":  "Blonde",
-        "production_volume":  "Unknown",
-        "community_rating":  0,
-        "distribution":  "Unknown",
-        "image":  "images/beer/be/PAIX_DIEU_TRIPEL_33CL.png",
-        "brewery":  "Unknown",
-        "alcohol":  "0°"
-    },
-    {
         "id":  "LEFFE_BLOND_33CL",
         "rarity_rank":  "Commun",
         "volume":  "33cl",
