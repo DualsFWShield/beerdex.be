@@ -181,6 +181,129 @@ export function migrateBeerData(oldId, newId) {
     return { success: true, transferred: { count: oldData.count || 0, history: oldHistory.length } };
 }
 
+/**
+ * Cleanup orphaned user data entries whose beer IDs no longer exist in the database.
+ * This handles the case where beers are removed from JSON files (e.g. deduplication).
+ * 
+ * For each orphaned entry:
+ * 1. Try to find a fuzzy match in the current beer list (same beer under a different ID).
+ * 2. If a match is found, migrate (merge) the user data to the matched beer's ID.
+ * 3. If no match is found, remove the orphaned entry entirely.
+ * 
+ * This ensures the unique beer count stays accurate after DB changes.
+ * 
+ * @param {Array} allBeers - The full beer list currently loaded in the app
+ * @returns {{ migrated: number, removed: number, details: Array }}
+ */
+export function cleanupOrphanedUserData(allBeers) {
+    const data = getAllUserData();
+    const userIds = Object.keys(data);
+    const beerIdSet = new Set(allBeers.map(b => String(b.id)));
+
+    let migrated = 0;
+    let removed = 0;
+    const details = [];
+    let changed = false;
+
+    for (const userId of userIds) {
+        // Skip IDs that exist in the current DB
+        if (beerIdSet.has(userId)) continue;
+
+        // Skip custom beers and API beers — they are managed separately
+        if (userId.startsWith('CUSTOM_') || userId.startsWith('API_') || userId.startsWith('OFF_')) continue;
+
+        const userData = data[userId];
+        // Only care about entries that have actual consumption data
+        if ((!userData.count || userData.count === 0) && userData.score === undefined && !userData.favorite) {
+            // Empty entry, just remove silently
+            delete data[userId];
+            changed = true;
+            continue;
+        }
+
+        // Try to find a fuzzy match in the current beer list
+        // Extract meaningful parts from the ID to reconstruct a title for matching
+        // IDs look like: PAIX_DIEU_BLONDE_0.33 or CHIMAY_ROUGE_ROUGERUBIS_033
+        const idNorm = Utils.normalize(userId.replace(/_/g, ' '));
+
+        let bestMatch = null;
+        let bestScore = 0;
+
+        for (const beer of allBeers) {
+            if (String(beer.id).startsWith('CUSTOM_')) continue;
+
+            const titleNorm = Utils.normalize(beer.title);
+            const sim = Utils.similarity(idNorm, titleNorm);
+
+            if (sim > bestScore) {
+                bestScore = sim;
+                bestMatch = beer;
+            }
+        }
+
+        // Threshold: 0.55 is fairly generous since IDs contain type/volume suffixes
+        if (bestMatch && bestScore >= 0.55) {
+            const targetId = String(bestMatch.id);
+
+            // Merge data into the matched beer
+            if (!data[targetId]) {
+                data[targetId] = { count: 0, history: [] };
+            }
+
+            const target = data[targetId];
+            target.count = (target.count || 0) + (userData.count || 0);
+
+            const oldHistory = userData.history || [];
+            const newHistory = target.history || [];
+            target.history = [...newHistory, ...oldHistory].sort((a, b) =>
+                new Date(a.date) - new Date(b.date)
+            );
+
+            if (userData.score !== undefined && target.score === undefined) {
+                target.score = userData.score;
+            }
+            if (userData.comment && !target.comment) {
+                target.comment = userData.comment;
+            }
+            if (userData.favorite) {
+                target.favorite = true;
+            }
+            if (userData.aromas && !target.aromas) {
+                target.aromas = userData.aromas;
+            }
+            if (userData.timestamp) {
+                if (!target.timestamp || new Date(userData.timestamp) < new Date(target.timestamp)) {
+                    target.timestamp = userData.timestamp;
+                }
+            }
+
+            delete data[userId];
+            changed = true;
+            migrated++;
+            details.push({ action: 'migrated', oldId: userId, newId: targetId, title: bestMatch.title, score: Math.round(bestScore * 100) });
+            console.log(`[Storage] Migrated orphaned data: "${userId}" → "${targetId}" (${bestMatch.title}, ${Math.round(bestScore * 100)}% match)`);
+        } else {
+            // No match found — remove the orphan
+            delete data[userId];
+            changed = true;
+            removed++;
+            details.push({ action: 'removed', oldId: userId });
+            console.warn(`[Storage] Removed orphaned user data: "${userId}" (no DB match found, best was ${bestMatch ? Math.round(bestScore * 100) + '% ' + bestMatch.title : 'none'})`);
+        }
+    }
+
+    if (changed) {
+        localStorage.setItem(STORAGE_KEY_RATINGS, JSON.stringify(data));
+        _invalidateCache();
+    }
+
+    if (migrated > 0 || removed > 0) {
+        console.log(`[Storage] Orphan cleanup complete: ${migrated} migrated, ${removed} removed.`);
+    }
+
+    return { migrated, removed, details };
+}
+
 // --- Consumption Logic ---
 
 export function addConsumption(id, volumeStr, customDate = null) {

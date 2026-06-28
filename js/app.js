@@ -117,6 +117,10 @@ async function init() {
                 // If user is searching right now, they'll show up on next input.
             }
 
+            // Cleanup orphaned user data (beers removed from DB due to deduplication etc.)
+            // Must run after all beers are loaded so we have the full ID set
+            Storage.cleanupOrphanedUserData(state.beers);
+
             // Run deduplicator later to save performance (only if enabled in Debug)
             setTimeout(() => {
                 state.migrationPrompts = Deduplicator.runCheck(state.beers);
