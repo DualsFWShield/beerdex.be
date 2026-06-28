@@ -75,21 +75,6 @@
         "rarity_rank":  "Commun"
     },
     {
-        "title":  "BONSECOURS AMBREE",
-        "brewery":  "CAULIER",
-        "type":  "AmbrÃ©e",
-        "volume":  "0.33 L",
-        "alcohol":  "8Â°",
-        "id":  "BONSECOURS AMBREE_AMBREE_0.33",
-        "image":  "images/beer/fr/BONSECOURS_AMBREE_AMBREE_033.png",
-        "production_volume":  "RÃ©gionale",
-        "distribution":  "Cavistes spÃ©cialisÃ©s",
-        "barrel_aged":  false,
-        "community_rating":  3.5,
-        "ingredients":  "Standard",
-        "rarity_rank":  "Rare"
-    },
-    {
         "title":  "CAMBIER MONGY BLONDE",
         "brewery":  "CAMBIER",
         "type":  "Blonde",
@@ -190,7 +175,7 @@
         "id":  "HELLFEST IPA_BLONDE_0.33",
         "image":  "images/beer/fr/HELLFEST_IPA_BLONDE_033.png",
         "production_volume":  "RÃ©gionale",
-        "distribution":  "Cavistes \u0026 EvÃ©nementiel",
+        "distribution":  "Cavistes & EvÃ©nementiel",
         "barrel_aged":  false,
         "community_rating":  3.4,
         "ingredients":  "Collaboration Hellfest",
@@ -865,7 +850,7 @@
         "rarity_rank":  "Rare"
     },
     {
-        "title":  "L\u0027AZALEE",
+        "title":  "L'AZALEE",
         "brewery":  "LA MONTAGNARDE",
         "type":  "IPA",
         "volume":  "0.33 L",
@@ -880,7 +865,7 @@
         "rarity_rank":  "Rare"
     },
     {
-        "title":  "L\u0027INDIGENE",
+        "title":  "L'INDIGENE",
         "brewery":  "LA MONTAGNARDE",
         "type":  "Brune",
         "volume":  "0.33 L",
@@ -895,7 +880,7 @@
         "rarity_rank":  "Rare"
     },
     {
-        "title":  "L\u0027INOUÃE",
+        "title":  "L'INOUÃE",
         "brewery":  "LA MONTAGNARDE",
         "type":  "Blonde Forte",
         "volume":  "0.33 L",
@@ -986,7 +971,7 @@
     },
     {
         "title":  "Moonspell Beyond #02",
-        "brewery":  "L\u0027Instant",
+        "brewery":  "L'Instant",
         "type":  "Imperial Stout",
         "volume":  "33cl",
         "alcohol":  "10.5",
@@ -995,8 +980,8 @@
         "removeBackground":  true
     },
     {
-        "title":  "Gin \u0026 Juice",
-        "brewery":  "L\u0027Instant",
+        "title":  "Gin & Juice",
+        "brewery":  "L'Instant",
         "type":  "Sour",
         "volume":  "44cl",
         "alcohol":  "15.91",
@@ -1006,7 +991,7 @@
     },
     {
         "title":  "Fruity Jungle",
-        "brewery":  "L\u0027Instant",
+        "brewery":  "L'Instant",
         "type":  "Sour",
         "volume":  "44cl",
         "alcohol":  "5.5",
@@ -1106,7 +1091,7 @@
     },
     {
         "title":  "Tutti Hoppy",
-        "brewery":  "L\u0027Instant",
+        "brewery":  "L'Instant",
         "type":  "Pilsner",
         "volume":  "44cl",
         "alcohol":  "5.3",
@@ -1116,7 +1101,7 @@
     },
     {
         "title":  "Wanderlust Syndrome",
-        "brewery":  "L\u0027Instant",
+        "brewery":  "L'Instant",
         "type":  "NEIPA / Hazy",
         "volume":  "44cl",
         "alcohol":  "7.6",
@@ -1126,7 +1111,7 @@
     },
     {
         "title":  "Diogenes Syndrome",
-        "brewery":  "L\u0027Instant",
+        "brewery":  "L'Instant",
         "type":  "Triple IPA",
         "volume":  "44cl",
         "alcohol":  "18.18",
@@ -1136,7 +1121,7 @@
     },
     {
         "title":  "Vertigo Syndrome",
-        "brewery":  "L\u0027Instant",
+        "brewery":  "L'Instant",
         "type":  "Double IPA (DIPA)",
         "volume":  "44cl",
         "alcohol":  "8.1",
@@ -1176,7 +1161,7 @@
     },
     {
         "title":  "Winterlude",
-        "brewery":  "L\u0027Instant",
+        "brewery":  "L'Instant",
         "type":  "Porter",
         "volume":  "33cl",
         "alcohol":  "10.60",
@@ -1186,7 +1171,7 @@
     },
     {
         "title":  "La Chipie",
-        "brewery":  "L\u0027Instant",
+        "brewery":  "L'Instant",
         "type":  "Limonades artisanales",
         "volume":  "33cl",
         "alcohol":  "0.05",
@@ -1196,7 +1181,7 @@
     },
     {
         "title":  "La Crapule",
-        "brewery":  "L\u0027Instant",
+        "brewery":  "L'Instant",
         "type":  "Limonades artisanales",
         "volume":  "33cl",
         "alcohol":  "0.05",
@@ -1206,7 +1191,7 @@
     },
     {
         "title":  "Moonspell Beyond #01",
-        "brewery":  "L\u0027Instant",
+        "brewery":  "L'Instant",
         "type":  "Imperial Stout",
         "volume":  "33cl",
         "alcohol":  "10.5",
@@ -1216,7 +1201,7 @@
     },
     {
         "title":  "Elixir d’Aventure – Collab’ Guilde des Aventuriers",
-        "brewery":  "L\u0027Instant",
+        "brewery":  "L'Instant",
         "type":  "Pale Ale",
         "volume":  "33cl",
         "alcohol":  "5.2",
@@ -1226,7 +1211,7 @@
     },
     {
         "title":  "Tropic Like It’s Hot",
-        "brewery":  "L\u0027Instant",
+        "brewery":  "L'Instant",
         "type":  "Sour",
         "volume":  "44cl",
         "alcohol":  "5.5",
@@ -1236,7 +1221,7 @@
     },
     {
         "title":  "In Hop We Trust",
-        "brewery":  "L\u0027Instant",
+        "brewery":  "L'Instant",
         "type":  "Double IPA (DIPA)",
         "volume":  "44cl",
         "alcohol":  "8.4",
@@ -1246,7 +1231,7 @@
     },
     {
         "title":  "Spirit of Dunkel",
-        "brewery":  "L\u0027Instant",
+        "brewery":  "L'Instant",
         "type":  "Bock",
         "volume":  "33cl",
         "alcohol":  "10.61",
@@ -1256,7 +1241,7 @@
     },
     {
         "title":  "Nuit Blanche",
-        "brewery":  "L\u0027Instant",
+        "brewery":  "L'Instant",
         "type":  "Wheat Ale",
         "volume":  "33cl",
         "alcohol":  "5.7",
@@ -1266,7 +1251,7 @@
     },
     {
         "title":  "Clé des Champs",
-        "brewery":  "L\u0027Instant",
+        "brewery":  "L'Instant",
         "type":  "Lager",
         "volume":  "33cl",
         "alcohol":  "4.6",
@@ -1276,7 +1261,7 @@
     },
     {
         "title":  "Contre Courant",
-        "brewery":  "L\u0027Instant",
+        "brewery":  "L'Instant",
         "type":  "Triple",
         "volume":  "33cl",
         "alcohol":  "10.61",
@@ -1286,7 +1271,7 @@
     },
     {
         "title":  "Sommet de la Vague",
-        "brewery":  "L\u0027Instant",
+        "brewery":  "L'Instant",
         "type":  "American IPA",
         "volume":  "33cl",
         "alcohol":  "6.4",
@@ -1296,7 +1281,7 @@
     },
     {
         "title":  "La Française",
-        "brewery":  "L\u0027Instant",
+        "brewery":  "L'Instant",
         "type":  "Pale Ale",
         "volume":  "33cl",
         "alcohol":  "5.6",
