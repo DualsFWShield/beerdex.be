@@ -3394,5 +3394,35 @@
     "community_rating": 3.7,
     "ingredients": "Standard",
     "rarity_rank": "Rare"
+  },
+    {
+    "title": "CHIMAY JAUNE",
+    "brewery": "ABBAYE NOTRE-DAME DE SCOURMONT",
+    "type": "Blonde",
+    "volume": "0.33 L",
+    "alcohol": "6.5°",
+    "id": "CHIMAY JAUNE_BLONDE_0.33",
+    "image": "images/beer/be/Chimay-jaune.png",
+    "production_volume": "Régionale",
+    "distribution": "Horeca",
+    "barrel_aged": false,
+    "community_rating": 3.7,
+    "ingredients": "Standard Trappiste",
+    "rarity_rank": "Commun"
+  },
+    {
+    "title": "FLYING FISH",
+    "brewery": "INBEV",
+    "type": "Rouge / Fruit",
+    "volume": "0.33 L",
+    "alcohol": "5.9°",
+    "id": "FLYING FISH_ROUGE___FRUIT_0.33",
+    "image": "images/beer/be/flying-fish.png",
+    "production_volume": "Industrielle",
+    "distribution": "Partout",
+    "barrel_aged": false,
+    "community_rating": 3.0,
+    "ingredients": "Eau/Orge/Maïs/Citron",
+    "rarity_rank": "Base"
   }
 ]
