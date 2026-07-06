@@ -1646,9 +1646,13 @@ export function renderBeerDetail(beer, onSave) {
                 </div>
 
                 <div style="text-align: center; margin-bottom: 20px;">
-                    <img src="${displayImage}" style="height: 150px; object-fit: contain; filter: drop-shadow(0 0 10px rgba(255,255,255,0.1));" 
-                         onload="removeImageBackground(this)"
-                         onerror="if(this.src.includes('${fallbackImage}')) return; this.src='${fallbackImage}';">
+                    ${beer.id === 'NEVER_GONNA_GIVE_YOU_ALE_AMBREE_0.50' ? `
+                        <video src="images/Rickroll.mp4" autoplay loop muted playsinline style="height: 150px; object-fit: contain; border-radius: 8px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.1));"></video>
+                    ` : `
+                        <img src="${displayImage}" style="height: 150px; object-fit: contain; filter: drop-shadow(0 0 10px rgba(255,255,255,0.1));" 
+                             onload="removeImageBackground(this)"
+                             onerror="if(this.src.includes('${fallbackImage}')) return; this.src='${fallbackImage}';">
+                    `}
                         <h2 style="margin-top: 10px; color: var(--accent-gold);">${beer.title}</h2>
                         <p style="color: #888;">${beer.brewery} - ${beer.type}</p>
                         <div style="display: flex; justify-content: center; gap: 15px; margin-top: 5px; font-size: 0.8rem; color: #aaa;">
@@ -1974,6 +1978,11 @@ export function renderBeerDetail(beer, onSave) {
 
         const wasLocked = !existingData.count || existingData.count === 0;
 
+        if (beer.id === 'NEVER_GONNA_GIVE_YOU_ALE_AMBREE_0.50') {
+            const trollAudio = new Audio('images/music/Trolololo.mp3');
+            trollAudio.play().catch(err => console.log('Audio playback failed', err));
+        }
+
         const vol = wrapper.querySelector('#consumption-volume').value;
         const dateOverride = wrapper.querySelector('#consumption-date') ? wrapper.querySelector('#consumption-date').value : null;
         const newData = Storage.addConsumption(beer.id, vol, dateOverride);
@@ -2044,7 +2053,11 @@ export function renderBeerDetail(beer, onSave) {
                             <div class="beer-card card-rarity-${beer.rarity} ${beer.rarity === 'ultra_legendaire' ? 'card-anim-ultra_legendary' : ''}" style="width: 260px; height: auto; min-height: 400px; margin: 0; background: var(--bg-card); display: flex; flex-direction: column; cursor: pointer; border-width: 3px;">
                                 
                                 <div style="width:100%; height:200px; display:flex; justify-content:center; align-items:center; margin-bottom: 15px;">
-                                    <img src="${displayImage}" alt="${beer.title}" class="beer-image" style="max-height: 180px; object-fit: contain;" onload="removeImageBackground(this)">
+                                    ${beer.id === 'NEVER_GONNA_GIVE_YOU_ALE_AMBREE_0.50' ? `
+                                        <video src="images/Rickroll.mp4" autoplay loop muted playsinline style="max-height: 180px; object-fit: contain; border-radius: 8px;"></video>
+                                    ` : `
+                                        <img src="${displayImage}" alt="${beer.title}" class="beer-image" style="max-height: 180px; object-fit: contain;" onload="removeImageBackground(this)">
+                                    `}
                                 </div>
                                 <div class="beer-info" style="text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
                                     <h3 class="beer-title" style="font-size: 1.5rem; margin-bottom: 5px;">${beer.title}</h3>

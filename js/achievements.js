@@ -112,6 +112,7 @@ const ACHIEVEMENTS = [
         { id: 'fun_custom_10', titleKey: 'ach_fun_custom_10_title', descKey: 'ach_fun_custom_10_desc', icon: '🏭', condition: (s) => s.customCount >= 10, rarity: 'epique' },
         { id: 'fun_photo', titleKey: 'ach_fun_photo_title', descKey: 'ach_fun_photo_desc', icon: '📷', condition: (s) => s.hasCustomPhoto, rarity: 'super_rare' },
         { id: 'secret_1', titleKey: 'ach_secret_1_title', descKey: 'ach_secret_1_desc', icon: '🐛', condition: (s) => s.hasGlitch, hidden: true, rarity: 'mythique' },
+        { id: 'troll_lol_lol', titleKey: 'ach_troll_lol_lol_title', descKey: 'ach_troll_lol_lol_desc', icon: '🤡', condition: (s) => s.hasRickRoll, hidden: true, rarity: 'ultra_legendaire' },
     ].map(a => ({ ...a, categoryKey: 'ach_cat_fun' })),
 
     // --- RARETÉ (Rarity Hunter) --- (10)
@@ -232,6 +233,7 @@ export function checkAchievements(allBeers) {
         hasLowAlcoholString: false, 
 
         hasGlitch: false,
+        hasRickRoll: false,
         
         // UX & Preferences
         prefs: {
@@ -272,6 +274,10 @@ export function checkAchievements(allBeers) {
         // "Homebrewer" says "Créer". But here we scan user data. 
         // If favorited but not drunk, it shouldn't probably count as "consumed" custom beer?
         // Let's enforce consumption for consistency in "stats" object.
+        if (isConsumed && id === 'NEVER_GONNA_GIVE_YOU_ALE_AMBREE_0.50') {
+            stats.hasRickRoll = true;
+        }
+
         if (isConsumed && id.startsWith('CUSTOM_')) {
             stats.hasCustomBeer = true;
             stats.customCount++;

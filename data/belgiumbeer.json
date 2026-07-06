@@ -1,4 +1,4 @@
-﻿[
+[
     {
         "title":  "CARA PILS",
         "brewery":  "EVERYDAY (COLRUYT)",
@@ -3634,5 +3634,20 @@
         "community_rating":  2.8,
         "ingredients":  "Pomme rouge",
         "rarity_rank":  "Base"
+    },
+    {
+        "title":  "RICK ROLL",
+        "brewery":  "TROLOLOLO BREWING CO.",
+        "type":  "Ambrée",
+        "volume":  "0.50 L",
+        "alcohol":  "5.8°",
+        "id":  "NEVER_GONNA_GIVE_YOU_ALE_AMBREE_0.50",
+        "image":  "images/Rickroll.png",
+        "production_volume":  "Micro-brasserie",
+        "distribution":  "Cachée",
+        "barrel_aged":  false,
+        "community_rating":  5.0,
+        "ingredients":  "Caramel, Houblons fruités (Passion, Ananas) - 87 IBU (1987)",
+        "rarity_rank":  "Ultra Légendaire"
     }
 ]

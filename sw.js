@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Beerdex-v95'; // Hardened Response logic
+const CACHE_NAME = 'Beerdex-v96'; // Hidden Rickroll & Troll achievement update
 const ASSETS = [
     './index.html',
     './style.css',
@@ -56,6 +56,9 @@ const ASSETS = [
     './offline.html',
     './images/beer/FUT.jpg',
     './images/beer/default.png',
+    './images/music/Trolololo.mp3',
+    './images/Rickroll.mp4',
+    './images/Rickroll.png',
     './images/foam.png',
     './'
 ];
