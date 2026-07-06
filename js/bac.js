@@ -65,7 +65,7 @@ export function calculateAlcoholGrams(volumeMl, abv) {
 /**
  * Adds a drink to the BAC history
  */
-export function addDrinkToBAC(volumeMl, abv) {
+export function addDrinkToBAC(volumeMl, abv, customDate = null) {
     if (!Storage.getPreference('bac_enabled', true)) return null;
 
     const vMl = Utils.parseVolumeToMl(volumeMl);
@@ -75,12 +75,14 @@ export function addDrinkToBAC(volumeMl, abv) {
 
     const history = Storage.getPreference('bac_history', []);
 
-    // Clean up history older than 24 hours to save space
-    const now = new Date().getTime();
-    const filteredHistory = history.filter(d => (now - d.time) < 24 * 60 * 60 * 1000);
+    // Clean up history older than 24 hours to save space (relative to current actual time, not event time)
+    const currentActualTime = new Date().getTime();
+    const filteredHistory = history.filter(d => (currentActualTime - d.time) < 24 * 60 * 60 * 1000);
+
+    const eventTime = customDate ? new Date(customDate).getTime() : currentActualTime;
 
     filteredHistory.push({
-        time: now,
+        time: eventTime,
         volume: vMl,
         abv: aPct,
         grams: calculateAlcoholGrams(vMl, aPct)

@@ -1994,7 +1994,7 @@ export function renderBeerDetail(beer, onSave) {
 
         // --- BAC INTEGRATION ---
         if (Storage.getPreference('bac_enabled', true) && !Storage.getPreference('bac_manual_only', false)) {
-            BAC.addDrinkToBAC(vol, beer.alcohol || 5.0);
+            BAC.addDrinkToBAC(vol, beer.alcohol || 5.0, dateOverride);
         }
 
         Analytics.track('beer_consumed', {
@@ -2442,10 +2442,14 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
 
                     <div class="form-group">
                         <label class="form-label">${i18n.t('form_label_image')}</label>
-                        <div style="display: flex; gap: 10px; align-items: center;">
+                        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
                             <input type="file" id="image-file-input" accept="image/*" style="display: none;">
-                                <button type="button" class="form-input" style="width: auto;" onclick="document.getElementById('image-file-input').click()">${i18n.t('form_btn_choose_photo')}</button>
-                                <span id="file-name" style="font-size: 0.8rem; color: #888;">${editModeBeer ? i18n.t('form_status_img_keep') : i18n.t('form_status_img_default')}</span>
+                            <input type="file" id="image-camera-input" accept="image/*" capture="environment" style="display: none;">
+                            <button type="button" class="form-input" style="flex:1; padding: 10px; font-size: 0.9rem;" onclick="document.getElementById('image-file-input').click()">📁 Galerie</button>
+                            <button type="button" class="form-input" style="flex:1; padding: 10px; font-size: 0.9rem;" onclick="document.getElementById('image-camera-input').click()">📷 Photo</button>
+                        </div>
+                        <div style="text-align: center;">
+                            <span id="file-name" style="font-size: 0.8rem; color: #888;">${editModeBeer ? (i18n.t('form_status_img_keep') || 'Image conservée') : (i18n.t('form_status_img_default') || 'Aucune image')}</span>
                         </div>
                     </div>
 
@@ -2456,8 +2460,7 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
     let imageBase64 = (editModeBeer ? editModeBeer.image : '') || (prefillData ? prefillData.image : '');
 
     // File Reader Logic with Resize
-    const fileInput = wrapper.querySelector('#image-file-input');
-    fileInput.onchange = (e) => {
+    const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
             wrapper.querySelector('#file-name').innerText = "Traitement...";
@@ -2467,6 +2470,9 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
             });
         }
     };
+    
+    wrapper.querySelector('#image-file-input').onchange = handleImageChange;
+    wrapper.querySelector('#image-camera-input').onchange = handleImageChange;
 
     // Point-Based Rarity Calculation
     const calculatePointRarity = (distributionPts, typePts, availabilityPts, barrelAged) => {
