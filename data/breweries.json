@@ -1,4 +1,4 @@
-﻿[
+[
     {
         "name":  "\u0027t Hofbrouwerijke",
         "province":  "ANT",
@@ -1768,5 +1768,10 @@
         "name":  "Waale",
         "province":  "Hauts-de-France",
         "country":  "FR"
+    },
+    {
+        "name":  "BRASSERIE DU VAL DE DUC",
+        "province":  "BW",
+        "country":  "BE"
     }
 ]
