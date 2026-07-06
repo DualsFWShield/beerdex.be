@@ -228,22 +228,6 @@
         "barcode":  "5411676100867"
     },
     {
-        "title":  "BERTINCHAMPS BLONDE",
-        "brewery":  "BERTINCHAMPS",
-        "type":  "Blonde",
-        "volume":  "0.50 L",
-        "alcohol":  "6.2°",
-        "id":  "BERTINCHAMPS BLONDE_BLONDE_20",
-        "image":  "images/beer/be/b-blonde-bottle.png",
-        "production_volume":  "Micro-brasserie",
-        "distribution":  "Cavistes spécialisés",
-        "barrel_aged":  false,
-        "community_rating":  3.4,
-        "ingredients":  "Malt de ferme",
-        "rarity_rank":  "Rare",
-        "barcode":  "5425033240011"
-    },
-    {
         "title":  "BIERE DES OURS",
         "brewery":  "LA BINCHOISE",
         "type":  "Ambrée",
@@ -3492,7 +3476,7 @@
         "volume":  "0.33 L",
         "alcohol":  "0°",
         "id":  "BERTINCHAMPS_ZERO_ALCOOL_BLONDE_0.33",
-        "image":  "images/beer/be/0.0-Zéro-sans-fond-Olivia.png",
+        "image":  "images/beer/be/0.0-Zéro-sans-fond-Olivia.png",
         "production_volume":  "Micro-brasserie",
         "distribution":  "Cavistes spécialisés",
         "barrel_aged":  false,
@@ -3552,7 +3536,7 @@
         "volume":  "0.33 L",
         "alcohol":  "5.2°",
         "id":  "BERTINCHAMPS_LEGERE_BLONDE_0.33",
-        "image":  "images/beer/be/0.3-Légère-sans-fond-Olivia.png",
+        "image":  "images/beer/be/0.3-Légère-sans-fond-Olivia.png",
         "production_volume":  "Micro-brasserie",
         "distribution":  "Cavistes spécialisés",
         "barrel_aged":  false,
@@ -3606,7 +3590,7 @@
         "rarity_rank":  "Épique"
     },
     {
-        "title":  "RIO",
+        "title":  "VALDUC RIO",
         "brewery":  "BRASSERIE DU VAL DE DUC",
         "type":  "Ambrée",
         "volume":  "0.33 L",
