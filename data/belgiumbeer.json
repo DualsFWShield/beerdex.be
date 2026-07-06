@@ -3636,6 +3636,21 @@
         "rarity_rank":  "Base"
     },
     {
+        "title":  "BERTINCHAMPS HÉRITAGE",
+        "brewery":  "BERTINCHAMPS",
+        "type":  "Blonde",
+        "volume":  "0.33 L",
+        "alcohol":  "9.5°",
+        "id":  "BERTINCHAMPS_HERITAGE_BLONDE_0.50",
+        "image":  "images/beer/be/bertinchamps-heritage.png",
+        "production_volume":  "Artisanale",
+        "distribution":  "Supermarché",
+        "barrel_aged":  false,
+        "community_rating":  4.0,
+        "ingredients":  "",
+        "rarity_rank":  "Base"
+    },
+    {
         "title":  "RICK ROLL",
         "brewery":  "TROLOLOLO BREWING CO.",
         "type":  "Ambrée",
