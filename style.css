@@ -1,3 +1,10 @@
+/* Animated angle for Ultra Legendary spinning border */
+@property --ultra-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+}
+
 :root {
     /* Premium Dark Palette */
     --bg-dark: #0a0a0a;
@@ -115,9 +122,16 @@
     box-shadow: 0 0 15px var(--rarity-legendary);
 }
 
+.rarity-ultra_legendaire,
 .rarity-ultra_legendary {
-    background: var(--rarity-ultra_legendary);
-    animation: gradient-shift 2s infinite linear;
+    background: linear-gradient(45deg, #ff00cc, #3333ff, #00ccff, #ff00cc);
+    background-size: 300% 300%;
+    animation: gradient-shift 3s infinite linear;
+    box-shadow: 0 0 15px rgba(255, 0, 204, 0.8), inset 0 0 5px rgba(255, 255, 255, 0.8);
+    text-shadow: 0 0 6px #fff, 0 1px 2px rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.6) !important;
+    font-weight: 900;
+    letter-spacing: 0.5px;
 }
 
 .rarity-saisonniere {
@@ -284,63 +298,56 @@
 }
 
 
-/* Constant Animated Card Border for Ultra Legendary */
+/* Constant Animated Card Border for Ultra Legendary – Spinning Conic Gradient */
 .card-anim-ultra_legendary {
+    --ultra-angle: 0deg;
     position: relative;
     border: 3px solid transparent !important;
     background-image: linear-gradient(var(--bg-card), var(--bg-card)),
-        linear-gradient(135deg, #ff00cc, #3333ff, #00ccff, #ff00cc, #ff6600);
+        conic-gradient(from var(--ultra-angle), #ff00cc, #3333ff, #00ccff, #ff6600, #ff00cc);
     background-origin: border-box;
-    background-clip: content-box, border-box;
-    background-size: 100% 100%, 600% 600%;
-    animation: ultra-border-flow 3s linear infinite, ultra-glow 2s ease-in-out infinite;
+    background-clip: padding-box, border-box;
+    animation: ultra-rotate 2.5s linear infinite, ultra-glow 3s ease-in-out infinite;
     overflow: visible;
 }
 
+/* Blurred spinning glow halo behind the card */
 .card-anim-ultra_legendary::before {
+    --ultra-angle: 0deg;
     content: '';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 150%;
-    height: 150%;
-    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.15) 0%, transparent 60%);
-    z-index: 1;
-    animation: ultra-pulse-core 3s infinite alternate;
+    top: -8px;
+    left: -8px;
+    right: -8px;
+    bottom: -8px;
+    background: conic-gradient(from var(--ultra-angle), #ff00cc, #3333ff, #00ccff, #ff6600, #ff00cc);
+    border-radius: inherit;
+    z-index: -1;
+    animation: ultra-rotate 2.5s linear infinite;
     pointer-events: none;
-    mix-blend-mode: overlay;
+    filter: blur(15px);
+    opacity: 0.6;
 }
 
-@keyframes ultra-border-flow {
-    0% {
-        background-position: 100% 100%, 0% 50%;
-    }
-
-    100% {
-        background-position: 100% 100%, 600% 50%;
-    }
+@keyframes ultra-rotate {
+    to { --ultra-angle: 360deg; }
 }
 
 @keyframes ultra-glow {
-
-    0%,
-    100% {
-        box-shadow: 0 0 20px rgba(255, 0, 204, 0.4),
-            0 0 50px rgba(51, 51, 255, 0.15),
-            0 0 80px rgba(0, 204, 255, 0.1);
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(255, 0, 204, 0.5),
+            0 0 50px rgba(51, 51, 255, 0.2),
+            0 0 80px rgba(0, 204, 255, 0.15);
     }
-
     33% {
-        box-shadow: 0 0 25px rgba(51, 51, 255, 0.5),
-            0 0 60px rgba(0, 204, 255, 0.2),
-            0 0 100px rgba(255, 0, 204, 0.1);
+        box-shadow: 0 0 25px rgba(51, 51, 255, 0.6),
+            0 0 60px rgba(0, 204, 255, 0.25),
+            0 0 100px rgba(255, 0, 204, 0.15);
     }
-
     66% {
-        box-shadow: 0 0 25px rgba(0, 204, 255, 0.5),
-            0 0 60px rgba(255, 0, 204, 0.2),
-            0 0 100px rgba(51, 51, 255, 0.1);
+        box-shadow: 0 0 25px rgba(0, 204, 255, 0.6),
+            0 0 60px rgba(255, 0, 204, 0.25),
+            0 0 100px rgba(51, 51, 255, 0.15);
     }
 }
 
@@ -349,7 +356,6 @@
         transform: translate(-50%, -50%) scale(0.8);
         opacity: 0.5;
     }
-
     100% {
         transform: translate(-50%, -50%) scale(1.2);
         opacity: 1;
@@ -833,7 +839,48 @@
     }
 }
 
-/* Ultra Légendaire – uses .card-anim-ultra_legendary applied via JS */
+/* Ultra Légendaire – fallback for card-rarity class (same spinning border) */
+.card-rarity-ultra_legendaire {
+    --ultra-angle: 0deg;
+    position: relative;
+    border: 3px solid transparent !important;
+    background-image: linear-gradient(var(--bg-card), var(--bg-card)),
+        conic-gradient(from var(--ultra-angle), #ff00cc, #3333ff, #00ccff, #ff6600, #ff00cc);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    animation: ultra-rotate 2.5s linear infinite, ultra-glow 3s ease-in-out infinite !important;
+    overflow: visible !important;
+}
+
+.card-rarity-ultra_legendaire::before {
+    --ultra-angle: 0deg;
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    right: -8px;
+    bottom: -8px;
+    background: conic-gradient(from var(--ultra-angle), #ff00cc, #3333ff, #00ccff, #ff6600, #ff00cc);
+    border-radius: inherit;
+    z-index: -1;
+    animation: ultra-rotate 2.5s linear infinite !important;
+    pointer-events: none;
+    filter: blur(15px);
+    opacity: 0.6;
+    display: block !important;
+}
+
+/* Force animation even if stop-animations is applied */
+.card-rarity-ultra_legendaire.stop-animations,
+.card-rarity-ultra_legendaire.stop-animations * {
+    animation: ultra-rotate 2.5s linear infinite, ultra-glow 3s ease-in-out infinite !important;
+}
+.card-rarity-ultra_legendaire.stop-animations::before {
+    display: block !important;
+    animation: ultra-rotate 2.5s linear infinite !important;
+}
+
+
 
 /* ======================================= */
 /* Modal Detail – Rarity Border Colors     */
@@ -873,11 +920,32 @@
 }
 
 .modal-rarity-ultra_legendaire {
+    --ultra-angle: 0deg;
+    position: relative;
     border: 3px solid transparent !important;
-    background-image: linear-gradient(#111, #111), var(--rarity-ultra_legendary-gradient);
+    background-image: linear-gradient(#111, #111),
+        conic-gradient(from var(--ultra-angle), #ff00cc, #3333ff, #00ccff, #ff6600, #ff00cc);
     background-origin: border-box;
     background-clip: padding-box, border-box;
-    box-shadow: 0 0 30px rgba(255, 0, 204, 0.3);
+    animation: ultra-rotate 2.5s linear infinite, ultra-glow 3s ease-in-out infinite;
+    overflow: visible;
+}
+
+.modal-rarity-ultra_legendaire::before {
+    --ultra-angle: 0deg;
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    right: -6px;
+    bottom: -6px;
+    background: conic-gradient(from var(--ultra-angle), #ff00cc, #3333ff, #00ccff, #ff6600, #ff00cc);
+    border-radius: inherit;
+    z-index: -1;
+    animation: ultra-rotate 2.5s linear infinite;
+    pointer-events: none;
+    filter: blur(18px);
+    opacity: 0.5;
 }
 
 /* Reveal Overlay Styles */
@@ -1598,12 +1666,12 @@ body.keyboard-open #main-content {
 
 /* Ultra Legendaire - RGB Pulse */
 .ach-rarity-ultra_legendaire {
+    --ultra-angle: 0deg;
     border-color: transparent !important;
-    background-image: linear-gradient(var(--bg-card), var(--bg-card)), linear-gradient(45deg, #ff00cc, #3333ff, #00ccff, #ff00cc);
+    background-image: linear-gradient(var(--bg-card), var(--bg-card)), conic-gradient(from var(--ultra-angle), #ff00cc, #3333ff, #00ccff, #ff6600, #ff00cc);
     background-origin: border-box;
     background-clip: padding-box, border-box;
-    background-size: 100% 100%, 400% 400%;
-    animation: ach-slide-in 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, rgb-border 3s linear infinite;
+    animation: ultra-rotate 2.5s linear infinite;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 50px rgba(0, 204, 255, 0.6);
 }
 

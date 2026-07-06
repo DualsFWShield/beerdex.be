@@ -828,8 +828,13 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
                 window.__playedAnims.add(beer.id);
                 if (window.savePlayedAnims) window.savePlayedAnims();
             } else if (animOnce && hasPlayed) {
-                // Force static if played once
-                card.classList.add('stop-animations');
+                // Ultra Légendaire cards ALWAYS stay animated
+                if (beer.rarity === 'ultra_legendaire') {
+                    card.classList.add('card-anim-ultra_legendary');
+                } else {
+                    // Force static if played once (other rarities only)
+                    card.classList.add('stop-animations');
+                }
             }
         } else {
             // Locked / Neutral State
