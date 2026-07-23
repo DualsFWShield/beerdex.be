@@ -90,6 +90,7 @@ build_variant() {
     # Build AAB
     if [ "$build_aab" = true ]; then
         echo "💎 Building AAB..."
+        chmod +x ./gradlew
         ./gradlew bundleRelease
         cp "app/build/outputs/bundle/release/app-release.aab" "$RELEASE_DIR/beerdex-$name.aab"
         echo "✅ AAB Collected: release/beerdex-$name.aab"
@@ -98,6 +99,7 @@ build_variant() {
     # Build APK
     if [ "$build_apk" = true ]; then
         echo "📱 Building APK..."
+        chmod +x ./gradlew
         ./gradlew assembleRelease
         cp "app/build/outputs/apk/release/app-release.apk" "$RELEASE_DIR/beerdex-$name.apk"
         echo "✅ APK Collected: release/beerdex-$name.apk"
