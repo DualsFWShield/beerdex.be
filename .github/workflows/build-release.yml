@@ -1,0 +1,100 @@
+name: Build & Release Mobile Apps
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build & Publish Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Read Version Info
+        id: version_info
+        run: |
+          vname=$(grep "VERSION_NAME=" bd-mobile/version.properties | cut -d'=' -f2)
+          vcode_online=$(grep "VERSION_CODE_ONLINE=" bd-mobile/version.properties | cut -d'=' -f2)
+          vcode_offline=$(grep "VERSION_CODE_OFFLINE=" bd-mobile/version.properties | cut -d'=' -f2)
+          echo "VERSION_NAME=$vname" >> $GITHUB_ENV
+          echo "VERSION_CODE_ONLINE=$vcode_online" >> $GITHUB_ENV
+          echo "VERSION_CODE_OFFLINE=$vcode_offline" >> $GITHUB_ENV
+          echo "Version: $vname (Online: $vcode_online, Offline: $vcode_offline)"
+
+      - name: Setup Keystore
+        run: |
+          if [ -n "${{ secrets.BEERDEX_KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.BEERDEX_KEYSTORE_BASE64 }}" | base64 -d > bd-mobile/beerdex.keystore
+            echo "Keystore decoded from GitHub Secrets."
+          elif [ -f bd-mobile/beerdex.keystore ]; then
+            echo "Using keystore from repository."
+          else
+            echo "::warning::No keystore found. Creating fallback debug keystore for build..."
+            keytool -genkey -v -keystore bd-mobile/beerdex.keystore -alias beerdex-key -keyalg RSA -keysize 2048 -validity 10000 -storepass beerdex-secret -keypass beerdex-secret -dname "CN=Beerdex, OU=Dev, O=Beerdex, L=Brussels, C=BE"
+          fi
+
+      - name: Run Build Script
+        run: |
+          chmod +x scripts/build-all.sh scripts/sync-mobile.sh
+          ./scripts/build-all.sh
+        env:
+          RELEASE_STORE_FILE: ${{ github.workspace }}/bd-mobile/beerdex.keystore
+          RELEASE_STORE_PASSWORD: ${{ secrets.BEERDEX_KEYSTORE_PASSWORD || 'N05h@bruijninckx.g00gle' }}
+          RELEASE_KEY_ALIAS: ${{ secrets.BEERDEX_KEY_ALIAS || 'beerdex-key' }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.BEERDEX_KEY_PASSWORD || 'N05h@bruijninckx.g00gle' }}
+
+      - name: Generate Release Notes Summary
+        id: release_notes
+        run: |
+          TAG_OR_PREV=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          echo "### 📦 Beerdex Mobile Release - v${{ env.VERSION_NAME }}" > release_notes.md
+          echo "" >> release_notes.md
+          echo "**Codes de version** : Online \`${{ env.VERSION_CODE_ONLINE }}\` | Offline \`${{ env.VERSION_CODE_OFFLINE }}\`" >> release_notes.md
+          echo "**Target SDK** : Android 16 (API 36)" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "#### 📝 Résumé des modifications :" >> release_notes.md
+          if [ -n "$TAG_OR_PREV" ]; then
+            git log ${TAG_OR_PREV}..HEAD --oneline --no-merges | sed 's/^/- /' >> release_notes.md || echo "- Mise à jour des dépendances et ciblage API 36" >> release_notes.md
+          else
+            git log -n 10 --oneline --no-merges | sed 's/^/- /' >> release_notes.md
+          fi
+          echo "" >> release_notes.md
+          echo "#### 📁 Fichiers inclus dans cette release :" >> release_notes.md
+          echo "- \`beerdex-playstore-online.aab\` (Google Play Console - Version en ligne)" >> release_notes.md
+          echo "- \`beerdex-playstore-online.apk\` (Installation directe)" >> release_notes.md
+          echo "- \`beerdex-playstore-offline.aab\` (Google Play Console - Version hors-ligne)" >> release_notes.md
+          echo "- \`beerdex-playstore-offline.apk\` (Installation directe hors-ligne)" >> release_notes.md
+          echo "- \`beerdex-github-online.apk\` (GitHub Wrapper Online)" >> release_notes.md
+          echo "- \`beerdex-github-offline.apk\` (GitHub Wrapper Offline)" >> release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}-build{1}', env.VERSION_NAME, github.run_number) }}
+          name: Beerdex v${{ env.VERSION_NAME }} (Build ${{ github.run_number }})
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          files: |
+            release/*.aab
+            release/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
