@@ -13,19 +13,23 @@ def vCode = (versionProps['VERSION_CODE_OFFLINE'] ?: "119").toInteger()
 
 
 android {
-    namespace "be.beerdex.app.offline"
-    compileSdk rootProject.ext.compileSdkVersion
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+    namespace = "be.beerdex.app.offline"
+    compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "be.beerdex.app.offline"
-        minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode vCode
-        versionName vName
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        applicationId = "be.beerdex.app.offline"
+        minSdkVersion = rootProject.ext.minSdkVersion
+        targetSdkVersion = rootProject.ext.targetSdkVersion
+        versionCode = vCode
+        versionName = vName
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
-            ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+            ignoreAssetsPattern = ''
         }
     }
     signingConfigs {
