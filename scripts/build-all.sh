@@ -80,7 +80,7 @@ build_variant() {
     cd "$ROOT_DIR/bd-mobile/$folder"
     
     echo "📦 Installing npm packages for $name..."
-    npm install --no-fund --no-audit
+    npm install --no-fund --no-audit --legacy-peer-deps
 
     echo "📦 Running Capacitor Copy..."
     npx cap copy android
