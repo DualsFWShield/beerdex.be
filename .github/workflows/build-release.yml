@@ -56,7 +56,7 @@ jobs:
         run: |
           mkdir -p bd-mobile
           if [ -n "${{ secrets.BEERDEX_KEYSTORE_BASE64 }}" ]; then
-            echo "${{ secrets.BEERDEX_KEYSTORE_BASE64 }}" | tr -d '\r\n ' | base64 -d > bd-mobile/beerdex.keystore
+            python3 -c "import os, base64; data = os.environ.get('KEYSTORE_B64', ''); open('bd-mobile/beerdex.keystore', 'wb').write(base64.b64decode(data))"
             echo "Keystore decoded from GitHub Secrets."
           elif [ -f bd-mobile/beerdex.keystore ]; then
             echo "Using keystore from repository."
@@ -64,6 +64,8 @@ jobs:
             echo "::warning::No keystore found. Creating fallback debug keystore for build..."
             keytool -genkey -v -keystore bd-mobile/beerdex.keystore -alias beerdex-key -keyalg RSA -keysize 2048 -validity 10000 -storepass beerdex-secret -keypass beerdex-secret -dname "CN=Beerdex, OU=Dev, O=Beerdex, L=Brussels, C=BE"
           fi
+        env:
+          KEYSTORE_B64: ${{ secrets.BEERDEX_KEYSTORE_BASE64 }}
 
       - name: Run Build Script
         run: |
