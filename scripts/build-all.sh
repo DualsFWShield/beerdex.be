@@ -82,8 +82,8 @@ build_variant() {
     echo "📦 Installing npm packages for $name..."
     npm install --no-fund --no-audit --legacy-peer-deps
 
-    echo "📦 Running Capacitor Copy..."
-    npx cap copy android
+    echo "📦 Running Capacitor Sync..."
+    npx cap sync android
 
     cd android
     
