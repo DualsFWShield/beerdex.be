@@ -1,0 +1,17 @@
+{
+  "name": "beerdex-offline",
+  "version": "1.0.0",
+  "dependencies": {
+    "capacitor-widget-bridge": "^7.0.0",
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/clipboard": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/filesystem": "^6.0.4",
+    "@capacitor/keyboard": "^6.0.4",
+    "@capacitor/share": "^6.0.4",
+    "@capacitor/status-bar": "^6.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0"
+  }
+}

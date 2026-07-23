@@ -28,6 +28,19 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Auto-Increment Version Code
+        run: |
+          mkdir -p bd-mobile
+          # Incrémente le versionCode de façon unique à chaque run GitHub Action
+          BASE_ONLINE=$(grep "VERSION_CODE_ONLINE=" bd-mobile/version.properties 2>/dev/null | cut -d'=' -f2 || echo "118")
+          BASE_OFFLINE=$(grep "VERSION_CODE_OFFLINE=" bd-mobile/version.properties 2>/dev/null | cut -d'=' -f2 || echo "119")
+          NEW_ONLINE=$((BASE_ONLINE + ${{ github.run_number }}))
+          NEW_OFFLINE=$((BASE_OFFLINE + ${{ github.run_number }}))
+          
+          sed -i "s/VERSION_CODE_ONLINE=.*/VERSION_CODE_ONLINE=$NEW_ONLINE/" bd-mobile/version.properties
+          sed -i "s/VERSION_CODE_OFFLINE=.*/VERSION_CODE_OFFLINE=$NEW_OFFLINE/" bd-mobile/version.properties
+          echo "Incrémentation des numéros de build : Online=$NEW_ONLINE, Offline=$NEW_OFFLINE"
+
       - name: Read Version Info
         id: version_info
         run: |
@@ -41,8 +54,9 @@ jobs:
 
       - name: Setup Keystore
         run: |
+          mkdir -p bd-mobile
           if [ -n "${{ secrets.BEERDEX_KEYSTORE_BASE64 }}" ]; then
-            echo "${{ secrets.BEERDEX_KEYSTORE_BASE64 }}" | base64 -d > bd-mobile/beerdex.keystore
+            echo "${{ secrets.BEERDEX_KEYSTORE_BASE64 }}" | base64 --decode > bd-mobile/beerdex.keystore
             echo "Keystore decoded from GitHub Secrets."
           elif [ -f bd-mobile/beerdex.keystore ]; then
             echo "Using keystore from repository."

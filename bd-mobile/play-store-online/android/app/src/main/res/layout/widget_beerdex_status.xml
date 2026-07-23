@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:background="@drawable/widget_background"
+    android:padding="0dp"
+    android:id="@+id/widget_root">
+
+    <!-- Left Accent Bar (Color-coded by BAC level) -->
+    <ImageView
+        android:id="@+id/widget_accent_bar"
+        android:layout_width="4dp"
+        android:layout_height="match_parent"
+        android:background="@drawable/widget_accent_bar" />
+
+    <!-- Content Area — uses weight for flexible sizing -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:gravity="center_vertical">
+
+        <!-- Header: Beerdex branding -->
+        <TextView
+            android:id="@+id/widget_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🍺 BEERDEX"
+            android:textColor="#FFCC00"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.15"
+            android:layout_marginBottom="4dp" />
+
+        <!-- BAC Value (main data) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="bottom"
+            android:layout_marginBottom="2dp">
+
+            <TextView
+                android:id="@+id/widget_bac_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0.00"
+                android:textColor="#4CAF50"
+                android:textSize="28sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=" g/l"
+                android:textColor="#888888"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginStart="2dp"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/widget_bac_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text=""
+                android:textColor="#AAAAAA"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginStart="8dp"
+                android:layout_marginBottom="4dp"
+                android:singleLine="true"
+                android:ellipsize="end" />
+        </LinearLayout>
+
+        <!-- BAC Message -->
+        <TextView
+            android:id="@+id/widget_bac_message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="#FFFFFF"
+            android:textSize="11sp"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:layout_marginBottom="6dp" />
+
+        <!-- Chart Graphic (Expands to fill all remaining space) -->
+        <ImageView
+            android:id="@+id/widget_chart"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:scaleType="fitCenter"
+            android:adjustViewBounds="true"
+            android:layout_marginBottom="6dp"
+            android:minHeight="30dp" />
+
+        <!-- Info Row: Drive + Monthly -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Time to drive -->
+            <TextView
+                android:id="@+id/widget_time_drive"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🚗 ✅"
+                android:textColor="#AAAAAA"
+                android:textSize="12sp"
+                android:singleLine="true" />
+
+            <!-- Monthly count -->
+            <TextView
+                android:id="@+id/widget_monthly"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📊 0 ce mois"
+                android:textColor="#AAAAAA"
+                android:textSize="12sp"
+                android:singleLine="true" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Beerdex</string>
+    <string name="title_activity_main">Beerdex</string>
+    <string name="package_name">be.beerdex.app.offline</string>
+    <string name="custom_url_scheme">be.beerdex.app.offline</string>
+    <string name="widget_label">Beerdex BAC</string>
+    <string name="widget_description">Affiche ton taux d\'alcoolémie, le temps avant de reprendre le volant, et le nombre de bières dégustées ce mois-ci.</string>
+</resources>

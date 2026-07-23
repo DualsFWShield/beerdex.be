@@ -1,8 +1,32 @@
-bd-mobile
+# --- SECURE GITIGNORE FOR BEERDEX ---
+
+# Build outputs
 release/
+scratch/
 .vscode
+
+# Project documentation & internal dev files
 AI_DB_GUIDE.md
 AI_FORUM.md
 TASKS.md
 AI_READ_THIS.md
-scratch/
+
+# Capacitor / Node generated files
+**/node_modules/
+**/build/
+**/.gradle/
+**/local.properties
+**/app/build/
+**/www/
+
+# --- CRITICAL SECURITY EXCLUSIONS ---
+# Never commit keystores, private keys, or certificates
+*.keystore
+*.jks
+*.p12
+*.pem
+*_private_key.zip
+pepk.jar
+bd-mobile/*.keystore
+bd-mobile/*.zip
+bd-mobile/*.pem

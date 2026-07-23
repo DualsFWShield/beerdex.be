@@ -1,0 +1,16 @@
+{
+  "appId": "co.median.android.yeenpjz",
+  "appName": "Beerdex",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "plugins": {
+    "StatusBar": {
+      "style": "DARK"
+    },
+    "Keyboard": {
+      "resize": "body",
+      "style": "dark",
+      "resizeOnFullScreen": true
+    }
+  }
+}

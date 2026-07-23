@@ -1,0 +1,21 @@
+{
+  "appId": "co.median.android.yeenpjz",
+  "appName": "Beerdex",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "https://beerdex.be",
+    "cleartext": true,
+    "allowNavigation": ["beerdex.be"]
+  },
+  "plugins": {
+    "StatusBar": {
+      "style": "DARK"
+    },
+    "Keyboard": {
+      "resize": "body",
+      "style": "dark",
+      "resizeOnFullScreen": true
+    }
+  }
+}
