@@ -73,9 +73,9 @@ jobs:
           ./scripts/build-all.sh
         env:
           RELEASE_STORE_FILE: ${{ github.workspace }}/bd-mobile/beerdex.keystore
-          RELEASE_STORE_PASSWORD: ${{ secrets.BEERDEX_KEYSTORE_PASSWORD || 'N05h@bruijninckx.g00gle' }}
-          RELEASE_KEY_ALIAS: ${{ secrets.BEERDEX_KEY_ALIAS || 'beerdex-key' }}
-          RELEASE_KEY_PASSWORD: ${{ secrets.BEERDEX_KEY_PASSWORD || 'N05h@bruijninckx.g00gle' }}
+          RELEASE_STORE_PASSWORD: ${{ secrets.BEERDEX_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.BEERDEX_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.BEERDEX_KEY_PASSWORD }}
 
       - name: Generate Release Notes Summary
         id: release_notes
