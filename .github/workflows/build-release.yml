@@ -56,7 +56,7 @@ jobs:
         run: |
           mkdir -p bd-mobile
           if [ -n "${{ secrets.BEERDEX_KEYSTORE_BASE64 }}" ]; then
-            echo "${{ secrets.BEERDEX_KEYSTORE_BASE64 }}" | base64 --decode > bd-mobile/beerdex.keystore
+            echo "${{ secrets.BEERDEX_KEYSTORE_BASE64 }}" | tr -d '\r\n ' | base64 -d > bd-mobile/beerdex.keystore
             echo "Keystore decoded from GitHub Secrets."
           elif [ -f bd-mobile/beerdex.keystore ]; then
             echo "Using keystore from repository."
