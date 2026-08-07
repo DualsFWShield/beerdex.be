@@ -3648,5 +3648,35 @@
         "community_rating":  5.0,
         "ingredients":  "Caramel, Houblons fruités (Passion, Ananas) - 87 IBU (1987)",
         "rarity_rank":  "Ultra Légendaire"
+    },
+    {
+        "title":  "BLOUP BLOUP MARK I",
+        "brewery":  "Noah & Dorian",
+        "type":  "Triple",
+        "volume":  "0.33 L",
+        "alcohol":  "11.0°",
+        "id":  "BLOUP_BLOUP_MARK_I",
+        "image":  "images/mistery.png",
+        "production_volume":  "Micro-brasserie",
+        "distribution":  "Introuvable (Proches uniquement)",
+        "barrel_aged":  false,
+        "community_rating":  1.5,
+        "ingredients":  "Ratée : Trop amère et pleine de bouillasse.",
+        "rarity_rank":  "Fondateur"
+    },
+    {
+        "title":  "BLOUP BLOUP MARK II",
+        "brewery":  "Noah & Dorian",
+        "type":  "Triple",
+        "volume":  "0.33 L",
+        "alcohol":  "8.0°",
+        "id":  "BLOUP_BLOUP_MARK_II",
+        "image":  "images/mistery.png",
+        "production_volume":  "Micro-brasserie",
+        "distribution":  "Introuvable (Proches uniquement)",
+        "barrel_aged":  false,
+        "community_rating":  4.5,
+        "ingredients":  "Houblons Target et Goldings, malts Pils et Abbaye. Légèrement trop amère mais très bonne.",
+        "rarity_rank":  "Fondateur"
     }
 ]

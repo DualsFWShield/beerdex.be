@@ -62,6 +62,8 @@ body.theme-museum {
     --rarity-mythique: #e74c3c;
     --rarity-legendaire: #f39c12;
     --rarity-ultra_legendaire: #ff00cc;
+    --rarity-fondateur: #FFD700;
+    --rarity-fondateur-gradient: linear-gradient(45deg, #FFD700, #FFF8DC, #DAA520, #FFD700);
 }
 
 /* Structural Overrides for Museum Feel */
@@ -139,6 +141,18 @@ body.theme-museum #app {
     border: 1px solid rgba(255, 255, 255, 0.6) !important;
     font-weight: 900;
     letter-spacing: 0.5px;
+}
+
+.rarity-fondateur {
+    background: linear-gradient(45deg, #FFD700, #FFF8DC, #DAA520, #B8860B, #FFD700);
+    background-size: 400% 400%;
+    animation: fondateur-shift 2.5s infinite linear;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.9), inset 0 0 8px rgba(255, 255, 255, 0.9);
+    text-shadow: 0 0 8px #fff, 0 1px 3px rgba(0, 0, 0, 0.9);
+    border: 2px solid rgba(255, 255, 255, 0.8) !important;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: #1a0a00;
 }
 
 .rarity-saisonniere {
@@ -954,6 +968,76 @@ body.theme-museum #app {
     opacity: 0.5;
 }
 
+/* Fondateur — Gold/Platinum spinning border for cards */
+.card-rarity-fondateur {
+    --fondateur-angle: 0deg;
+    position: relative;
+    border: 3px solid transparent !important;
+    background-image: linear-gradient(var(--bg-card), var(--bg-card)),
+        conic-gradient(from var(--fondateur-angle), #FFD700, #FFF8DC, #DAA520, #B8860B, #FFD700);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    animation: fondateur-rotate 2s linear infinite, fondateur-glow 2.5s ease-in-out infinite !important;
+    overflow: visible !important;
+}
+
+.card-rarity-fondateur::before {
+    --fondateur-angle: 0deg;
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    background: conic-gradient(from var(--fondateur-angle), #FFD700, #FFF8DC, #DAA520, #B8860B, #FFD700);
+    border-radius: inherit;
+    z-index: -1;
+    animation: fondateur-rotate 2s linear infinite !important;
+    pointer-events: none;
+    filter: blur(18px);
+    opacity: 0.7;
+    display: block !important;
+}
+
+.card-rarity-fondateur.stop-animations,
+.card-rarity-fondateur.stop-animations * {
+    animation: fondateur-rotate 2s linear infinite, fondateur-glow 2.5s ease-in-out infinite !important;
+}
+.card-rarity-fondateur.stop-animations::before {
+    display: block !important;
+    animation: fondateur-rotate 2s linear infinite !important;
+}
+
+/* Fondateur Modal */
+.modal-rarity-fondateur {
+    --fondateur-angle: 0deg;
+    position: relative;
+    border: 3px solid transparent !important;
+    background-image: linear-gradient(#111, #111),
+        conic-gradient(from var(--fondateur-angle), #FFD700, #FFF8DC, #DAA520, #B8860B, #FFD700);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    animation: fondateur-rotate 2s linear infinite, fondateur-glow 2.5s ease-in-out infinite;
+    overflow: visible;
+}
+
+.modal-rarity-fondateur::before {
+    --fondateur-angle: 0deg;
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    right: -8px;
+    bottom: -8px;
+    background: conic-gradient(from var(--fondateur-angle), #FFD700, #FFF8DC, #DAA520, #B8860B, #FFD700);
+    border-radius: inherit;
+    z-index: -1;
+    animation: fondateur-rotate 2s linear infinite;
+    pointer-events: none;
+    filter: blur(22px);
+    opacity: 0.6;
+}
+
 /* Reveal Overlay Styles */
 .reveal-overlay {
     position: fixed;
@@ -1733,6 +1817,17 @@ h3 {
     background-clip: padding-box, border-box;
     animation: ultra-rotate 2.5s linear infinite;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 50px rgba(0, 204, 255, 0.6);
+}
+
+/* Fondateur - Gold Crown Pulse */
+.ach-rarity-fondateur {
+    --fondateur-angle: 0deg;
+    border-color: transparent !important;
+    background-image: linear-gradient(var(--bg-card), var(--bg-card)), conic-gradient(from var(--fondateur-angle), #FFD700, #FFF8DC, #DAA520, #B8860B, #FFD700);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    animation: fondateur-rotate 2s linear infinite;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 60px rgba(255, 215, 0, 0.7);
 }
 
 .achievement-toast.out {

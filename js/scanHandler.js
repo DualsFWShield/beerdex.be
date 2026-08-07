@@ -5,6 +5,7 @@ import * as BAC from './bac.js';
 import * as Utils from './utils.js';
 import { i18n } from './i18n.js';
 import { fetchProductByBarcode } from './off-api.js';
+import Match from './match.js';
 
 export function setupScanHandler(state, renderCurrentView, updateWidgetData) {
     document.getElementById('fab-scan')?.addEventListener('click', () => {
@@ -18,6 +19,45 @@ export function setupScanHandler(state, renderCurrentView, updateWidgetData) {
                 console.log("[App] Barcode cached, ignoring.");
                 return 0; // Resume immediately if already cached
             }
+
+            // --- QR CODE TYPE DETECTION ---
+            // 1. BEERDEX Match QR Code → Route to Match comparison
+            if (barcode.startsWith('BEERDEX:')) {
+                console.log("[App] BEERDEX Match QR detected.");
+                scanCache.add(barcode);
+                const friendData = Match.parseQRData(barcode);
+                if (friendData) {
+                    UI.closeModal();
+                    // Get user's drunk beer IDs
+                    const userData = Storage.getAllUserData();
+                    const myIds = Object.keys(userData).filter(id => (userData[id].count || 0) > 0);
+                    const result = Match.compare(state.beers, myIds, friendData);
+                    if (UI.renderMatchResult) {
+                        UI.renderMatchResult(result, state.beers);
+                    } else {
+                        UI.showToast(`🍻 ${friendData.u}: ${result.commonCount} en commun!`);
+                    }
+                } else {
+                    UI.setScannerFeedback(i18n.t('scanner_invalid_qr', "❌ QR BeerDex invalide"), true);
+                }
+                return 3000;
+            }
+
+            // 2. URL → Ignore (not a barcode)
+            if (barcode.startsWith('http://') || barcode.startsWith('https://') || barcode.startsWith('www.')) {
+                console.log("[App] URL detected, ignoring:", barcode);
+                UI.setScannerFeedback(i18n.t('scanner_url_ignored', "🔗 URL détectée — pas un code-barres"), false);
+                return 2000;
+            }
+
+            // 3. Non-numeric text → Not a valid barcode
+            if (!/^\d{8,14}$/.test(barcode.trim())) {
+                console.log("[App] Non-barcode text detected:", barcode);
+                UI.setScannerFeedback(i18n.t('scanner_not_barcode', "❓ Code non reconnu — pas un code-barres"), true);
+                return 2000;
+            }
+
+            // 4. Valid barcode → Continue with lookup
             UI.setScannerFeedback(i18n.t('scanner_feedback_searching', "🔍 Recherche..."), false);
 
             try {

@@ -63,7 +63,8 @@ export async function fetchAllBeers(files = ALL_DATA_FILES) {
         'Mythique': 'mythique',
         'Légendaire': 'legendaire',
         'Ultra Légendaire': 'ultra_legendaire',
-        'Saisonnière': 'saisonniere'
+        'Saisonnière': 'saisonniere',
+        'Fondateur': 'fondateur'
     };
 
     // Simple deterministic string hash for IDs

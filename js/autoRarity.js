@@ -13,6 +13,7 @@
     - mythique (Rouge)
     - legendaire (Orange)
     - ultra_legendaire (Gradient)
+    - fondateur (Or/Platine) -> Non-auto (Hardcoded uniquement pour les bières des fondateurs)
 */
 
 export function calculateRarity(beer) {

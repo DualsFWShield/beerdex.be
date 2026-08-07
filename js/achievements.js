@@ -125,6 +125,7 @@ const ACHIEVEMENTS = [
         { id: 'mythique_1', titleKey: 'ach_mythique_1_title', descKey: 'ach_mythique_1_desc', icon: '🧙', condition: (s) => s.countByRarity('mythique') >= 1, rarity: 'mythique' },
         { id: 'legendaire_1', titleKey: 'ach_legendaire_1_title', descKey: 'ach_legendaire_1_desc', icon: '🏆', condition: (s) => s.countByRarity('legendaire') >= 1, rarity: 'legendaire' },
         { id: 'ultra_1', titleKey: 'ach_ultra_1_title', descKey: 'ach_ultra_1_desc', icon: '☀️', condition: (s) => s.countByRarity('ultra_legendaire') >= 1, rarity: 'ultra_legendaire' },
+        { id: 'fondateur_1', titleKey: 'ach_fondateur_1_title', descKey: 'ach_fondateur_1_desc', icon: '🌌', condition: (s) => s.countByRarity('fondateur') >= 1, rarity: 'fondateur', hidden: true },
         { id: 'rarity_master', titleKey: 'ach_rarity_master_title', descKey: 'ach_rarity_master_desc', icon: '👑', condition: (s) => s.countByRarity('rare') >= 1 && s.countByRarity('super_rare') >= 1 && s.countByRarity('epique') >= 1 && s.countByRarity('mythique') >= 1 && s.countByRarity('legendaire') >= 1, rarity: 'legendaire' },
     ].map(a => ({ ...a, categoryKey: 'ach_cat_rarity' })),
 
@@ -170,6 +171,12 @@ const ACHIEVEMENTS = [
         { id: 'fill_3', titleKey: 'ach_fill_3_title', descKey: 'ach_fill_3_desc', icon: '🍺', condition: (s) => s.hasVolume(500), rarity: 'commun' },
         { id: 'fill_4', titleKey: 'ach_fill_4_title', descKey: 'ach_fill_4_desc', icon: '🍾', condition: (s) => s.hasVolume(750), rarity: 'rare' },
     ].map(a => ({ ...a, categoryKey: 'ach_cat_formats' })),
+
+    // FONDATEURS
+    ...[
+        { id: 'founder_mark_1', titleKey: 'ach_founder_1_title', descKey: 'ach_founder_1_desc', icon: '🛡️', condition: (s) => s.hasBloupI, rarity: 'fondateur', hidden: true },
+        { id: 'founder_mark_2', titleKey: 'ach_founder_2_title', descKey: 'ach_founder_2_desc', icon: '⚜️', condition: (s) => s.hasBloupII, rarity: 'fondateur', hidden: true },
+    ].map(a => ({ ...a, categoryKey: 'ach_cat_founder' })),
 ];
 
 export function checkAchievements(allBeers) {
@@ -234,6 +241,8 @@ export function checkAchievements(allBeers) {
 
         hasGlitch: false,
         hasRickRoll: false,
+        hasBloupI: false,
+        hasBloupII: false,
         
         // UX & Preferences
         prefs: {
@@ -276,6 +285,14 @@ export function checkAchievements(allBeers) {
         // Let's enforce consumption for consistency in "stats" object.
         if (isConsumed && id === 'NEVER_GONNA_GIVE_YOU_ALE_AMBREE_0.50') {
             stats.hasRickRoll = true;
+        }
+
+        if (isConsumed && id === 'BLOUP_BLOUP_MARK_I') {
+            stats.hasBloupI = true;
+        }
+
+        if (isConsumed && id === 'BLOUP_BLOUP_MARK_II') {
+            stats.hasBloupII = true;
         }
 
         if (isConsumed && id.startsWith('CUSTOM_')) {
@@ -357,7 +374,7 @@ export function checkAchievements(allBeers) {
     // Rarity Stats
     stats.rarityCounts = {
         'base': 0, 'commun': 0, 'rare': 0, 'super_rare': 0,
-        'epique': 0, 'mythique': 0, 'legendaire': 0, 'ultra_legendaire': 0
+        'epique': 0, 'mythique': 0, 'legendaire': 0, 'ultra_legendaire': 0, 'fondateur': 0
     };
     stats.countByRarity = (r) => stats.rarityCounts[r] || 0;
 

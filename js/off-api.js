@@ -3,13 +3,18 @@
  * Handles fetching product data and mapping it to Beerdex schema.
  */
 
-const API_BASE_URL = 'https://world.openfoodfacts.org/api/v2';
+const API_BASE_URL = 'https://world.openfoodfacts.org/api/v3.6';
 import { calculateRarity } from './autoRarity.js';
 
-// Rate Limiting Config
+// Rate Limiting Config (per OFF API docs: 15 req/min product, 10 req/min search)
 const RATE_LIMITS = {
     search: { limit: 10, interval: 60 * 1000, timestamps: [] }, // 10 req/min
-    product: { limit: 100, interval: 60 * 1000, timestamps: [] } // 100 req/min
+    product: { limit: 15, interval: 60 * 1000, timestamps: [] } // 15 req/min
+};
+
+// User-Agent header as required by OFF API docs
+const API_HEADERS = {
+    'User-Agent': 'BeerDex/2.0 (https://beerdex.be)'
 };
 
 function checkRateLimit(type) {
@@ -43,7 +48,8 @@ export async function fetchProductByBarcode(barcode) {
 
     try {
         const response = await fetch(`${API_BASE_URL}/product/${barcode}.json`, {
-            method: 'GET'
+            method: 'GET',
+            headers: API_HEADERS
         });
 
         if (!response.ok) {
@@ -53,7 +59,8 @@ export async function fetchProductByBarcode(barcode) {
 
         const data = await response.json();
 
-        if (data.status === 0 || !data.product) {
+        // v3.6 uses 'result' field; v2 used 'status'
+        if ((data.result && data.result.id === 'product_not_found') || data.status === 0 || !data.product) {
             console.warn('Product not found in OFF');
             return { status: 'not_found' };
         }
@@ -222,11 +229,12 @@ export async function searchProducts(query, page = 1) {
     }
 
     try {
-        // Use the robust CGI search endpoint which handles text search better than V2
+        // Use the robust CGI search endpoint which handles text search better
         const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&tagtype_0=categories&tag_contains_0=contains&tag_0=beers&json=1&page=${page}&page_size=24`;
 
         const response = await fetch(url, {
-            method: 'GET'
+            method: 'GET',
+            headers: API_HEADERS
         });
 
         if (!response.ok) return { products: [], count: 0 };
@@ -257,7 +265,7 @@ export async function getTotalBeerCount() {
         const url = `https://world.openfoodfacts.org/category/beers.json?page_size=1`;
         const response = await fetch(url, {
             method: 'GET',
-            headers: { 'User-Agent': 'Beerdex/1.0' }
+            headers: API_HEADERS
         });
         if (!response.ok) return 0;
         const data = await response.json();
