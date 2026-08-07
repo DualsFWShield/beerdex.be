@@ -6099,9 +6099,19 @@ export function showAchievementDetails(title, desc, icon, isUnlocked, rarity) {
         else if (rarity === 'mythique') { rarityColor = '#e74c3c'; rarityKey = 'rarity_mythique'; }
         else if (rarity === 'legendaire') { rarityColor = '#f1c40f'; rarityKey = 'rarity_legendaire'; }
         else if (rarity === 'ultra_legendaire') { rarityColor = '#ff00cc'; rarityKey = 'rarity_ultra_legendaire'; }
+        else if (rarity === 'fondateur') { rarityColor = '#FFD700'; rarityKey = 'rarity_fondateur'; }
 
         const rarityTranslated = i18n.t(rarityKey) || rarity;
-        rarityHTML = `<div style="display:inline-block; font-size:0.75rem; font-weight:800; color:${rarityColor}; background:rgba(255,255,255,0.05); padding:4px 12px; border-radius:20px; margin-bottom:15px; text-transform:uppercase; letter-spacing:1px; border:1px solid ${rarityColor}40;">${rarityTranslated}</div>`;
+        
+        let specialClass = '';
+        if (rarity === 'ultra_legendaire') specialClass = 'rarity-ultra_legendaire';
+        if (rarity === 'fondateur') specialClass = 'rarity-fondateur';
+        
+        if (specialClass) {
+            rarityHTML = `<div class="${specialClass}" style="display:inline-block; font-size:0.75rem; padding:4px 12px; border-radius:20px; margin-bottom:15px; text-transform:uppercase; border: none !important;">${rarityTranslated}</div>`;
+        } else {
+            rarityHTML = `<div style="display:inline-block; font-size:0.75rem; font-weight:800; color:${rarityColor}; background:rgba(255,255,255,0.05); padding:4px 12px; border-radius:20px; margin-bottom:15px; text-transform:uppercase; letter-spacing:1px; border:1px solid ${rarityColor}40;">${rarityTranslated}</div>`;
+        }
     }
 
     const iconFilter = isUnlocked ? 'drop-shadow(0 4px 12px rgba(255,255,255,0.1))' : 'grayscale(100%) opacity(50%) drop-shadow(0 4px 12px rgba(255,255,255,0.05))';
