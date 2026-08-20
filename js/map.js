@@ -90,7 +90,7 @@ export const MAPS = {
 export function getRegionName(scope, code) {
     const map = MAPS[scope];
     if (!map) return code;
-    const isEn = i18n && typeof i18n.getLanguage === 'function' && i18n.getLanguage() === 'en';
+    const isEn = i18n && i18n.currentLang === 'en';
     if (isEn && map.names_en && map.names_en[code]) {
         return map.names_en[code];
     }

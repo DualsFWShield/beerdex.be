@@ -1,5 +1,5 @@
 import { calculateRarity } from './autoRarity.js';
-import { MAPS } from './map.js';
+import { MAPS, getRegionName } from './map.js';
 import { i18n } from './i18n.js';
 
 const ALL_DATA_FILES = [
@@ -38,7 +38,7 @@ export function enrichBeerMetadata(beer, breweryData = {}) {
         if (mapObj) {
             searchCountry = `${mapObj.icon} ${i18n.t(mapObj.titleKey)}`;
             if (mapObj.names && provinceCode) {
-                searchRegion = mapObj.names[provinceCode] || provinceCode;
+                searchRegion = getRegionName(countryCode.toLowerCase(), provinceCode) || provinceCode;
             }
         }
     }

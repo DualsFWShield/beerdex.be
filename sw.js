@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Beerdex-v101'; // Full i18n support for Add Beer form, region names, and buttons
+const CACHE_NAME = 'Beerdex-v103'; // Fix region names i18n in Add Beer form (using i18n.currentLang)
 const ASSETS = [
     './index.html',
     './style.css',
