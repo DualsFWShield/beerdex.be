@@ -9,8 +9,46 @@ const ALL_DATA_FILES = [
     'data/nlbeer.json',
     'data/usbeer.json',
     'data/newbeer.json',
-    'data/cobeer.json'
+    'data/cobeer.json',
+    'data/krbeer.json',
+    'data/jpbeer.json',
+    'data/cnbeer.json'
 ];
+
+export function enrichBeerMetadata(beer, breweryData = {}) {
+    let searchRegion = beer.searchRegion || '';
+    let searchCountry = beer.searchCountry || '';
+
+    const brewInfo = breweryData[beer.brewery];
+    let countryCode = brewInfo?.country;
+    let provinceCode = brewInfo?.province || beer.province;
+
+    if (!countryCode && beer.province) {
+        for (const [scope, mapObj] of Object.entries(MAPS)) {
+            if (mapObj.names && mapObj.names[beer.province]) {
+                countryCode = mapObj.countryCode;
+                break;
+            }
+        }
+    }
+    countryCode = countryCode || (brewInfo ? 'BE' : '');
+
+    if (countryCode) {
+        const mapObj = MAPS[countryCode.toLowerCase()];
+        if (mapObj) {
+            searchCountry = `${mapObj.icon} ${i18n.t(mapObj.titleKey)}`;
+            if (mapObj.names && provinceCode) {
+                searchRegion = mapObj.names[provinceCode] || provinceCode;
+            }
+        }
+    }
+
+    return {
+        ...beer,
+        searchRegion,
+        searchCountry
+    };
+}
 
 export async function fetchAllBeers(files = ALL_DATA_FILES) {
     let allBeers = [];
@@ -77,31 +115,12 @@ export async function fetchAllBeers(files = ALL_DATA_FILES) {
     };
 
     const mapped = allBeers.map(beer => {
-        // Find region data for search features
-        let searchRegion = '';
-        let searchCountry = '';
-        const brewInfo = breweryData[beer.brewery];
-        if (brewInfo) {
-            let countryCode = brewInfo.country || 'BE'; // default BE
-            let provinceCode = brewInfo.province;
-            
-            // Map the codes to human readable names from MAPS
-            const mapObj = MAPS[countryCode.toLowerCase()];
-            if (mapObj) {
-                searchCountry = `${mapObj.icon} ${i18n.t(mapObj.titleKey)}`; // e.g. "🇧🇪 Belgique"
-                if (mapObj.names && provinceCode) {
-                    searchRegion = mapObj.names[provinceCode] || provinceCode;
-                }
-            }
-        }
-
+        const enriched = enrichBeerMetadata(beer, breweryData);
         return {
-            ...beer,
+            ...enriched,
             id: beer.id || beer.title.replace(/\s+/g, '_').toUpperCase() + '_' + djb2Hash(beer.title + (beer.brewery || '')),
             rarity: rarityMap[beer.rarity_rank] || beer.rarity || 'commun',
-            isSeasonal: beer.rarity_rank === 'Saisonnière' || beer.isSeasonal || false,
-            searchRegion: searchRegion,
-            searchCountry: searchCountry
+            isSeasonal: beer.rarity_rank === 'Saisonnière' || beer.isSeasonal || false
         };
     });
 

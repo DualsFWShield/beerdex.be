@@ -1,4 +1,4 @@
-﻿[
+[
     {
         "title":  "DESPERADOS",
         "brewery":  "FISCHER",
@@ -1438,5 +1438,50 @@
         "id":  "Laca_Bo_ates_Lager",
         "image":  "images/beer/fr/laca-bo-ates-lager.png",
         "removeBackground":  true
+    },
+    {
+        "title": "Desperados Tropical",
+        "brewery": "Desperados",
+        "type": "Bière aromatisée",
+        "volume": "0.33 L",
+        "alcohol": "5.9°",
+        "id": "FR_DESPERADOS_TROPICAL_033",
+        "image": "images/beer/FUT.jpg",
+        "production_volume": "Industrielle",
+        "distribution": "Supermarché",
+        "barrel_aged": false,
+        "community_rating": 2.7,
+        "ingredients": "Bière aromatisée tequila, fruit de la passion et citron vert",
+        "rarity_rank": "Base"
+    },
+    {
+        "title": "Perlembourg Pils",
+        "brewery": "Perlembourg (Lidl)",
+        "type": "Pils",
+        "volume": "0.5 L",
+        "alcohol": "4.9°",
+        "id": "FR_PERLEMBOURG_PILS_05",
+        "image": "images/beer/FUT.jpg",
+        "production_volume": "Industrielle",
+        "distribution": "Supermarché",
+        "barrel_aged": false,
+        "community_rating": 2.3,
+        "ingredients": "Eau, malt d'orge, extrait de houblon",
+        "rarity_rank": "Base"
+    },
+    {
+        "title": "Perlembourg Strong",
+        "brewery": "Perlembourg (Lidl)",
+        "type": "Blonde Forte",
+        "volume": "0.5 L",
+        "alcohol": "8.0°",
+        "id": "FR_PERLEMBOURG_STRONG_05",
+        "image": "images/beer/FUT.jpg",
+        "production_volume": "Industrielle",
+        "distribution": "Supermarché",
+        "barrel_aged": false,
+        "community_rating": 2.2,
+        "ingredients": "Eau, malt d'orge, sirop de glucose, extrait de houblon",
+        "rarity_rank": "Base"
     }
 ]

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Beerdex-v96'; // Hidden Rickroll & Troll achievement update
+const CACHE_NAME = 'Beerdex-v97'; // Added KR, JP, CN maps & beer datasets, Brouwerij 't IJ range, custom beers
 const ASSETS = [
     './index.html',
     './style.css',
@@ -46,6 +46,9 @@ const ASSETS = [
     './data/usbeer.json',
     './data/newbeer.json',
     './data/cobeer.json',
+    './data/krbeer.json',
+    './data/jpbeer.json',
+    './data/cnbeer.json',
     './data/breweries.json',
     './data/locales/en.json',
     './data/locales/fr.json',
@@ -54,6 +57,9 @@ const ASSETS = [
     './icons/192x192.png',
     './icons/512x512.png',
     './offline.html',
+    './images/kr.svg',
+    './images/jp.svg',
+    './images/cn.svg',
     './images/beer/FUT.jpg',
     './images/beer/default.png',
     './images/music/Trolololo.mp3',

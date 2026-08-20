@@ -90,7 +90,7 @@ async function init() {
         // Lazy-loading: Load Core Beers first for fast render
         const coreFiles = ['data/newbeer.json', 'data/belgiumbeer.json'];
         const staticBeers = await Data.fetchAllBeers(coreFiles);
-        const customBeers = Storage.getCustomBeers();
+        const customBeers = Storage.getCustomBeers().map(b => Data.enrichBeerMetadata(b));
         state.beers = [...customBeers, ...staticBeers];
 
         // Initial Render
@@ -103,7 +103,10 @@ async function init() {
                 'data/frenchbeer.json',
                 'data/nlbeer.json',
                 'data/usbeer.json',
-                'data/cobeer.json'
+                'data/cobeer.json',
+                'data/krbeer.json',
+                'data/jpbeer.json',
+                'data/cnbeer.json'
             ];
             const moreBeers = await Data.fetchAllBeers(restFiles);
             // Deduplicate Custom/Static overlaps just in case? Data.js handles internal dedupe, but let's just append

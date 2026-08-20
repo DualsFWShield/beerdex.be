@@ -2324,6 +2324,27 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
         return '';
     };
 
+    let provinceOptionsHtml = `<option value="">${i18n.t('form_option_unspecified')}</option>`;
+    const currentProvince = v('province');
+
+    Object.entries(Map.MAPS || {}).forEach(([scope, mapObj]) => {
+        if (mapObj.isContinental) return;
+        const groupLabel = `${mapObj.icon} ${i18n.t(mapObj.titleKey)}`;
+        provinceOptionsHtml += `<optgroup label="${groupLabel}">`;
+        if (mapObj.names) {
+            Object.entries(mapObj.names).forEach(([code, name]) => {
+                const selected = (currentProvince === code) ? 'selected' : '';
+                provinceOptionsHtml += `<option value="${code}" ${selected}>${name}</option>`;
+            });
+        }
+        provinceOptionsHtml += `</optgroup>`;
+    });
+    provinceOptionsHtml += `
+        <optgroup label="🌍 ${i18n.t('region_others') || 'Autres'}">
+            <option value="OTHER" ${currentProvince === 'OTHER' ? 'selected' : ''}>${i18n.t('province_other') || 'Autre'}</option>
+        </optgroup>
+    `;
+
     wrapper.innerHTML = `
                 <h2 style="margin-bottom: 5px;">${title}</h2>
                 <div style="display:flex; gap:10px; margin-bottom:15px;">
@@ -2345,31 +2366,7 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
                     <div class="form-group">
                         <label class="form-label">${i18n.t('form_label_province')}</label>
                         <select class="form-select" name="province">
-                            <option value="">${i18n.t('form_option_unspecified')}</option>
-                            <optgroup label="${i18n.t('region_be_flanders')}">
-                                <option value="ANT" ${v('province') === 'ANT' ? 'selected' : ''}>${i18n.t('province_ant')}</option>
-                                <option value="OVL" ${v('province') === 'OVL' ? 'selected' : ''}>${i18n.t('province_ovl')}</option>
-                                <option value="WVL" ${v('province') === 'WVL' ? 'selected' : ''}>${i18n.t('province_wvl')}</option>
-                                <option value="VBR" ${v('province') === 'VBR' ? 'selected' : ''}>${i18n.t('province_vbr')}</option>
-                                <option value="LIM" ${v('province') === 'LIM' ? 'selected' : ''}>${i18n.t('province_lim')}</option>
-                            </optgroup>
-                            <optgroup label="${i18n.t('region_be_wallonia')}">
-                                <option value="HAI" ${v('province') === 'HAI' ? 'selected' : ''}>${i18n.t('province_hai')}</option>
-                                <option value="NAM" ${v('province') === 'NAM' ? 'selected' : ''}>${i18n.t('province_nam')}</option>
-                                <option value="LIE" ${v('province') === 'LIE' ? 'selected' : ''}>${i18n.t('province_lie')}</option>
-                                <option value="LUX" ${v('province') === 'LUX' ? 'selected' : ''}>${i18n.t('province_lux')}</option>
-                                <option value="WBR" ${v('province') === 'WBR' ? 'selected' : ''}>${i18n.t('province_wbr')}</option>
-                            </optgroup>
-                            <optgroup label="${i18n.t('region_be_brussels')}">
-                                <option value="BRU" ${v('province') === 'BRU' ? 'selected' : ''}>${i18n.t('province_bru')}</option>
-                            </optgroup>
-                            <optgroup label="${i18n.t('region_others')}">
-                                <option value="FR" ${v('province') === 'FR' ? 'selected' : ''}>${i18n.t('province_fr')}</option>
-                                <option value="NL" ${v('province') === 'NL' ? 'selected' : ''}>${i18n.t('province_nl')}</option>
-                                <option value="DE" ${v('province') === 'DE' ? 'selected' : ''}>${i18n.t('province_de')}</option>
-                                <option value="US" ${v('province') === 'US' ? 'selected' : ''}>${i18n.t('province_us')}</option>
-                                <option value="OTHER" ${v('province') === 'OTHER' ? 'selected' : ''}>${i18n.t('province_other')}</option>
-                            </optgroup>
+                            ${provinceOptionsHtml}
                         </select>
                     </div>
 
@@ -3905,6 +3902,9 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                             <option value="nl" ${localStorage.getItem('defaultMapScope') === 'nl' ? 'selected' : ''}>🇳🇱 ${i18n.t('country_nl')}</option>
                             <option value="us" ${localStorage.getItem('defaultMapScope') === 'us' ? 'selected' : ''}>🇺🇸 ${i18n.t('country_us')}</option>
                             <option value="co" ${localStorage.getItem('defaultMapScope') === 'co' ? 'selected' : ''}>🇨🇴 ${i18n.t('country_co')}</option>
+                            <option value="kr" ${localStorage.getItem('defaultMapScope') === 'kr' ? 'selected' : ''}>🇰🇷 ${i18n.t('country_kr')}</option>
+                            <option value="jp" ${localStorage.getItem('defaultMapScope') === 'jp' ? 'selected' : ''}>🇯🇵 ${i18n.t('country_jp')}</option>
+                            <option value="cn" ${localStorage.getItem('defaultMapScope') === 'cn' ? 'selected' : ''}>🇨🇳 ${i18n.t('country_cn')}</option>
                             <option value="eu" ${localStorage.getItem('defaultMapScope') === 'eu' ? 'selected' : ''}>🇪🇺 ${i18n.t('map_scope_eu')}</option>
                             <option value="wo" ${localStorage.getItem('defaultMapScope') === 'wo' ? 'selected' : ''}>🌍 ${i18n.t('map_scope_wo')}</option>
                         </select>

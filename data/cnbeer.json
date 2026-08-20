@@ -1,0 +1,62 @@
+[
+    {
+        "title": "Tsingtao",
+        "brewery": "Tsingtao Brewery",
+        "type": "Lager",
+        "volume": "0.33 L",
+        "alcohol": "4.7°",
+        "id": "CN_TSINGTAO_033",
+        "image": "images/beer/FUT.jpg",
+        "production_volume": "Industrielle",
+        "distribution": "Partout",
+        "barrel_aged": false,
+        "community_rating": 3.5,
+        "ingredients": "Eau de source Laoshan, malt d'orge, riz, houblon",
+        "rarity_rank": "Commun"
+    },
+    {
+        "title": "Snow Beer (Brave Quest)",
+        "brewery": "CR Snow",
+        "type": "Lager",
+        "volume": "0.33 L",
+        "alcohol": "4.5°",
+        "id": "CN_SNOW_033",
+        "image": "images/beer/FUT.jpg",
+        "production_volume": "Industrielle",
+        "distribution": "Partout",
+        "barrel_aged": false,
+        "community_rating": 3.1,
+        "ingredients": "Eau, malt d'orge, riz, houblon",
+        "rarity_rank": "Commun"
+    },
+    {
+        "title": "Harbin Beer",
+        "brewery": "Harbin Brewery",
+        "type": "Lager",
+        "volume": "0.33 L",
+        "alcohol": "4.8°",
+        "id": "CN_HARBIN_033",
+        "image": "images/beer/FUT.jpg",
+        "production_volume": "Industrielle",
+        "distribution": "Partout",
+        "barrel_aged": false,
+        "community_rating": 3.3,
+        "ingredients": "Eau, malt d'orge, riz, houblon de Chine",
+        "rarity_rank": "Commun"
+    },
+    {
+        "title": "Beijing Yanjing Beer",
+        "brewery": "Beijing Yanjing Brewery",
+        "type": "Lager",
+        "volume": "0.33 L",
+        "alcohol": "4.5°",
+        "id": "CN_YANJING_033",
+        "image": "images/beer/FUT.jpg",
+        "production_volume": "Industrielle",
+        "distribution": "Partout",
+        "barrel_aged": false,
+        "community_rating": 3.2,
+        "ingredients": "Eau minérale, malt d'orge, riz, houblon",
+        "rarity_rank": "Commun"
+    }
+]

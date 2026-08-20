@@ -1,0 +1,62 @@
+[
+    {
+        "title": "Cass Fresh",
+        "brewery": "Oriental Brewery",
+        "type": "Lager",
+        "volume": "0.33 L",
+        "alcohol": "4.5°",
+        "id": "KR_CASS_FRESH_033",
+        "image": "images/beer/world/Cass.png",
+        "production_volume": "Industrielle",
+        "distribution": "Partout",
+        "barrel_aged": false,
+        "community_rating": 3.2,
+        "ingredients": "Eau, malt d'orge, maïs, houblon",
+        "rarity_rank": "Commun"
+    },
+    {
+        "title": "Terra",
+        "brewery": "HiteJinro",
+        "type": "Lager",
+        "volume": "0.33 L",
+        "alcohol": "4.6°",
+        "id": "KR_TERRA_033",
+        "image": "images/beer/FUT.jpg",
+        "production_volume": "Industrielle",
+        "distribution": "Partout",
+        "barrel_aged": false,
+        "community_rating": 3.3,
+        "ingredients": "Eau, malt d'orge, houblon",
+        "rarity_rank": "Commun"
+    },
+    {
+        "title": "Hite Extra Cold",
+        "brewery": "HiteJinro",
+        "type": "Lager",
+        "volume": "0.33 L",
+        "alcohol": "4.5°",
+        "id": "KR_HITE_EXTRA_COLD_033",
+        "image": "images/beer/FUT.jpg",
+        "production_volume": "Industrielle",
+        "distribution": "Partout",
+        "barrel_aged": false,
+        "community_rating": 3.0,
+        "ingredients": "Eau, malt d'orge, riz, houblon",
+        "rarity_rank": "Commun"
+    },
+    {
+        "title": "Kloud Original Gravity",
+        "brewery": "Lotte Chilsung",
+        "type": "Pilsner",
+        "volume": "0.33 L",
+        "alcohol": "5.0°",
+        "id": "KR_KLOUD_033",
+        "image": "images/beer/FUT.jpg",
+        "production_volume": "Industrielle",
+        "distribution": "Partout",
+        "barrel_aged": false,
+        "community_rating": 3.4,
+        "ingredients": "Eau, 100% malt d'orge, houblon",
+        "rarity_rank": "Commun"
+    }
+]

@@ -1771,7 +1771,147 @@
     },
     {
         "name":  "BRASSERIE DU VAL DE DUC",
-        "province":  "BW",
+        "province":  "WBR",
         "country":  "BE"
+    },
+    {
+        "name": "Oriental Brewery",
+        "province": "KR11",
+        "country": "KR"
+    },
+    {
+        "name": "HiteJinro",
+        "province": "KR11",
+        "country": "KR"
+    },
+    {
+        "name": "Lotte Chilsung",
+        "province": "KR11",
+        "country": "KR"
+    },
+    {
+        "name": "Echigo Beer",
+        "province": "JP15",
+        "country": "JP"
+    },
+    {
+        "name": "Asahi Breweries",
+        "province": "JP13",
+        "country": "JP"
+    },
+    {
+        "name": "Sapporo Breweries",
+        "province": "JP01",
+        "country": "JP"
+    },
+    {
+        "name": "Kirin Brewery",
+        "province": "JP13",
+        "country": "JP"
+    },
+    {
+        "name": "Kiuchi Brewery",
+        "province": "JP08",
+        "country": "JP"
+    },
+    {
+        "name": "Tsingtao Brewery",
+        "province": "CNSD",
+        "country": "CN"
+    },
+    {
+        "name": "CR Snow",
+        "province": "CNBJ",
+        "country": "CN"
+    },
+    {
+        "name": "Harbin Brewery",
+        "province": "CNHL",
+        "country": "CN"
+    },
+    {
+        "name": "Beijing Yanjing Brewery",
+        "province": "CNBJ",
+        "country": "CN"
+    },
+    {
+        "name": "Brouwerij 't IJ",
+        "province": "NLNH",
+        "country": "NL"
+    },
+    {
+        "name": "Brouwerij ‘t IJ",
+        "province": "NLNH",
+        "country": "NL"
+    },
+    {
+        "name": "Heineken",
+        "province": "NLNH",
+        "country": "NL"
+    },
+    {
+        "name": "Bavaria",
+        "province": "NLNB",
+        "country": "NL"
+    },
+    {
+        "name": "Unseen Brewery",
+        "province": "WBR",
+        "country": "BE"
+    },
+    {
+        "name": "CoHop",
+        "province": "BRU",
+        "country": "BE"
+    },
+    {
+        "name": "Duvel Moortgat",
+        "province": "ANT",
+        "country": "BE"
+    },
+    {
+        "name": "Brasserie Haacht",
+        "province": "VBR",
+        "country": "BE"
+    },
+    {
+        "name": "Black Pig Brewery",
+        "province": "HAI",
+        "country": "BE"
+    },
+    {
+        "name": "Brasserie Battin",
+        "province": "LUX",
+        "country": "BE"
+    },
+    {
+        "name": "Palm Belgian Craft Brewers",
+        "province": "VBR",
+        "country": "BE"
+    },
+    {
+        "name": "Gordon (John Martin)",
+        "province": "WBR",
+        "country": "BE"
+    },
+    {
+        "name": "Brasserie de l'Orne",
+        "province": "WBR",
+        "country": "BE"
+    },
+    {
+        "name": "Birra Moretti (Heineken)",
+        "province": "BRU",
+        "country": "BE"
+    },
+    {
+        "name": "Desperados",
+        "province": "FRGES",
+        "country": "FR"
+    },
+    {
+        "name": "Perlembourg (Lidl)",
+        "province": "FRHDF",
+        "country": "FR"
     }
 ]
