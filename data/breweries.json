@@ -1901,8 +1901,13 @@
     },
     {
         "name": "Birra Moretti (Heineken)",
-        "province": "BRU",
-        "country": "BE"
+        "province": "ITFRI",
+        "country": "IT"
+    },
+    {
+        "name": "Birra Moretti",
+        "province": "ITFRI",
+        "country": "IT"
     },
     {
         "name": "Desperados",

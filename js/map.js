@@ -30,18 +30,72 @@ if (currentMapScope === 'wo' && Intl.DateTimeFormat().resolvedOptions().timeZone
 }
 
 export const MAPS = {
-    'be': { titleKey: 'country_be', icon: '🇧🇪', svg: 'images/belgium.svg', countryCode: 'BE', names: { 'ANT': 'Antwerpen', 'LIM': 'Limburg', 'VBR': 'Vlaams-Brabant', 'BRU': 'Bruxelles', 'WBR': 'Brabant Wallon', 'HAI': 'Hainaut', 'NAM': 'Namur', 'LIE': 'Liège', 'LUX': 'Luxembourg', 'WVL': 'West-Vlaanderen', 'OVL': 'Oost-Vlaanderen' }},
-    'fr': { titleKey: 'country_fr', icon: '🇫🇷', svg: 'images/fr.svg', countryCode: 'FR', names: { 'FRHDF': 'Hauts-de-France', 'FRGES': 'Grand Est', 'FRPAC': "Provence-Alpes-Côte d'Azur", 'FRARA': 'Auvergne-Rhône-Alpes', 'FRBFC': 'Bourgogne-Franche-Comté', 'FROCC': 'Occitanie', 'FRPDL': 'Pays de la Loire', 'FRBRE': 'Bretagne', 'FRNOR': 'Normandie', 'FR20R': 'Corse', 'FRNAQ': 'Nouvelle-Aquitaine', 'FRCVL': 'Centre-Val de Loire', 'FRIDF': 'Île-de-France' } },
-    'de': { titleKey: 'country_de', icon: '🇩🇪', svg: 'images/de.svg', countryCode: 'DE', names: { 'DESN': 'Sachsen', 'DEBY': 'Bayern', 'DERP': 'Rheinland-Pfalz', 'DESL': 'Saarland', 'DESH': 'Schleswig-Holstein', 'DENI': 'Niedersachsen', 'DENW': 'Nordrhein-Westfalen', 'DEBW': 'Baden-Württemberg', 'DEBB': 'Brandenburg', 'DEMV': 'Mecklenburg-Vorpommern', 'DEHB': 'Bremen', 'DEHH': 'Hamburg', 'DEHE': 'Hessen', 'DETH': 'Thüringen', 'DEST': 'Sachsen-Anhalt', 'DEBE': 'Berlin' } },
-    'nl': { titleKey: 'country_nl', icon: '🇳🇱', svg: 'images/nl.svg', countryCode: 'NL', names: { 'NLGR': 'Groningen', 'NLDR': 'Drenthe', 'NLOV': 'Overijssel', 'NLGE': 'Gelderland', 'NLLI': 'Limburg', 'NLZE': 'Zeeland', 'NLNB': 'Noord-Brabant', 'NLZH': 'Zuid-Holland', 'NLNH': 'Noord-Holland', 'NLFR': 'Friesland', 'NLFL': 'Flevoland', 'NLUT': 'Utrecht' } },
-    'us': { titleKey: 'country_us', icon: '🇺🇸', svg: 'images/us.svg', countryCode: 'US', names: { 'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'Californie','CO':'Colorado','CT':'Connecticut','DE':'Delaware','FL':'Floride','GA':'Géorgie','HI':'Hawaï','ID':'Idaho','IL':'Illinois','IN':'Indiana','IA':'Iowa','KS':'Kansas','KY':'Kentucky','LA':'Louisiane','ME':'Maine','MD':'Maryland','MA':'Massachusetts','MI':'Michigan','MN':'Minnesota','MS':'Mississippi','MO':'Missouri','MT':'Montana','NE':'Nebraska','NV':'Nevada','NH':'New Hampshire','NJ':'New Jersey','NM':'Nouveau-Mexique','NY':'New York','NC':'Caroline du Nord','ND':'Dakota du Nord','OH':'Ohio','OK':'Oklahoma','OR':'Oregon','PA':'Pennsylvanie','RI':'Rhode Island','SC':'Caroline du Sud','SD':'Dakota du Sud','TN':'Tennessee','TX':'Texas','UT':'Utah','VT':'Vermont','VA':'Virginie','WA':'État de Washington','WV':'Virginie-Occidentale','WI':'Wisconsin','WY':'Wyoming' } },
-    'co': { titleKey: 'country_co', icon: '🇨🇴', svg: 'images/co.svg', countryCode: 'CO', names: { 'COCUN': 'Cundinamarca', 'COANT': 'Antioquia', 'COVAL': 'Valle del Cauca', 'COATL': 'Atlántico', 'COBOL': 'Bolívar', 'COSAN': 'Santander', 'COMB': 'Bogotá D.C.', 'COBOY': 'Boyacá' } },
-    'kr': { titleKey: 'country_kr', icon: '🇰🇷', svg: 'images/kr.svg', countryCode: 'KR', names: { 'KR11': 'Séoul', 'KR26': 'Busan', 'KR27': 'Daegu', 'KR28': 'Incheon', 'KR29': 'Gwangju', 'KR30': 'Daejeon', 'KR31': 'Ulsan', 'KR41': 'Gyeonggi', 'KR42': 'Gangwon', 'KR43': 'Chungcheong du Nord', 'KR44': 'Chungcheong du Sud', 'KR45': 'Jeolla du Nord', 'KR46': 'Jeolla du Sud', 'KR47': 'Gyeongsang du Nord', 'KR48': 'Gyeongsang du Sud', 'KR49': 'Jeju', 'KR50': 'Sejong' } },
-    'jp': { titleKey: 'country_jp', icon: '🇯🇵', svg: 'images/jp.svg', countryCode: 'JP', names: { 'JP01': 'Hokkaidō', 'JP02': 'Aomori', 'JP03': 'Iwate', 'JP04': 'Miyagi', 'JP05': 'Akita', 'JP06': 'Yamagata', 'JP07': 'Fukushima', 'JP08': 'Ibaraki', 'JP09': 'Tochigi', 'JP10': 'Gunma', 'JP11': 'Saitama', 'JP12': 'Chiba', 'JP13': 'Tokyo', 'JP14': 'Kanagawa', 'JP15': 'Niigata', 'JP16': 'Toyama', 'JP17': 'Ishikawa', 'JP18': 'Fukui', 'JP19': 'Yamanashi', 'JP20': 'Nagano', 'JP21': 'Gifu', 'JP22': 'Shizuoka', 'JP23': 'Aichi', 'JP24': 'Mie', 'JP25': 'Shiga', 'JP26': 'Kyōto', 'JP27': 'Ōsaka', 'JP28': 'Hyōgo', 'JP29': 'Nara', 'JP30': 'Wakayama', 'JP31': 'Tottori', 'JP32': 'Shimane', 'JP33': 'Okayama', 'JP34': 'Hiroshima', 'JP35': 'Yamaguchi', 'JP36': 'Tokushima', 'JP37': 'Kagawa', 'JP38': 'Ehime', 'JP39': 'Kōchi', 'JP40': 'Fukuoka', 'JP41': 'Saga', 'JP42': 'Nagasaki', 'JP43': 'Kumamoto', 'JP44': 'Ōita', 'JP45': 'Miyazaki', 'JP46': 'Kagoshima', 'JP47': 'Okinawa' } },
-    'cn': { titleKey: 'country_cn', icon: '🇨🇳', svg: 'images/cn.svg', countryCode: 'CN', names: { 'CNSN': 'Shaanxi', 'CNSH': 'Shanghai', 'CNCQ': 'Chongqing', 'CNZJ': 'Zhejiang', 'CNJX': 'Jiangxi', 'CNYN': 'Yunnan', 'CNSD': 'Shandong', 'CNLN': 'Liaoning', 'CNXZ': 'Tibet', 'CNGS': 'Gansu', 'CNHK': 'Hong Kong', 'CNQH': 'Qinghai', 'CNBJ': 'Beijing', 'CNMO': 'Macao', 'CNNM': 'Mongolie-Intérieure', 'CNHB': 'Hubei', 'CNAH': 'Anhui', 'CNGZ': 'Guizhou', 'CNNX': 'Ningxia', 'CNJS': 'Jiangsu', 'CNXJ': 'Xinjiang', 'CNSX': 'Shanxi', 'CNHN': 'Hunan', 'CNSC': 'Sichuan', 'CNGX': 'Guangxi', 'CNJL': 'Jilin', 'CNTW': 'Taïwan', 'CNHE': 'Hebei', 'CNTJ': 'Tianjin', 'CNGD': 'Guangdong', 'CNFJ': 'Fujian', 'CNHL': 'Heilongjiang', 'CNHA': 'Henan', 'CNHI': 'Hainan' } },
-    'eu': { titleKey: 'map_scope_eu', icon: '🇪🇺', svg: 'images/europe.svg', isContinental: true, names: { 'BE': 'Belgique', 'FR': 'France', 'DE': 'Allemagne', 'NL': 'Pays-Bas', 'ES': 'Espagne', 'IE': 'Irlande', 'GB': 'Grande-Bretagne', 'DK': 'Danemark' } },
-    'wo': { titleKey: 'map_scope_wo', icon: '🌍', svg: 'images/world.svg', isContinental: true, names: { 'BE': 'Belgique', 'FR': 'France', 'DE': 'Allemagne', 'NL': 'Pays-Bas', 'US': 'États-Unis', 'CO': 'Colombie', 'KR': 'Corée du Sud', 'JP': 'Japon', 'CN': 'Chine', 'AU': 'Australie', 'ES': 'Espagne', 'IE': 'Irlande', 'GB': 'Grande-Bretagne', 'DK': 'Danemark', 'IT': 'Italie' } }
+    'be': { 
+        titleKey: 'country_be', icon: '🇧🇪', svg: 'images/belgium.svg', countryCode: 'BE', 
+        names: { 'ANT': 'Antwerpen', 'LIM': 'Limburg', 'VBR': 'Vlaams-Brabant', 'BRU': 'Bruxelles', 'WBR': 'Brabant Wallon', 'HAI': 'Hainaut', 'NAM': 'Namur', 'LIE': 'Liège', 'LUX': 'Luxembourg', 'WVL': 'West-Vlaanderen', 'OVL': 'Oost-Vlaanderen' },
+        names_en: { 'ANT': 'Antwerp', 'LIM': 'Limburg', 'VBR': 'Flemish Brabant', 'BRU': 'Brussels', 'WBR': 'Walloon Brabant', 'HAI': 'Hainaut', 'NAM': 'Namur', 'LIE': 'Liège', 'LUX': 'Luxembourg', 'WVL': 'West Flanders', 'OVL': 'East Flanders' }
+    },
+    'fr': { 
+        titleKey: 'country_fr', icon: '🇫🇷', svg: 'images/fr.svg', countryCode: 'FR', 
+        names: { 'FRHDF': 'Hauts-de-France', 'FRGES': 'Grand Est', 'FRPAC': "Provence-Alpes-Côte d'Azur", 'FRARA': 'Auvergne-Rhône-Alpes', 'FRBFC': 'Bourgogne-Franche-Comté', 'FROCC': 'Occitanie', 'FRPDL': 'Pays de la Loire', 'FRBRE': 'Bretagne', 'FRNOR': 'Normandie', 'FR20R': 'Corse', 'FRNAQ': 'Nouvelle-Aquitaine', 'FRCVL': 'Centre-Val de Loire', 'FRIDF': 'Île-de-France' },
+        names_en: { 'FRHDF': 'Hauts-de-France', 'FRGES': 'Grand Est', 'FRPAC': "Provence-Alpes-Côte d'Azur", 'FRARA': 'Auvergne-Rhône-Alpes', 'FRBFC': 'Bourgogne-Franche-Comté', 'FROCC': 'Occitanie', 'FRPDL': 'Pays de la Loire', 'FRBRE': 'Brittany', 'FRNOR': 'Normandy', 'FR20R': 'Corsica', 'FRNAQ': 'Nouvelle-Aquitaine', 'FRCVL': 'Centre-Val de Loire', 'FRIDF': 'Île-de-France' }
+    },
+    'de': { 
+        titleKey: 'country_de', icon: '🇩🇪', svg: 'images/de.svg', countryCode: 'DE', 
+        names: { 'DESN': 'Sachsen', 'DEBY': 'Bayern', 'DERP': 'Rheinland-Pfalz', 'DESL': 'Saarland', 'DESH': 'Schleswig-Holstein', 'DENI': 'Niedersachsen', 'DENW': 'Nordrhein-Westfalen', 'DEBW': 'Baden-Württemberg', 'DEBB': 'Brandenburg', 'DEMV': 'Mecklenburg-Vorpommern', 'DEHB': 'Bremen', 'DEHH': 'Hamburg', 'DEHE': 'Hessen', 'DETH': 'Thüringen', 'DEST': 'Sachsen-Anhalt', 'DEBE': 'Berlin' },
+        names_en: { 'DESN': 'Saxony', 'DEBY': 'Bavaria', 'DERP': 'Rhineland-Palatinate', 'DESL': 'Saarland', 'DESH': 'Schleswig-Holstein', 'DENI': 'Lower Saxony', 'DENW': 'North Rhine-Westphalia', 'DEBW': 'Baden-Württemberg', 'DEBB': 'Brandenburg', 'DEMV': 'Mecklenburg-Western Pomerania', 'DEHB': 'Bremen', 'DEHH': 'Hamburg', 'DEHE': 'Hesse', 'DETH': 'Thuringia', 'DEST': 'Saxony-Anhalt', 'DEBE': 'Berlin' }
+    },
+    'nl': { 
+        titleKey: 'country_nl', icon: '🇳🇱', svg: 'images/nl.svg', countryCode: 'NL', 
+        names: { 'NLGR': 'Groningen', 'NLDR': 'Drenthe', 'NLOV': 'Overijssel', 'NLGE': 'Gelderland', 'NLLI': 'Limburg', 'NLZE': 'Zeeland', 'NLNB': 'Noord-Brabant', 'NLZH': 'Zuid-Holland', 'NLNH': 'Noord-Holland', 'NLFR': 'Friesland', 'NLFL': 'Flevoland', 'NLUT': 'Utrecht' },
+        names_en: { 'NLGR': 'Groningen', 'NLDR': 'Drenthe', 'NLOV': 'Overijssel', 'NLGE': 'Gelderland', 'NLLI': 'Limburg', 'NLZE': 'Zeeland', 'NLNB': 'North Brabant', 'NLZH': 'South Holland', 'NLNH': 'North Holland', 'NLFR': 'Friesland', 'NLFL': 'Flevoland', 'NLUT': 'Utrecht' }
+    },
+    'us': { 
+        titleKey: 'country_us', icon: '🇺🇸', svg: 'images/us.svg', countryCode: 'US', 
+        names: { 'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'Californie','CO':'Colorado','CT':'Connecticut','DE':'Delaware','FL':'Floride','GA':'Géorgie','HI':'Hawaï','ID':'Idaho','IL':'Illinois','IN':'Indiana','IA':'Iowa','KS':'Kansas','KY':'Kentucky','LA':'Louisiane','ME':'Maine','MD':'Maryland','MA':'Massachusetts','MI':'Michigan','MN':'Minnesota','MS':'Mississippi','MO':'Missouri','MT':'Montana','NE':'Nebraska','NV':'Nevada','NH':'New Hampshire','NJ':'New Jersey','NM':'Nouveau-Mexique','NY':'New York','NC':'Caroline du Nord','ND':'Dakota du Nord','OH':'Ohio','OK':'Oklahoma','OR':'Oregon','PA':'Pennsylvanie','RI':'Rhode Island','SC':'Caroline du Sud','SD':'Dakota du Sud','TN':'Tennessee','TX':'Texas','UT':'Utah','VT':'Vermont','VA':'Virginie','WA':'État de Washington','WV':'Virginie-Occidentale','WI':'Wisconsin','WY':'Wyoming' },
+        names_en: { 'AL':'Alabama','AK':'Alaska','AZ':'Arizona','AR':'Arkansas','CA':'California','CO':'Colorado','CT':'Connecticut','DE':'Delaware','FL':'Florida','GA':'Georgia','HI':'Hawaii','ID':'Idaho','IL':'Illinois','IN':'Indiana','IA':'Iowa','KS':'Kansas','KY':'Kentucky','LA':'Louisiana','ME':'Maine','MD':'Maryland','MA':'Massachusetts','MI':'Michigan','MN':'Minnesota','MS':'Mississippi','MO':'Missouri','MT':'Montana','NE':'Nebraska','NV':'Nevada','NH':'New Hampshire','NJ':'New Jersey','NM':'New Mexico','NY':'New York','NC':'North Carolina','ND':'North Dakota','OH':'Ohio','OK':'Oklahoma','OR':'Oregon','PA':'Pennsylvania','RI':'Rhode Island','SC':'South Carolina','SD':'South Dakota','TN':'Tennessee','TX':'Texas','UT':'Utah','VT':'Vermont','VA':'Virginia','WA':'Washington','WV':'West Virginia','WI':'Wisconsin','WY':'Wyoming' }
+    },
+    'co': { 
+        titleKey: 'country_co', icon: '🇨🇴', svg: 'images/co.svg', countryCode: 'CO', 
+        names: { 'COCUN': 'Cundinamarca', 'COANT': 'Antioquia', 'COVAL': 'Valle del Cauca', 'COATL': 'Atlántico', 'COBOL': 'Bolívar', 'COSAN': 'Santander', 'COMB': 'Bogotá D.C.', 'COBOY': 'Boyacá' },
+        names_en: { 'COCUN': 'Cundinamarca', 'COANT': 'Antioquia', 'COVAL': 'Valle del Cauca', 'COATL': 'Atlántico', 'COBOL': 'Bolívar', 'COSAN': 'Santander', 'COMB': 'Bogotá D.C.', 'COBOY': 'Boyacá' }
+    },
+    'kr': { 
+        titleKey: 'country_kr', icon: '🇰🇷', svg: 'images/kr.svg', countryCode: 'KR', 
+        names: { 'KR11': 'Séoul', 'KR26': 'Busan', 'KR27': 'Daegu', 'KR28': 'Incheon', 'KR29': 'Gwangju', 'KR30': 'Daejeon', 'KR31': 'Ulsan', 'KR41': 'Gyeonggi', 'KR42': 'Gangwon', 'KR43': 'Chungcheong du Nord', 'KR44': 'Chungcheong du Sud', 'KR45': 'Jeolla du Nord', 'KR46': 'Jeolla du Sud', 'KR47': 'Gyeongsang du Nord', 'KR48': 'Gyeongsang du Sud', 'KR49': 'Jeju', 'KR50': 'Sejong' },
+        names_en: { 'KR11': 'Seoul', 'KR26': 'Busan', 'KR27': 'Daegu', 'KR28': 'Incheon', 'KR29': 'Gwangju', 'KR30': 'Daejeon', 'KR31': 'Ulsan', 'KR41': 'Gyeonggi', 'KR42': 'Gangwon', 'KR43': 'North Chungcheong', 'KR44': 'South Chungcheong', 'KR45': 'North Jeolla', 'KR46': 'South Jeolla', 'KR47': 'North Gyeongsang', 'KR48': 'South Gyeongsang', 'KR49': 'Jeju', 'KR50': 'Sejong' }
+    },
+    'jp': { 
+        titleKey: 'country_jp', icon: '🇯🇵', svg: 'images/jp.svg', countryCode: 'JP', 
+        names: { 'JP01': 'Hokkaidō', 'JP02': 'Aomori', 'JP03': 'Iwate', 'JP04': 'Miyagi', 'JP05': 'Akita', 'JP06': 'Yamagata', 'JP07': 'Fukushima', 'JP08': 'Ibaraki', 'JP09': 'Tochigi', 'JP10': 'Gunma', 'JP11': 'Saitama', 'JP12': 'Chiba', 'JP13': 'Tokyo', 'JP14': 'Kanagawa', 'JP15': 'Niigata', 'JP16': 'Toyama', 'JP17': 'Ishikawa', 'JP18': 'Fukui', 'JP19': 'Yamanashi', 'JP20': 'Nagano', 'JP21': 'Gifu', 'JP22': 'Shizuoka', 'JP23': 'Aichi', 'JP24': 'Mie', 'JP25': 'Shiga', 'JP26': 'Kyōto', 'JP27': 'Ōsaka', 'JP28': 'Hyōgo', 'JP29': 'Nara', 'JP30': 'Wakayama', 'JP31': 'Tottori', 'JP32': 'Shimane', 'JP33': 'Okayama', 'JP34': 'Hiroshima', 'JP35': 'Yamaguchi', 'JP36': 'Tokushima', 'JP37': 'Kagawa', 'JP38': 'Ehime', 'JP39': 'Kōchi', 'JP40': 'Fukuoka', 'JP41': 'Saga', 'JP42': 'Nagasaki', 'JP43': 'Kumamoto', 'JP44': 'Ōita', 'JP45': 'Miyazaki', 'JP46': 'Kagoshima', 'JP47': 'Okinawa' },
+        names_en: { 'JP01': 'Hokkaido', 'JP02': 'Aomori', 'JP03': 'Iwate', 'JP04': 'Miyagi', 'JP05': 'Akita', 'JP06': 'Yamagata', 'JP07': 'Fukushima', 'JP08': 'Ibaraki', 'JP09': 'Tochigi', 'JP10': 'Gunma', 'JP11': 'Saitama', 'JP12': 'Chiba', 'JP13': 'Tokyo', 'JP14': 'Kanagawa', 'JP15': 'Niigata', 'JP16': 'Toyama', 'JP17': 'Ishikawa', 'JP18': 'Fukui', 'JP19': 'Yamanashi', 'JP20': 'Nagano', 'JP21': 'Gifu', 'JP22': 'Shizuoka', 'JP23': 'Aichi', 'JP24': 'Mie', 'JP25': 'Shiga', 'JP26': 'Kyoto', 'JP27': 'Osaka', 'JP28': 'Hyogo', 'JP29': 'Nara', 'JP30': 'Wakayama', 'JP31': 'Tottori', 'JP32': 'Shimane', 'JP33': 'Okayama', 'JP34': 'Hiroshima', 'JP35': 'Yamaguchi', 'JP36': 'Tokushima', 'JP37': 'Kagawa', 'JP38': 'Ehime', 'JP39': 'Kochi', 'JP40': 'Fukuoka', 'JP41': 'Saga', 'JP42': 'Nagasaki', 'JP43': 'Kumamoto', 'JP44': 'Oita', 'JP45': 'Miyazaki', 'JP46': 'Kagoshima', 'JP47': 'Okinawa' }
+    },
+    'cn': { 
+        titleKey: 'country_cn', icon: '🇨🇳', svg: 'images/cn.svg', countryCode: 'CN', 
+        names: { 'CNSN': 'Shaanxi', 'CNSH': 'Shanghai', 'CNCQ': 'Chongqing', 'CNZJ': 'Zhejiang', 'CNJX': 'Jiangxi', 'CNYN': 'Yunnan', 'CNSD': 'Shandong', 'CNLN': 'Liaoning', 'CNXZ': 'Tibet', 'CNGS': 'Gansu', 'CNHK': 'Hong Kong', 'CNQH': 'Qinghai', 'CNBJ': 'Beijing', 'CNMO': 'Macao', 'CNNM': 'Mongolie-Intérieure', 'CNHB': 'Hubei', 'CNAH': 'Anhui', 'CNGZ': 'Guizhou', 'CNNX': 'Ningxia', 'CNJS': 'Jiangsu', 'CNXJ': 'Xinjiang', 'CNSX': 'Shanxi', 'CNHN': 'Hunan', 'CNSC': 'Sichuan', 'CNGX': 'Guangxi', 'CNJL': 'Jilin', 'CNTW': 'Taïwan', 'CNHE': 'Hebei', 'CNTJ': 'Tianjin', 'CNGD': 'Guangdong', 'CNFJ': 'Fujian', 'CNHL': 'Heilongjiang', 'CNHA': 'Henan', 'CNHI': 'Hainan' },
+        names_en: { 'CNSN': 'Shaanxi', 'CNSH': 'Shanghai', 'CNCQ': 'Chongqing', 'CNZJ': 'Zhejiang', 'CNJX': 'Jiangxi', 'CNYN': 'Yunnan', 'CNSD': 'Shandong', 'CNLN': 'Liaoning', 'CNXZ': 'Tibet', 'CNGS': 'Gansu', 'CNHK': 'Hong Kong', 'CNQH': 'Qinghai', 'CNBJ': 'Beijing', 'CNMO': 'Macau', 'CNNM': 'Inner Mongolia', 'CNHB': 'Hubei', 'CNAH': 'Anhui', 'CNGZ': 'Guizhou', 'CNNX': 'Ningxia', 'CNJS': 'Jiangsu', 'CNXJ': 'Xinjiang', 'CNSX': 'Shanxi', 'CNHN': 'Hunan', 'CNSC': 'Sichuan', 'CNGX': 'Guangxi', 'CNJL': 'Jilin', 'CNTW': 'Taiwan', 'CNHE': 'Hebei', 'CNTJ': 'Tianjin', 'CNGD': 'Guangdong', 'CNFJ': 'Fujian', 'CNHL': 'Heilongjiang', 'CNHA': 'Henan', 'CNHI': 'Hainan' }
+    },
+    'eu': { 
+        titleKey: 'map_scope_eu', icon: '🇪🇺', svg: 'images/europe.svg', isContinental: true, 
+        names: { 'BE': 'Belgique', 'FR': 'France', 'DE': 'Allemagne', 'NL': 'Pays-Bas', 'IT': 'Italie', 'ES': 'Espagne', 'IE': 'Irlande', 'GB': 'Grande-Bretagne', 'DK': 'Danemark' },
+        names_en: { 'BE': 'Belgium', 'FR': 'France', 'DE': 'Germany', 'NL': 'Netherlands', 'IT': 'Italy', 'ES': 'Spain', 'IE': 'Ireland', 'GB': 'United Kingdom', 'DK': 'Denmark' }
+    },
+    'wo': { 
+        titleKey: 'map_scope_wo', icon: '🌍', svg: 'images/world.svg', isContinental: true, 
+        names: { 'BE': 'Belgique', 'FR': 'France', 'DE': 'Allemagne', 'NL': 'Pays-Bas', 'US': 'États-Unis', 'CO': 'Colombie', 'KR': 'Corée du Sud', 'JP': 'Japon', 'CN': 'Chine', 'AU': 'Australie', 'ES': 'Espagne', 'IE': 'Irlande', 'GB': 'Grande-Bretagne', 'DK': 'Danemark', 'IT': 'Italie' },
+        names_en: { 'BE': 'Belgium', 'FR': 'France', 'DE': 'Germany', 'NL': 'Netherlands', 'US': 'United States', 'CO': 'Colombia', 'KR': 'South Korea', 'JP': 'Japan', 'CN': 'China', 'AU': 'Australia', 'ES': 'Spain', 'IE': 'Ireland', 'GB': 'United Kingdom', 'DK': 'Denmark', 'IT': 'Italy' }
+    }
 };
+
+export function getRegionName(scope, code) {
+    const map = MAPS[scope];
+    if (!map) return code;
+    const isEn = i18n && typeof i18n.getLanguage === 'function' && i18n.getLanguage() === 'en';
+    if (isEn && map.names_en && map.names_en[code]) {
+        return map.names_en[code];
+    }
+    return (map.names && map.names[code]) || code;
+}
 
 export async function renderMapWithData(container, historyWithBreweries) {
     if (!breweryData) {
@@ -225,7 +279,7 @@ function applyHeatmap(svg, stats, tooltip, mapConfig) {
         if (svgId && stats[svgId]) {
             const data = stats[svgId];
             const count = data.count;
-            const regionName = mapConfig.names[data.provCode] || svgId;
+            const regionName = getRegionName(currentMapScope, data.provCode) || mapConfig.names[data.provCode] || svgId;
 
             let fill = '#222';
             if (count >= 1) fill = '#f1c40f';

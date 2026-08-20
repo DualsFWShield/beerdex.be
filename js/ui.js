@@ -2332,9 +2332,10 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
         const groupLabel = `${mapObj.icon} ${i18n.t(mapObj.titleKey)}`;
         provinceOptionsHtml += `<optgroup label="${groupLabel}">`;
         if (mapObj.names) {
-            Object.entries(mapObj.names).forEach(([code, name]) => {
+            Object.entries(mapObj.names).forEach(([code]) => {
                 const selected = (currentProvince === code) ? 'selected' : '';
-                provinceOptionsHtml += `<option value="${code}" ${selected}>${name}</option>`;
+                const displayName = Map.getRegionName(scope, code);
+                provinceOptionsHtml += `<option value="${code}" ${selected}>${displayName}</option>`;
             });
         }
         provinceOptionsHtml += `</optgroup>`;
@@ -2349,7 +2350,7 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
                 <h2 style="margin-bottom: 5px;">${title}</h2>
                 <div style="display:flex; gap:10px; margin-bottom:15px;">
                     <button type="button" id="btn-autofill-name" class="form-input" style="font-size:0.8rem; padding: 5px; flex:1; display:flex; align-items:center; justify-content:center; gap:5px; background:rgba(255,255,255,0.1);">
-                        🔍 Remplir via Nom
+                        🔍 ${i18n.t('btn_autofill_name') || 'Remplir via Nom'}
                     </button>
                 </div>
                 <form id="add-beer-form">
@@ -2359,7 +2360,7 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Brasserie</label>
+                        <label class="form-label">${i18n.t('form_label_brewery') || 'Brasserie'}</label>
                         <input type="text" class="form-input" name="brewery" value="${v('brewery')}" required>
                     </div>
 
@@ -2417,6 +2418,7 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
                         <label for="barrel_aged" style="font-size:0.9rem; margin:0;">${i18n.t('form_label_barrel_aged')}</label>
                     </div>
 
+                    <div class="form-group">
                         <label class="form-label">${i18n.t('form_label_rarity')}</label>
                         <div style="display:flex; gap:10px; margin-bottom:10px;">
                             <select class="form-select" name="rarity" style="flex:1;">
@@ -2442,8 +2444,8 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
                         <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
                             <input type="file" id="image-file-input" accept="image/*" style="display: none;">
                             <input type="file" id="image-camera-input" accept="image/*" capture="environment" style="display: none;">
-                            <button type="button" class="form-input" style="flex:1; padding: 10px; font-size: 0.9rem;" onclick="document.getElementById('image-file-input').click()">📁 Galerie</button>
-                            <button type="button" class="form-input" style="flex:1; padding: 10px; font-size: 0.9rem;" onclick="document.getElementById('image-camera-input').click()">📷 Photo</button>
+                            <button type="button" class="form-input" style="flex:1; padding: 10px; font-size: 0.9rem;" onclick="document.getElementById('image-file-input').click()">📁 ${i18n.t('btn_gallery') || 'Galerie'}</button>
+                            <button type="button" class="form-input" style="flex:1; padding: 10px; font-size: 0.9rem;" onclick="document.getElementById('image-camera-input').click()">📷 ${i18n.t('btn_photo') || 'Photo'}</button>
                         </div>
                         <div style="text-align: center;">
                             <span id="file-name" style="font-size: 0.8rem; color: #888;">${editModeBeer ? (i18n.t('form_status_img_keep') || 'Image conservée') : (i18n.t('form_status_img_default') || 'Aucune image')}</span>
@@ -2460,10 +2462,10 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            wrapper.querySelector('#file-name').innerText = "Traitement...";
+            wrapper.querySelector('#file-name').innerText = i18n.t('status_processing') || "Traitement...";
             resizeImage(file, 250, 250, (resizedBase64) => {
                 imageBase64 = resizedBase64;
-                wrapper.querySelector('#file-name').innerText = file.name + " (Redimensionné)";
+                wrapper.querySelector('#file-name').innerText = file.name + " (" + (i18n.t('status_resized') || "Redimensionné") + ")";
             });
         }
     };
@@ -3761,7 +3763,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
 
             <!-- 1. Interface & Apparence -->
             <div class="setting-group" data-group="interface">
-                <h4>🎨 Interface & Apparence</h4>
+                <h4 data-i18n="settings_group_theme_appearance">${i18n.t('settings_group_theme_appearance') || '🎨 Interface & Apparence'}</h4>
                 
                 <div class="setting-row" data-keywords="langue language english français">
                     <div class="setting-info">
@@ -3857,8 +3859,8 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
 
                 <div class="setting-row" style="flex-direction: column; align-items: stretch;" data-keywords="grille notation rating note template critère">
                     <div class="setting-info" style="margin-bottom: 10px;">
-                        <span class="setting-title">Grille de notation</span>
-                        <span class="setting-desc">Personnalisez les critères de notation de vos bières.</span>
+                        <span class="setting-title" data-i18n="settings_rating_grid_title">${i18n.t('settings_rating_grid_title') || 'Grille de notation'}</span>
+                        <span class="setting-desc" data-i18n="settings_rating_grid_desc">${i18n.t('settings_rating_grid_desc') || 'Personnalisez les critères de notation de vos bières.'}</span>
                     </div>
                     <button type="button" id="btn-template" class="setting-btn">
                         ${i18n.t('settings_btn_configure_rating')}
@@ -3873,7 +3875,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
 
             <!-- 2. Fonctionnalités & Immersion -->
             <div class="setting-group" data-group="features">
-                <h4>⚙️ Fonctionnalités & Immersion</h4>
+                <h4 data-i18n="settings_group_features_immersion">${i18n.t('settings_group_features_immersion') || '⚙️ Fonctionnalités & Immersion'}</h4>
 
                 <div class="setting-row" data-keywords="carte map localisation soif">
                     <div class="setting-info">
@@ -3992,7 +3994,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
 
             <!-- 3. Suivi & Statistiques -->
             <div class="setting-group" data-group="stats">
-                <h4>📊 Suivi & Statistiques</h4>
+                <h4 data-i18n="settings_group_stats_tracking">${i18n.t('settings_group_stats_tracking') || '📊 Suivi & Statistiques'}</h4>
 
                 <!-- BAC Toggle -->
                 <div class="setting-row" data-keywords="bac alcoolémie sang blood alcohol">
@@ -4243,7 +4245,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
 
             <!-- 4. Données & Sauvegarde -->
             <div class="setting-group" data-group="data">
-                <h4>💾 Données & Sauvegarde</h4>
+                <h4 data-i18n="settings_group_data_backup">${i18n.t('settings_group_data_backup') || '💾 Données & Sauvegarde'}</h4>
 
                 <div class="setting-row" data-keywords="exporter importer données json export import data save">
                     <div class="setting-info" style="margin-bottom: 0;">
@@ -4259,7 +4261,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                 <div class="setting-row" data-keywords="réinitialiser supprimer reset clear effacer delete">
                     <div class="setting-info" style="width:100%;">
                         <span class="setting-title" style="color:#ff6b6b;">${i18n.t('settings_danger_zone')}</span>
-                        <span class="setting-desc" style="margin-bottom:10px;">Suppression définitive des données</span>
+                        <span class="setting-desc" data-i18n="settings_danger_desc" style="margin-bottom:10px;">${i18n.t('settings_danger_desc') || 'Suppression définitive des données'}</span>
                         
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:10px;">
                             <button id="btn-reset-ratings" class="setting-btn" style="font-size:0.75rem;">${i18n.t('settings_reset_ratings')}</button>
@@ -4274,7 +4276,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
 
             <!-- 5. Système & Support -->
             <div class="setting-group" data-group="system">
-                <h4>🛠️ Système & Support</h4>
+                <h4 data-i18n="settings_group_system_support">${i18n.t('settings_group_system_support') || '🛠️ Système & Support'}</h4>
 
                 <div class="setting-row" data-keywords="mise à jour update actualiser version">
                     <div class="setting-info">
@@ -4282,7 +4284,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                         <span class="setting-desc" data-i18n="settings_check_update_desc">Forcer la recherche de la dernière version de l'application</span>
                     </div>
                     <div class="setting-action">
-                        <button id="btn-check-update" class="setting-btn">🔄 Actualiser</button>
+                        <button id="btn-check-update" class="setting-btn">🔄 ${i18n.t('btn_refresh') || 'Actualiser'}</button>
                     </div>
                 </div>
 
@@ -4292,7 +4294,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                         <span class="setting-desc" data-i18n="settings_restart_tuto_desc">Relancer le guide de démarrage interactif</span>
                     </div>
                     <div class="setting-action">
-                        <button id="btn-restart-tuto" class="setting-btn">🎓 Lancer</button>
+                        <button id="btn-restart-tuto" class="setting-btn">🎓 ${i18n.t('btn_launch') || 'Lancer'}</button>
                     </div>
                 </div>
 
@@ -4302,7 +4304,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                         <span class="setting-desc" data-i18n="settings_request_beer_desc">Soumettre une bière manquante pour ajout à la base</span>
                     </div>
                     <div class="setting-action">
-                        <button id="btn-request-beer" class="setting-btn primary">🍺 Demander</button>
+                        <button id="btn-request-beer" class="setting-btn primary">🍺 ${i18n.t('btn_request') || 'Demander'}</button>
                     </div>
                 </div>
 
@@ -4312,7 +4314,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                         <span class="setting-desc" data-i18n="settings_dedup_desc">Fusionner vos bières personnalisées avec les bières officielles</span>
                     </div>
                     <div class="setting-action">
-                        <button id="btn-deduplicate-db" class="setting-btn">🧹 Nettoyer</button>
+                        <button id="btn-deduplicate-db" class="setting-btn">🧹 ${i18n.t('btn_clean') || 'Nettoyer'}</button>
                     </div>
                 </div>
 
@@ -4322,7 +4324,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                         <span class="setting-desc" data-i18n="settings_debug_desc">Outils avancés pour la réparation et le test</span>
                     </div>
                     <div class="setting-action">
-                        <button id="btn-open-debug" class="setting-btn">⚙️ Ouvrir</button>
+                        <button id="btn-open-debug" class="setting-btn">⚙️ ${i18n.t('btn_open') || 'Ouvrir'}</button>
                     </div>
                 </div>
             </div>
