@@ -18,7 +18,9 @@ import * as Deduplicator from './deduplicator.js';
 import * as Theme from './theme.js';
 import * as Utils from './utils.js';
 import { setupScanHandler } from './scanHandler.js';
+import { Recommendation } from './recommendation.js';
 
+window.Recommendation = Recommendation;
 window.Share = Share;
 window.Wrapped = Wrapped;
 window.UI = UI;
@@ -93,6 +95,8 @@ async function init() {
         const customBeers = Storage.getCustomBeers().map(b => Data.enrichBeerMetadata(b));
         state.beers = [...customBeers, ...staticBeers];
 
+        if (window.Recommendation) window.Recommendation.init(state.beers);
+
         // Initial Render
         renderCurrentView();
 
@@ -115,6 +119,7 @@ async function init() {
             
             if (newBeersToAdd.length > 0) {
                 state.beers = [...state.beers, ...newBeersToAdd];
+                if (window.Recommendation) window.Recommendation.init(state.beers);
                 applyFilters();
                 // We don't forcefully re-render to avoid jumping, but next paginate will include them.
                 // If user is searching right now, they'll show up on next input.
@@ -123,6 +128,9 @@ async function init() {
             // Cleanup orphaned user data (beers removed from DB due to deduplication etc.)
             // Must run after all beers are loaded so we have the full ID set
             Storage.cleanupOrphanedUserData(state.beers);
+
+            // Check for Achievements on Load (Syncs import/offline data with full database)
+            Achievements.checkAchievements(state.beers);
 
             // Run deduplicator later to save performance (only if enabled in Debug)
             setTimeout(() => {
@@ -136,9 +144,6 @@ async function init() {
 
         // Setup Event Listeners
         setupEventListeners();
-
-        // Check for Achievements on Load (Syncs import/offline data)
-        Achievements.checkAchievements(state.beers);
 
         // Check Consent -> which checks Welcome
         UI.checkAndShowConsent();
@@ -895,7 +900,35 @@ function renderCurrentView() {
     if (state.view === 'home') {
         const isDiscovery = Storage.getPreference('discoveryMode', false);
 
-        // 1. Search
+        // 1. Check BrewBrother
+        if (state.activeFilters.useBrewBrother && window.Recommendation) {
+            mainContent.innerHTML = '';
+            UI.showSkeletonLoading(mainContent);
+            
+            window.Recommendation.getRecommendedBeers(state.beers, {
+                mode: state.activeFilters.recMode,
+                country: state.activeFilters.recCountry,
+                region: state.activeFilters.recRegion,
+                manualPrefs: {
+                     types: state.activeFilters.recTypes,
+                     flavors: state.activeFilters.recFlavors,
+                     idealAbv: parseFloat(state.activeFilters.recAbv)
+                }
+            }).then(results => {
+                state.filteredBeers = results;
+                state.pagination.page = 1;
+                state.pagination.hasMore = false;
+                
+                const busTab = document.querySelector('.nav-item[data-view="drunk"]');
+                if (busTab) busTab.style.display = isDiscovery ? 'none' : 'flex';
+
+                mainContent.innerHTML = '';
+                loadMoreBeers(mainContent, false, isDiscovery, false);
+            });
+            return;
+        }
+
+        // 2. Search
         let filtered = searchBeers(state.beers, state.filter);
 
         // 2. Discovery Logic

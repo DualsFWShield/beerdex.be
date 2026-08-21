@@ -1,0 +1,180 @@
+{
+    "brewbrother": {
+        "positive": {
+            "scenarios": [
+                "Si vous cherchez {un_type} de grande qualité, {title} de chez {brewery} s'impose d'elle-même. Avec ses {abv} et {prestige_desc}, elle s'inscrit précisément dans la lignée de vos dégustations favorites. {outro}",
+                "D'après l'analyse de votre profil, {title} ({abv}) est un choix remarquable. La brasserie {brewery} signe ici {un_type} dont le profil aromatique saura immédiatement séduire votre palais. {outro}",
+                "Vous qui appréciez {le_type}, cette cuvée signée {brewery} coche toutes les cases. {prestige_desc} et affichant {abv}, {title} vous offrira une dégustation équilibrée et savoureuse. {outro}",
+                "Coup de cœur recommandé pour {title} ! Entre le savoir-faire reconnu de {brewery} et la maîtrise {du_type}, cette bouteille à {abv} est taillée sur mesure pour vos préférences. {outro}"
+            ],
+            "prestige_desc": {
+                "industrial": "son statut de grand classique accessible",
+                "standard": "son équilibre gustatif maîtrisé",
+                "craft": "sa belle signature artisanale indépendante",
+                "prestige": "son prestige brassicole d'exception"
+            },
+            "outros": [
+                "Je vous la conseille les yeux fermés pour votre prochaine dégustation.",
+                "Une référence à ajouter sans hésiter à votre sélection.",
+                "Une excellente expérience gustative en perspective !"
+            ]
+        },
+        "mixed": {
+            "scenarios": [
+                "{title} ({brewery}) est {un_type} titrant à {abv}. {prestige_desc}, elle s'écarte un peu de vos préférences habituelles mais constitue une alternative intéressante si vous souhaitez varier les plaisirs. {outro}",
+                "Voici une suggestion pour explorer de nouveaux horizons : {title} à {abv}. Bien que {le_type} ne soit pas votre style prioritaire, la proposition de {brewery} mérite qu'on s'y attarde par curiosité. {outro}",
+                "Une proposition intermédiaire avec {title} ({abv}). La brasserie {brewery} offre ici {un_type} plus mesurée que vos coups de cœur habituels, idéale pour une dégustation sans prise de tête. {outro}"
+            ],
+            "prestige_desc": {
+                "industrial": "Bien qu'il s'agisse d'un produit industriel très courant",
+                "standard": "Fidèle à un profil classique et régulier",
+                "craft": "Portée par une approche artisanale originale",
+                "prestige": "Malgré la réputation prestigieuse de son étiquette"
+            },
+            "outros": [
+                "Une expérience intéressante à tenter pour élargir votre carnet de dégustation.",
+                "Pourquoi ne pas lui donner sa chance lors d'un moment de découverte ?",
+                "À essayer avec curiosité !"
+            ]
+        },
+        "negative": {
+            "scenarios": [
+                "Au vu de votre historique, je vous déconseille {title} de chez {brewery}. À {abv}, {prestige_desc}, elle sera en net décalage avec vos standards de dégustation habituels. {outro}",
+                "Je préfère être transparent : {title} ({abv}) risque fort de vous décevoir. {le_type} ne correspond pas du tout à ce qui vous plaît, et {prestige_desc}. {outro}",
+                "Avec une compatibilité statistique très faible, {title} ({brewery}) n'est pas recommandée pour votre profil. Son profil {de_type} et {prestige_desc} sont trop éloignés de vos goûts. {outro}"
+            ],
+            "prestige_desc": {
+                "industrial": "son positionnement grand public très standardisé manquera cruellement de relief",
+                "standard": "sa recette classique n'apporte pas le caractère que vous recherchez",
+                "craft": "son profil aromatique s'oppose directement à vos appréciations passées",
+                "prestige": "son style ne convient tout simplement pas à votre palais malgré sa renommée"
+            },
+            "outros": [
+                "Je vous conseille plutôt de passer votre chemin et de choisir une autre bouteille.",
+                "Mieux vaut vous orienter vers une référence plus en phase avec vos favoris.",
+                "À éviter, vous trouverez bien plus satisfaisant ailleurs."
+            ]
+        },
+        "alreadyTasted": [
+            "Cela étant, vous l'avez déjà dégustée dans le passé : votre propre palais reste le meilleur juge !",
+            "Notez qu'elle figure déjà dans votre carnet, vous savez donc précisément à quoi vous en tenir.",
+            "Puisqu'elle est déjà dans votre historique, vous avez déjà votre propre avis sur cette bouteille !"
+        ]
+    },
+    "friend": {
+        "positive": {
+            "scenarios": [
+                "Si tu cherches {un_type} au top, fonce sur {title} de chez {brewery} ! Avec ses {abv} et {prestige_desc}, ça colle pile-poil avec tout ce que tu kiffes d'habitude. {outro}",
+                "Mec, j'ai direct pensé à toi en voyant {title} ({abv}) ! {brewery} nous sort là {un_type} aux petits oignons qui va glisser tout seul. {outro}",
+                "Tu es fan {de_type} ? Alors {title} ({abv}) est un match parfait. {prestige_desc}, c'est exactement le genre de bouteille qui va te régaler ce soir. {outro}",
+                "Gros coup de cœur pour {title} ! Entre la réputation de {brewery} et la maîtrise {du_type}, cette quille à {abv} a tout pour te plaire. {outro}"
+            ],
+            "prestige_desc": {
+                "industrial": "c'est un grand classique de supermarché qui fait carrément le taf",
+                "standard": "son équilibre est parfait pour passer un super moment",
+                "craft": "du super boulot de brasserie artisanale indépendante",
+                "prestige": "là on touche carrément à une masterclass de connaisseur"
+            },
+            "outros": [
+                "Santé mon pote, tu m'en diras des nouvelles !",
+                "Fonce les yeux fermés, c'est du très bon !",
+                "À décapsuler d'urgence !"
+            ]
+        },
+        "mixed": {
+            "scenarios": [
+                "{title} ({brewery}) est {un_type} à {abv}. {prestige_desc}, ça te changera un peu de tes bières habituelles mais ça peut valoir le coup d'œil. {outro}",
+                "Envie de tester autre chose ? Regarde {title} à {abv}. C'est pas forcément ton style {de_type} habituel, mais {prestige_desc}, ça se tente carrément. {outro}",
+                "Un petit compromis avec {title} ({abv}) de chez {brewery}. C'est plus léger ou différent de tes classiques, mais pour l'apéro sans prise de tête, ça passe bien. {outro}"
+            ],
+            "prestige_desc": {
+                "industrial": "C'est de l'industriel basique mais efficace",
+                "standard": "Une bière honnête et bien calibrée",
+                "craft": "Une création artisanale qui sort des sentiers battus",
+                "prestige": "C'est une belle quille réputée même si c'est pas ton délire habituel"
+            },
+            "outros": [
+                "Pourquoi pas tenter le coup si t'es curieux ?",
+                "Ça passe ou ça casse, à toi de voir !",
+                "À tester si tu veux du changement !"
+            ]
+        },
+        "negative": {
+            "scenarios": [
+                "Honnêtement mon pote, laisse tomber {title} de chez {brewery}. À {abv} et {prestige_desc}, ça va te paraître fade au possible par rapport à ce que tu bois d'habitude. {outro}",
+                "Gros carton rouge sur {title} ({abv}) ! {le_type} c'est vraiment pas ta came, et {prestige_desc}. Tu vas détester. {outro}",
+                "Oublie direct {title} ({brewery}). Son profil {de_type} et {prestige_desc} sont à des années-lumière de ce que tu aimes. {outro}"
+            ],
+            "prestige_desc": {
+                "industrial": "en tant qu'industrielle grand public de supermarché, ça manque cruellement de caractère",
+                "standard": "c'est bien trop banal pour ton palais",
+                "craft": "même si c'est artisanal, la recette ne va pas du tout te convenir",
+                "prestige": "malgré la renommée de la bouteille, c'est l'opposé total de tes goûts"
+            },
+            "outros": [
+                "Passe ton chemin et choisis autre chose au frais !",
+                "Esquive cette quille, fais-moi confiance !",
+                "Prends plutôt une bonne valeur sûre !"
+            ]
+        },
+        "alreadyTasted": [
+            "Mais bon, vu que tu l'as déjà bue et notée, tu sais déjà mieux que moi ce qu'elle vaut !",
+            "Après je vois que tu l'as déjà testée, donc tu connais la chanson !",
+            "De toute façon elle est déjà dans ton historique, c'est toi l'expert là-dessus !"
+        ]
+    },
+    "neutral": {
+        "positive": {
+            "scenarios": [
+                "Recommandation algorithmique favorable : {title} ({brewery}). Produit titrant {abv} dans la catégorie {type}. {prestige_desc}. Indice de compatibilité élevé avec l'historique utilisateur. {outro}",
+                "Suggestion optimale basée sur les données : {title} ({abv}). {le_type} produite par {brewery} maximise vos scores d'affinité. {prestige_desc}. {outro}"
+            ],
+            "prestige_desc": {
+                "industrial": "Distribution commerciale à large échelle.",
+                "standard": "Production standardisée de qualité constante.",
+                "craft": "Production de brasserie artisanale indépendante.",
+                "prestige": "Catégorie hautement réputée auprès des dégustateurs."
+            },
+            "outros": [
+                "Recommandation validée.",
+                "Profil de compatibilité optimal."
+            ]
+        },
+        "mixed": {
+            "scenarios": [
+                "Recommandation modérée : {title} ({brewery}). Titrage alcoolique : {abv}. Catégorie : {type}. {prestige_desc}. Écart partiel identifié avec les tendances prioritaires. {outro}",
+                "Suggestion exploratoire : {title} ({abv}). {le_type} s'écarte modérément de vos standards réguliers. {prestige_desc}. {outro}"
+            ],
+            "prestige_desc": {
+                "industrial": "Produit standard de grande diffusion.",
+                "standard": "Référence conventionnelle.",
+                "craft": "Brassin artisanal atypique.",
+                "prestige": "Référence établie mais divergente du profil type."
+            },
+            "outros": [
+                "Pertinence globale : Moyenne.",
+                "Potentiel d'exploration identifié."
+            ]
+        },
+        "negative": {
+            "scenarios": [
+                "Alerte d'incompatibilité algorithmique : {title} ({brewery}). {le_type} à {abv} présente une forte divergence avec votre historique. {prestige_desc}. {outro}",
+                "Recommandation déconseillée pour {title} ({abv}). Le profil {de_type} et {prestige_desc} contredisent vos critères d'appréciation dominants. {outro}"
+            ],
+            "prestige_desc": {
+                "industrial": "produit industriel basique jugé insuffisant pour ce profil",
+                "standard": "caractéristiques globales en décalage",
+                "craft": "direction aromatique incompatible",
+                "prestige": "divergence marquée malgré la renommée du produit"
+            },
+            "outros": [
+                "Recommandation déconseillée.",
+                "Risque d'insatisfaction élevé."
+            ]
+        },
+        "alreadyTasted": [
+            "Note : Référence déjà enregistrée dans les dégustations de l'utilisateur.",
+            "Historique existant sur ce produit pour cet utilisateur."
+        ]
+    }
+}

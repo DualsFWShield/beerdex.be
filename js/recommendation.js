@@ -1,5 +1,5 @@
 // recommendation.js — Bridge for BrewBrother
-import { Storage } from './storage.js';
+import * as Storage from './storage.js';
 
 let engine = null;
 let lastAllBeers = [];

@@ -112,7 +112,9 @@
     BrewBrother.prototype.scoreBeer = function(beer, profile) {
         const cfg = this.config;
         // Handle empty profile (new user) -> everything gets a baseline score
-        const isProfileEmpty = Object.keys(profile.typeAffinity).length === 0;
+        const isProfileEmpty = Object.keys(profile.typeAffinity || {}).length === 0 && 
+                               Object.keys(profile.breweryAffinity || {}).length === 0 && 
+                               Object.keys(profile.flavorAffinity || {}).length === 0;
 
         let typeScore = profile.typeAffinity[beer.type] || 0;
         let breweryScore = profile.breweryAffinity[beer.brewery] || 0;
@@ -158,7 +160,8 @@
         // Random jitter to break ties
         totalScore += Math.random() * 0.05;
 
-        totalScore = clamp(totalScore, 0, 1);
+        // Apply a non-linear curve so that good matches naturally reach higher scores out of 20
+        totalScore = Math.pow(clamp(totalScore, 0, 1), 0.65);
         const score20 = parseFloat((totalScore * 20).toFixed(1));
         const percentage = Math.round(totalScore * 100);
 
@@ -200,7 +203,7 @@
         scoredCandidates.sort((a, b) => b._brewBrotherMatch.score20 - a._brewBrotherMatch.score20);
         
         return {
-            results: scoredCandidates.slice(0, cfg.output.maxResults),
+            results: scoredCandidates,
             profile
         };
     };

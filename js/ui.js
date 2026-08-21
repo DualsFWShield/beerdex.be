@@ -943,6 +943,7 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
                 <h3 class="beer-title">${beer.title}</h3>
                 <p class="beer-brewery">${beer.brewery}</p>
                 <div class="beer-card-stats-row" style="display:flex; gap:5px; justify-content:center; margin-top:5px; color:#aaa; flex-wrap:wrap;">
+                    ${beer._brewBrotherMatch ? `<span style="background:var(--accent-gold); color:#000; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:0.7rem;">🤖 ${beer._brewBrotherMatch.percentage}%</span>` : ''}
                     ${abv} ${vol} ${typeBadge}
                 </div>
                 ${bacBadgeHtml}
@@ -1120,6 +1121,7 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
     const types = [...new Set(allBeers.map(b => b.type).filter(Boolean))].sort();
     const breweries = ['All', ...new Set(allBeers.map(b => b.brewery).filter(Boolean))].sort();
     const countries = ['All', ...new Set(allBeers.map(b => b.searchCountry).filter(Boolean))].sort();
+    const regions = ['All', ...new Set(allBeers.map(b => b.searchRegion).filter(Boolean))].sort();
 
     // Group regions by Country for a cleaner dropdown
     const regionByCountry = {};
@@ -1156,6 +1158,7 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
             <button type="button" class="ftab active" data-tab="tab-gen" style="background:var(--accent-gold); color:#000; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">${i18n.t('tab_general')}</button>
             <button type="button" class="ftab" data-tab="tab-tri" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">${i18n.t('tab_sort_notes')}</button>
             <button type="button" class="ftab" data-tab="tab-attr" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">${i18n.t('tab_attributes')}</button>
+            <button type="button" class="ftab" data-tab="tab-rec" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">🤖 ${i18n.t('tab_recommendations') || 'Recommandations'}</button>
         </div>
 
         <!-- SCROLLING FORM -->
@@ -1304,6 +1307,73 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
                 </div>
             </div>
 
+            <!-- TAB: RECOMMANDATIONS (BrewBrother) -->
+            <div id="tab-rec" class="tab-pane" style="display:none;">
+                <div class="stat-card mb-20" style="margin-bottom:15px; background:linear-gradient(135deg, rgba(30,30,30,0.8), rgba(15,15,15,0.9)); border:1px solid var(--accent-gold);">
+                    <h4 style="margin-bottom:10px; color:var(--accent-gold); display:flex; align-items:center; gap:8px;">
+                        🤖 BrewBrother
+                    </h4>
+                    <p style="font-size:0.85rem; color:#aaa; margin-bottom:15px;">
+                        ${i18n.t('brewbrother_desc') || "Générez les 20 meilleures recommandations basées sur vos goûts et les disponibilités."}
+                    </p>
+
+                    <div class="form-group mb-20">
+                        <label class="form-label">${i18n.t('brewbrother_mode_label') || "Mode de Profil"}</label>
+                        <select name="recMode" id="rec-mode-select" class="form-select">
+                            <option value="auto" ${activeFilters.recMode === 'auto' ? 'selected' : ''}>${i18n.t('brewbrother_mode_auto') || "Automatique (Basé sur vos consos)"}</option>
+                            <option value="manual" ${activeFilters.recMode === 'manual' ? 'selected' : ''}>${i18n.t('brewbrother_mode_manual') || "Manuel (Personnaliser)"}</option>
+                        </select>
+                    </div>
+
+                    <div id="rec-manual-options" style="display:${activeFilters.recMode === 'manual' ? 'block' : 'none'}; border-left:2px solid var(--accent-gold); padding-left:10px; margin-bottom:15px;">
+                        <label class="form-label">${i18n.t('filter_type_label')}</label>
+                        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
+                            ${['IPA', 'Blonde', 'Brune', 'Triple', 'Stout', 'Blanche', 'Fruitée', 'Sour', 'Trappiste', 'Saison'].map(t => {
+                                const isChecked = activeFilters.recTypes && activeFilters.recTypes.includes(t);
+                                return `
+                                    <label style="display:flex; align-items:center; gap:4px; background:${isChecked ? 'rgba(255,192,0,0.2)' : 'rgba(255,255,255,0.05)'}; padding:4px 8px; border-radius:12px; cursor:pointer; border:1px solid ${isChecked ? 'var(--accent-gold)' : 'transparent'};">
+                                        <input type="checkbox" name="recTypes" value="${t}" ${isChecked ? 'checked' : ''} style="display:none;">
+                                        <span style="font-size:0.75rem; color:${isChecked ? 'var(--accent-gold)' : '#fff'};">${t}</span>
+                                    </label>`;
+                            }).join('')}
+                        </div>
+                        
+                        <label class="form-label">${i18n.t('brewbrother_ideal_abv') || "Degré d'Alcool Idéal"}</label>
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                            <input type="range" name="recAbv" class="form-input" min="3" max="15" step="0.5" value="${activeFilters.recAbv || 7}" 
+                                oninput="document.getElementById('rec-abv-display').innerText = this.value" style="padding:0; height:30px; flex:1;">
+                            <span style="min-width:45px; text-align:right;"><span id="rec-abv-display">${activeFilters.recAbv || 7}</span>%</span>
+                        </div>
+
+                        <label class="form-label">${i18n.t('brewbrother_flavors') || "Saveurs"}</label>
+                        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                            ${(window.BrewBrother ? window.BrewBrother.FLAVOR_KEYWORDS.slice(0,12) : ['fruité', 'houblonné', 'torréfié', 'épicé', 'acide', 'amer', 'doux', 'floral']).map(t => {
+                                const isChecked = activeFilters.recFlavors && activeFilters.recFlavors.includes(t);
+                                return `
+                                    <label style="display:flex; align-items:center; gap:4px; background:${isChecked ? 'rgba(255,192,0,0.2)' : 'rgba(255,255,255,0.05)'}; padding:4px 8px; border-radius:12px; cursor:pointer; border:1px solid ${isChecked ? 'var(--accent-gold)' : 'transparent'};">
+                                        <input type="checkbox" name="recFlavors" value="${t}" ${isChecked ? 'checked' : ''} style="display:none;">
+                                        <span style="font-size:0.75rem; color:${isChecked ? 'var(--accent-gold)' : '#fff'}; text-transform:capitalize;">${t}</span>
+                                    </label>`;
+                            }).join('')}
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:15px;">
+                        <label class="form-label">${i18n.t('filter_country')} (${i18n.t('brewbrother_availability') || "Disponibilité"})</label>
+                        <select name="recCountry" class="form-select">${createOptions(countries, activeFilters.recCountry || 'All')}</select>
+                    </div>
+                    <div class="form-group" style="margin-bottom:15px;">
+                        <label class="form-label">${i18n.t('filter_region')} (${i18n.t('brewbrother_availability') || "Disponibilité"})</label>
+                        <select name="recRegion" class="form-select">${createOptions(regions, activeFilters.recRegion || 'All')}</select>
+                    </div>
+
+                    <label style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:10px 12px; border-radius:8px; cursor:pointer; margin-bottom:15px;">
+                        <span style="font-size:0.95rem; font-weight:bold; color:var(--accent-gold);">${i18n.t('brewbrother_enable') || "Activer les Recommandations"}</span>
+                        <input type="checkbox" name="useBrewBrother" id="useBrewBrother" ${activeFilters.useBrewBrother ? 'checked' : ''} style="width:20px; height:20px;">
+                    </label>
+                </div>
+            </div>
+
         </form>
 
         <!-- FOOTER -->
@@ -1406,6 +1476,35 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
         };
     });
 
+    // Toggle manual options visibility
+    const recModeSelect = wrapper.querySelector('#rec-mode-select');
+    if (recModeSelect) {
+        recModeSelect.onchange = (e) => {
+            const manualDiv = wrapper.querySelector('#rec-manual-options');
+            if (manualDiv) manualDiv.style.display = e.target.value === 'manual' ? 'block' : 'none';
+        };
+        // Set initial state
+        const manualDiv = wrapper.querySelector('#rec-manual-options');
+        if (manualDiv) manualDiv.style.display = recModeSelect.value === 'manual' ? 'block' : 'none';
+    }
+
+    // Toggle checkbox styles for recTypes and recFlavors
+    wrapper.querySelectorAll('label > input[name="recTypes"], label > input[name="recFlavors"]').forEach(cb => {
+        cb.onchange = (e) => {
+            const label = e.target.closest('label');
+            const span = label.querySelector('span');
+            if (e.target.checked) {
+                label.style.background = 'rgba(255,192,0,0.2)';
+                label.style.borderColor = 'var(--accent-gold)';
+                span.style.color = 'var(--accent-gold)';
+            } else {
+                label.style.background = 'rgba(255,255,255,0.05)';
+                label.style.borderColor = 'transparent';
+                span.style.color = '#fff';
+            }
+        };
+    });
+
     wrapper.querySelector('form').onsubmit = (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
@@ -1417,13 +1516,21 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
         const typeSelected = [];
         wrapper.querySelectorAll('.cb-type:checked').forEach(cb => typeSelected.push(cb.value));
 
+        const recTypes = [];
+        wrapper.querySelectorAll('input[name="recTypes"]:checked').forEach(cb => recTypes.push(cb.value));
+        const recFlavors = [];
+        wrapper.querySelectorAll('input[name="recFlavors"]:checked').forEach(cb => recFlavors.push(cb.value));
+
         const filters = Object.fromEntries(formData.entries());
         filters.onlyFavorites = formData.get('onlyFavorites') === 'on';
         filters.ignoreFavorites = formData.get('ignoreFavorites') === 'on';
         filters.onlyCustom = formData.get('onlyCustom') === 'on';
         filters.barrel_aged = formData.get('barrel_aged') === 'on';
+        filters.useBrewBrother = formData.get('useBrewBrother') === 'on';
         filters.rarity = rarity;
         filters.type = typeSelected;
+        filters.recTypes = recTypes;
+        filters.recFlavors = recFlavors;
 
         onApply(filters);
         closeModal();
@@ -1680,6 +1787,8 @@ export function renderBeerDetail(beer, onSave) {
                 </div>
 
                 ${consumptionWrapper.outerHTML}
+                
+                <div id="brewbrother-match-container"></div>
 
                 <div class="info-panel">
                     <h4>${i18n.t('info_title')}</h4>
@@ -1803,6 +1912,62 @@ export function renderBeerDetail(beer, onSave) {
 
                 ${customActionsHtml}
                 `;
+
+    // Fetch and display BrewBrother match if applicable
+    if (window.Recommendation) {
+        window.Recommendation.getBeerMatchScore(beer).then(async match => {
+            if (match && match.percentage > 0) {
+                const container = wrapper.querySelector('#brewbrother-match-container');
+                if (container) {
+                    const matchColor = match.percentage >= 75 ? 'var(--success)' : (match.percentage >= 50 ? 'var(--accent-gold)' : '#aaa');
+                    
+                    let explanationHtml = "";
+                    if (window.BrewBrotherNLP) {
+                        const tone = Storage.getPreference('brewbrother_tone', 'brewbrother');
+                        const lang = Storage.getPreference('lang', 'fr');
+                        
+                        try {
+                            const explanation = await window.BrewBrotherNLP.generateExplanation(beer, match, tone, lang);
+                            explanationHtml = `<div style="margin-top:10px; padding:12px; background:rgba(0,0,0,0.4); border-left:3px solid ${matchColor}; border-radius:4px; font-style:italic; line-height:1.4; color:#ddd;">"${explanation}"</div>`;
+                        } catch(e) {
+                            console.error(e);
+                        }
+                    } 
+                    
+                    if (!explanationHtml) {
+                        // Fallback
+                        const translateReason = (key) => i18n.t(key) || key;
+                        const fallbackReasons = [];
+                        if (match.typeScore > 0.7) fallbackReasons.push(translateReason('brewbrother_reason_type') || "Ce type de bière");
+                        if (match.breweryScore > 0.7) fallbackReasons.push(translateReason('brewbrother_reason_brewery') || "Cette brasserie");
+                        if (match.abvScore > 0.8) fallbackReasons.push(translateReason('brewbrother_reason_abv') || "Taux d'alcool idéal");
+                        if (match.flavorScore > 0.7) fallbackReasons.push(translateReason('brewbrother_reason_flavor') || "Saveurs recherchées");
+                        
+                        if (fallbackReasons.length > 0) {
+                            explanationHtml = `<ul style="margin:5px 0 0 15px; font-size:0.8rem; color:#ccc; text-align:left;">
+                                ${fallbackReasons.map(r => `<li>${r}</li>`).join('')}
+                            </ul>`;
+                        } else {
+                            explanationHtml = `<div style="font-style:italic; font-size:0.8rem; color:#aaa; margin-top:5px;">${i18n.t('brewbrother_no_strong_match') || "Profil de recommandation global."}</div>`;
+                        }
+                    }
+
+                    container.innerHTML = `
+                        <div class="stat-card" style="margin-bottom:15px; background:linear-gradient(135deg, rgba(30,30,30,0.8), rgba(15,15,15,0.9)); border:1px solid ${matchColor}; padding:15px; text-align:left;">
+                            <h4 style="margin-bottom:10px; color:${matchColor}; display:flex; justify-content:space-between; align-items:center;">
+                                <span>🤖 Note BrewBrother</span>
+                                <span style="font-size:1.2rem; font-weight:bold;">${match.score20}/20</span>
+                            </h4>
+                            <div style="font-size:0.9rem;">
+                                Affinité estimée à <strong style="color:${matchColor};">${match.percentage}%</strong>.
+                                ${explanationHtml}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        }).catch(err => console.error("BrewBrother error:", err));
+    }
 
     // Volume Presets Logic
     const volBtns = wrapper.querySelectorAll('.vol-btn');
@@ -2925,6 +3090,7 @@ export function renderStats(allBeers, userData, container) {
         <div class="stats-view-wrapper" style="max-width: 600px; margin: 0 auto; width: 100%;">
             <div class="text-center p-20">
                 ${currentOrder.map(key => blocks[key] || '').join('')}
+                <div id="brewbrother-stats-container"></div>
                 ${matchBlock}
                 ${wrappedBlock}
             </div>
@@ -2961,6 +3127,57 @@ export function renderStats(allBeers, userData, container) {
     if (Storage.getPreference('bac_enabled', true)) {
         setTimeout(() => renderBACStatsContent(container.querySelector('#bac-dynamic-content')), 50);
     }
+
+    // Render BrewBrother Taste Profile
+    setTimeout(() => {
+        if (window.Recommendation) {
+            const bbContainer = container.querySelector('#brewbrother-stats-container');
+            if (bbContainer) {
+                window.Recommendation.getUserTasteProfile(allBeers).then(res => {
+                    const { archetype, archetypeIcon, topTypes, topBreweries, topFlavors, profile } = res;
+                    const hasData = Object.keys(profile.typeAffinity).length > 0;
+                    
+                    if (hasData) {
+                        const translateKey = (k) => i18n.t(k) || k;
+                        const topTypesHtml = topTypes.map(t => `<span class="stat-badge">${t[0]}</span>`).join(' ');
+                        const topFlavorsHtml = topFlavors.map(f => `<span class="stat-badge" style="background:var(--bg-dark);">${f[0]}</span>`).join(' ');
+                        
+                        bbContainer.innerHTML = `
+                            <div class="stat-card mt-20 text-center" style="border:1px solid var(--accent-gold); background:linear-gradient(135deg, rgba(30,30,30,0.8), rgba(15,15,15,0.9));">
+                                <h3 style="margin-bottom:15px; color:var(--accent-gold); display:flex; align-items:center; justify-content:center; gap:8px;">
+                                    🤖 ${i18n.t('brewbrother_profile_title') || "Profil BrewBrother"}
+                                </h3>
+                                
+                                <div style="display:flex; justify-content:center; align-items:center; gap:15px; margin-bottom:20px;">
+                                    <div style="font-size:3rem; filter:drop-shadow(0 0 10px rgba(255,255,255,0.2));">${archetypeIcon}</div>
+                                    <div style="text-align:left;">
+                                        <div style="font-size:0.75rem; color:#aaa; text-transform:uppercase;">${i18n.t('brewbrother_archetype') || "Votre Archétype"}</div>
+                                        <div style="font-size:1.2rem; font-weight:bold; color:#fff;">${translateKey(archetype)}</div>
+                                    </div>
+                                </div>
+                                
+                                <div style="margin-bottom:15px; text-align:left; background:rgba(0,0,0,0.2); padding:10px; border-radius:8px;">
+                                    <div style="font-size:0.8rem; color:#aaa; margin-bottom:5px;">${i18n.t('brewbrother_top_types') || "Styles Favoris"}</div>
+                                    <div>${topTypesHtml || "-"}</div>
+                                </div>
+                                
+                                <div style="margin-bottom:15px; text-align:left; background:rgba(0,0,0,0.2); padding:10px; border-radius:8px;">
+                                    <div style="font-size:0.8rem; color:#aaa; margin-bottom:5px;">${i18n.t('brewbrother_top_flavors') || "Saveurs Préférées"}</div>
+                                    <div>${topFlavorsHtml || "-"}</div>
+                                </div>
+                                
+                                ${profile.idealAbv ? `
+                                <div style="text-align:left; background:rgba(0,0,0,0.2); padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                                    <span style="font-size:0.8rem; color:#aaa;">${i18n.t('brewbrother_ideal_abv_stat') || "Degré idéal moyen"}</span>
+                                    <span style="font-weight:bold; color:var(--accent-gold);">${profile.idealAbv.toFixed(1)}%</span>
+                                </div>` : ''}
+                            </div>
+                        `;
+                    }
+                }).catch(err => console.error("BrewBrother Profil Error:", err));
+            }
+        }
+    }, 150);
 
     // Render Streak
     setTimeout(() => {
@@ -3370,8 +3587,10 @@ function _renderCalendar(container, allBeers, userData) {
 }
 
 export function renderBACStatsContent(container) {
-    Storage.savePreference('stats_bac_used', true);
-    window.dispatchEvent(new Event('beerdex-action'));
+    if (!Storage.getPreference('stats_bac_used', false)) {
+        Storage.savePreference('stats_bac_used', true);
+        window.dispatchEvent(new Event('beerdex-action'));
+    }
     if (!container) return;
     const rules = BAC.getCurrentRules() || { sanctionThreshold: 0.5, withdrawThreshold: 0.8 };
     const bacStatus = BAC.getBACStatus();
@@ -3962,6 +4181,20 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                     </div>
                 </div>
 
+                <div class="setting-row" data-keywords="brewbrother tone ton ia recommandation">
+                    <div class="setting-info">
+                        <span class="setting-title" data-i18n="settings_bb_tone_title">${i18n.t('settings_bb_tone_title') || 'Ton BrewBrother'}</span>
+                        <span class="setting-desc" data-i18n="settings_bb_tone_desc">${i18n.t('settings_bb_tone_desc') || 'Choisissez le style des descriptions'}</span>
+                    </div>
+                    <div class="setting-action">
+                        <select id="select-bb-tone" class="form-select" style="min-width: 120px;">
+                            <option value="brewbrother" ${Storage.getPreference('brewbrother_tone', 'brewbrother') === 'brewbrother' ? 'selected' : ''}>${i18n.t('settings_bb_tone_default') || 'BrewBrother'}</option>
+                            <option value="friend" ${Storage.getPreference('brewbrother_tone', 'brewbrother') === 'friend' ? 'selected' : ''}>${i18n.t('settings_bb_tone_friend') || 'Ami'}</option>
+                            <option value="neutral" ${Storage.getPreference('brewbrother_tone', 'brewbrother') === 'neutral' ? 'selected' : ''}>${i18n.t('settings_bb_tone_neutral') || 'Neutre'}</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="setting-row" data-keywords="wrapped bilan spotify">
                     <div class="setting-info">
                         <span class="setting-title">${i18n.t('settings_toggle_wrapped') || 'Beerdex Wrapped'}</span>
@@ -4468,6 +4701,14 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
             if (val) localStorage.setItem('defaultMapScope', val);
             else localStorage.removeItem('defaultMapScope');
             showToast(i18n.t('toast_map_updated'));
+        };
+    }
+
+    const bbToneSelect = container.querySelector('#select-bb-tone');
+    if (bbToneSelect) {
+        bbToneSelect.onchange = (e) => {
+            Storage.savePreference('brewbrother_tone', e.target.value);
+            showToast(i18n.t('toast_settings_saved') || 'Paramètre sauvegardé');
         };
     }
 

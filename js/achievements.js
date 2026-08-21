@@ -363,12 +363,11 @@ export function checkAchievements(allBeers) {
                     const words = beer.title.split(/[\s\-_''"\/\\.,;:()\[\]{}!+?]+/);
                     for (const word of words) {
                         if (!word) continue;
-                        // Strip accents (NFD decompose + remove combining marks)
-                        const cleaned = word.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-                        // Get first alphabetic character
-                        const match = cleaned.match(/[A-Za-z]/);
-                        if (match) {
-                            stats.firstLetters.add(match[0].toUpperCase());
+                        // Strip accents and leading non-alphanumeric characters
+                        let cleaned = word.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/^[^a-zA-Z0-9]+/, '');
+                        // Ensure the word actually STARTS with an alphabetical character
+                        if (/^[A-Za-z]/.test(cleaned)) {
+                            stats.firstLetters.add(cleaned[0].toUpperCase());
                         }
                     }
                 }
@@ -437,7 +436,7 @@ export function checkAchievements(allBeers) {
             console.warn("Achievement Check Failed", ach.id, e);
         }
 
-        // Make UX achievements permanent
+        // Make UX achievements permanent (tutorials, theme, etc.)
         if (!isMet && ach.categoryKey === 'ach_cat_ux' && previouslyUnlocked.includes(ach.id)) {
             isMet = true;
         }
