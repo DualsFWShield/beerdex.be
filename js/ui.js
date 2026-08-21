@@ -1933,7 +1933,9 @@ export function renderBeerDetail(beer, onSave) {
                         const lang = Storage.getPreference('lang', 'fr');
                         
                         try {
-                            const explanation = await window.BrewBrotherNLP.generateExplanation(beer, match, tone, lang);
+                            const existingData = Storage.getBeerRating(beer.id);
+                            const isAlreadyTasted = existingData && (existingData.score > 0 || existingData.count > 0 || existingData.date);
+                            const explanation = await window.BrewBrotherNLP.generateExplanation(beer, match, tone, lang, isAlreadyTasted);
                             explanationHtml = `<div style="margin-top:10px; padding:12px; background:rgba(0,0,0,0.4); border-left:3px solid ${matchColor}; border-radius:4px; font-style:italic; line-height:1.4; color:#ddd;">"${explanation}"</div>`;
                         } catch(e) {
                             console.error(e);

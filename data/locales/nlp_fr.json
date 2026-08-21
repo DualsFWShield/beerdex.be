@@ -15,7 +15,7 @@
             },
             "outros": [
                 "Je vous la conseille les yeux fermés pour votre prochaine dégustation.",
-                "Une référence à ajouter sans hésiter à votre sélection.",
+                "Une référence à ajouter sans hésiter à votre BeerDex.",
                 "Une excellente expérience gustative en perspective !"
             ]
         },
@@ -32,14 +32,14 @@
                 "prestige": "Malgré la réputation prestigieuse de son étiquette"
             },
             "outros": [
-                "Une expérience intéressante à tenter pour élargir votre carnet de dégustation.",
+                "Une expérience intéressante à tenter pour élargir votre BeerDex.",
                 "Pourquoi ne pas lui donner sa chance lors d'un moment de découverte ?",
                 "À essayer avec curiosité !"
             ]
         },
         "negative": {
             "scenarios": [
-                "Au vu de votre historique, je vous déconseille {title} de chez {brewery}. À {abv}, {prestige_desc}, elle sera en net décalage avec vos standards de dégustation habituels. {outro}",
+                "Au vu de votre BeerDex, je vous déconseille {title} de chez {brewery}. À {abv}, {prestige_desc}, elle sera en net décalage avec vos standards de dégustation habituels. {outro}",
                 "Je préfère être transparent : {title} ({abv}) risque fort de vous décevoir. {le_type} ne correspond pas du tout à ce qui vous plaît, et {prestige_desc}. {outro}",
                 "Avec une compatibilité statistique très faible, {title} ({brewery}) n'est pas recommandée pour votre profil. Son profil {de_type} et {prestige_desc} sont trop éloignés de vos goûts. {outro}"
             ],
@@ -57,8 +57,8 @@
         },
         "alreadyTasted": [
             "Cela étant, vous l'avez déjà dégustée dans le passé : votre propre palais reste le meilleur juge !",
-            "Notez qu'elle figure déjà dans votre carnet, vous savez donc précisément à quoi vous en tenir.",
-            "Puisqu'elle est déjà dans votre historique, vous avez déjà votre propre avis sur cette bouteille !"
+            "Notez qu'elle figure déjà dans votre BeerDex, vous savez donc précisément à quoi vous en tenir.",
+            "Puisqu'elle est déjà dans votre Dex, vous avez déjà votre propre avis sur cette bouteille !"
         ]
     },
     "friend": {
@@ -120,13 +120,13 @@
         "alreadyTasted": [
             "Mais bon, vu que tu l'as déjà bue et notée, tu sais déjà mieux que moi ce qu'elle vaut !",
             "Après je vois que tu l'as déjà testée, donc tu connais la chanson !",
-            "De toute façon elle est déjà dans ton historique, c'est toi l'expert là-dessus !"
+            "De toute façon elle est déjà dans ton Dex, c'est toi l'expert là-dessus !"
         ]
     },
     "neutral": {
         "positive": {
             "scenarios": [
-                "Recommandation algorithmique favorable : {title} ({brewery}). Produit titrant {abv} dans la catégorie {type}. {prestige_desc}. Indice de compatibilité élevé avec l'historique utilisateur. {outro}",
+                "Recommandation algorithmique favorable : {title} ({brewery}). Produit titrant {abv} dans la catégorie {type}. {prestige_desc}. Indice de compatibilité élevé avec le BeerDex de l'utilisateur. {outro}",
                 "Suggestion optimale basée sur les données : {title} ({abv}). {le_type} produite par {brewery} maximise vos scores d'affinité. {prestige_desc}. {outro}"
             ],
             "prestige_desc": {
@@ -158,7 +158,7 @@
         },
         "negative": {
             "scenarios": [
-                "Alerte d'incompatibilité algorithmique : {title} ({brewery}). {le_type} à {abv} présente une forte divergence avec votre historique. {prestige_desc}. {outro}",
+                "Alerte d'incompatibilité algorithmique : {title} ({brewery}). {le_type} à {abv} présente une forte divergence avec votre BeerDex. {prestige_desc}. {outro}",
                 "Recommandation déconseillée pour {title} ({abv}). Le profil {de_type} et {prestige_desc} contredisent vos critères d'appréciation dominants. {outro}"
             ],
             "prestige_desc": {
@@ -174,7 +174,7 @@
         },
         "alreadyTasted": [
             "Note : Référence déjà enregistrée dans les dégustations de l'utilisateur.",
-            "Historique existant sur ce produit pour cet utilisateur."
+            "Produit déjà existant dans le BeerDex de cet utilisateur."
         ]
     }
 }

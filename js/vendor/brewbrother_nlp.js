@@ -124,7 +124,7 @@
             return res;
         },
 
-        generateExplanation: async function(beer, match, tone = 'brewbrother', lang = 'fr') {
+        generateExplanation: async function(beer, match, tone = 'brewbrother', lang = 'fr', isAlreadyTasted = false) {
             await this.init(lang);
             
             const tGroup = this.dict[tone] || this.dict['brewbrother'] || Object.values(this.dict)[0];
@@ -141,25 +141,17 @@
             // 2. Prestige Analysis
             const prestigeLevel = this.getPrestigeLevel(beer);
             const prestigeDesc = (t.prestige_desc && t.prestige_desc[prestigeLevel]) || "";
-            
-            // 3. Outro selection
-            const outro = this.getRandom(t.outros) || "";
+
+
+            const outro = isAlreadyTasted 
+                ? (this.getRandom(tGroup.alreadyTasted) || "")
+                : (this.getRandom(t.outros) || "");
             
             // 4. Cohesive Narrative Scenario Selection
             const scenarioTemplate = this.getRandom(t.scenarios) || "";
             
             let rawText = this.formatSlots(scenarioTemplate, beer, prestigeDesc, outro, lang);
-            
-            // 5. Already Tasted Injection
-            if (window.Storage && typeof window.Storage.getBeerRating === 'function') {
-                const existingData = window.Storage.getBeerRating(beer.id);
-                if (existingData && (existingData.score > 0 || existingData.count > 0 || existingData.date)) {
-                    const alreadyTastedPhrase = this.getRandom(tGroup.alreadyTasted);
-                    if (alreadyTastedPhrase) {
-                        rawText += " " + alreadyTastedPhrase;
-                    }
-                }
-            }
+
             
             // 6. RosaeNLG Surface Realization (Elisions, Contractions, Spacing)
             return this.surfaceRealize(rawText, lang);

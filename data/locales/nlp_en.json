@@ -3,7 +3,7 @@
         "positive": {
             "scenarios": [
                 "If you are looking for a top-quality {type}, {title} from {brewery} stands out naturally. With its {abv} and {prestige_desc}, it aligns precisely with your favorite tasting experiences. {outro}",
-                "According to your tasting history, {title} ({abv}) is an outstanding choice. {brewery} delivers a {type} with an aroma profile that should immediately delight your palate. {outro}",
+                "According to your BeerDex, {title} ({abv}) is an outstanding choice. {brewery} delivers a {type} with an aroma profile that should immediately delight your palate. {outro}",
                 "As someone who appreciates {le_type}, this release by {brewery} ticks all the boxes. {prestige_desc} and sitting at {abv}, {title} offers a balanced and flavorful tasting. {outro}",
                 "Highly recommended: {title}! Between the recognized craft of {brewery} and mastery of {type}s, this {abv} bottle is tailored to your preferences. {outro}"
             ],
@@ -39,7 +39,7 @@
         },
         "negative": {
             "scenarios": [
-                "Based on your tasting history, I advise against {title} from {brewery}. At {abv}, {prestige_desc}, it will fall noticeably short of your usual tasting standards. {outro}",
+                "Based on your BeerDex, I advise against {title} from {brewery}. At {abv}, {prestige_desc}, it will fall noticeably short of your usual tasting standards. {outro}",
                 "To be direct: {title} ({abv}) is likely to disappoint you. {le_type} does not match what you enjoy, and {prestige_desc}. {outro}",
                 "With very low compatibility, {title} ({brewery}) is not recommended for your profile. Its {type} style and {prestige_desc} are too far from your tastes. {outro}"
             ],
@@ -57,8 +57,8 @@
         },
         "alreadyTasted": [
             "That said, you've already tasted it in the past: your own palate is the ultimate judge!",
-            "Note that it's already in your logbook, so you know exactly what to expect.",
-            "Since it's already in your history, you already have your own opinion on this bottle!"
+            "Note that it's already in your BeerDex, so you know exactly what to expect.",
+            "Since it's already in your Dex, you already have your own opinion on this bottle!"
         ]
     },
     "friend": {
@@ -126,7 +126,7 @@
     "neutral": {
         "positive": {
             "scenarios": [
-                "Favorable algorithmic recommendation: {title} ({brewery}). Product at {abv} in category {type}. {prestige_desc}. High compatibility index with user tasting history. {outro}",
+                "Favorable algorithmic recommendation: {title} ({brewery}). Product at {abv} in category {type}. {prestige_desc}. High compatibility index with the user's BeerDex. {outro}",
                 "Data-driven optimal suggestion: {title} ({abv}). {le_type} by {brewery} maximizes affinity scores. {prestige_desc}. {outro}"
             ],
             "prestige_desc": {
@@ -158,7 +158,7 @@
         },
         "negative": {
             "scenarios": [
-                "Algorithmic incompatibility alert: {title} ({brewery}). {le_type} at {abv} shows strong divergence from profile history. {prestige_desc}. {outro}",
+                "Algorithmic incompatibility alert: {title} ({brewery}). {le_type} at {abv} shows strong divergence from the user's BeerDex. {prestige_desc}. {outro}",
                 "Recommendation not advised for {title} ({abv}). {type} style and {prestige_desc} contradict dominant preference criteria. {outro}"
             ],
             "prestige_desc": {
@@ -173,8 +173,8 @@
             ]
         },
         "alreadyTasted": [
-            "Note: Reference already recorded in user tasting history.",
-            "Existing historical log for this user."
+            "Note: Reference already recorded in the user's BeerDex.",
+            "Existing BeerDex record for this user."
         ]
     }
 }
