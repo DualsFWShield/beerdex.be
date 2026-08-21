@@ -910,7 +910,7 @@ function renderCurrentView() {
         // 1. Check BrewBrother
         if (state.activeFilters.useBrewBrother && window.Recommendation) {
             mainContent.innerHTML = '';
-            UI.showSkeletonLoading(mainContent);
+            showSkeletonLoading(mainContent);
             
             window.Recommendation.getRecommendedBeers(state.beers, {
                 mode: state.activeFilters.recMode,
