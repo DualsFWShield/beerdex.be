@@ -3163,6 +3163,7 @@ export function renderStats(allBeers, userData, container) {
                                     <div style="text-align:left;">
                                         <div style="font-size:0.75rem; color:#aaa; text-transform:uppercase;">${i18n.t('brewbrother_archetype') || "Votre Archétype"}</div>
                                         <div style="font-size:1.2rem; font-weight:bold; color:#fff;">${translateKey(archetype)}</div>
+                                        <div style="font-size:0.85rem; color:#ccc; margin-top:4px; font-style:italic;">${translateKey(archetype + '_desc')}</div>
                                     </div>
                                 </div>
                                 

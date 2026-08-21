@@ -154,17 +154,36 @@ export const Recommendation = {
         const topType = sortedTypes[0];
         const topFlavor = sortedFlavors[0];
         
-        if (topType && topType[1] > 0.5) {
-            const t = topType[0].toLowerCase();
-            if (t.includes('ipa')) { archetype = "archetype_hophead"; archetypeIcon = "🌿"; }
-            else if (t.includes('stout') || t.includes('porter')) { archetype = "archetype_stout_lover"; archetypeIcon = "☕"; }
-            else if (t.includes('trappist') || t.includes('abbaye')) { archetype = "archetype_trappist"; archetypeIcon = "⛪"; }
-            else if (t.includes('fruit') || t.includes('kriek')) { archetype = "archetype_fruity"; archetypeIcon = "🍓"; }
-            else if (t.includes('sour') || t.includes('gueuze') || t.includes('lambic')) { archetype = "archetype_sour"; archetypeIcon = "🍋"; }
-        } else if (profile.idealAbv && profile.idealAbv > 8.5) {
+        const distinctBeers = profile.distinctBeers || 0;
+        const totalDrinks = profile.totalDrinks || 0;
+        const idealAbv = profile.idealAbv || 0;
+        
+        if (distinctBeers >= 15 && (!topType || topType[1] < 0.35)) {
+            archetype = "archetype_explorer"; archetypeIcon = "🧭";
+        } else if (idealAbv > 0 && idealAbv <= 5.5 && totalDrinks >= 5) {
+            archetype = "archetype_session"; archetypeIcon = "🍻";
+        } else if (idealAbv >= 8.5 && totalDrinks >= 5) {
             archetype = "archetype_strong"; archetypeIcon = "💪";
-        } else if (topFlavor && topFlavor[1] > 0.6) {
+        } else if (topType && topType[1] > 0.3 && topType[0].toLowerCase().includes('ipa')) {
+            archetype = "archetype_hophead"; archetypeIcon = "🌿";
+        } else if (topType && topType[1] > 0.3 && (topType[0].toLowerCase().includes('stout') || topType[0].toLowerCase().includes('porter'))) {
+            archetype = "archetype_stout_lover"; archetypeIcon = "☕";
+        } else if (topType && topType[1] > 0.3 && (topType[0].toLowerCase().includes('trappist') || topType[0].toLowerCase().includes('abbaye') || topType[0].toLowerCase().includes('quadrupel'))) {
+            archetype = "archetype_trappist"; archetypeIcon = "⛪";
+        } else if ((topType && topType[1] > 0.3 && (topType[0].toLowerCase().includes('fruit') || topType[0].toLowerCase().includes('kriek'))) || (topFlavor && topFlavor[0] === 'fruity' && topFlavor[1] > 0.4)) {
+            archetype = "archetype_fruity"; archetypeIcon = "🍓";
+        } else if ((topType && topType[1] > 0.3 && (topType[0].toLowerCase().includes('sour') || topType[0].toLowerCase().includes('gueuze') || topType[0].toLowerCase().includes('lambic'))) || (topFlavor && topFlavor[0] === 'sour' && topFlavor[1] > 0.4)) {
+            archetype = "archetype_sour"; archetypeIcon = "🍋";
+        } else if (topType && topType[1] > 0.4 && (topType[0].toLowerCase().includes('pils') || topType[0].toLowerCase().includes('lager') || topType[0].toLowerCase() === 'blonde')) {
+            archetype = "archetype_classic"; archetypeIcon = "👑";
+        } else if (topFlavor && topFlavor[1] > 0.4 && (topFlavor[0] === 'sweet' || topFlavor[0] === 'caramel' || topFlavor[0] === 'chocolate')) {
+            archetype = "archetype_sweet"; archetypeIcon = "🍫";
+        } else if (topFlavor && topFlavor[1] > 0.4 && topFlavor[0] === 'bitter') {
+            archetype = "archetype_bitter"; archetypeIcon = "😠";
+        } else if (topFlavor && topFlavor[1] > 0.5) {
             archetype = "archetype_flavorful"; archetypeIcon = "👅";
+        } else if (distinctBeers >= 5) {
+            archetype = "archetype_curious"; archetypeIcon = "🧐";
         }
 
         return {
