@@ -1397,5 +1397,11 @@
     "settings_bb_tone_default": "BrewBrother (Expert)",
     "settings_bb_tone_friend": "Ami (Familier)",
     "settings_bb_tone_neutral": "Neutre (Descriptif)",
-    "toast_settings_saved": "Paramètres sauvegardés"
+    "toast_settings_saved": "Paramètres sauvegardés",
+    "settings_toggle_brewbrother": "Activer BrewBrother",
+    "settings_brewbrother_desc": "Assistant IA de recommandations et profil de goût",
+    "settings_card_bb_pct_title": "Match BrewBrother (%)",
+    "settings_card_bb_pct_desc": "Afficher le pourcentage de match sur la carte",
+    "stats_block_brewbrother": "Profil BrewBrother",
+    "filter_sort_brewbrother": "Match BrewBrother"
 }

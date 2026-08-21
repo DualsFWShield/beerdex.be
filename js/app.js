@@ -95,7 +95,12 @@ async function init() {
         const customBeers = Storage.getCustomBeers().map(b => Data.enrichBeerMetadata(b));
         state.beers = [...customBeers, ...staticBeers];
 
-        if (window.Recommendation) window.Recommendation.init(state.beers);
+        if (window.Recommendation) {
+            window.Recommendation.init(state.beers);
+            if (Storage.getPreference('feat_brewbrother_enabled', true) && Storage.getPreference('card_brewbrother_pct', false)) {
+                try { await window.Recommendation.getUserTasteProfile(state.beers); } catch(e) {}
+            }
+        }
 
         // Initial Render
         renderCurrentView();
@@ -931,6 +936,59 @@ function renderCurrentView() {
 
                 mainContent.innerHTML = '';
                 loadMoreBeers(mainContent, false, isDiscovery, false);
+            });
+            return;
+        }
+
+        // 1.5. Async Pre-scoring if sorting by BrewBrother but not in strict mode
+        if (state.activeFilters.sortBy === 'brewbrother' && window.Recommendation && !state.activeFilters.useBrewBrother) {
+            mainContent.innerHTML = '';
+            showSkeletonLoading(mainContent);
+            
+            window.Recommendation.getRecommendedBeers(state.beers, { noLimit: true }).then(scoredBeers => {
+                let filtered = searchBeers(scoredBeers, state.filter);
+                if (isDiscovery && !state.filter) {
+                    const consumedIds = Storage.getAllConsumedBeerIds();
+                    filtered = filtered.filter(b => consumedIds.includes(b.id));
+                }
+                filtered = applyFilters(filtered, state.activeFilters);
+                
+                state.filteredBeers = filtered;
+                state.pagination.page = 1;
+                state.pagination.hasMore = true;
+                
+                const busTab = document.querySelector('.nav-item[data-view="drunk"]');
+                if (busTab) busTab.style.display = isDiscovery ? 'none' : 'flex';
+
+                mainContent.innerHTML = '';
+                loadMoreBeers(mainContent, false, isDiscovery, isDiscovery && state.filter);
+                
+                // BAC Widget on Home page
+                if (Storage.getPreference('bac_enabled', true) && Storage.getPreference('bac_show_home', true)) {
+                    const bacStatus = BAC.getBACStatus();
+                    const bacValue = BAC.getCurrentBAC().toFixed(2);
+                    const breathValue = (BAC.getCurrentBAC() * 0.44).toFixed(2);
+
+                    const widgetHtml = `
+                        <div class="bac-widget-home" style="background: linear-gradient(135deg, #111, #222); border-left: 5px solid ${bacStatus.color}; padding: 15px; border-radius: 12px; margin: 0 15px 20px 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 8px 16px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid ${bacStatus.color};">
+                            <div>
+                                <div style="font-size: 0.7rem; color: #aaa; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 5px; font-weight: bold;">${i18n.t('bac_speculative_title')}</div>
+                                <div style="font-size: 1.1rem; font-weight: 700; color: ${bacStatus.color}; text-shadow: 0 0 10px ${bacStatus.color}44;">
+                                    ${bacStatus.title} <span style="font-size: 0.9rem; color: #fff; font-weight: normal; margin-left: 5px;">(${bacValue} g/l)</span>
+                                </div>
+                                <div style="font-size: 0.75rem; color: #888; margin-top: 5px;">
+                                    ${i18n.t('bac_air_expired')}: <span style="color: ${bacStatus.color}; font-weight: bold;">${breathValue}</span> mg/l
+                                </div>
+                            </div>
+                            <div style="background: ${bacStatus.color}22; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid ${bacStatus.color}44;">
+                                 <span style="font-size: 1.2rem;">🩸</span>
+                            </div>
+                        </div>
+                    `;
+                    mainContent.insertAdjacentHTML('afterbegin', widgetHtml);
+                }
+                
+                if (typeof updateWidgetData === 'function') updateWidgetData();
             });
             return;
         }

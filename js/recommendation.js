@@ -116,8 +116,8 @@ export const Recommendation = {
             filteredResults = filteredResults.filter(b => b.searchRegion === options.region);
         }
 
-        // Slice to max 20 after location filtering
-        return filteredResults.slice(0, 20);
+        // Slice to max 20 after location filtering unless noLimit is true
+        return options.noLimit ? filteredResults : filteredResults.slice(0, 20);
     },
 
     getBeerMatchScore: async function(beer, allBeers) {
@@ -133,6 +133,15 @@ export const Recommendation = {
         const reasons = engine.buildReasons(beer, match, profile);
         match.reasons = reasons;
         match.reasonCodes = reasons.map(r => 'brewbrother_reason_' + r.code.replace('_mismatch', ''));
+        return match;
+    },
+
+    getBeerMatchScoreSync: function(beer) {
+        if (!engine) return null;
+        const profile = engine.getProfile();
+        if (!profile) return null;
+        
+        const match = engine.scoreBeer(beer, profile);
         return match;
     },
 

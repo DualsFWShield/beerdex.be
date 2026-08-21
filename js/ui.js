@@ -927,6 +927,21 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
             }
         }
 
+        let bbMatchPct = beer.matchPercentage;
+        if (bbMatchPct === undefined && window.Recommendation && window.Recommendation.getBeerMatchScoreSync) {
+            const syncMatch = window.Recommendation.getBeerMatchScoreSync(beer);
+            if (syncMatch) bbMatchPct = syncMatch.score;
+        }
+
+        const showBBPct = Storage.getPreference('card_brewbrother_pct', false) && Storage.getPreference('feat_brewbrother_enabled', true) && bbMatchPct !== undefined;
+        if (showBBPct) {
+            const pct = Math.round(bbMatchPct * 100);
+            const color = pct >= 75 ? '#2ecc71' : (pct >= 50 ? '#f1c40f' : '#e74c3c');
+            cardStatsHtml += `<div class="bac-speculative-badge" style="color:${color}; border-color:${color}33; display:inline-flex; ${cardStatsHtml ? 'margin-top:4px;' : ''}">
+                <span style="font-weight:bold;">🤖 ${pct}%</span>
+            </div>`;
+        }
+
         let badgesContainerHtml = '';
         if (cardStatsHtml) {
             badgesContainerHtml = `<div class="card-badges-left" style="position:absolute; top:5px; left:5px; z-index:2; display:flex; flex-direction:column; gap:4px; font-size:0.75rem;">
@@ -1164,7 +1179,7 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
             <button type="button" class="ftab active" data-tab="tab-gen" style="background:var(--accent-gold); color:#000; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">${i18n.t('tab_general')}</button>
             <button type="button" class="ftab" data-tab="tab-tri" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">${i18n.t('tab_sort_notes')}</button>
             <button type="button" class="ftab" data-tab="tab-attr" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">${i18n.t('tab_attributes')}</button>
-            <button type="button" class="ftab" data-tab="tab-rec" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">🤖 ${i18n.t('tab_recommendations') || 'Recommandations'}</button>
+            ${Storage.getPreference('feat_brewbrother_enabled', true) ? `<button type="button" class="ftab" data-tab="tab-rec" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">🤖 ${i18n.t('tab_recommendations') || 'Recommandations'}</button>` : ''}
         </div>
 
         <!-- SCROLLING FORM -->
@@ -1228,6 +1243,7 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
                     <div style="display:flex; gap:10px;">
                         <select name="sortBy" class="form-select" style="flex:2;">
                             <option value="default" ${activeFilters.sortBy === 'default' ? 'selected' : ''}>${i18n.t('filter_sort_default')}</option>
+                            <option value="brewbrother" ${activeFilters.sortBy === 'brewbrother' ? 'selected' : ''}>${i18n.t('filter_sort_brewbrother') || 'Match BrewBrother'}</option>
                             <option value="brewery" ${activeFilters.sortBy === 'brewery' ? 'selected' : ''}>${i18n.t('filter_brewery')}</option>
                             <option value="alcohol" ${activeFilters.sortBy === 'alcohol' ? 'selected' : ''}>${i18n.t('filter_label_degree')} (%)</option>
                             <option value="volume" ${activeFilters.sortBy === 'volume' ? 'selected' : ''}>Volume</option>
@@ -1314,6 +1330,7 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
             </div>
 
             <!-- TAB: RECOMMANDATIONS (BrewBrother) -->
+            ${Storage.getPreference('feat_brewbrother_enabled', true) ? `
             <div id="tab-rec" class="tab-pane" style="display:none;">
                 <div class="stat-card mb-20" style="margin-bottom:15px; background:linear-gradient(135deg, rgba(30,30,30,0.8), rgba(15,15,15,0.9)); border:1px solid var(--accent-gold);">
                     <h4 style="margin-bottom:10px; color:var(--accent-gold); display:flex; align-items:center; gap:8px;">
@@ -1380,6 +1397,7 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
                     </label>
                 </div>
             </div>
+            ` : ''}
 
         </form>
 
@@ -3070,10 +3088,13 @@ export function renderStats(allBeers, userData, container) {
                     <span class="spinner"></span> ${i18n.t('stats_loading_map')}
                 </div>
             </div>
+        ` : '',
+        'brewbrother': Storage.getPreference('feat_brewbrother_enabled', true) ? `
+            <div id="brewbrother-stats-container"></div>
         ` : ''
     };
 
-    const currentOrder = Storage.getPreference('stats_order', ['progression', 'equivalences', 'bac', 'streak', 'history', 'calendar', 'achievements', 'map']);
+    const currentOrder = Storage.getPreference('stats_order', ['progression', 'equivalences', 'bac', 'streak', 'history', 'calendar', 'achievements', 'map', 'brewbrother']);
 
     const matchBlock = Storage.getPreference('feat_beermatch_enabled', true) ? `
         <div class="stat-card mt-20 text-center">
@@ -3100,7 +3121,6 @@ export function renderStats(allBeers, userData, container) {
         <div class="stats-view-wrapper" style="max-width: 600px; margin: 0 auto; width: 100%;">
             <div class="text-center p-20">
                 ${currentOrder.map(key => blocks[key] || '').join('')}
-                <div id="brewbrother-stats-container"></div>
                 ${matchBlock}
                 ${wrappedBlock}
             </div>
@@ -4130,6 +4150,19 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                     </div>
                 </div>
 
+                <div class="setting-row" data-keywords="brewbrother recommendation recommandations ia ai">
+                    <div class="setting-info">
+                        <span class="setting-title">${i18n.t('settings_toggle_brewbrother') || 'Activer BrewBrother'}</span>
+                        <span class="setting-desc">${i18n.t('settings_brewbrother_desc') || 'Assistant IA de recommandations et profil de goût'}</span>
+                    </div>
+                    <div class="setting-action">
+                        <label class="switch">
+                            <input type="checkbox" class="toggle-switch" id="toggle-feat-brewbrother" ${Storage.getPreference('feat_brewbrother_enabled', true) ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
                 <div class="setting-row" data-keywords="carte défaut pays default map country">
                     <div class="setting-info">
                         <span class="setting-title">${i18n.t('settings_map_default')}</span>
@@ -4449,6 +4482,16 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                                 <span class="slider round"></span>
                             </label>
                         </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div style="display:flex; flex-direction:column;">
+                                <span class="setting-title" style="font-size:0.85rem;">${i18n.t('settings_card_bb_pct_title') || 'Match BrewBrother (%)'}</span>
+                                <span class="setting-desc">${i18n.t('settings_card_bb_pct_desc') || 'Afficher le pourcentage de match sur la carte'}</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" class="toggle-switch" id="toggle-card-brewbrother" ${Storage.getPreference('card_brewbrother_pct', false) ? 'checked' : ''}>
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
                     </div>
                 </div>
 
@@ -4459,7 +4502,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                     </div>
                     <div id="stats-order-list" style="display:flex; flex-direction:column; gap:8px;">
                         ${(() => {
-                            const defaultOrder = ['progression', 'equivalences', 'bac', 'streak', 'history', 'calendar', 'achievements', 'map'];
+                            const defaultOrder = ['progression', 'equivalences', 'bac', 'streak', 'history', 'calendar', 'achievements', 'map', 'brewbrother'];
                             let currentOrder = Storage.getPreference('stats_order', defaultOrder);
                             
                             if (currentOrder.includes('donut')) {
@@ -4482,7 +4525,8 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                                 'history': i18n.t('stats_block_history') || "Historique des consos",
                                 'calendar': i18n.t('stats_block_calendar') || "Calendrier de dégustation",
                                 'achievements': i18n.t('stats_block_achievements') || "Succès et Badges",
-                                'map': i18n.t('stats_block_map') || "Carte de Dégustation"
+                                'map': i18n.t('stats_block_map') || "Carte de Dégustation",
+                                'brewbrother': i18n.t('stats_block_brewbrother') || "Profil BrewBrother"
                             };
 
                             return currentOrder.map((key, index) => {
@@ -4846,6 +4890,20 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
 
     const toggleCardStatVolume = container.querySelector('#toggle-card-stat-volume');
     if (toggleCardStatVolume) toggleCardStatVolume.onchange = (e) => { Storage.savePreference('card_stat_volume', e.target.checked); showToast(i18n.t('toast_preference_saved')); };
+
+    const toggleCardBrewBrother = container.querySelector('#toggle-card-brewbrother');
+    if (toggleCardBrewBrother) toggleCardBrewBrother.onchange = (e) => { 
+        Storage.savePreference('card_brewbrother_pct', e.target.checked); 
+        showToast(i18n.t('toast_preference_saved')); 
+        setTimeout(() => window.location.reload(), 300);
+    };
+
+    const toggleFeatBrewBrother = container.querySelector('#toggle-feat-brewbrother');
+    if (toggleFeatBrewBrother) toggleFeatBrewBrother.onchange = (e) => { 
+        Storage.savePreference('feat_brewbrother_enabled', e.target.checked); 
+        showToast(i18n.t('toast_preference_saved')); 
+        setTimeout(() => window.location.reload(), 300);
+    };
 
     const toggleBac = container.querySelector('#toggle-bac-enabled');
     if (toggleBac) {

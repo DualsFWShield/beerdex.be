@@ -145,8 +145,8 @@ export async function renderMapWithData(container, historyWithBreweries) {
 
         const match = Array.isArray(breweryData) ? breweryData.find(b => b.name.toLowerCase() === brewName || brewName.includes(b.name.toLowerCase())) : breweryData[item.beer.brewery];
         
-        let matchCountry = match ? match.country : null;
-        let matchProvince = match ? match.province : item.beer.province;
+        let matchCountry = item.beer.countryCode || (match ? match.country : null);
+        let matchProvince = item.beer.province || (match ? match.province : null);
 
         // If no brewery match in DB, try inferring country from custom beer's province code
         if (!matchCountry && item.beer.province) {

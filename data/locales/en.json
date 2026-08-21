@@ -1399,5 +1399,11 @@
     "settings_bb_tone_default": "BrewBrother (Expert)",
     "settings_bb_tone_friend": "Friend (Casual)",
     "settings_bb_tone_neutral": "Neutral (Descriptive)",
-    "toast_settings_saved": "Settings saved"
+    "toast_settings_saved": "Settings saved",
+    "settings_toggle_brewbrother": "Enable BrewBrother",
+    "settings_brewbrother_desc": "AI recommendation assistant and taste profile",
+    "settings_card_bb_pct_title": "BrewBrother Match (%)",
+    "settings_card_bb_pct_desc": "Display match percentage on the card",
+    "stats_block_brewbrother": "BrewBrother Profile",
+    "filter_sort_brewbrother": "BrewBrother Match"
 }
