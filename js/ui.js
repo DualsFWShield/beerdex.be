@@ -212,9 +212,15 @@ export function closeModal(fromPopState = false) {
     }
     
     // If this wasn't triggered by native back, keep history stack clean
-    if (fromPopState !== true && window.history.state && window.history.state.isModal) {
-        _closingModalProgrammatically = true;
-        window.history.back();
+    if (fromPopState !== true) {
+        // Remove ourselves from the modal stack so we don't orphan the reference
+        const idx = modalStack.indexOf(closeModal);
+        if (idx > -1) modalStack.splice(idx, 1);
+
+        if (window.history.state && window.history.state.isModal) {
+            _closingModalProgrammatically = true;
+            window.history.back();
+        }
     }
     
     document.removeEventListener('keydown', focusTrap);

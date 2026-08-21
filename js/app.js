@@ -194,6 +194,13 @@ async function init() {
                 window.history.back();
                 return;
             }
+            if (window.history.state && !window.history.state.isInitial) {
+                window.history.back();
+                return;
+            }
+            if (navigator.app && navigator.app.exitApp) {
+                navigator.app.exitApp();
+            }
         }, false);
 
         // Set initial history state so we know when we're back at the start
