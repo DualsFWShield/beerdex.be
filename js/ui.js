@@ -1622,6 +1622,16 @@ export function renderBeerDetail(beer, onSave) {
                 seasonBadge.innerHTML = i18n.t('detail_seasonal');
                 rarityContainer.appendChild(seasonBadge);
             }
+
+            // Import bonus indicator
+            if (beer.importBonus && beer.importBonus > 0 && isUnlocked) {
+                const importBadge = document.createElement('div');
+                importBadge.style.cssText = 'font-size: 0.7rem; color: #aaa; margin-top: 4px; text-align: center;';
+                const baseLabel = i18n.t('rarity_' + (beer.baseRarity || 'commun'));
+                const arrows = '↑'.repeat(beer.importBonus);
+                importBadge.innerHTML = `🌍 ${i18n.t('import_bonus_label') || 'Import'} +${beer.importBonus} ${arrows} <span style="color:#666;">(${baseLabel})</span>`;
+                rarityContainer.appendChild(importBadge);
+            }
         };
 
         renderBadge();
@@ -4052,8 +4062,12 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                                 <option value="FR" ${Storage.getPreference('bac_country', 'BE') === 'FR' ? 'selected' : ''}>🇫🇷 FR</option>
                                 <option value="DE" ${Storage.getPreference('bac_country', 'BE') === 'DE' ? 'selected' : ''}>🇩🇪 DE</option>
                                 <option value="NL" ${Storage.getPreference('bac_country', 'BE') === 'NL' ? 'selected' : ''}>🇳🇱 NL</option>
+                                <option value="IT" ${Storage.getPreference('bac_country', 'BE') === 'IT' ? 'selected' : ''}>🇮🇹 IT</option>
                                 <option value="CO" ${Storage.getPreference('bac_country', 'BE') === 'CO' ? 'selected' : ''}>🇨🇴 CO</option>
                                 <option value="US" ${Storage.getPreference('bac_country', 'BE') === 'US' ? 'selected' : ''}>🇺🇸 US</option>
+                                <option value="CN" ${Storage.getPreference('bac_country', 'BE') === 'CN' ? 'selected' : ''}>🇨🇳 CN</option>
+                                <option value="JP" ${Storage.getPreference('bac_country', 'BE') === 'JP' ? 'selected' : ''}>🇯🇵 JP</option>
+                                <option value="KR" ${Storage.getPreference('bac_country', 'BE') === 'KR' ? 'selected' : ''}>🇰🇷 KR</option>
                             </select>
                         </div>
                     </div>
@@ -5698,8 +5712,12 @@ const TutorialSystem = {
                             <option value="FR" ${Storage.getPreference('bac_country', 'BE') === 'FR' ? 'selected' : ''}>🇫🇷 ${i18n.t('country_fr')}</option>
                             <option value="DE" ${Storage.getPreference('bac_country', 'BE') === 'DE' ? 'selected' : ''}>🇩🇪 ${i18n.t('country_de')}</option>
                             <option value="NL" ${Storage.getPreference('bac_country', 'BE') === 'NL' ? 'selected' : ''}>🇳🇱 ${i18n.t('country_nl')}</option>
+                            <option value="IT" ${Storage.getPreference('bac_country', 'BE') === 'IT' ? 'selected' : ''}>🇮🇹 ${i18n.t('country_it')}</option>
                             <option value="US" ${Storage.getPreference('bac_country', 'BE') === 'US' ? 'selected' : ''}>🇺🇸 ${i18n.t('country_us')}</option>
                             <option value="CO" ${Storage.getPreference('bac_country', 'BE') === 'CO' ? 'selected' : ''}>🇨🇴 ${i18n.t('country_co')}</option>
+                            <option value="CN" ${Storage.getPreference('bac_country', 'BE') === 'CN' ? 'selected' : ''}>🇨🇳 ${i18n.t('country_cn')}</option>
+                            <option value="JP" ${Storage.getPreference('bac_country', 'BE') === 'JP' ? 'selected' : ''}>🇯🇵 ${i18n.t('country_jp')}</option>
+                            <option value="KR" ${Storage.getPreference('bac_country', 'BE') === 'KR' ? 'selected' : ''}>🇰🇷 ${i18n.t('country_kr')}</option>
                         </select>
                     </div>
                     <div style="flex:1;">

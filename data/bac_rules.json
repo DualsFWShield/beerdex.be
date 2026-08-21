@@ -46,5 +46,37 @@
     "airRatio": 0.48,
     "sanctionKey": "bac_us_sanction",
     "withdrawKey": "bac_us_withdraw"
+  },
+  "CN": {
+    "nameKey": "country_cn",
+    "sanctionThreshold": 0.2,
+    "withdrawThreshold": 0.8,
+    "airRatio": 0.50,
+    "sanctionKey": "bac_cn_sanction",
+    "withdrawKey": "bac_cn_withdraw"
+  },
+  "IT": {
+    "nameKey": "country_it",
+    "sanctionThreshold": 0.5,
+    "withdrawThreshold": 0.8,
+    "airRatio": 0.44,
+    "sanctionKey": "bac_it_sanction",
+    "withdrawKey": "bac_it_withdraw"
+  },
+  "JP": {
+    "nameKey": "country_jp",
+    "sanctionThreshold": 0.3,
+    "withdrawThreshold": 0.5,
+    "airRatio": 0.50,
+    "sanctionKey": "bac_jp_sanction",
+    "withdrawKey": "bac_jp_withdraw"
+  },
+  "KR": {
+    "nameKey": "country_kr",
+    "sanctionThreshold": 0.3,
+    "withdrawThreshold": 0.8,
+    "airRatio": 0.48,
+    "sanctionKey": "bac_kr_sanction",
+    "withdrawKey": "bac_kr_withdraw"
   }
 }

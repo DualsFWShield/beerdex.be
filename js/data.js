@@ -1,6 +1,7 @@
-import { calculateRarity } from './autoRarity.js';
+import { calculateRarity, getDynamicBeerRarity } from './autoRarity.js';
 import { MAPS, getRegionName } from './map.js';
 import { i18n } from './i18n.js';
+import * as Storage from './storage.js';
 
 const ALL_DATA_FILES = [
     'data/belgiumbeer.json',
@@ -45,6 +46,7 @@ export function enrichBeerMetadata(beer, breweryData = {}) {
 
     return {
         ...beer,
+        countryCode: countryCode || '',
         searchRegion,
         searchCountry
     };
@@ -114,13 +116,30 @@ export async function fetchAllBeers(files = ALL_DATA_FILES) {
         return Math.abs(hash).toString(36);
     };
 
+    // Detect user country for dynamic rarity
+    const userMapScope = localStorage.getItem('defaultMapScope') || '';
+    const bacCountry = Storage.getPreference('bac_country', '');
+    // Resolve user country code from map scope or BAC country
+    const scopeToCountry = { 'be': 'BE', 'fr': 'FR', 'de': 'DE', 'nl': 'NL', 'us': 'US', 'co': 'CO', 'kr': 'KR', 'jp': 'JP', 'cn': 'CN', 'it': 'IT' };
+    const userCountry = scopeToCountry[userMapScope] || bacCountry || 'BE';
+
     const mapped = allBeers.map(beer => {
         const enriched = enrichBeerMetadata(beer, breweryData);
+        const baseRarity = rarityMap[beer.rarity_rank] || beer.rarity || 'commun';
+        const isSeasonal = beer.rarity_rank === 'Saisonnière' || beer.isSeasonal || false;
+        
+        // Apply dynamic import rarity bonus
+        const beerWithBase = { ...enriched, rarity: baseRarity, countryCode: enriched.countryCode };
+        const dynamicResult = getDynamicBeerRarity(beerWithBase, userCountry);
+        
         return {
             ...enriched,
             id: beer.id || beer.title.replace(/\s+/g, '_').toUpperCase() + '_' + djb2Hash(beer.title + (beer.brewery || '')),
-            rarity: rarityMap[beer.rarity_rank] || beer.rarity || 'commun',
-            isSeasonal: beer.rarity_rank === 'Saisonnière' || beer.isSeasonal || false
+            rarity: dynamicResult.rarity,
+            baseRarity: dynamicResult.baseRarity,
+            importBonus: dynamicResult.importBonus,
+            importReason: dynamicResult.importReason,
+            isSeasonal
         };
     });
 

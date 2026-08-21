@@ -123,6 +123,66 @@ export function similarity(a, b) {
     return maxLen === 0 ? 1 : 1 - dist / maxLen;
 }
 
+/**
+ * Token-based Jaccard similarity.
+ * Splits strings into word tokens (normalized) and computes overlap.
+ * Handles word-order differences (e.g. "Tripel Karmeliet" vs "Karmeliet Tripel").
+ */
+export function tokenSimilarity(a, b) {
+    if (!a && !b) return 1;
+    if (!a || !b) return 0;
+    const tokensA = new Set(normalize(a).split(/\s+/).filter(t => t.length > 0));
+    const tokensB = new Set(normalize(b).split(/\s+/).filter(t => t.length > 0));
+    if (tokensA.size === 0 && tokensB.size === 0) return 1;
+    if (tokensA.size === 0 || tokensB.size === 0) return 0;
+    let intersection = 0;
+    for (const t of tokensA) {
+        if (tokensB.has(t)) intersection++;
+    }
+    const union = new Set([...tokensA, ...tokensB]).size;
+    return union === 0 ? 0 : intersection / union;
+}
+
+/**
+ * Detects if two beer titles have a variant/color conflict.
+ * If one title contains a variant word that the other doesn't (or has a different one),
+ * they are different beers (e.g. "Leffe Blonde" vs "Leffe Brune").
+ * Returns true if there IS a conflict (beers should NOT be merged).
+ */
+const VARIANT_WORDS = [
+    'blonde', 'blond', 'brune', 'bruin', 'ambree', 'amber', 'rouge', 'rubis',
+    'noire', 'black', 'blanche', 'witte', 'wit', 'gold', 'doree', 'triple',
+    'tripel', 'quadrupel', 'quad', 'double', 'dubbel', 'ipa', 'stout', 'porter',
+    'pils', 'lager', 'kriek', 'framboise', 'peche', 'cerise', 'grand cru',
+    'sans alcool', '0.0', 'radler', 'saison', 'hiver', 'noel', 'christmas',
+    'speciale', 'special', 'platinum', 'gold', 'silver', 'chrome', 'red',
+    'carbon', 'nickel', 'scotch'
+];
+
+export function hasVariantConflict(titleA, titleB) {
+    const normA = normalize(titleA);
+    const normB = normalize(titleB);
+    
+    const variantsA = [];
+    const variantsB = [];
+    
+    for (const v of VARIANT_WORDS) {
+        // Check as whole word or substring
+        if (normA.includes(v)) variantsA.push(v);
+        if (normB.includes(v)) variantsB.push(v);
+    }
+    
+    // If one has variant words that the other doesn't, it's a conflict
+    for (const v of variantsA) {
+        if (!variantsB.includes(v)) return true;
+    }
+    for (const v of variantsB) {
+        if (!variantsA.includes(v)) return true;
+    }
+    
+    return false;
+}
+
 // ============================== //
 // Fuzzy Search                   //
 // ============================== //

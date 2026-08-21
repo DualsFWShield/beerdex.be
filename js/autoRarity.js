@@ -139,3 +139,143 @@ export function calculateRarity(beer) {
         reasons
     };
 }
+
+// ============================== //
+// Dynamic Import Rarity System   //
+// ============================== //
+
+/**
+ * Rarity tier hierarchy (lowest to highest).
+ * Used for rank promotion when import bonus is applied.
+ */
+const RARITY_RANKS = [
+    'base',           // 0
+    'commun',         // 1
+    'rare',           // 2
+    'super_rare',     // 3
+    'epique',         // 4
+    'mythique',       // 5
+    'legendaire',     // 6
+    'ultra_legendaire' // 7
+];
+
+/**
+ * Geographic proximity groups for import bonus calculation.
+ * Countries in the same group are "neighbors" (low/no bonus).
+ * Countries in different groups get higher bonuses.
+ */
+const GEO_GROUPS = {
+    // Western Europe (close neighbors)
+    'BE': 'eu_west', 'FR': 'eu_west', 'NL': 'eu_west', 'DE': 'eu_west',
+    'LU': 'eu_west', 'GB': 'eu_west', 'IE': 'eu_west', 'DK': 'eu_west',
+    // Southern Europe
+    'IT': 'eu_south', 'ES': 'eu_south', 'PT': 'eu_south',
+    // Americas
+    'US': 'americas', 'CO': 'americas', 'BR': 'americas', 'MX': 'americas', 'CA': 'americas',
+    // East Asia
+    'JP': 'east_asia', 'KR': 'east_asia', 'CN': 'east_asia', 'TW': 'east_asia',
+    // Oceania
+    'AU': 'oceania', 'NZ': 'oceania'
+};
+
+/**
+ * Returns the import bonus (number of rarity ranks to add) based on
+ * the distance between beer origin country and user country.
+ * 
+ * @param {string} beerCountry - ISO country code of the beer's origin (e.g. 'JP')
+ * @param {string} userCountry - ISO country code of the user (e.g. 'BE')
+ * @returns {{ bonus: number, reason: string|null }}
+ */
+export function getImportBonus(beerCountry, userCountry) {
+    if (!beerCountry || !userCountry) return { bonus: 0, reason: null };
+    
+    const bc = beerCountry.toUpperCase();
+    const uc = userCountry.toUpperCase();
+    
+    // Same country = no bonus
+    if (bc === uc) return { bonus: 0, reason: null };
+    
+    const beerGroup = GEO_GROUPS[bc];
+    const userGroup = GEO_GROUPS[uc];
+    
+    // If either country is unknown, give a small default bonus
+    if (!beerGroup || !userGroup) return { bonus: 1, reason: 'import_unknown' };
+    
+    // Same geographic group (e.g. both Western Europe)
+    if (beerGroup === userGroup) {
+        return { bonus: 1, reason: 'import_neighbor' };
+    }
+    
+    // Adjacent groups (e.g. Western Europe ↔ Southern Europe, or East Asia ↔ East Asia)
+    const ADJACENT_PAIRS = [
+        ['eu_west', 'eu_south'],
+        ['americas', 'americas'], // already same group, shouldn't reach here
+    ];
+    
+    const isAdjacent = ADJACENT_PAIRS.some(([a, b]) => 
+        (beerGroup === a && userGroup === b) || (beerGroup === b && userGroup === a)
+    );
+    
+    if (isAdjacent) {
+        return { bonus: 1, reason: 'import_close' };
+    }
+    
+    // Different continents / distant groups (e.g. EU ↔ Asia, EU ↔ Americas)
+    // These get the largest bonus
+    const isIntercontinental = (
+        (beerGroup.startsWith('eu') && !userGroup.startsWith('eu')) ||
+        (!beerGroup.startsWith('eu') && userGroup.startsWith('eu')) ||
+        (beerGroup === 'east_asia' && userGroup === 'americas') ||
+        (beerGroup === 'americas' && userGroup === 'east_asia')
+    );
+    
+    if (isIntercontinental) {
+        return { bonus: 3, reason: 'import_intercontinental' };
+    }
+    
+    // Default for other distant combinations
+    return { bonus: 2, reason: 'import_distant' };
+}
+
+/**
+ * Promotes a rarity by N ranks, capped at ultra_legendaire.
+ * 
+ * @param {string} baseRarity - Original rarity string (e.g. 'commun')
+ * @param {number} ranks - Number of ranks to promote
+ * @returns {string} Promoted rarity string
+ */
+export function promoteRarity(baseRarity, ranks) {
+    if (ranks <= 0) return baseRarity;
+    const currentIndex = RARITY_RANKS.indexOf(baseRarity);
+    if (currentIndex < 0) return baseRarity; // Unknown rarity, return as-is
+    const newIndex = Math.min(currentIndex + ranks, RARITY_RANKS.length - 1);
+    return RARITY_RANKS[newIndex];
+}
+
+/**
+ * Computes the effective (dynamic) rarity for a beer given the user's country.
+ * Returns the base rarity if no import bonus applies.
+ * 
+ * @param {Object} beer - Beer object with countryCode and rarity fields
+ * @param {string} userCountry - ISO country code of the user
+ * @returns {{ rarity: string, baseRarity: string, importBonus: number, importReason: string|null }}
+ */
+export function getDynamicBeerRarity(beer, userCountry) {
+    const baseRarity = beer.rarity || 'commun';
+    const beerCountry = beer.countryCode || '';
+    
+    const { bonus, reason } = getImportBonus(beerCountry, userCountry);
+    
+    if (bonus <= 0) {
+        return { rarity: baseRarity, baseRarity, importBonus: 0, importReason: null };
+    }
+    
+    const promotedRarity = promoteRarity(baseRarity, bonus);
+    
+    return {
+        rarity: promotedRarity,
+        baseRarity,
+        importBonus: bonus,
+        importReason: reason
+    };
+}

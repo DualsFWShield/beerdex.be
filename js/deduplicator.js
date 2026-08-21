@@ -1,8 +1,15 @@
 /**
  * deduplicator.js — Detects similar/duplicate beers.
  * 
- * 1. Compares user custom beers against the official DB using Levenshtein.
+ * 1. Compares user custom beers against the official DB using multiple similarity metrics.
  * 2. Scans the official DB for internal duplicates (console.warn only).
+ * 
+ * Improvements over v1:
+ * - Token-based Jaccard similarity for word-order-insensitive matching
+ * - Variant/color conflict detection (e.g. Blonde vs Brune = different beers)
+ * - Proper field access (alcohol instead of degree)
+ * - Alcohol delta penalty to reject beers with very different ABV
+ * - No more artificial score forcing
  */
 
 import * as Storage from './storage.js';
@@ -20,10 +27,10 @@ import * as Utils from './utils.js';
  * 
  * @param {Array} customBeers - From Storage.getCustomBeers()
  * @param {Array} officialBeers - All non-custom beers from the DB
- * @param {number} threshold - Minimum similarity (0-1). Default 0.80.
+ * @param {number} threshold - Minimum similarity (0-1). Default 0.65.
  * @returns {Array<{customBeer, officialBeer, score}>}
  */
-export function findMatches(customBeers, officialBeers, threshold = 0.60, ignoreDismissed = false) {
+export function findMatches(customBeers, officialBeers, threshold = 0.65, ignoreDismissed = false) {
     if (!customBeers || !officialBeers) return [];
 
     // Filter out already-dismissed matches
@@ -35,7 +42,7 @@ export function findMatches(customBeers, officialBeers, threshold = 0.60, ignore
     for (const custom of customBeers) {
         const customTitle = Utils.normalize(custom.title);
         const customBrewery = Utils.normalize(custom.brewery);
-        const customDeg = Utils.parseDegree(custom.degree);
+        const customDeg = Utils.parseDegree(custom.alcohol || custom.degree);
         const customVol = Utils.parseVolumeToMl(custom.volume);
 
         let bestMatch = null;
@@ -45,35 +52,70 @@ export function findMatches(customBeers, officialBeers, threshold = 0.60, ignore
             // Skip if the official beer is itself a custom beer
             if (String(official.id).startsWith('CUSTOM_')) continue;
 
-            const titleSim = Utils.similarity(customTitle, Utils.normalize(official.title));
-            const brewerySim = Utils.similarity(customBrewery, Utils.normalize(official.brewery));
+            const officialTitle = Utils.normalize(official.title);
+            const officialBrewery = Utils.normalize(official.brewery);
+
+            // --- Quick reject: if normalized titles share no significant words, skip ---
+            const tokenSim = Utils.tokenSimilarity(custom.title, official.title);
+            const levenSim = Utils.similarity(customTitle, officialTitle);
             
-            const officialDeg = Utils.parseDegree(official.degree);
-            const degreeMatch = (customDeg > 0 && customDeg === officialDeg) ? 1 : 0;
+            // Best of both similarity methods (handles word-order differences AND typos)
+            const titleSim = Math.max(tokenSim, levenSim);
 
-            const officialVol = Utils.parseVolumeToMl(official.volume);
-            const volumeMatch = (customVol > 0 && customVol === officialVol) ? 1 : 0;
+            // Early exit: if title similarity is too low, skip entirely
+            if (titleSim < 0.35) continue;
 
-            let points = 0;
-            if (titleSim >= 0.5) points++;
-            if (brewerySim >= 0.5) points++;
-            if (degreeMatch) points++;
-            if (volumeMatch) points++;
+            // --- Variant/Color conflict check ---
+            // If titles differ by a variant word (e.g. "Blonde" vs "Brune"), reject
+            if (Utils.hasVariantConflict(custom.title, official.title)) continue;
 
-            // Weighted score
-            let score = (titleSim * 0.5) + (brewerySim * 0.2) + (degreeMatch * 0.15) + (volumeMatch * 0.15);
+            // --- Brewery similarity ---
+            const brewerySim = Utils.similarity(customBrewery, officialBrewery);
 
-            // If 2 or more elements correspond, ensure score meets threshold
-            // User feedback: degree + volume alone is too generic. Must include brewery or title.
-            let hasValidCombo = false;
-            if (titleSim >= 0.5 && points >= 2) {
-                hasValidCombo = true; // Title + something else
-            } else if (brewerySim >= 0.5 && degreeMatch && volumeMatch) {
-                hasValidCombo = true; // Brewery + Degree + Volume
+            // --- Alcohol degree comparison ---
+            const officialDeg = Utils.parseDegree(official.alcohol || official.degree);
+            let degreePenalty = 0;
+            let degreeMatch = 0;
+            if (customDeg > 0 && officialDeg > 0) {
+                const delta = Math.abs(customDeg - officialDeg);
+                if (delta === 0) {
+                    degreeMatch = 1;
+                } else if (delta <= 0.5) {
+                    degreeMatch = 0.7;
+                } else if (delta <= 1.5) {
+                    degreeMatch = 0.3;
+                } else {
+                    // Very different alcohol → strong penalty
+                    degreePenalty = 0.15;
+                }
             }
 
-            if (hasValidCombo && score < threshold) {
-                score = threshold;
+            // --- Volume comparison ---
+            const officialVol = Utils.parseVolumeToMl(official.volume);
+            const volumeMatch = (customVol > 0 && officialVol > 0 && customVol === officialVol) ? 1 : 0;
+
+            // --- Weighted score ---
+            // Title is heavily weighted because it's the primary identifier
+            let score = (titleSim * 0.55) + (brewerySim * 0.25) + (degreeMatch * 0.10) + (volumeMatch * 0.10);
+            
+            // Apply alcohol penalty
+            score -= degreePenalty;
+
+            // --- Brewery conflict rejection ---
+            // If both have breweries and they're very different, reject
+            if (customBrewery && officialBrewery && customBrewery.length > 2 && officialBrewery.length > 2) {
+                if (brewerySim < 0.25) {
+                    // Very different breweries → hard reject unless title is nearly identical
+                    if (titleSim < 0.90) continue;
+                }
+            }
+
+            // --- Substring containment bonus ---
+            // If one title fully contains the other (normalized), bonus
+            if (customTitle.length > 3 && officialTitle.length > 3) {
+                if (customTitle.includes(officialTitle) || officialTitle.includes(customTitle)) {
+                    score = Math.max(score, 0.70);
+                }
             }
 
             if (score > bestScore) {
@@ -127,7 +169,13 @@ export function findOfficialDuplicates(officialBeers) {
                 continue;
             }
 
-            const titleSim = Utils.similarity(Utils.normalize(beers[i].title), Utils.normalize(beers[j].title));
+            // Skip if variant conflict
+            if (Utils.hasVariantConflict(beers[i].title, beers[j].title)) continue;
+
+            const titleSim = Math.max(
+                Utils.similarity(Utils.normalize(beers[i].title), Utils.normalize(beers[j].title)),
+                Utils.tokenSimilarity(beers[i].title, beers[j].title)
+            );
             const brewerySim = Utils.similarity(Utils.normalize(beers[i].brewery), Utils.normalize(beers[j].brewery));
             const combined = titleSim * 0.7 + brewerySim * 0.3;
 
@@ -181,7 +229,7 @@ export function runCheck(allBeers, ignoreDismissed = false) {
     const officialBeers = allBeers.filter(b => !String(b.id).startsWith('CUSTOM_'));
 
     // 1. Find custom → official matches
-    const matches = findMatches(customBeers, officialBeers, 0.60, ignoreDismissed);
+    const matches = findMatches(customBeers, officialBeers, 0.65, ignoreDismissed);
 
     if (matches.length > 0) {
         console.log(`[Deduplicator] Found ${matches.length} custom beer(s) matching official entries:`);

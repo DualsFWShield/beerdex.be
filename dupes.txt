@@ -1,0 +1,90 @@
+<truncated 237 lines>
+       Brewery: "WARSTEINER" vs "Huyghe" | Alc: 4.8� vs 5� | title:67% brew:10% deg:0%
+[75%] "WEISSBIER" (deutchbeer.json) <-> "WEISSBIER KRISTALLKLAR" (deutchbeer.json)
+       Brewery: "ERDINGER WEISSBRA�" vs "SPATEN-FRANZISKANER-BR�U" | Alc: 5.3� vs 5� | title:50% brew:32% deg:0%
+[75%] "BENEDIKTINER WEISSBIER" (deutchbeer.json) <-> "WEISSBIER" (deutchbeer.json)
+       Brewery: "BITBURGER" vs "ERDINGER WEISSBRA�" | Alc: 5.4� vs 5.3� | title:50% brew:22% deg:30%
+[75%] "BLOUP BLOUP MARK I" (belgiumbeer.json) <-> "BLOUP BLOUP MARK II" (belgiumbeer.json)
+       Brewery: "Noah & Dorian" vs "Noah & Dorian" | Alc: 11.0� vs 8.0� | title:95% brew:100% deg:0%
+[75%] "Gordon Watermelon Xplosion" (belgiumbeer.json) <-> "Gordon Tequila Xplosion" (belgiumbeer.json)
+       Brewery: "Gordon (John Martin)" vs "Gordon (John Martin)" | Alc: 8.0� vs 8.0� | title:73% brew:100% deg:100%
+[75%] "BARBAR" (belgiumbeer.json) <-> "BARBAR BOK" (belgiumbeer.json)
+       Brewery: "LEFEBVRE" vs "LEFEBVRE" | Alc: 8� vs 8.5� | title:60% brew:100% deg:0%
+[75%] "LA NANTELLE" (frenchbeer.json) <-> "LULU LA NANTELLE" (frenchbeer.json)
+       Brewery: "LOU DISTRIBUTION" vs "LOU DISTRIBUTION" | Alc: 4.8� vs 3.5� | title:69% brew:100% deg:0%
+[75%] "AVERBODE" (belgiumbeer.json) <-> "Averbode Extra" (newbeer.json)
+       Brewery: "HUYGHE" vs "Huyghe" | Alc: 7.5� vs 4.8� | title:57% brew:100% deg:0%
+[75%] "LA DIVINE" (frenchbeer.json) <-> "La Divine" (newbeer.json)
+       Brewery: "LA MONTAGNARDE" vs "Silly" | Alc: 8.5� vs 9.5� | title:100% brew:0% deg:0%
+[75%] "DESPERADOS" (frenchbeer.json) <-> "Desperados Virgin 0�" (newbeer.json)
+       Brewery: "FISCHER" vs "Desperados" | Alc: 5.9� vs 0� | title:53% brew:20% deg:0%
+[75%] "WEISSBIER" (deutchbeer.json) <-> "Erdinger Weissbier" (newbeer.json)
+       Brewery: "ERDINGER WEISSBRA�" vs "Erdinger" | Alc: 5.3� vs 5.3� | title:50% brew:44% deg:100%
+[75%] "DESPERADOS" (frenchbeer.json) <-> "Desperados Tropical" (frenchbeer.json)
+       Brewery: "FISCHER" vs "Desperados" | Alc: 5.9� vs 5.9� | title:53% brew:20% deg:100%
+[75%] "DESPERADOS" (frenchbeer.json) <-> "Desperados" (newbeer.json)
+       Brewery: "FISCHER" vs "Heineken" | Alc: 5.9� vs 5.9� | title:100% brew:25% deg:100%
+[75%] "YPRA" (belgiumbeer.json) <-> "Ypra Alcoholvrij" (newbeer.json)
+       Brewery: "OMER VANDER GHINSTE" vs "Omer Vander Ghinste" | Alc: 6� vs 0.4� | title:50% brew:100% deg:0%
+[75%] "ROCHEFORT TRIPLE" (belgiumbeer.json) <-> "Rochefort Triple Extra" (newbeer.json)
+       Brewery: "ABBAYE NOTRE-DAME DE SAINT-REMY" vs "Trappistes Rochefort" | Alc: 8.1� vs 8.1� | title:73% brew:17% deg:100%
+[75%] "ST BERNARDUS ABT" (belgiumbeer.json) <-> "St Bernardus Abt 12" (newbeer.json)
+       Brewery: "ST BERNARDUS" vs "Watou" | Alc: 10� vs 10� | title:84% brew:17% deg:100%
+[75%] "STELLA" (belgiumbeer.json) <-> "Stella Artois" (newbeer.json)
+       Brewery: "ARTOIS (AB INBEV)" vs "Ab Inbev" | Alc: 5.2� vs 5.2� | title:50% brew:53% deg:100%
+[75%] "SAISON DUPONT" (belgiumbeer.json) <-> "Saison Dupont Biologique" (newbeer.json)
+       Brewery: "DUPONT" vs "Dupont" | Alc: 6.5� vs 5.5� | title:67% brew:100% deg:0%
+[75%] "SAISON DUPONT" (belgiumbeer.json) <-> "SAISON DUPONT DRY HOPPINg" (belgiumbeer.json)
+       Brewery: "DUPONT" vs "DUPONT" | Alc: 6.5� vs 6.5� | title:52% brew:100% deg:100%
+[75%] "SAISON DUPONT" (belgiumbeer.json) <-> "Saison Dupont Biologique" (newbeer.json)
+       Brewery: "DUPONT" vs "Brasserie Dupont" | Alc: 6.5� vs 5.5� | title:67% brew:38% deg:0%
+[75%] "STELLA" (belgiumbeer.json) <-> "Stella Artois" (newbeer.json)
+       Brewery: "ARTOIS (AB INBEV)" vs "Ab Inbev" | Alc: 5.2� vs 5.2� | title:50% brew:53% deg:100%
+[75%] "TETE DE MORT RED" (belgiumbeer.json) <-> "T�te De Mort Red" (newbeer.json)
+       Brewery: "DU BOCQ" vs "Brasserie du Bocq" | Alc: 8.2� vs 8.2� | title:100% brew:41% deg:100%
+[75%] "SMASH ORIGINAL" (belgiumbeer.json) <-> "Smash" (newbeer.json)
+       Brewery: "BRASSERIE [C]" vs "Brasserie Het Nest" | Alc: 6.2� vs 5.7� | title:50% brew:56% deg:0%
+[75%] "BLANCHE DE NAMUR" (belgiumbeer.json) <-> "BLANCHE DE NAMUR ROSEE" (belgiumbeer.json)
+       Brewery: "DU BOCQ" vs "DU BOCQ" | Alc: 4.5� vs 3.2� | title:75% brew:100% deg:0%
+[75%] "SUPER 8 FLANDRIEN" (belgiumbeer.json) <-> "Super 8 Flandrien 0�" (newbeer.json)
+       Brewery: "BRASSERIE HAACHT" vs "Haacht" | Alc: 6.4� vs 0� | title:89% brew:38% deg:0%
+[75%] "ROCHEFORT 8%" (belgiumbeer.json) <-> "Trappistes Rochefort 8" (newbeer.json)
+       Brewery: "ABBAYE NOTRE-DAME DE SAINT-REMY" vs "St Remy" | Alc: 9.2� vs 9.2� | title:67% brew:21% deg:100%
+[74%] "Enigma Hopnytized NEIPA" (newbeer.json) <-> "Enigma Hopnytized DIPAV3" (newbeer.json)
+       Brewery: "Enigma" vs "Enigma" | Alc: 8� vs 9� | title:83% brew:100% deg:30%
+[74%] "Mongozo Banana" (newbeer.json) <-> "Mongozo Mango" (newbeer.json)
+       Brewery: "Huyghe" vs "Huyghe" | Alc: 3.6� vs 3.6� | title:71% brew:100% deg:100%
+[74%] "Broeder Jacob Lazarus Bourbon Whiskey" (newbeer.json) <-> "Broeder Jacob Lazarus Rum Infused" (newbeer.json)
+       Brewery: "Broeder Jacob" vs "Broeder Jacob" | Alc: 8.5� vs 8.5� | title:70% brew:100% deg:100%
+[73%] "CORSENDONK AGNUS" (belgiumbeer.json) <-> "Corsendonk Pater" (newbeer.json)
+       Brewery: "Corsendonk" vs "Corsendonk" | Alc: 7.5� vs 7.5� | title:69% brew:100% deg:100%
+[73%] "Lindemans Cassis" (newbeer.json) <-> "Lindemans Apple" (newbeer.json)
+       Brewery: "Lindemans" vs "Lindemans" | Alc: 3.5� vs 3.5� | title:69% brew:100% deg:100%
+[73%] "De Leite Cuvee Soeur'Ise" (newbeer.json) <-> "De Leite Cuvee Mam'zelle" (newbeer.json)
+       Brewery: "De Leite" vs "De Leite" | Alc: 8� vs 8� | title:70% brew:100% deg:100%
+[72%] "LEVRETTE BLANCHE" (frenchbeer.json) <-> "Millevertus Blanchette" (newbeer.json)
+       Brewery: "LEVRETTE (Marque)" vs "Millevertus" | Alc: 5� vs 5� | title:100% brew:27% deg:100%
+[72%] "Gouden Carolus Hopsinjoor" (newbeer.json) <-> "Gouden Carolus Ambrio" (newbeer.json)
+       Brewery: "Het Anker" vs "Het Anker" | Alc: 8� vs 8� | title:68% brew:100% deg:100%
+[72%] "Gordon Xotic Lime Mojito" (belgiumbeer.json) <-> "Gordon Xotic Pina Colada" (belgiumbeer.json)
+       Brewery: "Gordon (John Martin)" vs "Gordon (John Martin)" | Alc: 5.0� vs 5.0� | title:67% brew:100% deg:100%
+[72%] "LINDEMANS FARO" (belgiumbeer.json) <-> "Lindemans Geuze" (newbeer.json)
+       Brewery: "LINDEMANS" vs "Lindemans" | Alc: 5� vs 5� | title:67% brew:100% deg:100%
+[72%] "Broeder Jacob Lazarus Sherry Infused" (newbeer.json) <-> "Broeder Jacob Lazarus Bourbon Whiskey" (newbeer.json)
+       Brewery: "Broeder Jacob" vs "Broeder Jacob" | Alc: 8.5� vs 8.5� | title:68% brew:100% deg:100%
+[71%] "Gordon Watermelon Xplosion" (belgiumbeer.json) <-> "Gordon Tropical Xplosion" (belgiumbeer.json)
+       Brewery: "Gordon (John Martin)" vs "Gordon (John Martin)" | Alc: 8.0� vs 8.0� | title:65% brew:100% deg:100%
+[71%] "LA CORNE TRIPLE" (belgiumbeer.json) <-> "Corne La Triple 10" (newbeer.json)
+       Brewery: "EBLY" vs "d'Ebly" | Alc: 10� vs 10� | title:75% brew:80% deg:100%
+[71%] "Broeder Jacob Lazarus Calvados Infused" (newbeer.json) <-> "Broeder Jacob Lazarus Bourbon Whiskey" (newbeer.json)
+       Brewery: "Broeder Jacob" vs "Broeder Jacob" | Alc: 8.5� vs 8.5� | title:66% brew:100% deg:100%
+[70%] "Kasteelbier Rouge 0�" (newbeer.json) <-> "Kasteelbier Rouge Blik" (newbeer.json)
+       Brewery: "Van Honsebrouck" vs "Van Honsebrouck" | Alc: 0� vs 8� | title:82% brew:100% deg:0%
+[70%] "Lindemans Geuze" (newbeer.json) <-> "Timmermans Gueuze" (newbeer.json)
+       Brewery: "Lindemans" vs "Anthony Martin" | Alc: 5� vs 5� | title:100% brew:21% deg:100%
+[70%] "Verzet Oud Bruin Hip Hons" (newbeer.json) <-> "T Verzet Oud Bruin Raspberry" (newbeer.json)
+       Brewery: "'t Verzet" vs "'t Verzet" | Alc: 6� vs 6� | title:64% brew:100% deg:100%
+[70%] "FLORIS PASSION" (belgiumbeer.json) <-> "Floris Mango" (newbeer.json)
+       Brewery: "HUYGHE" vs "Huyghe" | Alc: 3.6� vs 3.6� | title:64% brew:100% deg:100%
+
+Done.

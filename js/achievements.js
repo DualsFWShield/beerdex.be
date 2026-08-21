@@ -358,7 +358,19 @@ export function checkAchievements(allBeers) {
                     const len = beer.title.length;
                     if (len > stats.maxNameLength) stats.maxNameLength = len;
                     if (len < stats.minNameLength) stats.minNameLength = len;
-                    stats.firstLetters.add(beer.title.charAt(0).toUpperCase());
+                    // Extract first letter of EACH word in the title (not just the first word)
+                    // Strip accents so É→E, Â→A, etc.
+                    const words = beer.title.split(/[\s\-_''"\/\\.,;:()\[\]{}!+?]+/);
+                    for (const word of words) {
+                        if (!word) continue;
+                        // Strip accents (NFD decompose + remove combining marks)
+                        const cleaned = word.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                        // Get first alphabetic character
+                        const match = cleaned.match(/[A-Za-z]/);
+                        if (match) {
+                            stats.firstLetters.add(match[0].toUpperCase());
+                        }
+                    }
                 }
             }
         }
