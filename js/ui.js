@@ -1353,12 +1353,13 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
 
                         <label class="form-label">${i18n.t('brewbrother_flavors') || "Saveurs"}</label>
                         <div style="display:flex; flex-wrap:wrap; gap:6px;">
-                            ${(window.BrewBrother ? window.BrewBrother.FLAVOR_KEYWORDS.slice(0,12) : ['fruité', 'houblonné', 'torréfié', 'épicé', 'acide', 'amer', 'doux', 'floral']).map(t => {
+                            ${(window.BrewBrother ? window.BrewBrother.FLAVOR_KEYWORDS.slice(0,12) : ['fruity', 'hoppy', 'roasted', 'spicy', 'sour', 'bitter', 'sweet', 'floral']).map(t => {
                                 const isChecked = activeFilters.recFlavors && activeFilters.recFlavors.includes(t);
+                                const labelText = window.BrewBrotherNLP ? window.BrewBrotherNLP.getFlavorName(t) : t;
                                 return `
                                     <label style="display:flex; align-items:center; gap:4px; background:${isChecked ? 'rgba(255,192,0,0.2)' : 'rgba(255,255,255,0.05)'}; padding:4px 8px; border-radius:12px; cursor:pointer; border:1px solid ${isChecked ? 'var(--accent-gold)' : 'transparent'};">
                                         <input type="checkbox" name="recFlavors" value="${t}" ${isChecked ? 'checked' : ''} style="display:none;">
-                                        <span style="font-size:0.75rem; color:${isChecked ? 'var(--accent-gold)' : '#fff'}; text-transform:capitalize;">${t}</span>
+                                        <span style="font-size:0.75rem; color:${isChecked ? 'var(--accent-gold)' : '#fff'}; text-transform:capitalize;">${labelText}</span>
                                     </label>`;
                             }).join('')}
                         </div>
@@ -1934,7 +1935,8 @@ export function renderBeerDetail(beer, onSave) {
                         
                         try {
                             const existingData = Storage.getBeerRating(beer.id);
-                            const isAlreadyTasted = existingData && (existingData.score > 0 || existingData.count > 0 || existingData.date);
+                            const tastedCount = (existingData && existingData.count > 0) ? parseInt(existingData.count, 10) : 0;
+                            const isAlreadyTasted = tastedCount > 0 ? tastedCount : (existingData && (existingData.score > 0 || existingData.date) ? 1 : false);
                             const explanation = await window.BrewBrotherNLP.generateExplanation(beer, match, tone, lang, isAlreadyTasted);
                             explanationHtml = `<div style="margin-top:10px; padding:12px; background:rgba(0,0,0,0.4); border-left:3px solid ${matchColor}; border-radius:4px; font-style:italic; line-height:1.4; color:#ddd;">"${explanation}"</div>`;
                         } catch(e) {
@@ -3148,7 +3150,7 @@ export function renderStats(allBeers, userData, container) {
                     if (hasData) {
                         const translateKey = (k) => i18n.t(k) || k;
                         const topTypesHtml = topTypes.map(t => `<span class="stat-badge">${t[0]}</span>`).join(' ');
-                        const topFlavorsHtml = topFlavors.map(f => `<span class="stat-badge" style="background:var(--bg-dark);">${f[0]}</span>`).join(' ');
+                        const topFlavorsHtml = topFlavors.map(f => `<span class="stat-badge" style="background:var(--bg-dark);">${window.BrewBrotherNLP ? window.BrewBrotherNLP.getFlavorName(f[0]) : f[0]}</span>`).join(' ');
                         
                         bbContainer.innerHTML = `
                             <div class="stat-card mt-20 text-center" style="border:1px solid var(--accent-gold); background:linear-gradient(135deg, rgba(30,30,30,0.8), rgba(15,15,15,0.9));">

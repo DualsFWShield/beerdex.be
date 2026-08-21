@@ -53,14 +53,6 @@
             maxPerBrewery: 3,
             maxPerType: 6
         },
-        scoring: {
-            communityPriorRating: 3.5,
-            communityPrior: 5,
-            jitter: 0.04,
-            curve: 0.70,
-            reasonThreshold: 0.35,
-            mismatchThreshold: -0.30
-        },
         output: { maxResults: 20, maxReasons: 5 }
     };
 
@@ -95,7 +87,6 @@
     }
 
     function parseAbv(beer) {
-        if (!beer) return null;
         const raw = (beer.alcohol || '').toString().replace(',', '.').replace(/[^0-9.]/g, '');
         const v = parseFloat(raw);
         return (!isNaN(v) && v > 0 && v < 25) ? v : null;
@@ -149,14 +140,14 @@
     const FLAVOR_CACHE = new WeakMap();
     function extractFlavors(beer) {
         if (!beer) return [];
-        if (typeof beer === 'object' && FLAVOR_CACHE.has(beer)) return FLAVOR_CACHE.get(beer);
+        if (FLAVOR_CACHE.has(beer)) return FLAVOR_CACHE.get(beer);
         const text = normalizeText([beer.type, beer.ingredients, beer.title, beer.description].filter(Boolean).join(' '));
         if (!text) return [];
         const found = [];
         FLAVOR_MATCHERS.forEach(m => {
             if (m.forms.some(rx => rx.test(text))) found.push(m.kw);
         });
-        if (typeof beer === 'object') FLAVOR_CACHE.set(beer, found);
+        FLAVOR_CACHE.set(beer, found);
         return found;
     }
 
@@ -202,7 +193,7 @@
     BrewBrother.prototype.buildProfile = async function (adapter) {
         const cfg = this.config;
         const w = cfg.weights;
-        const sc = cfg.scoring || DEFAULTS.scoring;
+        const sc = cfg.scoring;
         const now = Date.now();
         const rawFeedback = await adapter.getFeedback();
         const feedback = Array.isArray(rawFeedback) ? rawFeedback : [];
@@ -284,16 +275,6 @@
             }
         });
 
-        // Favorite type calculation
-        let favoriteType = null, favoriteTypeCount = 0, topAff = -Infinity;
-        Object.keys(typeAffinity).forEach(t => {
-            if (typeAffinity[t] > topAff) {
-                topAff = typeAffinity[t];
-                favoriteType = t;
-                favoriteTypeCount = typeDrinkCount[t] || 0;
-            }
-        });
-
         // Signed Normalization
         normalizeSigned(typeAffinity);
         normalizeSigned(breweryAffinity);
@@ -318,7 +299,6 @@
             typeAffinity, breweryAffinity, flavorAffinity,
             typeDrinkCount, breweryDrinkCount,
             idealAbv, abvTolerance: abvStd,
-            favoriteType, favoriteTypeCount,
             anchors: anchors.slice(0, 40), 
             negativeAnchors: negativeAnchors.slice(0, 15),
             confidence: confidenceVal,
@@ -327,14 +307,12 @@
         };
 
         this.lastFeedbackCounts = new Map(Array.from(byKey.values()).map(e => [String(e.beer.id), Math.max(e.explicitCount, e.entries)]));
-        if (drinkCountMap) this.lastDrinkCounts = drinkCountMap;
         return this.lastProfile;
     };
 
     BrewBrother.prototype.scoreBeer = function (beer, profile) {
         const cfg = this.config;
         const inf = cfg.influence;
-        const sc = cfg.scoring || DEFAULTS.scoring;
         profile = profile || {};
 
         const isProfileEmpty = (profile.confidence || 0) === 0 &&
@@ -410,9 +388,7 @@
             const rating = parseFloat(beer.community_rating) || 0;
             const countRaw = beer.community_rating_count !== undefined ? beer.community_rating_count : beer.rating_count;
             const count = parseInt(countRaw, 10) || 0;
-            const priorRating = sc.communityPriorRating !== undefined ? sc.communityPriorRating : 3.5;
-            const prior = sc.communityPrior !== undefined ? sc.communityPrior : 5;
-            const smoothed = count > 0 ? (rating * count + priorRating * prior) / (count + prior) : rating;
+            const smoothed = count > 0 ? (rating * count + cfg.scoring.communityPriorRating * cfg.scoring.communityPrior) / (count + cfg.scoring.communityPrior) : rating;
             community = { rating, count, smoothed: parseFloat(smoothed.toFixed(2)) };
 
             const commScore = clamp(smoothed / 5.0, 0, 1);
@@ -422,9 +398,7 @@
             totalScore = (totalScore * (1 - qualityWeight)) + (commScore * qualityWeight);
         }
 
-        const jitter = sc.jitter !== undefined ? sc.jitter : 0.04;
-        const curve = sc.curve !== undefined ? sc.curve : 0.70;
-        totalScore = Math.pow(clamp(totalScore + Math.random() * jitter, 0, 1), curve);
+        totalScore = Math.pow(clamp(totalScore + Math.random() * cfg.scoring.jitter, 0, 1), cfg.scoring.curve);
 
         return {
             score20: parseFloat((totalScore * 20).toFixed(1)),
@@ -444,37 +418,33 @@
                 idealAbv: profile.idealAbv !== null ? round1(profile.idealAbv) : null,
                 profileSize: profile.distinctBeers || 0,
                 totalDrinks: profile.totalDrinks || 0,
-                abvTolerance: profile.abvTolerance,
-                favoriteType: profile.favoriteType,
-                favoriteTypeCount: profile.favoriteTypeCount
+                abvTolerance: profile.abvTolerance
             }
         };
     };
 
     BrewBrother.prototype.buildReasons = function (beer, match, profile) {
-        const sc = this.config.scoring || DEFAULTS.scoring;
+        const sc = this.config.scoring;
         const reasons = [];
         const d = match.dims || {};
         const ev = match.evidence || {};
         const type = beer.type ? String(beer.type).trim() : '';
         const brewery = beer.brewery ? String(beer.brewery).trim() : '';
-        const reasonThreshold = sc.reasonThreshold !== undefined ? sc.reasonThreshold : 0.35;
-        const mismatchThreshold = sc.mismatchThreshold !== undefined ? sc.mismatchThreshold : -0.30;
 
         // Positives
-        if (d.typeSigned >= reasonThreshold && type) reasons.push({ code: 'type', strength: d.typeSigned, detail: Object.assign({ type }, ev) });
-        if (d.brewerySigned >= reasonThreshold && brewery) reasons.push({ code: 'brewery', strength: d.brewerySigned, detail: Object.assign({ brewery }, ev) });
-        if (match.likedFlavors && match.likedFlavors.length && d.flavorSigned >= 0.3) reasons.push({ code: 'flavor', strength: Math.min(1, d.flavorSigned + 0.2), detail: Object.assign({ flavors: match.likedFlavors }, ev) });
-        if (d.abvScore >= 0.75 && ev.idealAbv !== null && match.abv !== null) reasons.push({ code: 'abv', strength: d.abvScore, detail: Object.assign({ beerAbv: match.abv }, ev) });
-        if (d.repeatSim >= 0.4 && ev.lovedRef) reasons.push({ code: 'similar', strength: d.repeatSim + 0.2, detail: Object.assign({ title: ev.lovedRef, count: ev.lovedRefDrinks }, ev) });
+        if (d.typeSigned >= sc.reasonThreshold && type) reasons.push({ code: 'type', strength: d.typeSigned, detail: ev });
+        if (d.brewerySigned >= sc.reasonThreshold && brewery) reasons.push({ code: 'brewery', strength: d.brewerySigned, detail: ev });
+        if (match.likedFlavors && match.likedFlavors.length && d.flavorSigned >= 0.3) reasons.push({ code: 'flavor', strength: Math.min(1, d.flavorSigned + 0.2), detail: ev });
+        if (d.abvScore >= 0.75 && ev.idealAbv !== null && match.abv !== null) reasons.push({ code: 'abv', strength: d.abvScore, detail: ev });
+        if (d.repeatSim >= 0.4 && ev.lovedRef) reasons.push({ code: 'similar', strength: d.repeatSim + 0.2, detail: ev });
         if (ev.typeDrinks >= this.config.weights.loyaltyThreshold && d.typeSigned > 0.4) reasons.push({ code: 'repeat', strength: d.typeSigned + 0.1, detail: ev });
-        if (match.community && match.community.smoothed >= 4.0) reasons.push({ code: 'community', strength: Math.min(1, match.community.smoothed / 5), detail: match.community });
+        if (match.community && match.community.smoothed >= 4.0) reasons.push({ code: 'community', strength: Math.min(1, match.community.smoothed / 5), detail: ev });
 
         // Mismatches
-        if (d.typeSigned <= mismatchThreshold && type) reasons.push({ code: 'type_mismatch', strength: Math.min(1, -d.typeSigned), detail: Object.assign({ type }, ev) });
-        if (d.brewerySigned <= mismatchThreshold && brewery) reasons.push({ code: 'brewery_mismatch', strength: Math.min(1, -d.brewerySigned), detail: Object.assign({ brewery }, ev) });
-        if (match.dislikedFlavors && match.dislikedFlavors.length && d.flavorSigned <= -0.15) reasons.push({ code: 'flavor_mismatch', strength: Math.min(1, 0.5 - d.flavorSigned), detail: Object.assign({ flavors: match.dislikedFlavors }, ev) });
-        if (d.abvScore <= 0.25 && ev.idealAbv !== null && match.abv !== null) reasons.push({ code: 'abv_mismatch', strength: 1 - d.abvScore, detail: Object.assign({ beerAbv: match.abv }, ev) });
+        if (d.typeSigned <= sc.mismatchThreshold && type) reasons.push({ code: 'type_mismatch', strength: Math.min(1, -d.typeSigned), detail: ev });
+        if (d.brewerySigned <= sc.mismatchThreshold && brewery) reasons.push({ code: 'brewery_mismatch', strength: Math.min(1, -d.brewerySigned), detail: ev });
+        if (match.dislikedFlavors && match.dislikedFlavors.length && d.flavorSigned <= -0.15) reasons.push({ code: 'flavor_mismatch', strength: Math.min(1, 0.5 - d.flavorSigned), detail: ev });
+        if (d.abvScore <= 0.25 && ev.idealAbv !== null && match.abv !== null) reasons.push({ code: 'abv_mismatch', strength: 1 - d.abvScore, detail: ev });
 
         reasons.sort((a, b) => b.strength - a.strength);
         return reasons.slice(0, this.config.output.maxReasons);
@@ -486,9 +456,7 @@
         const rawCandidates = await adapter.getCandidates();
         const candidates = Array.isArray(rawCandidates) ? rawCandidates : [];
         const drunkIdsRaw = await adapter.getDrunkIds();
-        const drunkIds = (drunkIdsRaw && typeof drunkIdsRaw.has === 'function') 
-            ? drunkIdsRaw 
-            : new Set(Array.isArray(drunkIdsRaw) ? drunkIdsRaw.map(String) : []);
+        const drunkIds = drunkIdsRaw && typeof drunkIdsRaw.has === 'function' ? drunkIdsRaw : new Set();
 
         const scored = [];
         candidates.forEach(beer => {
@@ -567,9 +535,411 @@
     BrewBrother.utils = { extractFlavors, beerSimilarity, parseAbv };
 
     if (typeof module !== 'undefined' && module.exports) module.exports = BrewBrother;
-    else { 
-        root.BrewBrother = BrewBrother; 
-        root.Recommender = BrewBrother; 
-    }
+    else { root.BrewBrother = BrewBrother; root.Recommender = BrewBrother; }
 
-})(typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : this);
+})(typeof window !== 'undefined' ? window : this);
+
+// brewbrother_nlp.js — RosaeNLG-inspired Cohesive Narrative Synthesizer v2.0 for BeerDex
+// ══════════════════════════════════════════════════════════════════════════════════
+// WHAT'S NEW IN v2.0
+//   • Composed narratives instead of single canned scenarios: opener + prestige
+//     clause + data-backed reason sentences + outro (+ tasted note).
+//   • Reason sentences carry REAL numbers (tasting counts, average ratings,
+//     ABV sweet spot, community stats, re-drink counts) provided by the
+//     BrewBrother engine — no more generic one-size-fits-all text.
+//   • Four sentiment tiers (excellent / positive / mixed / negative).
+//   • Anti-repetition memory (pickFresh) ensures successive reviews vary.
+//   • Advanced French surface realization (smart elisions, non-breaking spaces).
+// ══════════════════════════════════════════════════════════════════════════════════
+
+(function (root) {
+    'use strict';
+
+    const NLP = {
+        dict: {},
+        currentLang: null,
+        _recent: {},
+
+        init: async function(lang) {
+            if (this.currentLang === lang && Object.keys(this.dict).length > 0) return;
+            try {
+                const response = await fetch(`data/locales/nlp_${lang}.json`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                this.dict = await response.json();
+                this.currentLang = lang;
+                this._recent = {};
+            } catch (error) {
+                console.error("Could not load NLP dictionary:", error);
+                this.currentLang = lang;
+            }
+        },
+
+        getRandom: function(array) {
+            return array && array.length > 0 ? array[Math.floor(Math.random() * array.length)] : "";
+        },
+
+        pickFresh: function(array, key, memory = 2) {
+            if (!array || array.length === 0) return "";
+            if (array.length === 1) return array[0];
+            const recent = this._recent[key] || (this._recent[key] = []);
+            const pool = array.filter(s => recent.indexOf(s) === -1);
+            const finalPool = pool.length > 0 ? pool : array;
+            const pick = finalPool[Math.floor(Math.random() * finalPool.length)];
+            recent.push(pick);
+            if (recent.length > memory) recent.shift();
+            return pick;
+        },
+
+        formatNumber: function (value, lang, decimals) {
+            const n = Number(value);
+            if (isNaN(n)) return String(value);
+            let dec = decimals !== undefined ? decimals : (Number.isInteger(n) ? 0 : 1);
+            const fixed = n.toFixed(dec);
+            return lang === 'fr' ? fixed.replace('.', ',') : fixed;
+        },
+
+        formatList: function(items, lang) {
+            if (!items || items.length === 0) return "";
+            const parts = items.slice(0, 3);
+            if (parts.length === 1) return parts[0];
+            const joiner = lang === 'fr' ? ' et ' : (parts.length === 2 ? ' and ' : ', and ');
+            if (parts.length === 2) return parts[0] + joiner + parts[1];
+            return parts.slice(0, -1).join(', ') + joiner + parts[parts.length - 1];
+        },
+
+        getFlavorName: function (key) {
+            const names = (this.dict && this.dict.flavorNames) || {};
+            return names[key] || key;
+        },
+
+        fmtTimes: function(n, lang) {
+            n = parseInt(n, 10);
+            if (isNaN(n) || n < 1) n = 1;
+            if (lang === 'fr') return n === 1 ? 'une fois' : (n === 2 ? 'deux fois' : `${n} fois`);
+            return n === 1 ? 'once' : (n === 2 ? 'twice' : `${n} times`);
+        },
+
+        describeAbv: function(abvRaw, lang) {
+            const v = parseFloat(String(abvRaw || '').replace(',', '.').replace(/[^0-9.]/g, ''));
+            if (isNaN(v) || v <= 0) return '';
+            const fr = v < 3.5 ? 'très modéré' : v < 5 ? 'léger' : v < 7.5 ? 'modéré' : v < 9.5 ? 'costaud' : 'puissant';
+            const en = v < 3.5 ? 'very light' : v < 5 ? 'light' : v < 7.5 ? 'moderate' : v < 9.5 ? 'robust' : 'powerful';
+            return lang === 'fr' ? fr : en;
+        },
+
+        formatAbv: function (beer, lang) {
+            const raw = beer && beer.alcohol;
+            if (raw === undefined || raw === null || String(raw).trim() === '') return lang === 'fr' ? 'degré moyen' : 'medium ABV';
+            const n = parseFloat(String(raw).replace(',', '.'));
+            if (isNaN(n)) return String(raw);
+            return lang === 'fr' ? this.formatNumber(n, lang) + '°' : this.formatNumber(n, lang) + '%';
+        },
+
+        getPrestigeLevel: function(beer) {
+            const brewery = ((beer.brewery || '') + ' ' + (beer.title || '')).toLowerCase();
+            const rarity = (beer.rarity || 'commun').toLowerCase();
+
+            const isIndustrial = /heineken|leffe|kronenbourg|1664|jupiler|stella|maes|bavaria|carlsberg|budweiser|desperados|grimbergen|affligem|hoegaarden|skoll|pelforth|gordon|amstel|bavaroise|fischer|kanterbr|schützen|corona|modelo|asahi|sapporo|kirin|tsingtao|peroni|moretti|warsteiner|bitburger|krombacher|veltins|erdinger|paulaner|franziskaner|spaten/.test(brewery);
+            const isPrestige = /cantillon|3 fonteinen|drie fonteinen|popihn|piggy|cloudwater|verdant|tree house|hill farmstead|bokke|westvleteren|rochefort|orval|chimay|westmalle|achel|la trappe|st\. bernardus|struise|dupont|paix dieu|mikkeller|omnipollo|evil twin|de la senne|to øl|to ol|nogne|siren|thornbridge|cigar city|jolly pumpkin|other half|trillium|side project|de molen|lervig|buxton|beavertown/.test(brewery) || ['epique', 'mythique', 'legendaire', 'ultra_legendaire'].includes(rarity);
+
+            if (isIndustrial) return 'industrial';
+            if (isPrestige) return 'prestige';
+            if (['rare', 'super_rare'].includes(rarity)) return 'craft';
+            return 'standard';
+        },
+
+        sentimentTier: function (percentage) {
+            if (percentage >= 85) return 'excellent';
+            if (percentage >= 65) return 'positive';
+            if (percentage >= 40) return 'mixed';
+            return 'negative';
+        },
+
+        getArticleForms: function (type, lang) {
+            const t = String(type || '').trim();
+            const tLower = t.toLowerCase();
+            if (lang === 'fr') {
+                const isMasc = ['lambic', 'bock', 'barleywine', 'faro', 'farô', 'doppelbock', 'eisbock', 'roggenbier', 'rauchbier'].some(m => tLower.includes(m));
+                return {
+                    type: t,
+                    le_type: isMasc ? 'le ' + t : 'la ' + t,
+                    un_type: isMasc ? 'un ' + t : 'une ' + t,
+                    du_type: isMasc ? 'du ' + t : 'de la ' + t,
+                    de_type: 'de ' + t,
+                    ce_type: isMasc ? 'ce ' + t : 'cette ' + t
+                };
+            }
+            return {
+                type: t,
+                le_type: 'the ' + t,
+                un_type: 'a ' + t,
+                du_type: 'of the ' + t,
+                de_type: 'of ' + t,
+                ce_type: 'this ' + t
+            };
+        },
+
+        buildGlobalCtx: function (beer, ev, match, lang) {
+            beer = beer || {};
+            ev = ev || {};
+            const ctx = {
+                title: beer.title || (lang === 'fr' ? 'cette bière' : 'this beer'),
+                brewery: beer.brewery || (lang === 'fr' ? 'la brasserie' : 'the brewery'),
+                type: beer.type || (lang === 'fr' ? 'bière' : 'beer'),
+                abv: this.formatAbv(beer, lang)
+            };
+            ctx.total_drinks = ev.totalDrinks || 0;
+            ctx.distinct_beers = ev.profileSize || 0;
+            ctx.match_pct = (match && match.percentage != null) ? match.percentage : '';
+            return ctx;
+        },
+
+        buildReasonCtx: function (reason, lang) {
+            const d = (reason && reason.detail) || {};
+            const ctx = {};
+            const num = (v, dec) => (typeof v === 'number' && !isNaN(v)) ? this.formatNumber(v, lang, dec) : '';
+
+            if (d.type) {
+                ctx.type = d.type;
+                ctx.type_drinks = d.drinkCount > 0 ? String(d.drinkCount) : (lang === 'fr' ? 'plusieurs' : 'several');
+                ctx.type_avg = num(d.avgRating, 1);
+            }
+            if (d.brewery) {
+                ctx.brewery = d.brewery;
+                ctx.brewery_drinks = d.drinkCount || 0;
+            }
+            if (Array.isArray(d.flavors) && d.flavors.length) {
+                ctx.flavors = this.formatList(d.flavors.map(k => this.getFlavorName(k)), lang);
+            }
+            if (typeof d.beerAbv === 'number') {
+                ctx.abv_beer = num(d.beerAbv);
+                ctx.abv_ideal = num(d.idealAbv);
+                ctx.abv_pref = d.idealAbv != null ? `${num(d.idealAbv)}°` : (lang === 'fr' ? 'votre zone habituelle' : 'your usual range');
+            }
+            if (typeof d.rating === 'number') {
+                ctx.community_rating = num(d.rating, 1);
+                ctx.community_count = d.count || 0;
+            }
+            if (d.title) {
+                ctx.loved_ref = d.title;
+                ctx.loved_ref_drinks = this.fmtTimes(d.count || 1, lang);
+            }
+            return ctx;
+        },
+
+        pickReasonTemplate: function (reason, toneGroup) {
+            const pools = (toneGroup.reasons && toneGroup.reasons[reason.code]) || null;
+            if (!pools) return "";
+            const tier = reason.strength >= 0.65 ? 'strong' : 'standard';
+            const hasCount = reason.detail && typeof reason.detail.drinkCount === 'number' && reason.detail.drinkCount >= 2;
+
+            if (hasCount && Array.isArray(pools[tier + '_count']) && pools[tier + '_count'].length) {
+                return this.getRandom(pools[tier + '_count']);
+            }
+            if (Array.isArray(pools[tier]) && pools[tier].length) {
+                return this.getRandom(pools[tier]);
+            }
+            const keys = Object.keys(pools);
+            for (let i = 0; i < keys.length; i++) {
+                if (Array.isArray(pools[keys[i]]) && pools[keys[i]].length) return this.getRandom(pools[keys[i]]);
+            }
+            return "";
+        },
+
+        buildReasonClause: function(t, match, beer, lang, tier) {
+            if (!t || !t.reason_clauses) return "";
+            const c = t.reason_clauses;
+            const ev = (match && match.evidence) || {};
+            const reasons = (match && match.reasons) || [];
+            const rCodes = reasons.map(r => r.code);
+            const d = match.dims || {};
+            
+            const neg = tier === 'negative';
+            const mixed = tier === 'mixed';
+            const pool = [];
+
+            if (!neg && c.similar && ev.lovedRef && (ev.lovedRefDrinks || 0) >= 2) pool.push(...c.similar);
+            if (c.type && (ev.typeDrinks || 0) >= 3) {
+                if (neg ? (d.typeSigned < -0.05) : (mixed || d.typeSigned > 0.2)) pool.push(...c.type);
+            }
+            if (!neg && c.repeat && rCodes.includes('repeat')) pool.push(...c.repeat);
+            if (c.brewery && (ev.breweryDrinks || 0) >= 2) {
+                if (neg ? (d.brewerySigned < -0.05) : (mixed || d.brewerySigned > 0.1)) pool.push(...c.brewery);
+            }
+            if (c.abv && ev.idealAbv != null) {
+                if (neg ? (d.abvScore < 0.45) : (mixed ? d.abvScore < 0.7 : d.abvScore > 0.7)) pool.push(...c.abv);
+            }
+            if (c.flavor && ev.flavors && ev.flavors.length > 0) {
+                if (neg ? (d.flavorSigned < -0.05) : (mixed ? Math.abs(d.flavorSigned) > 0.15 : d.flavorSigned > 0.5)) pool.push(...c.flavor);
+            }
+            if (c.community && (rCodes.includes('community') || (beer && parseFloat(beer.community_rating) >= 4))) {
+                pool.push(...c.community);
+            }
+
+            if (pool.length === 0) return "";
+            return this.pickFresh(pool, `clause_${lang}_${tier}`, 3);
+        },
+
+        formatSlots: function(template, beer, prestigeDesc, outro, lang, ctx) {
+            ctx = ctx || {};
+            const ev = ctx.evidence || {};
+            let res = template || "";
+            const forms = this.getArticleForms(beer.type || ev.type, lang);
+            
+            Object.keys(forms).forEach(k => {
+                res = res.split('{' + k + '}').join(forms[k]);
+            });
+
+            const merged = Object.assign({}, ctx.global, ctx.reason, {
+                prestige_desc: prestigeDesc || '',
+                outro: outro || '',
+                reason_clause: ctx.reasonClause || '',
+                abv_strength: this.describeAbv(beer.alcohol, lang)
+            });
+
+            Object.keys(merged).forEach(k => {
+                const v = merged[k];
+                res = res.split('{' + k + '}').join(v == null ? '' : String(v));
+            });
+
+            return res;
+        },
+
+        surfaceRealize: function (text, lang) {
+            if (!text) return "";
+            let res = text;
+
+            if (lang === 'fr') {
+                res = res.replace(/\bde\s+le\b/gi, 'du');
+                res = res.replace(/\bde\s+les\b/gi, 'des');
+                res = res.replace(/\bà\s+le\b/gi, 'au');
+                res = res.replace(/\bà\s+les\b/gi, 'aux');
+                res = res.replace(/\b(de|du|le|la|ce|que|se|ne|me|te)\s+([aeiouyéèêàâîôû][\wÀ-ÿ-]*)/gi, (match, prefix, word) => {
+                    const p = prefix.toLowerCase();
+                    if (p === 'de' || p === 'du') return "d'" + word;
+                    if (p === 'le' || p === 'la') return "l'" + word;
+                    if (p === 'ce') return 'cet ' + word;
+                    if (p === 'que') return "qu'" + word;
+                    if (p === 'se') return "s'" + word;
+                    if (p === 'ne') return "n'" + word;
+                    if (p === 'me') return "m'" + word;
+                    if (p === 'te') return "t'" + word;
+                    return match;
+                });
+                res = res.replace(/\bsi\s+(ils?)\b/gi, "s'$1");
+            } else {
+                const AN_EXCEPTIONS = /^(uni|use|usu|euro|one|once|ubiq)/i;
+                const AN_EXTRA = /^(hour|honest|honor|heir)/i;
+                res = res.replace(/\b([Aa])\s+([\w-]+)/g, (m, a, word) => {
+                    const w = word.toLowerCase();
+                    if ((/^[aeiou]/.test(w) && !AN_EXCEPTIONS.test(w)) || AN_EXTRA.test(w)) return (a === 'A' ? 'An' : 'an') + ' ' + word;
+                    return m;
+                });
+            }
+
+            // Cleanup & Typography
+            res = res.replace(/\s+/g, ' ');
+            res = res.replace(/\(\s*\)/g, '');
+            res = res.replace(/,\s*,+/g, ',');
+            res = res.replace(/([.,;:])(\s*[.,;:])+/g, '$1');
+            res = res.replace(/\s+([.,])/g, '$1');
+            if (lang === 'fr') res = res.replace(/ ([!?;:])/g, '\u00A0$1'); // French non-breaking space
+            else res = res.replace(/\s+([!?;:])/g, '$1');
+
+            res = res.replace(/([.!?])\s*([a-zà-ÿ])/g, (m, p, l) => p + ' ' + l.toUpperCase());
+            res = res.trim();
+            if (res.length > 0) res = res.charAt(0).toUpperCase() + res.slice(1);
+            return res;
+        },
+
+        generateExplanation: async function (beer, match, tone = 'brewbrother', lang = 'fr', isAlreadyTasted = false) {
+            await this.init(lang);
+
+            let toneGroup = this.dict[tone] || this.dict['brewbrother'] || Object.values(this.dict)[0];
+            if (!toneGroup) return "";
+
+            match = match || {};
+            const ev = match.evidence || {};
+            const pct = match.percentage != null ? match.percentage : 50;
+            const tier = this.sentimentTier(pct);
+            const sentiment = (tier === 'excellent' || tier === 'positive') ? 'positive' : (tier === 'negative' ? 'negative' : 'mixed');
+
+            const t = toneGroup[tier] || toneGroup['positive'] || toneGroup['mixed'];
+            if (!t) return "";
+
+            const globalCtx = this.buildGlobalCtx(beer, ev, match, lang);
+            const parts = [];
+
+            // 1. Opener (statistical vs standard)
+            const openerPools = (toneGroup.openers && toneGroup.openers[tier]) || null;
+            let openerPool = [];
+            if (Array.isArray(openerPools)) {
+                openerPool = openerPools;
+            } else if (openerPools) {
+                const useStats = ev.totalDrinks >= 5 && Array.isArray(openerPools.withStats) && openerPools.withStats.length > 0;
+                openerPool = useStats ? openerPools.withStats : (openerPools.standard || []);
+            }
+            const opener = this.getRandom(openerPool);
+            if (opener) parts.push(this.formatSlots(opener, beer, "", "", lang, { global: globalCtx }));
+
+            // 2. Prestige
+            const prestigeLevel = this.getPrestigeLevel(beer);
+            const prestigePool = (t.prestige_desc && t.prestige_desc[prestigeLevel] && t.prestige_desc[prestigeLevel][sentiment]) || [];
+            const prestigeDesc = this.getRandom(prestigePool);
+
+            // 3. Outro
+            const outroPool = isAlreadyTasted ? (toneGroup.alreadyTasted || []) : (t.outros || []);
+            const outro = this.pickFresh(outroPool, `outro_${tone}_${lang}_${tier}`);
+
+            // 4. Data-driven embedded Reason Clause
+            const reasonClause = this.buildReasonClause(t, match, beer, lang, tier);
+
+            // 5. Narrative Scenario
+            const scenario = this.pickFresh(t.scenarios, `scen_${tone}_${lang}_${tier}`);
+
+            // 6. Reasons Sentences (Budgeted)
+            const reasons = Array.isArray(match.reasons) ? match.reasons : [];
+            const budgets = { excellent: { pos: 3, neg: 1 }, positive: { pos: 3, neg: 1 }, mixed: { pos: 2, neg: 2 }, negative: { pos: 1, neg: 3 } };
+            const budget = budgets[tier];
+            
+            const reasonSentences = [];
+            let posUsed = 0, negUsed = 0;
+            reasons.forEach(r => {
+                const isNeg = r.code && r.code.includes('_mismatch');
+                if (isNeg ? negUsed >= budget.neg : posUsed >= budget.pos) return;
+                const rTpl = this.pickReasonTemplate(r, toneGroup);
+                if (!rTpl) return;
+                const rCtx = this.buildReasonCtx(r, lang);
+                reasonSentences.push(this.formatSlots(rTpl, beer, "", "", lang, { global: globalCtx, reason: rCtx }));
+                if (isNeg) negUsed++; else posUsed++;
+            });
+
+            // 7. Assembly
+            const fullCtx = { global: globalCtx, evidence: ev, match, reasonClause };
+            let rawText = this.formatSlots(scenario, beer, prestigeDesc, outro, lang, fullCtx);
+            if (reasonSentences.length > 0) rawText += " " + reasonSentences.join(" ");
+
+            // 8. Tasted Note Append (if not handled by outro swap)
+            if (isAlreadyTasted) {
+                const tastedCount = Math.max(1, typeof isAlreadyTasted === 'number' ? Math.floor(isAlreadyTasted) : 1);
+                const at = toneGroup.alreadyTasted || {};
+                let pool = (tastedCount >= 2 && Array.isArray(at.multiple) && at.multiple.length) ? at.multiple : (at.once || []);
+                if (!Array.isArray(pool)) pool = [];
+                const note = this.getRandom(pool);
+                if (note) rawText += " " + this.formatSlots(note, beer, "", "", lang, { global: Object.assign({}, globalCtx, { count: tastedCount }) });
+            }
+
+            // Fallback for legacy dicts
+            if (!rawText.trim() && toneGroup[sentiment] && toneGroup[sentiment].scenarios) {
+                const legacyScenario = this.getRandom(toneGroup[sentiment].scenarios);
+                rawText = this.formatSlots(legacyScenario, beer, prestigeDesc, outro, lang, fullCtx);
+            }
+
+            return this.surfaceRealize(rawText, lang);
+        }
+    };
+
+    if (typeof module !== 'undefined' && module.exports) module.exports = NLP;
+    else { root.NLP = NLP; root.BrewBrotherNLP = NLP; }
+
+})(typeof window !== 'undefined' ? window : this);

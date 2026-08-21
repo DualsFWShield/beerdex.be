@@ -1,180 +1,406 @@
 {
+    "meta": { "conjunction": "and", "locale": "en-US" },
+    "flavorNames": {
+        "fruity": "fruity", "hoppy": "hoppy", "roasted": "roasted", "spicy": "spicy", "sour": "sour", "bitter": "bitter", "sweet": "sweet", "caramel": "caramel", "citrus": "citrusy", "coffee": "coffee", "chocolate": "chocolate", "floral": "floral", "malty": "malty", "herbal": "herbal", "smoky": "smoky", "woody": "oaky", "vanilla": "vanilla", "coriander": "coriander", "honey": "honey", "dry": "dry", "yeasty": "yeasty", "wheat": "wheat", "resinous": "resinous", "tropical": "tropical", "redFruits": "red fruit"
+    },
     "brewbrother": {
-        "positive": {
+        "openers": {
+            "excellent": {
+                "withStats": [
+                    "After cross-referencing your {total_drinks} tastings across {distinct_beers} different beers, {title} from {brewery} emerges as an exceptional match.",
+                    "Your BeerDex tells a clear story: {favorite_type_count} {favorite_type} tastings on record, and {title} ({abv}) fits that profile remarkably well.",
+                    "Having analyzed your drinking history ({total_drinks} tastings, {distinct_beers} distinct references), I can say with confidence: {title} belongs in your cellar."
+                ],
+                "standard": [
+                    "{title} ({abv}) from {brewery} is quite simply one of the strongest matches I have found for your palate.",
+                    "This is a confident recommendation: {title} ticks every single box your tasting history has drawn."
+                ]
+            },
+            "positive": {
+                "withStats": [
+                    "Based on your {total_drinks} recorded tastings, {title} from {brewery} stands out as a serious contender for your next bottle.",
+                    "Your profile — {distinct_beers} different beers, with a clear soft spot for {favorite_type} — points straight to {title} ({abv})."
+                ],
+                "standard": [
+                    "If you are looking for a quality {type}, {title} from {brewery} stands out naturally.",
+                    "According to your BeerDex, {title} ({abv}) is an excellent choice for your palate."
+                ]
+            },
+            "mixed": {
+                "withStats": [
+                    "With {total_drinks} tastings on record, I can be precise: {title} ({abv}) sits at the edge of your usual comfort zone."
+                ],
+                "standard": [
+                    "{title} ({brewery}) is a {type} at {abv} that deviates somewhat from your usual favorites.",
+                    "This one is a calculated gamble: {title} sits outside your core preferences, though not without appeal."
+                ]
+            },
+            "negative": {
+                "withStats": [
+                    "I have weighed {title} against your {total_drinks} logged tastings, and the verdict is clear: this is not your beer."
+                ],
+                "standard": [
+                    "Based on your BeerDex, I advise against {title} from {brewery}.",
+                    "To be direct: {title} ({abv}) is likely to disappoint you."
+                ]
+            }
+        },
+        "excellent": {
             "scenarios": [
-                "If you are looking for a top-quality {type}, {title} from {brewery} stands out naturally. With its {abv} and {prestige_desc}, it aligns precisely with your favorite tasting experiences. {outro}",
-                "According to your BeerDex, {title} ({abv}) is an outstanding choice. {brewery} delivers a {type} with an aroma profile that should immediately delight your palate. {outro}",
-                "As someone who appreciates {le_type}, this release by {brewery} ticks all the boxes. {prestige_desc} and sitting at {abv}, {title} offers a balanced and flavorful tasting. {outro}",
-                "Highly recommended: {title}! Between the recognized craft of {brewery} and mastery of {type}s, this {abv} bottle is tailored to your preferences. {outro}"
+                "Let me be direct: {title} is one of the closest matches your BeerDex has ever produced. {reason_clause} At {abv} with {prestige_desc}, {brewery} has practically brewed to your personal specification. {outro}",
+                "Rarely do the numbers align this cleanly. {title} ({abv}) echoes your tastes on every axis I measure — style, strength, aromatic signature. {reason_clause} {outro}"
             ],
             "prestige_desc": {
-                "industrial": "its status as a widely accessible classic",
-                "standard": "its solid flavor balance",
-                "craft": "its fine independent craft signature",
-                "prestige": "its exceptional brewing prestige"
+                "industrial": { "positive": ["a profile that punches well above its category"] },
+                "standard": { "positive": ["a rock-solid, well-calibrated recipe"] },
+                "craft": { "positive": ["a genuine independent craft signature"] },
+                "prestige": { "positive": ["a pedigree most beer cellars would envy"] }
+            },
+            "reason_clauses": {
+                "similar": ["Placed next to {loved_ref} — a bottle you have gone back to {loved_ref_drinks} — the stylistic kinship is unmistakable."],
+                "type": ["You have logged {type_drinks} {type}s in your BeerDex, and your average score for the style speaks for itself."],
+                "repeat": ["This style has become a fixture of your history: {type_drinks} tastings and counting, with no sign of fatigue."],
+                "brewery": ["The {brewery_drinks} brews you have already tried from {brewery} all earned a place in your good books."],
+                "abv": ["Its {abv} lands squarely in the strength bracket where your highest ratings cluster, right around {abv_pref}."],
+                "flavor": ["Its {flavors} character ticks the exact aromatic boxes you reward most consistently."],
+                "community": ["The wider tasting community corroborates the diagnosis with consistently high ratings."]
             },
             "outros": [
-                "I highly recommend it with your eyes closed for your next tasting.",
-                "A solid reference to add to your collection right away.",
-                "An excellent tasting experience ahead!"
+                "Clear an evening for this one: it deserves your full attention.",
+                "My strongest recommendation this session."
+            ]
+        },
+        "positive": {
+            "scenarios": [
+                "A confident recommendation: {title} from {brewery}. {reason_clause} Its {abv} falls right within your preferred range and {prestige_desc} — you will likely enjoy this one. {outro}",
+                "Your BeerDex leans firmly towards {le_type}, and {title} is a fine example. Its {abv} matches your comfort zone and {prestige_desc} only adds to the appeal. {outro}",
+                "The overlap between your history and {title} is genuine. {reason_clause} Its {abv} aligns with your ideal range and {prestige_desc} reinforces the match. {outro}"
+            ],
+            "prestige_desc": {
+                "industrial": { "positive": ["its straightforward, well-executed recipe"] },
+                "standard": { "positive": ["its honest, well-balanced profile"] },
+                "craft": { "positive": ["its careful independent craft signature"] },
+                "prestige": { "positive": ["its well-deserved reputation among connoisseurs"] }
+            },
+            "reason_clauses": {
+                "similar": ["It sits comfortably in the same family as {loved_ref}, which you have gone back to {loved_ref_drinks}."],
+                "type": ["With {type_drinks} {type}s already logged, the style is clearly one of your home grounds."],
+                "brewery": ["Your {brewery_drinks} previous tastings from {brewery} all left a positive impression."],
+                "abv": ["Its {abv} sits right in the strength bracket your top scores gravitate towards, around {abv_pref}."],
+                "flavor": ["The {flavors} profile matches the aromatic signatures you rate highest."],
+                "community": ["Community ratings back up your personal fit on this one."]
+            },
+            "outros": [
+                "I recommend it without hesitation for your next tasting.",
+                "A reference worth adding to your BeerDex sooner rather than later.",
+                "Serve it fresh, take your time with it: this one deserves it."
             ]
         },
         "mixed": {
             "scenarios": [
-                "{title} ({brewery}) is a {type} at {abv}. {prestige_desc}, it deviates slightly from your usual favorites but offers an interesting alternative if you want variety. {outro}",
-                "Looking to explore new horizons? Consider {title} at {abv}. While {le_type} is not your primary go-to style, this release from {brewery} is worth tasting out of curiosity. {outro}",
-                "A solid middle ground with {title} ({abv}). {brewery} offers a {type} that is more measured than your top favorites, great for a relaxed drink. {outro}"
+                "{title} and its {abv} sit at a respectful distance from your comfort zone. {reason_clause} If you fancy stretching your palate without straying too far, this {type} from {brewery} is a sensible detour. {outro}",
+                "A calculated detour rather than a guaranteed home run: {title}. {prestige_desc}, but its {abv} strays from your usual sweet spot around {abv_pref}. Still, variety pays its own dividends. {outro}"
             ],
             "prestige_desc": {
-                "industrial": "While it is a common commercial brew",
-                "standard": "True to a classic and consistent profile",
-                "craft": "Driven by an original craft approach",
-                "prestige": "Despite the prestigious reputation of its label"
+                "industrial": { "positive": ["It is an accessible commercial brew"] },
+                "standard": { "positive": ["Its profile stays classic and consistent"] },
+                "craft": { "positive": ["It is carried by an original craft approach"] },
+                "prestige": { "positive": ["Its label carries a prestigious reputation"] }
+            },
+            "reason_clauses": {
+                "similar": ["It shares part of its DNA with {loved_ref}, which you have opened {loved_ref_drinks}, yet the recipe wanders onto ground you usually sidestep."],
+                "type": ["With {type_drinks} {type}s on record, you know precisely what you expect from the style — and this one bends the formula."],
+                "brewery": ["Your {brewery_drinks} earlier encounters with {brewery} were solid, if not transcendent."],
+                "abv": ["Its {abv} hovers just outside your usual territory around {abv_pref}."],
+                "flavor": ["The {flavors} notes hover halfway between your favorites and territory you tend to rate cooler."],
+                "community": ["Community ratings suggest solid quality, even though the personal fit is only partial."]
             },
             "outros": [
-                "An interesting experience to broaden your tasting log.",
-                "Why not give it a shot during a casual discovery session?",
-                "Worth trying with curiosity!"
+                "An interesting experience if you want to widen your tasting log.",
+                "Worth trying with curiosity — and moderate expectations."
             ]
         },
         "negative": {
             "scenarios": [
-                "Based on your BeerDex, I advise against {title} from {brewery}. At {abv}, {prestige_desc}, it will fall noticeably short of your usual tasting standards. {outro}",
-                "To be direct: {title} ({abv}) is likely to disappoint you. {le_type} does not match what you enjoy, and {prestige_desc}. {outro}",
-                "With very low compatibility, {title} ({brewery}) is not recommended for your profile. Its {type} style and {prestige_desc} are too far from your tastes. {outro}"
+                "I will be blunt: {title} is a poor match for you. {reason_clause} Its {abv} drifts from your ideal zone and {prestige_desc} — it will fall noticeably short of your standards. {outro}",
+                "Your BeerDex and this bottle disagree on principle. {le_type} from {brewery} belongs to a school of brewing you have penalized time and again. {outro}",
+                "Statistically, {title} and its {abv} are ones to skip in your case. {prestige_desc}; the chemistry simply is not there. {outro}"
             ],
             "prestige_desc": {
-                "industrial": "its standardized supermarket profile will lack the character you look for",
-                "standard": "its ordinary recipe lacks the depth you seek",
-                "craft": "its aromatic direction goes directly against your past ratings",
-                "prestige": "its style simply does not suit your palate despite its fame"
+                "industrial": { "negative": ["its standardized recipe lacks the depth you look for"] },
+                "standard": { "negative": ["its conventional recipe misses the complexity your favorites share"] },
+                "craft": { "negative": ["its aromatic direction runs opposite to your past ratings"] },
+                "prestige": { "negative": ["its style simply does not suit your palate, reputation notwithstanding"] }
+            },
+            "reason_clauses": {
+                "type_mismatch": ["Across the {type_drinks} {type}s you have tasted, your verdicts on this direction have been consistently lukewarm."],
+                "brewery_mismatch": ["Your {brewery_drinks} previous tastings from {brewery} left you distinctly underwhelmed."],
+                "flavor_mismatch": ["The {flavors} profile mirrors the very notes you have repeatedly scored low."],
+                "abv_mismatch": ["Its {abv} drifts well away from your {abv_pref} zone where your best evenings happened."]
             },
             "outros": [
-                "I'd advise you to skip this one and reach for another bottle.",
-                "Better to look for a beer closer to your core favorites.",
-                "Best avoided, you will find much better suited picks elsewhere."
+                "I would steer you towards another bottle without a second thought.",
+                "Skip it; your BeerDex contains far better-suited picks."
             ]
         },
-        "alreadyTasted": [
-            "That said, you've already tasted it in the past: your own palate is the ultimate judge!",
-            "Note that it's already in your BeerDex, so you know exactly what to expect.",
-            "Since it's already in your Dex, you already have your own opinion on this bottle!"
-        ]
+        "reasons": {
+            "type": { "strong_count": [], "strong": [], "standard_count": [], "standard": [] },
+            "brewery": { "strong_count": [], "strong": [], "standard_count": [], "standard": [] },
+            "flavor": { "strong_count": [], "strong": [], "standard_count": [], "standard": [] },
+            "abv": { "strong": [], "standard": [] },
+            "repeat": { "strong": [], "standard": [] },
+            "community": { "strong_count": [], "strong": [], "standard": [] },
+            "type_mismatch": { "strong_count": [], "strong": [], "standard_count": [], "standard": [] },
+            "brewery_mismatch": { "strong": [], "standard": [] },
+            "flavor_mismatch": { "strong": [], "standard": [] },
+            "abv_mismatch": { "strong": [], "standard": [] }
+        },
+        "alreadyTasted": {
+            "once": [
+                "That said, you have already tasted it once — your own palate is the ultimate judge!"
+            ],
+            "multiple": [
+                "That said, you have already drunk it {count} times — at this point, you know it better than I do!"
+            ]
+        }
     },
     "friend": {
-        "positive": {
+        "openers": {
+            "excellent": {
+                "withStats": ["Okay so I crunched your {total_drinks} tastings, and {title} from {brewery} came out on top. No surprise there!"],
+                "standard": ["Stop what you're doing: {title} ({abv}) is THE bottle for you tonight."]
+            },
+            "positive": {
+                "withStats": ["I went through your {total_drinks} logged beers and {title} kept popping up as a perfect fit."],
+                "standard": ["Looking for an awesome {type}? Go grab {title} from {brewery}!"]
+            },
+            "mixed": {
+                "withStats": ["Looked at your {total_drinks} tastings: {title} is a bit outside your usual lane, but it could be a fun one."],
+                "standard": ["Feeling adventurous? {title} might be your thing tonight."]
+            },
+            "negative": {
+                "withStats": ["So I checked your {total_drinks} tastings... yeah, {title} is really not your thing buddy."],
+                "standard": ["Honestly dude, skip {title} from {brewery}."]
+            }
+        },
+        "excellent": {
             "scenarios": [
-                "Looking for an awesome {type}? Go grab {title} from {brewery}! With its {abv} and {prestige_desc}, it fits right into what you love drinking. {outro}",
-                "Dude, I immediately thought of you when I saw {title} ({abv})! {brewery} cooked up a killer {type} here that'll go down super easy. {outro}",
-                "You're a fan of {type}s? Then {title} ({abv}) is a perfect match. {prestige_desc}, it's exactly the kind of bottle you want tonight. {outro}",
-                "Huge pick for {title}! Between the reputation of {brewery} and this {type} recipe, this {abv} bottle has everything you like. {outro}"
+                "Okay, this one's a no-brainer: {title}! You've basically been training for this bottle. {reason_clause} {outro}",
+                "Bro, I swear {brewery} brewed this one with you in mind. {title} at {abv} — {le_type} with your name on the label. {outro}"
             ],
             "prestige_desc": {
-                "industrial": "it's a supermarket classic that totally does the job",
-                "standard": "its balance is perfect for sharing with friends",
-                "craft": "awesome work from an independent craft brewery",
-                "prestige": "we're talking about an absolute top-tier masterclass here"
+                "industrial": { "positive": ["it's a classic that genuinely over-delivers"] },
+                "standard": { "positive": ["it's exactly the kind of bottle that never lets you down"] },
+                "craft": { "positive": ["it's proper small-batch craft, the good stuff"] },
+                "prestige": { "positive": ["it's the kind of bottle beer nerds fight over"] }
+            },
+            "reason_clauses": {
+                "similar": ["It's basically {loved_ref}'s cousin — and you've emptied that one {loved_ref_drinks} already."],
+                "type": ["You've put away {type_drinks} {type}s and I've never heard you complain once."],
+                "repeat": ["It's your comfort style at this point — {type_drinks} of them down and counting."],
+                "brewery": ["The {brewery_drinks} bottles you've had from {brewery} all vanished suspiciously fast."],
+                "abv": ["Its {abv} is your sweet spot, right around your usual {abv_pref}."],
+                "flavor": ["Those {flavors} notes you always go on about? They're all in there."],
+                "community": ["Even the whole community is raving about it, and not just me."]
             },
             "outros": [
-                "Cheers buddy, let me know what you think!",
-                "Go for it with your eyes closed, it's solid gold!",
-                "Pop the cap right away!"
+                "Cheers mate — text me when you crack it open!",
+                "Don't overthink it, just grab it. You're welcome."
+            ]
+        },
+        "positive": {
+            "scenarios": [
+                "Solid pick incoming: {title} from {brewery}. {reason_clause} Its {abv} is right up your alley and {prestige_desc}. {outro}",
+                "You like {le_type}, right? Then {title} and its {abv} will treat you right. Plus, {prestige_desc}. {outro}"
+            ],
+            "prestige_desc": {
+                "industrial": { "positive": ["it's an accessible classic that does the job properly"] },
+                "standard": { "positive": ["it's got that honest balance you like after a long day"] },
+                "craft": { "positive": ["it's proper independent craft work"] },
+                "prestige": { "positive": ["it's a big-name bottle that lives up to the hype"] }
+            },
+            "reason_clauses": {
+                "similar": ["It's in the same family as {loved_ref}, the one you keep restocking — {loved_ref_drinks} and counting."],
+                "type": ["You've logged {type_drinks} of these {type}s and your ratings keep climbing."],
+                "brewery": ["The {brewery_drinks} brews you've tried from {brewery} never lasted long."],
+                "abv": ["Its {abv} is basically your usual cruising speed ({abv_pref})."],
+                "flavor": ["Those {flavors} vibes you rate so highly? Present and correct."],
+                "community": ["The community's all over it too, so it's not just my bias."]
+            },
+            "outros": [
+                "Let me know what you think, I want a full report!",
+                "You won't regret it, chief."
             ]
         },
         "mixed": {
             "scenarios": [
-                "{title} ({brewery}) is a {type} at {abv}. {prestige_desc}, it will change things up from your usual picks, but it's worth a look. {outro}",
-                "In the mood to try something different? Check out {title} at {abv}. It's not your usual {type}, but {prestige_desc}, it's definitely worth a shot. {outro}",
-                "A decent compromise with {title} ({abv}) from {brewery}. It's lighter or different from your usual classics, but for an easy drink, it works well. {outro}"
+                "{title} and its {abv} are a bit of a left turn for you, but hey — that's how you found half your favorites. {reason_clause} {outro}",
+                "Feeling adventurous? {title} from {brewery} isn't your usual lane, but {prestige_desc}. {outro}"
             ],
             "prestige_desc": {
-                "industrial": "It's basic commercial beer, but effective",
-                "standard": "A solid, honest beer",
-                "craft": "A craft creation that steps outside the box",
-                "prestige": "It's a prestigious bottle even if it's not your everyday style"
+                "industrial": { "positive": ["it's an easy-going drink that goes down smooth"] },
+                "standard": { "positive": ["it's an honest bottle that holds its own"] },
+                "craft": { "positive": ["it's a craft experiment that thinks outside the box"] },
+                "prestige": { "positive": ["it's a fancy bottle even if it's not your usual vibe"] }
+            },
+            "reason_clauses": {
+                "similar": ["It's got a whiff of {loved_ref} about it — you know, your usual go-to — but it does its own thing too."],
+                "type": ["You've had {type_drinks} of this style, so you'll spot the difference from the first sip."],
+                "brewery": ["The {brewery_drinks} you've tried from {brewery} were fine, nothing legendary."],
+                "abv": ["Its {abv} is a bit off your usual {abv_pref} cruising altitude."],
+                "flavor": ["The {flavors} notes are half your thing, half new territory."],
+                "community": ["People seem to like it, even if it's not your home turf."]
             },
             "outros": [
-                "Why not give it a shot if you're curious?",
-                "Hit or miss, up to you!",
-                "Try it out if you want a change of pace!"
+                "Why not roll the dice if you're feeling curious?",
+                "Hit or miss — but a fun miss at worst."
             ]
         },
         "negative": {
             "scenarios": [
-                "Honestly dude, skip {title} from {brewery}. At {abv} and {prestige_desc}, it's gonna taste super bland compared to what you usually drink. {outro}",
-                "Big red flag on {title} ({abv})! {le_type} really isn't your vibe, and {prestige_desc}. You're gonna hate it. {outro}",
-                "Forget {title} ({brewery}). Its {type} style and {prestige_desc} are miles away from what you enjoy. {outro}"
+                "Yeah, no — leave {title} on the shelf. {prestige_desc}, and with its {abv} far from your comfort zone, it's just not built for you. {reason_clause} {outro}",
+                "I love you buddy, but I'm not watching you spend money on {title}. {le_type} at {abv}? Hard pass. {outro}"
             ],
             "prestige_desc": {
-                "industrial": "as a generic supermarket beer, it seriously lacks character",
-                "standard": "it's way too ordinary for your palate",
-                "craft": "even if craft, the recipe is totally wrong for you",
-                "prestige": "despite the fame of the label, it's the exact opposite of your tastes"
+                "industrial": { "negative": ["It's generic supermarket fare with zero personality"] },
+                "standard": { "negative": ["It's way too ordinary for your palate"] },
+                "craft": { "negative": ["It's craft, sure, but craft in the wrong direction for you"] },
+                "prestige": { "negative": ["The label's famous, but it's just not your thing"] }
+            },
+            "reason_clauses": {
+                "type_mismatch": ["You've rated {type_drinks} of these {type}s and the story never ends well."],
+                "brewery_mismatch": ["The {brewery_drinks} you've had from {brewery}? You finished them out of politeness."],
+                "flavor_mismatch": ["Those {flavors} notes? Yeah, I've seen you make that face before."],
+                "abv_mismatch": ["Its {abv} is way outside your comfort zone around {abv_pref}."]
             },
             "outros": [
-                "Pass on it and grab something else from the fridge!",
-                "Dodge this bottle, trust me!",
-                "Stick with a proven winner instead!"
+                "Pass on it and grab something else from the fridge.",
+                "Stick with a proven winner instead."
             ]
         },
-        "alreadyTasted": [
-            "Anyway, you already drank and rated it, so you know better than me!",
-            "I see you've already tested it, so you're the boss on this one!",
-            "It's already in your log anyway, you know the deal!"
-        ]
+        "reasons": {
+            "type": { "strong_count": [], "strong": [], "standard_count": [], "standard": [] },
+            "brewery": { "strong_count": [], "strong": [], "standard_count": [], "standard": [] },
+            "flavor": { "strong_count": [], "strong": [], "standard_count": [], "standard": [] },
+            "abv": { "strong": [], "standard": [] },
+            "repeat": { "strong": [], "standard": [] },
+            "community": { "strong_count": [], "strong": [], "standard": [] },
+            "type_mismatch": { "strong_count": [], "strong": [], "standard_count": [], "standard": [] },
+            "brewery_mismatch": { "strong": [], "standard": [] },
+            "flavor_mismatch": { "strong": [], "standard": [] },
+            "abv_mismatch": { "strong": [], "standard": [] }
+        },
+        "alreadyTasted": {
+            "once": [
+                "Anyway, you've already drunk and rated it once, so you know better than me!"
+            ],
+            "multiple": [
+                "Bro, you've already drunk it {count} times — you're basically the expert on this one!"
+            ]
+        }
     },
     "neutral": {
-        "positive": {
-            "scenarios": [
-                "Favorable algorithmic recommendation: {title} ({brewery}). Product at {abv} in category {type}. {prestige_desc}. High compatibility index with the user's BeerDex. {outro}",
-                "Data-driven optimal suggestion: {title} ({abv}). {le_type} by {brewery} maximizes affinity scores. {prestige_desc}. {outro}"
-            ],
-            "prestige_desc": {
-                "industrial": "Large-scale commercial distribution.",
-                "standard": "Standardized production with consistent quality.",
-                "craft": "Independent craft production.",
-                "prestige": "Highly reputable category among connoisseurs."
+        "openers": {
+            "excellent": {
+                "withStats": ["Analysis complete. Dataset: {total_drinks} tastings across {distinct_beers} references. Result: {title} ({brewery}) achieves maximum compatibility."],
+                "standard": ["Recommendation output: {title} ({brewery}) at {abv}. Compatibility index: exceptional."]
             },
-            "outros": [
-                "Recommendation validated.",
-                "Optimal compatibility profile."
-            ]
+            "positive": {
+                "withStats": ["Data-driven suggestion: {title} ({brewery}). Correlation with the {total_drinks} logged tastings: high."],
+                "standard": ["Favorable algorithmic recommendation: {title} ({brewery}). Product at {abv} in category {type}."]
+            },
+            "mixed": {
+                "withStats": ["Moderate recommendation computed. Divergence detected between {title} and the dominant trends of your {total_drinks} tastings."],
+                "standard": ["Moderate recommendation: {title} ({brewery}). ABV: {abv}. Category: {type}."]
+            },
+            "negative": {
+                "withStats": ["Incompatibility alert. Cross-check against {total_drinks} tastings confirms: {title} does not match this profile."],
+                "standard": ["Algorithmic incompatibility alert: {title} ({brewery})."]
+            }
+        },
+        "excellent": {
+            "scenarios": ["{prestige_desc} Compatibility index: {match_pct}%. {reason_clause} {outro}"],
+            "prestige_desc": {
+                "industrial": { "positive": ["Large-scale commercial distribution. Batch-to-batch consistency: verified."] },
+                "standard": { "positive": ["Standardized production with consistent quality."] },
+                "craft": { "positive": ["Independent craft production. Character coefficient: elevated."] },
+                "prestige": { "positive": ["Category highly reputed among connoisseurs. Rarity coefficient: notable."] }
+            },
+            "reason_clauses": {
+                "similar": ["Nearest profile reference: {loved_ref} ({loved_ref_drinks} logged)."],
+                "type": ["Style frequency in user log: {type_drinks} entries."],
+                "repeat": ["Style retention index: {type_drinks} tastings, no fatigue detected."],
+                "brewery": ["Brewery history: {brewery_drinks} prior tastings."],
+                "abv": ["ABV ({abv}) deviation from preferred range ({abv_pref}): minimal."],
+                "flavor": ["Detected aromatic markers: {flavors}."],
+                "community": ["Community rating: above baseline."]
+            },
+            "outros": ["End of analysis. Confidence: maximal."]
+        },
+        "positive": {
+            "scenarios": ["{prestige_desc} Compatibility index: {match_pct}%. {reason_clause} {outro}"],
+            "prestige_desc": {
+                "industrial": { "positive": ["Large-scale commercial distribution. Batch-to-batch consistency: verified."] },
+                "standard": { "positive": ["Standardized production with consistent quality."] },
+                "craft": { "positive": ["Independent craft production. Character coefficient: elevated."] },
+                "prestige": { "positive": ["Category highly reputed among connoisseurs. Rarity coefficient: notable."] }
+            },
+            "reason_clauses": {
+                "similar": ["Nearest profile reference: {loved_ref} ({loved_ref_drinks} logged)."],
+                "type": ["Style frequency in user log: {type_drinks} entries."],
+                "brewery": ["Brewery history: {brewery_drinks} prior tastings."],
+                "abv": ["ABV ({abv}) deviation from preferred range ({abv_pref}): minimal."],
+                "flavor": ["Detected aromatic markers: {flavors}."],
+                "community": ["Community rating: above baseline."]
+            },
+            "outros": ["Recommendation validated."]
         },
         "mixed": {
-            "scenarios": [
-                "Moderate recommendation: {title} ({brewery}). ABV: {abv}. Category: {type}. {prestige_desc}. Partial divergence identified from core preference trends. {outro}",
-                "Exploratory suggestion: {title} ({abv}). {le_type} moderately deviates from regular standards. {prestige_desc}. {outro}"
-            ],
+            "scenarios": ["{prestige_desc} Index: {match_pct}%. Partial deviation from baseline preferences. {reason_clause} {outro}"],
             "prestige_desc": {
-                "industrial": "Standard mass-market product.",
-                "standard": "Conventional commercial reference.",
-                "craft": "Atypical craft brew.",
-                "prestige": "Established reference diverging from baseline profile."
+                "industrial": { "positive": ["Large-scale commercial distribution."] },
+                "standard": { "positive": ["Standardized production with consistent quality."] },
+                "craft": { "positive": ["Independent craft production."] },
+                "prestige": { "positive": ["Category highly reputed among connoisseurs."] }
             },
-            "outros": [
-                "Overall relevance: Moderate.",
-                "Exploratory potential identified."
-            ]
+            "reason_clauses": {
+                "type": ["Style frequency in user log: {type_drinks} entries."],
+                "brewery": ["Brewery history: {brewery_drinks} prior tastings."],
+                "abv": ["ABV ({abv}) deviation from preferred range ({abv_pref}): moderate."]
+            },
+            "outros": ["Overall relevance: moderate."]
         },
         "negative": {
-            "scenarios": [
-                "Algorithmic incompatibility alert: {title} ({brewery}). {le_type} at {abv} shows strong divergence from the user's BeerDex. {prestige_desc}. {outro}",
-                "Recommendation not advised for {title} ({abv}). {type} style and {prestige_desc} contradict dominant preference criteria. {outro}"
-            ],
+            "scenarios": ["{prestige_desc} Index: {match_pct}%. Significant divergence from user preference baseline. {reason_clause} {outro}"],
             "prestige_desc": {
-                "industrial": "basic commercial product evaluated as insufficient for this profile",
-                "standard": "overall profile misaligned with preference baseline",
-                "craft": "incompatible aroma direction",
-                "prestige": "marked divergence despite product reputation"
+                "industrial": { "negative": ["Standard mass-market product. Organoleptic interest for this profile: limited."] },
+                "standard": { "negative": ["Conventional commercial reference. No differentiating signal detected."] },
+                "craft": { "negative": ["Atypical craft brew. Deviation from profile without compensating factors."] },
+                "prestige": { "negative": ["Established reputation. Reputation does not correlate with this user's preference baseline."] }
             },
-            "outros": [
-                "Recommendation not advised.",
-                "High risk of dissatisfaction."
-            ]
+            "reason_clauses": {
+                "type_mismatch": ["Category {type} statistically rejected by this profile."],
+                "brewery_mismatch": ["Brewery {brewery} not validated by historical data."],
+                "flavor_mismatch": ["Aromatic profile outside preference envelope: {flavors}."],
+                "abv_mismatch": ["Alcoholic strength ({abv_beer}) outside tolerance range ({abv_pref})."]
+            },
+            "outros": ["Recommendation not advised."]
         },
-        "alreadyTasted": [
-            "Note: Reference already recorded in the user's BeerDex.",
-            "Existing BeerDex record for this user."
-        ]
+        "reasons": {
+            "type": { "strong_count": [], "strong": [], "standard_count": [], "standard": [] },
+            "brewery": { "strong_count": [], "strong": [], "standard_count": [], "standard": [] },
+            "flavor": { "strong_count": [], "strong": [], "standard_count": [], "standard": [] },
+            "abv": { "strong": [], "standard": [] },
+            "repeat": { "strong": [], "standard": [] },
+            "community": { "strong_count": [], "strong": [], "standard": [] },
+            "type_mismatch": { "strong_count": [], "strong": [], "standard_count": [], "standard": [] },
+            "brewery_mismatch": { "strong": [], "standard": [] },
+            "flavor_mismatch": { "strong": [], "standard": [] },
+            "abv_mismatch": { "strong": [], "standard": [] }
+        },
+        "alreadyTasted": {
+            "once": ["Note: reference already recorded in the user's BeerDex."],
+            "multiple": ["Note: {count} consumptions of this reference already recorded. User expertise on this product exceeds model confidence."]
+        }
     }
 }
