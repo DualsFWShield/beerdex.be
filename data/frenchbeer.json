@@ -1,19 +1,4 @@
-[
-    {
-        "title":  "DESPERADOS",
-        "brewery":  "FISCHER",
-        "type":  "AromatisÃ©e",
-        "volume":  "0.33 L",
-        "alcohol":  "5.9Â°",
-        "id":  "DESPERADOS_AROMATISEE_0.33",
-        "image":  "images/beer/fr/DESPERADOS_AROMATISEE_033.png",
-        "production_volume":  "Industrielle",
-        "distribution":  "Partout",
-        "barrel_aged":  false,
-        "community_rating":  2.3,
-        "ingredients":  "ArÃ´mes Tequila",
-        "rarity_rank":  "Base"
-    },
+﻿[
     {
         "title":  "ARDWEN BLANCHE",
         "brewery":  "ARDWEN",
@@ -175,7 +160,7 @@
         "id":  "HELLFEST IPA_BLONDE_0.33",
         "image":  "images/beer/fr/HELLFEST_IPA_BLONDE_033.png",
         "production_volume":  "RÃ©gionale",
-        "distribution":  "Cavistes & EvÃ©nementiel",
+        "distribution":  "Cavistes \u0026 EvÃ©nementiel",
         "barrel_aged":  false,
         "community_rating":  3.4,
         "ingredients":  "Collaboration Hellfest",
@@ -850,7 +835,7 @@
         "rarity_rank":  "Rare"
     },
     {
-        "title":  "L'AZALEE",
+        "title":  "L\u0027AZALEE",
         "brewery":  "LA MONTAGNARDE",
         "type":  "IPA",
         "volume":  "0.33 L",
@@ -865,7 +850,7 @@
         "rarity_rank":  "Rare"
     },
     {
-        "title":  "L'INDIGENE",
+        "title":  "L\u0027INDIGENE",
         "brewery":  "LA MONTAGNARDE",
         "type":  "Brune",
         "volume":  "0.33 L",
@@ -880,7 +865,7 @@
         "rarity_rank":  "Rare"
     },
     {
-        "title":  "L'INOUÃE",
+        "title":  "L\u0027INOUÃE",
         "brewery":  "LA MONTAGNARDE",
         "type":  "Blonde Forte",
         "volume":  "0.33 L",
@@ -971,7 +956,7 @@
     },
     {
         "title":  "Moonspell Beyond #02",
-        "brewery":  "L'Instant",
+        "brewery":  "L\u0027Instant",
         "type":  "Imperial Stout",
         "volume":  "33cl",
         "alcohol":  "10.5",
@@ -980,8 +965,8 @@
         "removeBackground":  true
     },
     {
-        "title":  "Gin & Juice",
-        "brewery":  "L'Instant",
+        "title":  "Gin \u0026 Juice",
+        "brewery":  "L\u0027Instant",
         "type":  "Sour",
         "volume":  "44cl",
         "alcohol":  "15.91",
@@ -991,7 +976,7 @@
     },
     {
         "title":  "Fruity Jungle",
-        "brewery":  "L'Instant",
+        "brewery":  "L\u0027Instant",
         "type":  "Sour",
         "volume":  "44cl",
         "alcohol":  "5.5",
@@ -1091,7 +1076,7 @@
     },
     {
         "title":  "Tutti Hoppy",
-        "brewery":  "L'Instant",
+        "brewery":  "L\u0027Instant",
         "type":  "Pilsner",
         "volume":  "44cl",
         "alcohol":  "5.3",
@@ -1101,7 +1086,7 @@
     },
     {
         "title":  "Wanderlust Syndrome",
-        "brewery":  "L'Instant",
+        "brewery":  "L\u0027Instant",
         "type":  "NEIPA / Hazy",
         "volume":  "44cl",
         "alcohol":  "7.6",
@@ -1111,7 +1096,7 @@
     },
     {
         "title":  "Diogenes Syndrome",
-        "brewery":  "L'Instant",
+        "brewery":  "L\u0027Instant",
         "type":  "Triple IPA",
         "volume":  "44cl",
         "alcohol":  "18.18",
@@ -1121,7 +1106,7 @@
     },
     {
         "title":  "Vertigo Syndrome",
-        "brewery":  "L'Instant",
+        "brewery":  "L\u0027Instant",
         "type":  "Double IPA (DIPA)",
         "volume":  "44cl",
         "alcohol":  "8.1",
@@ -1161,7 +1146,7 @@
     },
     {
         "title":  "Winterlude",
-        "brewery":  "L'Instant",
+        "brewery":  "L\u0027Instant",
         "type":  "Porter",
         "volume":  "33cl",
         "alcohol":  "10.60",
@@ -1171,7 +1156,7 @@
     },
     {
         "title":  "La Chipie",
-        "brewery":  "L'Instant",
+        "brewery":  "L\u0027Instant",
         "type":  "Limonades artisanales",
         "volume":  "33cl",
         "alcohol":  "0.05",
@@ -1181,7 +1166,7 @@
     },
     {
         "title":  "La Crapule",
-        "brewery":  "L'Instant",
+        "brewery":  "L\u0027Instant",
         "type":  "Limonades artisanales",
         "volume":  "33cl",
         "alcohol":  "0.05",
@@ -1191,7 +1176,7 @@
     },
     {
         "title":  "Moonspell Beyond #01",
-        "brewery":  "L'Instant",
+        "brewery":  "L\u0027Instant",
         "type":  "Imperial Stout",
         "volume":  "33cl",
         "alcohol":  "10.5",
@@ -1201,7 +1186,7 @@
     },
     {
         "title":  "Elixir d’Aventure – Collab’ Guilde des Aventuriers",
-        "brewery":  "L'Instant",
+        "brewery":  "L\u0027Instant",
         "type":  "Pale Ale",
         "volume":  "33cl",
         "alcohol":  "5.2",
@@ -1211,7 +1196,7 @@
     },
     {
         "title":  "Tropic Like It’s Hot",
-        "brewery":  "L'Instant",
+        "brewery":  "L\u0027Instant",
         "type":  "Sour",
         "volume":  "44cl",
         "alcohol":  "5.5",
@@ -1221,7 +1206,7 @@
     },
     {
         "title":  "In Hop We Trust",
-        "brewery":  "L'Instant",
+        "brewery":  "L\u0027Instant",
         "type":  "Double IPA (DIPA)",
         "volume":  "44cl",
         "alcohol":  "8.4",
@@ -1231,7 +1216,7 @@
     },
     {
         "title":  "Spirit of Dunkel",
-        "brewery":  "L'Instant",
+        "brewery":  "L\u0027Instant",
         "type":  "Bock",
         "volume":  "33cl",
         "alcohol":  "10.61",
@@ -1241,7 +1226,7 @@
     },
     {
         "title":  "Nuit Blanche",
-        "brewery":  "L'Instant",
+        "brewery":  "L\u0027Instant",
         "type":  "Wheat Ale",
         "volume":  "33cl",
         "alcohol":  "5.7",
@@ -1251,7 +1236,7 @@
     },
     {
         "title":  "Clé des Champs",
-        "brewery":  "L'Instant",
+        "brewery":  "L\u0027Instant",
         "type":  "Lager",
         "volume":  "33cl",
         "alcohol":  "4.6",
@@ -1261,7 +1246,7 @@
     },
     {
         "title":  "Contre Courant",
-        "brewery":  "L'Instant",
+        "brewery":  "L\u0027Instant",
         "type":  "Triple",
         "volume":  "33cl",
         "alcohol":  "10.61",
@@ -1271,7 +1256,7 @@
     },
     {
         "title":  "Sommet de la Vague",
-        "brewery":  "L'Instant",
+        "brewery":  "L\u0027Instant",
         "type":  "American IPA",
         "volume":  "33cl",
         "alcohol":  "6.4",
@@ -1281,7 +1266,7 @@
     },
     {
         "title":  "La Française",
-        "brewery":  "L'Instant",
+        "brewery":  "L\u0027Instant",
         "type":  "Pale Ale",
         "volume":  "33cl",
         "alcohol":  "5.6",
@@ -1440,48 +1425,33 @@
         "removeBackground":  true
     },
     {
-        "title": "Desperados Tropical",
-        "brewery": "Desperados",
-        "type": "Bière aromatisée",
-        "volume": "0.33 L",
-        "alcohol": "5.9°",
-        "id": "FR_DESPERADOS_TROPICAL_033",
-        "image": "images/beer/FUT.jpg",
-        "production_volume": "Industrielle",
-        "distribution": "Supermarché",
-        "barrel_aged": false,
-        "community_rating": 2.7,
-        "ingredients": "Bière aromatisée tequila, fruit de la passion et citron vert",
-        "rarity_rank": "Base"
+        "title":  "Perlembourg Pils",
+        "brewery":  "Perlembourg (Lidl)",
+        "type":  "Pils",
+        "volume":  "0.5 L",
+        "alcohol":  "4.9°",
+        "id":  "FR_PERLEMBOURG_PILS_05",
+        "image":  "images/beer/FUT.jpg",
+        "production_volume":  "Industrielle",
+        "distribution":  "Supermarché",
+        "barrel_aged":  false,
+        "community_rating":  2.3,
+        "ingredients":  "Eau, malt d\u0027orge, extrait de houblon",
+        "rarity_rank":  "Base"
     },
     {
-        "title": "Perlembourg Pils",
-        "brewery": "Perlembourg (Lidl)",
-        "type": "Pils",
-        "volume": "0.5 L",
-        "alcohol": "4.9°",
-        "id": "FR_PERLEMBOURG_PILS_05",
-        "image": "images/beer/FUT.jpg",
-        "production_volume": "Industrielle",
-        "distribution": "Supermarché",
-        "barrel_aged": false,
-        "community_rating": 2.3,
-        "ingredients": "Eau, malt d'orge, extrait de houblon",
-        "rarity_rank": "Base"
-    },
-    {
-        "title": "Perlembourg Strong",
-        "brewery": "Perlembourg (Lidl)",
-        "type": "Blonde Forte",
-        "volume": "0.5 L",
-        "alcohol": "8.0°",
-        "id": "FR_PERLEMBOURG_STRONG_05",
-        "image": "images/beer/FUT.jpg",
-        "production_volume": "Industrielle",
-        "distribution": "Supermarché",
-        "barrel_aged": false,
-        "community_rating": 2.2,
-        "ingredients": "Eau, malt d'orge, sirop de glucose, extrait de houblon",
-        "rarity_rank": "Base"
+        "title":  "Perlembourg Strong",
+        "brewery":  "Perlembourg (Lidl)",
+        "type":  "Blonde Forte",
+        "volume":  "0.5 L",
+        "alcohol":  "8.0°",
+        "id":  "FR_PERLEMBOURG_STRONG_05",
+        "image":  "images/beer/FUT.jpg",
+        "production_volume":  "Industrielle",
+        "distribution":  "Supermarché",
+        "barrel_aged":  false,
+        "community_rating":  2.2,
+        "ingredients":  "Eau, malt d\u0027orge, sirop de glucose, extrait de houblon",
+        "rarity_rank":  "Base"
     }
 ]

@@ -56,7 +56,8 @@ const state = {
     },
     observer: null, // Store observer to disconnect if needed
     initialView: 'home', // Track the view at app launch for back navigation
-    migrationPrompts: [] // Deduplicator results
+    migrationPrompts: [], // Deduplicator results
+    activeBrewery: null // Store brewery name for brewery view
 };
 
 // Initialize Wrapped
@@ -849,6 +850,25 @@ window.addEventListener('beerdex-action', () => {
     Achievements.checkAchievements(state.beers);
 });
 
+// Listen for Brewery page navigation from Beer Modal
+window.addEventListener('beerdex-open-brewery', (e) => {
+    const breweryName = e.detail?.brewery;
+    if (breweryName) {
+        state.activeBrewery = breweryName;
+        // Push view change to history
+        if (state.view !== 'brewery') {
+            window.history.pushState({ view: 'brewery' }, '');
+        }
+        
+        // Ensure nav items don't look active if they shouldn't
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        
+        state.view = 'brewery';
+        window.scrollTo(0, 0);
+        renderCurrentView();
+    }
+});
+
 // Register Service Worker for PWA (Only in Web Mode)
 // Register Service Worker for PWA
 if ('serviceWorker' in navigator) {
@@ -1175,6 +1195,17 @@ function renderCurrentView() {
         UI.renderSettings(state.beers, Storage.getAllUserData(), mainContent, isDiscovery, (newVal) => {
             Storage.savePreference('discoveryMode', newVal);
             // Optional: Reload logic if needed, or just stay on settings
+        });
+    } else if (state.view === 'brewery') {
+        // Find all beers matching this brewery
+        const breweryBeers = state.beers.filter(b => b.brewery === state.activeBrewery);
+        UI.renderBreweryView(state.activeBrewery, breweryBeers, mainContent, state.activeFilters, () => {
+            // Callback when back button is pressed: go back in history or fallback to home
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                document.querySelector('.nav-item[data-view="home"]')?.click();
+            }
         });
     }
 }

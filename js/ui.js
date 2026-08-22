@@ -1801,7 +1801,7 @@ export function renderBeerDetail(beer, onSave) {
                              onerror="if(this.src.includes('${fallbackImage}')) return; this.src='${fallbackImage}';">
                     `}
                         <h2 style="margin-top: 10px; color: var(--accent-gold);">${beer.title}</h2>
-                        <p style="color: #888;">${beer.brewery} - ${beer.type}</p>
+                        <p style="color: #888;"><a href="#" class="brewery-link" data-brewery="${beer.brewery}" style="color: inherit; text-decoration: underline;">${beer.brewery}</a> - ${beer.type}</p>
                         <div style="display: flex; justify-content: center; gap: 15px; margin-top: 5px; font-size: 0.8rem; color: #aaa;">
                             <span>${beer.alcohol || '?'}</span>
                             <span>${Utils.formatVolume(beer.volume) || '?'}</span>
@@ -7394,3 +7394,90 @@ export function filterSettings(query) {
         group.style.display = hasVisibleRow ? 'block' : 'none';
     });
 }
+
+export function renderBreweryView(breweryName, breweryBeers, container, activeFilters, onBack) {
+    container.innerHTML = '';
+    
+    const wrapper = document.createElement('div');
+    wrapper.className = 'brewery-page';
+    
+    const totalBeers = breweryBeers.length;
+    let avgRating = 0, countRating = 0;
+    const stylesCount = {};
+    const aromaCount = {};
+    let totalAbv = 0, countAbv = 0;
+    let totalUserScore = 0, countUserScore = 0;
+    let tastedCount = 0;
+    
+    breweryBeers.forEach(beer => {
+        if (beer.community_rating) { avgRating += parseFloat(beer.community_rating); countRating++; }
+        if (beer.type) { stylesCount[beer.type] = (stylesCount[beer.type] || 0) + 1; }
+        if (beer.alcohol) {
+            const abv = parseFloat(beer.alcohol.replace('%', '').replace(/\u00b0/g, '').replace(',', '.'));
+            if (!isNaN(abv)) { totalAbv += abv; countAbv++; }
+        }
+        const ud = Storage.getBeerRating(beer.id);
+        if (ud) {
+            if (ud.aromas) ud.aromas.forEach(a => { aromaCount[a] = (aromaCount[a] || 0) + 1; });
+            if (ud.score) { totalUserScore += parseFloat(ud.score); countUserScore++; }
+            if (ud.count > 0) tastedCount++;
+        }
+    });
+    
+    const fAvgR = countRating > 0 ? (avgRating / countRating).toFixed(1) : null;
+    const fAvgA = countAbv > 0 ? (totalAbv / countAbv).toFixed(1) : null;
+    const fUserS = countUserScore > 0 ? (totalUserScore / countUserScore).toFixed(1) : null;
+    const pPct = totalBeers > 0 ? Math.round((tastedCount / totalBeers) * 100) : 0;
+    
+    const sStyles = Object.entries(stylesCount).sort((a, b) => b[1] - a[1]);
+    const sAromas = Object.entries(aromaCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    
+    const sPills = sStyles.map(([s, c]) => '<span class="brewery-style-pill"><span class="brewery-pill-name">' + s + '</span><span class="brewery-pill-count">' + c + '</span></span>').join('');
+    const aPills = sAromas.length > 0 ? sAromas.map(([a]) => '<span class="brewery-aroma-pill">' + (i18n ? (i18n.t('aroma_' + a) || a) : a) + '</span>').join('') : '';
+    
+    let starsH = '';
+    if (fAvgR) {
+        const v = parseFloat(fAvgR);
+        for (let i = 1; i <= 5; i++) {
+            if (i <= Math.floor(v)) starsH += '<span class="brewery-star filled">\u2605</span>';
+            else if (i - v < 1 && i - v > 0) starsH += '<span class="brewery-star half">\u2605</span>';
+            else starsH += '<span class="brewery-star">\u2605</span>';
+        }
+    }
+
+    wrapper.innerHTML = '<div class="brewery-hero">'
+        + '<div class="brewery-hero-bg"></div>'
+        + '<div class="brewery-hero-content">'
+        + '<button id="btn-brewery-back" class="brewery-back-btn" aria-label="Retour"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>'
+        + '<div class="brewery-hero-text">'
+        + '<div class="brewery-hero-icon">\ud83c\udfed</div>'
+        + '<h1 class="brewery-name">' + breweryName + '</h1>'
+        + '<p class="brewery-subtitle">' + totalBeers + ' bi\u00e8re' + (totalBeers > 1 ? 's' : '') + ' r\u00e9f\u00e9renc\u00e9e' + (totalBeers > 1 ? 's' : '') + '</p>'
+        + '</div></div></div>'
+        + '<div class="brewery-stats-row">'
+        + '<div class="brewery-stat-item"><div class="brewery-stat-value">' + (fAvgA || '-') + '<span class="brewery-stat-unit">' + (fAvgA ? '\u00b0' : '') + '</span></div><div class="brewery-stat-label">Alcool moy.</div></div>'
+        + '<div class="brewery-stat-divider"></div>'
+        + '<div class="brewery-stat-item"><div class="brewery-stat-value">' + (fAvgR || '-') + '<span class="brewery-stat-unit">' + (fAvgR ? '/5' : '') + '</span></div><div class="brewery-stat-label">Note communaut\u00e9</div>' + (starsH ? '<div class="brewery-stars-row">' + starsH + '</div>' : '') + '</div>'
+        + '<div class="brewery-stat-divider"></div>'
+        + '<div class="brewery-stat-item"><div class="brewery-stat-value">' + (fUserS || '-') + '<span class="brewery-stat-unit">' + (fUserS ? '/20' : '') + '</span></div><div class="brewery-stat-label">Votre note moy.</div></div>'
+        + '</div>'
+        + '<div class="brewery-progress-section"><div class="brewery-progress-header"><span class="brewery-progress-label">\ud83c\udfc6 Collection</span><span class="brewery-progress-pct">' + tastedCount + '/' + totalBeers + ' go\u00fbt\u00e9es (' + pPct + '%)</span></div><div class="brewery-progress-track"><div class="brewery-progress-fill" style="width: 0%"></div></div></div>'
+        + (sStyles.length > 0 ? '<div class="brewery-section"><h3 class="brewery-section-title">\ud83c\udf3e Styles propos\u00e9s</h3><div class="brewery-pills-wrap">' + sPills + '</div></div>' : '')
+        + (aPills ? '<div class="brewery-section"><h3 class="brewery-section-title">\ud83d\udc43 Ar\u00f4mes les plus fr\u00e9quents</h3><div class="brewery-pills-wrap">' + aPills + '</div></div>' : '')
+        + '<div class="brewery-grid-header"><div class="brewery-grid-line"></div><span class="brewery-grid-title">\ud83c\udf7a Catalogue</span><div class="brewery-grid-line"></div></div>'
+        + '<div id="brewery-beers-container" style="display: contents;"></div>';
+    
+    const backBtn = wrapper.querySelector('#btn-brewery-back');
+    if (backBtn && onBack) backBtn.addEventListener('click', onBack);
+    
+    container.appendChild(wrapper);
+    
+    requestAnimationFrame(() => {
+        const fill = wrapper.querySelector('.brewery-progress-fill');
+        if (fill) requestAnimationFrame(() => { fill.style.width = pPct + '%'; });
+    });
+    
+    const beersContainer = wrapper.querySelector('#brewery-beers-container');
+    renderBeerList(breweryBeers, beersContainer, activeFilters, false, null, false);
+}
+
