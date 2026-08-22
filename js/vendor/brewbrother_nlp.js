@@ -255,7 +255,7 @@
                 if (neg ? (d.brewerySigned < -0.05) : (mixed || d.brewerySigned > 0.1)) pool.push(...c.brewery);
             }
             if (c.abv && ev.idealAbv != null) {
-                if (neg ? (d.abvScore < 0.45) : (mixed ? d.abvScore < 0.7 : d.abvScore > 0.7)) pool.push(...c.abv);
+                if (neg ? (d.abvScore < 0.45) : (mixed ? (d.abvScore >= 0.4 && d.abvScore < 0.85) : d.abvScore >= 0.85)) pool.push(...c.abv);
             }
             if (c.flavor && ev.flavors && ev.flavors.length > 0) {
                 if (neg ? (d.flavorSigned < -0.05) : (mixed ? Math.abs(d.flavorSigned) > 0.15 : d.flavorSigned > 0.5)) pool.push(...c.flavor);
@@ -343,7 +343,7 @@
 
                 // 2. Élisions devant voyelles / h muet (d', l', cet, qu', s', n', m', t')
                 // Note : On utilise \p{L} avec le drapeau /u pour respecter l'ensemble des caractères Unicode français
-                res = res.replace(/(^|[^\p{L}\p{N}_])(de|du|le|la|ce|que|se|ne|me|te)\s+([aeiouyéèêëàâäîïôöûü][\p{L}\p{N}-]*)/gui, (match, before, prefix, word) => {
+                res = res.replace(/(^|[^\p{L}\p{N}_-])(de|du|le|la|ce|que|se|ne|me|te)\s+([aeiouyéèêëàâäîïôöûü][\p{L}\p{N}-]*)/gui, (match, before, prefix, word) => {
                     const p = prefix.toLowerCase();
                     let elided = prefix;
                     if (p === 'de' || p === 'du') elided = "d'";
@@ -424,7 +424,7 @@
             const prestigeDesc = Array.isArray(prestigePool) ? this.getRandom(prestigePool) : (typeof prestigePool === 'string' ? prestigePool : "");
 
             // 3. Outro
-            const outroPool = isAlreadyTasted ? ((toneGroup.alreadyTasted && toneGroup.alreadyTasted.once) || toneGroup.alreadyTasted || []) : (t.outros || []);
+            const outroPool = t.outros || [];
             const outro = Array.isArray(outroPool) ? this.pickFresh(outroPool, `outro_${tone}_${lang}_${tier}`) : "";
 
             // 4. Data-driven embedded Reason Clause

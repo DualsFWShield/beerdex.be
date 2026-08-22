@@ -44,7 +44,7 @@
             confidenceSample: 25      // distinct rated beers for full confidence
         },
         exploration: {
-            bonus: 0.05 // nudge towards untried breweries/styles
+            bonus: 0.02 // nudge towards untried breweries/styles
         },
         diversity: {
             enabled: true,
@@ -57,7 +57,7 @@
             communityPriorRating: 3.5,
             communityPrior: 5,
             jitter: 0.04,
-            curve: 0.70,
+            curve: 1.10,
             reasonThreshold: 0.35,
             mismatchThreshold: -0.30
         },
@@ -98,7 +98,7 @@
         if (!beer) return null;
         const raw = (beer.alcohol || '').toString().replace(',', '.').replace(/[^0-9.]/g, '');
         const v = parseFloat(raw);
-        return (!isNaN(v) && v > 0 && v < 25) ? v : null;
+        return (!isNaN(v) && v >= 0 && v < 25) ? v : null;
     }
 
     function normalizeSigned(aff) {
@@ -187,7 +187,12 @@
         }
         const abvA = parseAbv(a), abvB = parseAbv(b);
         if (abvA !== null && abvB !== null) {
-            sim += Math.max(0, 1 - Math.abs(abvA - abvB) / 6) * 0.15;
+            const diff = Math.abs(abvA - abvB);
+            sim += Math.max(0, 1 - diff / 6) * 0.15;
+            
+            // Penalty for comparing beers with highly different ABVs
+            if (diff >= 1.5) sim *= 0.75;
+            if (diff >= 2.5) sim *= 0.50;
         }
         return Math.min(1, sim);
     }
@@ -403,6 +408,11 @@
             const typeUntried = !beer.type || !(lookupIgnoreCase(profile.typeDrinkCount, beer.type) > 0);
             const breweryUntried = !beer.brewery || !(lookupIgnoreCase(profile.breweryDrinkCount, beer.brewery) > 0);
             if (typeUntried || breweryUntried) totalScore += cfg.exploration.bonus;
+
+            // Severe mismatch penalties (preventing completely off-profile beers from staying at 60%)
+            if (typeScore <= -0.4) totalScore *= 0.85;
+            if (breweryScore <= -0.4) totalScore *= 0.85;
+            if (abvScore <= 0.15) totalScore *= 0.85;
         }
 
         let community = null;
@@ -465,7 +475,7 @@
         if (d.typeSigned >= reasonThreshold && type) reasons.push({ code: 'type', strength: d.typeSigned, detail: Object.assign({ type }, ev) });
         if (d.brewerySigned >= reasonThreshold && brewery) reasons.push({ code: 'brewery', strength: d.brewerySigned, detail: Object.assign({ brewery }, ev) });
         if (match.likedFlavors && match.likedFlavors.length && d.flavorSigned >= 0.3) reasons.push({ code: 'flavor', strength: Math.min(1, d.flavorSigned + 0.2), detail: Object.assign({ flavors: match.likedFlavors }, ev) });
-        if (d.abvScore >= 0.75 && ev.idealAbv !== null && match.abv !== null) reasons.push({ code: 'abv', strength: d.abvScore, detail: Object.assign({ beerAbv: match.abv }, ev) });
+        if (d.abvScore >= 0.85 && ev.idealAbv !== null && match.abv !== null) reasons.push({ code: 'abv', strength: d.abvScore, detail: Object.assign({ beerAbv: match.abv }, ev) });
         if (d.repeatSim >= 0.4 && ev.lovedRef) reasons.push({ code: 'similar', strength: d.repeatSim + 0.2, detail: Object.assign({ title: ev.lovedRef, count: ev.lovedRefDrinks }, ev) });
         if (ev.typeDrinks >= this.config.weights.loyaltyThreshold && d.typeSigned > 0.4) reasons.push({ code: 'repeat', strength: d.typeSigned + 0.1, detail: ev });
         if (match.community && match.community.smoothed >= 4.0) reasons.push({ code: 'community', strength: Math.min(1, match.community.smoothed / 5), detail: match.community });
@@ -474,7 +484,7 @@
         if (d.typeSigned <= mismatchThreshold && type) reasons.push({ code: 'type_mismatch', strength: Math.min(1, -d.typeSigned), detail: Object.assign({ type }, ev) });
         if (d.brewerySigned <= mismatchThreshold && brewery) reasons.push({ code: 'brewery_mismatch', strength: Math.min(1, -d.brewerySigned), detail: Object.assign({ brewery }, ev) });
         if (match.dislikedFlavors && match.dislikedFlavors.length && d.flavorSigned <= -0.15) reasons.push({ code: 'flavor_mismatch', strength: Math.min(1, 0.5 - d.flavorSigned), detail: Object.assign({ flavors: match.dislikedFlavors }, ev) });
-        if (d.abvScore <= 0.25 && ev.idealAbv !== null && match.abv !== null) reasons.push({ code: 'abv_mismatch', strength: 1 - d.abvScore, detail: Object.assign({ beerAbv: match.abv }, ev) });
+        if (d.abvScore <= 0.35 && ev.idealAbv !== null && match.abv !== null) reasons.push({ code: 'abv_mismatch', strength: 1 - d.abvScore, detail: Object.assign({ beerAbv: match.abv }, ev) });
 
         reasons.sort((a, b) => b.strength - a.strength);
         return reasons.slice(0, this.config.output.maxReasons);

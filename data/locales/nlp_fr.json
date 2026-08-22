@@ -72,9 +72,9 @@
         },
         "positive": {
             "scenarios": [
-                "Une recommandation assurée : {title} de chez {brewery}. {reason_clause} Avec ses {abv} qui tombent pile dans vos préférences et {prestige_desc}, vous saurez sans doute l'apprécier. {outro}",
-                "Votre BeerDex penche nettement vers {le_type}, et {title} en est une belle incarnation. Avec ses {abv} qui collent à votre zone de confort et {prestige_desc}, elle a tout pour vous plaire. {outro}",
-                "Le recoupement entre vos habitudes et {title} est tangible. {reason_clause} Ses {abv} correspondent à votre zone idéale et {prestige_desc} ne gâche rien. {outro}"
+                "Une recommandation assurée : {title} de chez {brewery}. {reason_clause} {prestige_desc}, vous saurez sans doute l'apprécier. {outro}",
+                "Votre BeerDex penche nettement vers {le_type}, et {title} en est une belle incarnation. L'alchimie est là et {prestige_desc}, elle a tout pour vous plaire. {outro}",
+                "Le recoupement entre vos habitudes et {title} est tangible. {reason_clause} {prestige_desc} ne gâche rien. {outro}"
             ],
             "prestige_desc": {
                 "industrial": { "positive": ["une recette directe et maîtrisée"] },
@@ -98,8 +98,8 @@
         },
         "mixed": {
             "scenarios": [
-                "{title} et ses {abv} se tiennent à distance respectueuse de votre zone de confort. {reason_clause} Pour étirer votre palais sans trop vous éloigner, cette proposition de {brewery} constitue un détour raisonnable. {outro}",
-                "Un détour calculé plutôt qu'un coup de cœur garanti : {title}. {prestige_desc}, mais ses {abv} s'écartent de votre zone habituelle autour de {abv_pref}. La variété a toutefois ses dividendes. {outro}"
+                "{title} se tient à distance respectueuse de votre zone de confort. {reason_clause} Pour étirer votre palais sans trop vous éloigner, cette proposition de {brewery} constitue un détour raisonnable. {outro}",
+                "Un détour calculé plutôt qu'un coup de cœur garanti : {title}. {prestige_desc}. {reason_clause} La variété a toutefois ses dividendes. {outro}"
             ],
             "prestige_desc": {
                 "industrial": { "positive": ["C'est une bière commerciale très accessible"] },
@@ -123,9 +123,9 @@
         },
         "negative": {
             "scenarios": [
-                "Je vais être franc : {title} est un mauvais match pour vous. {reason_clause} Ses {abv} s'éloignent de votre zone idéale et {prestige_desc} — elle restera en net décalage avec vos standards. {outro}",
+                "Je vais être franc : {title} est un mauvais match pour vous. {reason_clause} {prestige_desc} — elle restera en net décalage avec vos standards. {outro}",
                 "Votre BeerDex et cette bouteille sont en désaccord de principe. {le_type} de {brewery} relève d'une école de brassage que vous avez sanctionnée à maintes reprises. {outro}",
-                "Statistiquement, {title} et ses {abv} font partie des bouteilles à écarter dans votre cas. {prestige_desc}. L'alchimie n'est simplement pas au rendez-vous. {outro}"
+                "Statistiquement, {title} fait partie des bouteilles à écarter dans votre cas. {prestige_desc}. L'alchimie n'est simplement pas au rendez-vous. {outro}"
             ],
             "prestige_desc": {
                 "industrial": { "negative": ["son profil grand public très standardisé manquera cruellement de relief"] },
@@ -256,7 +256,7 @@
         },
         "mixed": {
             "scenarios": [
-                "{title} et ses {abv}, c'est un petit virage pour toi, mais bon — c'est comme ça que t'as découvert la moitié de tes favorites. {reason_clause} {outro}",
+                "{title} représente un petit virage pour toi, mais bon — c'est comme ça que t'as découvert la moitié de tes favorites. {reason_clause} {outro}",
                 "Envie d'aventure ? {title} de {brewery} c'est pas ton créneau habituel, mais {prestige_desc}. {outro}"
             ],
             "prestige_desc": {
@@ -280,8 +280,8 @@
         },
         "negative": {
             "scenarios": [
-                "Non mais franchement, laisse {title} sur l'étagère. {prestige_desc}, et avec ses {abv} loin de ta zone de confort, c'est juste pas fait pour toi. {reason_clause} {outro}",
-                "Je t'aime bien mon vieux, mais je te laisserai pas claquer un radis dans {title}. {le_type} à {abv} ? Net non. {outro}"
+                "Honnêtement, je te la déconseille. Laisse {title} sur l'étagère. {prestige_desc}, et avec ses {abv} loin de ta zone de confort, c'est juste pas fait pour toi. {reason_clause} {outro}",
+                "Je t'aime bien mon vieux, mais je te déconseille vivement de claquer ton argent dans {title}. {le_type} à {abv} ? Net non, ça ne va pas le faire. {outro}"
             ],
             "prestige_desc": {
                 "industrial": { "negative": ["C'est de l'industriel basique sans personnalité"] },

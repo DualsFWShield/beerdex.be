@@ -10,7 +10,7 @@ export const Recommendation = {
             console.error("BrewBrother script not loaded!");
             return;
         }
-        engine = new window.BrewBrother();
+        if (!engine) engine = new window.BrewBrother();
         lastAllBeers = allBeers || [];
     },
 

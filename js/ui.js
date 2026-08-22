@@ -930,7 +930,7 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
         let bbMatchPct = beer.matchPercentage;
         if (bbMatchPct === undefined && window.Recommendation && window.Recommendation.getBeerMatchScoreSync) {
             const syncMatch = window.Recommendation.getBeerMatchScoreSync(beer);
-            if (syncMatch) bbMatchPct = syncMatch.score;
+            if (syncMatch) bbMatchPct = syncMatch.total;
         }
 
         const showBBPct = Storage.getPreference('card_brewbrother_pct', false) && Storage.getPreference('feat_brewbrother_enabled', true) && bbMatchPct !== undefined;

@@ -72,9 +72,9 @@
         },
         "positive": {
             "scenarios": [
-                "A confident recommendation: {title} from {brewery}. {reason_clause} Its {abv} falls right within your preferred range and {prestige_desc} — you will likely enjoy this one. {outro}",
-                "Your BeerDex leans firmly towards {le_type}, and {title} is a fine example. Its {abv} matches your comfort zone and {prestige_desc} only adds to the appeal. {outro}",
-                "The overlap between your history and {title} is genuine. {reason_clause} Its {abv} aligns with your ideal range and {prestige_desc} reinforces the match. {outro}"
+                "A confident recommendation: {title} from {brewery}. {reason_clause} {prestige_desc} — you will likely enjoy this one. {outro}",
+                "Your BeerDex leans firmly towards {le_type}, and {title} is a fine example. The chemistry is there and {prestige_desc} only adds to the appeal. {outro}",
+                "The overlap between your history and {title} is genuine. {reason_clause} {prestige_desc} reinforces the match. {outro}"
             ],
             "prestige_desc": {
                 "industrial": { "positive": ["its straightforward, well-executed recipe"] },
@@ -98,8 +98,8 @@
         },
         "mixed": {
             "scenarios": [
-                "{title} and its {abv} sit at a respectful distance from your comfort zone. {reason_clause} If you fancy stretching your palate without straying too far, this {type} from {brewery} is a sensible detour. {outro}",
-                "A calculated detour rather than a guaranteed home run: {title}. {prestige_desc}, but its {abv} strays from your usual sweet spot around {abv_pref}. Still, variety pays its own dividends. {outro}"
+                "{title} sits at a respectful distance from your comfort zone. {reason_clause} If you fancy stretching your palate without straying too far, this {type} from {brewery} is a sensible detour. {outro}",
+                "A calculated detour rather than a guaranteed home run: {title}. {prestige_desc}. {reason_clause} Still, variety pays its own dividends. {outro}"
             ],
             "prestige_desc": {
                 "industrial": { "positive": ["It is an accessible commercial brew"] },
@@ -122,9 +122,9 @@
         },
         "negative": {
             "scenarios": [
-                "I will be blunt: {title} is a poor match for you. {reason_clause} Its {abv} drifts from your ideal zone and {prestige_desc} — it will fall noticeably short of your standards. {outro}",
+                "I will be blunt: {title} is a poor match for you. {reason_clause} {prestige_desc} — it will fall noticeably short of your standards. {outro}",
                 "Your BeerDex and this bottle disagree on principle. {le_type} from {brewery} belongs to a school of brewing you have penalized time and again. {outro}",
-                "Statistically, {title} and its {abv} are ones to skip in your case. {prestige_desc}; the chemistry simply is not there. {outro}"
+                "Statistically, {title} is one to skip in your case. {prestige_desc}; the chemistry simply is not there. {outro}"
             ],
             "prestige_desc": {
                 "industrial": { "negative": ["its standardized recipe lacks the depth you look for"] },
