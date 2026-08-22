@@ -912,6 +912,9 @@ function renderCurrentView() {
 
     Analytics.track('view_change', { view: state.view });
 
+    // Ensure window scroll is reset to prevent off-screen shifting issues on mobile
+    window.scrollTo(0, 0);
+
     // Reset padding for non-beerpedia views
     mainContent.style.padding = '';
     mainContent.style.margin = '';

@@ -1218,7 +1218,8 @@ h3 {
 #app {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    flex: 1;
+    min-height: 0;
     width: 100%;
     position: relative;
     max-width: 600px;
@@ -1290,6 +1291,7 @@ body.is-offline .offline-badge {
 /* Main Content */
 #main-content {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding: var(--spacing-md);
     padding-bottom: calc(var(--nav-height) + min(env(safe-area-inset-bottom), 40px) + 120px);

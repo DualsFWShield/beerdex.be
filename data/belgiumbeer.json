@@ -2381,7 +2381,7 @@
     },
     {
         "title":  "Rochefort 10 Trappistes",
-        "brewery":  "Abbaye Notre-Dame de Saint-Remy",
+        "brewery":  "Trappistes Rochefort",
         "type":  "Brune",
         "volume":  "0.33 L",
         "alcohol":  "11.3°",
@@ -2397,7 +2397,7 @@
     },
     {
         "title":  "Rochefort 6 Trappistes",
-        "brewery":  "Abbaye Notre-Dame de Saint-Remy",
+        "brewery":  "Trappistes Rochefort",
         "type":  "Brune",
         "volume":  "0.33 L",
         "alcohol":  "7.5°",
@@ -2412,7 +2412,7 @@
     },
     {
         "title":  "Rochefort 8 Trappistes",
-        "brewery":  "Abbaye Notre-Dame de Saint-Remy",
+        "brewery":  "Trappistes Rochefort",
         "type":  "Brune",
         "volume":  "0.33 L",
         "alcohol":  "9.2°",
@@ -2428,7 +2428,7 @@
     },
     {
         "title":  "ROCHEFORT TRIPLE",
-        "brewery":  "ABBAYE NOTRE-DAME DE SAINT-REMY",
+        "brewery":  "Trappistes Rochefort",
         "type":  "Blonde",
         "volume":  "0.33 L",
         "alcohol":  "8.1°",
@@ -2718,7 +2718,7 @@
     },
     {
         "title":  "Stella Artois",
-        "brewery":  "AB InBev",
+        "brewery":  "Stella Artois",
         "type":  "Blonde",
         "volume":  "6 L",
         "alcohol":  "5.2°",

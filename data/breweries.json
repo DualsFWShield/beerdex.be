@@ -1918,5 +1918,20 @@
         "name": "Perlembourg (Lidl)",
         "province": "FRHDF",
         "country": "FR"
+    },
+    {
+        "name": "Stella Artois",
+        "province": "BEVBR",
+        "country": "BE"
+    },
+    {
+        "name": "TROLOLOLO BREWING CO.",
+        "province": "BE",
+        "country": "BE"
+    },
+    {
+        "name": "Noah & Dorian",
+        "province": "BE",
+        "country": "BE"
     }
 ]
