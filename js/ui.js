@@ -192,6 +192,12 @@ window.addEventListener('popstate', (e) => {
         return;
     }
 
+    // Priority 2.5: Skip obsolete search state if search bar is already closed
+    if (e.state && e.state.isSearch) {
+        window.history.back();
+        return;
+    }
+
     // Priority 3: Navigate back to previous view
     if (e.state && e.state.view) {
         const targetView = e.state.view;
@@ -2508,6 +2514,20 @@ export function renderBeerDetail(beer, onSave) {
         wrapper.querySelector('details').open = false;
         wrapper.querySelector('summary').innerHTML = "📝 Note de dégustation ✅";
     };
+
+    const breweryLink = wrapper.querySelector('.brewery-link');
+    if (breweryLink) {
+        breweryLink.onclick = (e) => {
+            e.preventDefault();
+            const bName = e.target.getAttribute('data-brewery');
+            if (bName) {
+                closeModal();
+                setTimeout(() => {
+                    window.dispatchEvent(new CustomEvent('beerdex-open-brewery', { detail: { brewery: bName } }));
+                }, 50);
+            }
+        };
+    }
 
     renderHistoryPanel(existingData.history);
     openModal(wrapper);
@@ -7445,13 +7465,54 @@ export function renderBreweryView(breweryName, breweryBeers, container, activeFi
         }
     }
 
+    function getBreweryType(bName, bBeers) {
+        // Prefer explicit production_volume from database
+        const beerWithVol = bBeers.find(b => b.production_volume);
+        if (beerWithVol && beerWithVol.production_volume) {
+            const vol = beerWithVol.production_volume;
+            const vLower = vol.toLowerCase();
+            if (vLower === 'industrielle') return 'Brasserie Industrielle';
+            if (vLower === 'r\u00e9gionale' || vLower === 'régionale') return 'Brasserie Régionale';
+            if (vLower === 'artisanale') return 'Brasserie Artisanale';
+            if (vLower === 'locale') return 'Brasserie Locale';
+            return vol.charAt(0).toUpperCase() + vol.slice(1);
+        }
+
+        const nameL = bName.toLowerCase();
+        if (nameL.includes('trappist')) return 'Brasserie Trappiste';
+        if (nameL.includes('abbaye') || nameL.includes('abdij')) return "Brasserie d'Abbaye";
+        if (nameL.includes('microbrasserie') || nameL.includes('micro-brasserie') || nameL.includes('nano')) return 'Microbrasserie';
+        if (['inbev', 'heineken', 'alken-maes', 'carlsberg', 'kronenbourg', 'duvel moortgat', 'swinkels'].some(n => nameL.includes(n))) return 'Groupe Brassicole Industriel';
+        for (const beer of bBeers) {
+            const t = (beer.type || '').toLowerCase();
+            const n = (beer.title || '').toLowerCase();
+            if (t.includes('trappiste') || n.includes('trappist')) return 'Brasserie Trappiste';
+            if (t.includes('abbaye') || t.includes('abdij') || n.includes('abbaye')) return "Brasserie d'Abbaye";
+        }
+        if (bBeers.length >= 30) return 'Grande Brasserie';
+        return 'Brasserie Artisanale';
+    }
+    const breweryType = getBreweryType(breweryName, breweryBeers);
+
+    let themeClass = '';
+    let iconHTML = '<div class="brewery-hero-icon">\ud83c\udfed</div>';
+    
+    if (breweryName === 'Noah & Dorian' || breweryName === 'Noah \u0026 Dorian') {
+        themeClass = 'theme-founders';
+        iconHTML = '<div class="brewery-hero-icon founders-icon" style="background:transparent;"><img src="icons/logo-bnr.png" alt="Beerdex" style="width: 80px; height: 80px; object-fit: contain;" /></div>';
+    } else if (breweryName === 'TROLOLOLO BREWING CO.') {
+        themeClass = 'theme-trololo';
+        iconHTML = '<div class="brewery-hero-icon trololo-icon" style="background:transparent; font-size: 60px;">🤡</div>';
+    }
+
     wrapper.innerHTML = '<div class="brewery-hero">'
         + '<div class="brewery-hero-bg"></div>'
         + '<div class="brewery-hero-content">'
         + '<button id="btn-brewery-back" class="brewery-back-btn" aria-label="Retour"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>'
         + '<div class="brewery-hero-text">'
-        + '<div class="brewery-hero-icon">\ud83c\udfed</div>'
+        + iconHTML
         + '<h1 class="brewery-name">' + breweryName + '</h1>'
+        + '<p class="brewery-subtitle" style="color:var(--accent-gold); font-weight:700; margin-bottom:2px; letter-spacing:0.5px;">' + breweryType + '</p>'
         + '<p class="brewery-subtitle">' + totalBeers + ' bi\u00e8re' + (totalBeers > 1 ? 's' : '') + ' r\u00e9f\u00e9renc\u00e9e' + (totalBeers > 1 ? 's' : '') + '</p>'
         + '</div></div></div>'
         + '<div class="brewery-stats-row">'
@@ -7466,6 +7527,8 @@ export function renderBreweryView(breweryName, breweryBeers, container, activeFi
         + (aPills ? '<div class="brewery-section"><h3 class="brewery-section-title">\ud83d\udc43 Ar\u00f4mes les plus fr\u00e9quents</h3><div class="brewery-pills-wrap">' + aPills + '</div></div>' : '')
         + '<div class="brewery-grid-header"><div class="brewery-grid-line"></div><span class="brewery-grid-title">\ud83c\udf7a Catalogue</span><div class="brewery-grid-line"></div></div>'
         + '<div id="brewery-beers-container" style="display: contents;"></div>';
+        
+    wrapper.className = 'brewery-page ' + themeClass;
     
     const backBtn = wrapper.querySelector('#btn-brewery-back');
     if (backBtn && onBack) backBtn.addEventListener('click', onBack);

@@ -865,6 +865,7 @@ window.addEventListener('beerdex-open-brewery', (e) => {
         
         state.view = 'brewery';
         window.scrollTo(0, 0);
+        window.dispatchEvent(new CustomEvent('beerdex-close-search'));
         renderCurrentView();
     }
 });
@@ -1197,8 +1198,11 @@ function renderCurrentView() {
             // Optional: Reload logic if needed, or just stay on settings
         });
     } else if (state.view === 'brewery') {
-        // Find all beers matching this brewery
-        const breweryBeers = state.beers.filter(b => b.brewery === state.activeBrewery);
+        mainContent.style.padding = '0';
+        mainContent.style.margin = '0';
+        // Find all beers matching this brewery (case-insensitive)
+        const activeBreweryLower = state.activeBrewery.toLowerCase();
+        const breweryBeers = state.beers.filter(b => b.brewery && b.brewery.toLowerCase() === activeBreweryLower);
         UI.renderBreweryView(state.activeBrewery, breweryBeers, mainContent, state.activeFilters, () => {
             // Callback when back button is pressed: go back in history or fallback to home
             if (window.history.length > 1) {

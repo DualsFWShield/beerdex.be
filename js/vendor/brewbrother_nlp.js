@@ -389,6 +389,25 @@
         },
 
         generateExplanation: async function (beer, match, tone = 'brewbrother', lang = 'fr', isAlreadyTasted = false) {
+            // Easter eggs interception
+            if (beer && beer.id) {
+                if (beer.id === 'BLOUP_BLOUP_MARK_I') {
+                    return lang === 'fr' ? "Je vous déconseille fortement cette bière, c'est un prototype complètement raté, beaucoup trop amer et avec une texture de bouillasse..." : "I strongly advise against this beer. It's a completely failed prototype, way too bitter and muddy.";
+                }
+                if (beer.id === 'BLOUP_BLOUP_MARK_II') {
+                    return lang === 'fr' ? "Ah, la Mark II ! Celle-ci est bien meilleure, le début d'une réussite. Elle mérite vraiment d'être goûtée !" : "Ah, the Mark II! Much better, the start of a success story. Definitely worth tasting!";
+                }
+                if (beer.id === 'NEVER_GONNA_GIVE_YOU_ALE_AMBREE_0.50') {
+                    if (tone === 'vulgaire' || tone === 'vulgar') {
+                        return lang === 'fr' ? "Aret mentir, espèce de gros menteur va ! Tu crois vraiment que cette bière existe ? Tu viens de te faire rickroll, pigeon !" : "Stop lying, you big fat liar! Did you really think this beer exists? You just got rickrolled, sucker!";
+                    } else if (tone === 'soutenu' || tone === 'polite') {
+                        return lang === 'fr' ? "Aret mentir, espèce de gros menteur va... Pardonnez-moi mon emportement, mais cette bière est purement fictive. Vous venez d'être victime d'une farce musicale !" : "Stop lying, you big fat liar... Forgive my outburst, but this beer is purely fictional. You've just been the victim of a musical prank!";
+                    } else {
+                        return lang === 'fr' ? "Aret mentir, espèce de gros menteur va ! Cette bière n'existe pas, tu t'es fait rickroll en beauté." : "Stop lying, you big fat liar! This beer doesn't exist, you just got beautifully rickrolled.";
+                    }
+                }
+            }
+
             await this.init(lang);
 
             let toneGroup = this.dict[tone] || this.dict['brewbrother'] || Object.values(this.dict)[0];
