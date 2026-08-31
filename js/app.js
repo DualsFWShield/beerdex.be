@@ -17,7 +17,6 @@ import * as CrashLogger from './crashLogger.js';
 import * as Deduplicator from './deduplicator.js';
 import * as Theme from './theme.js';
 import * as Utils from './utils.js';
-import { setupScanHandler } from './scanHandler.js';
 import { Recommendation } from './recommendation.js';
 
 window.Recommendation = Recommendation;
@@ -479,9 +478,6 @@ function setupEventListeners() {
         });
     });
 
-    // Scan Toggle (New ID: fab-scan)
-    setupScanHandler(state, renderCurrentView, updateWidgetData);
-
 
     // Search Toggle
     const searchToggle = document.getElementById('search-toggle');
@@ -871,8 +867,7 @@ window.addEventListener('beerdex-open-brewery', (e) => {
 });
 
 // Register Service Worker for PWA (Only in Web Mode)
-// Register Service Worker for PWA
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && !window.Capacitor) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
             .then(registration => {
@@ -908,7 +903,6 @@ if ('serviceWorker' in navigator) {
 function renderCurrentView() {
     const mainContent = document.getElementById('main-content');
     const appHeader = document.querySelector('.app-header');
-    const fab = document.getElementById('fab-scan');
 
     Analytics.track('view_change', { view: state.view });
 
@@ -921,9 +915,8 @@ function renderCurrentView() {
     mainContent.style.paddingBottom = '';
     mainContent.style.overscrollBehavior = '';
 
-    // Show header and FAB by default
+    // Show header by default
     if (appHeader) appHeader.style.display = '';
-    if (fab) fab.style.display = '';
 
     // Reset body overscroll
     document.body.style.overscrollBehavior = '';
@@ -1102,8 +1095,6 @@ function renderCurrentView() {
         // --- IMMERSIVE MODE ---
         // Hide header for fullscreen experience
         if (appHeader) appHeader.style.display = 'none';
-        // Hide FAB
-        if (fab) fab.style.display = 'none';
 
         // Disable pull-to-refresh on mobile
         mainContent.style.overscrollBehavior = 'none';

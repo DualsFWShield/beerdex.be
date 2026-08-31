@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Beerdex-v103'; // Fix region names i18n in Add Beer form (using i18n.currentLang)
+const CACHE_NAME = 'Beerdex-v104'; // Remove barcode scanner feature
 const ASSETS = [
     './index.html',
     './style.css',
@@ -21,7 +21,6 @@ const ASSETS = [
     './js/map.js',
     './js/match.js',
     './js/off-api.js',
-    './js/scanner.js',
     './js/share.js',
     './js/wrapped.js',
     './js/widget-bridge.js',
@@ -29,7 +28,6 @@ const ASSETS = [
     './js/deduplicator.js',
     './js/theme.js',
     './js/utils.js',
-    './js/scanHandler.js',
     './js/vendor/lz-string.min.js',
     './js/vendor/qrcode.min.js',
     './js/vendor/html5-qrcode.min.js',

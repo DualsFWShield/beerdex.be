@@ -7,7 +7,6 @@ import * as Share from './share.js';
 import Match from './match.js';
 import * as Map from './map.js';
 import * as API from './api.js';
-import * as Scanner from './scanner.js';
 import { fetchProductByBarcode, searchProducts } from './off-api.js';
 import { Feedback } from './feedback.js';
 import * as BAC from './bac.js';
@@ -19,7 +18,7 @@ import * as Theme from './theme.js';
 import * as Utils from './utils.js';
 
 let editModeBeer = null;
-// We assume global libs: QRCode, Html5QrcodeScanner (handled via CDN)
+// We assume global libs: QRCode, Html5Qrcode (handled via CDN)
 const QRCodeLib = window.QRCode;
 const Html5Qrcode = window.Html5Qrcode;
 
@@ -81,13 +80,7 @@ export function updateNetworkStatus(isOnline) {
         }
     });
 
-    // Check for offline edition
-    Env.getEdition().then(edition => {
-        if (edition === 'preview_offline') {
-            const scanBtn = document.getElementById('fab-scan');
-            if (scanBtn) scanBtn.style.display = 'none';
-        }
-    });
+
 }
 
 export function showToast(message, type = 'default') {
@@ -2724,30 +2717,7 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
 
     // --- Bind Auto-Fill Logic ---
     setTimeout(() => {
-        const btnScan = wrapper.querySelector('#btn-autofill-scan');
         const btnName = wrapper.querySelector('#btn-autofill-name');
-
-        if (btnScan) {
-            btnScan.onclick = () => {
-                renderScannerModal(async (barcode) => {
-                    closeModal(); // Scanner replaces modal content, so we close to reset or just rely on re-render
-                    // Actually renderScannerModal uses openModal, so it overwrites current modal content.
-                    // The callback is executed. 
-
-                    showToast(i18n.t('toast_analyzing'));
-                    const product = await fetchProductByBarcode(barcode);
-                    if (product) {
-                        renderAddBeerForm(onSave, editModeBeer, product);
-                        showToast(i18n.t('toast_found_data'));
-                        Feedback.playScan(); // Play sound on successful scan
-                        Feedback.impactLight(); // Haptic feedback
-                    } else {
-                        showToast(i18n.t('toast_unknown_product'));
-                        renderAddBeerForm(onSave, editModeBeer, prefillData);
-                    }
-                });
-            };
-        }
 
         if (btnName) {
             btnName.onclick = async () => {
@@ -2844,55 +2814,6 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
     openModal(wrapper);
 }
 
-export function renderScannerModal(onScan) {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'modal-content';
-    wrapper.innerHTML = `
-        <h2 style="margin-bottom: 20px;">${i18n.t('scan_title')}</h2>
-        <div style="position:relative; margin-bottom: 15px;">
-            <div id="reader" style="width: 100%; min-height: 250px; background: #000; border-radius: 8px; overflow: hidden;"></div>
-            <div id="scanner-feedback" style="position:absolute; bottom:10px; left:0; width:100%; text-align:center; color:white; font-weight:bold; text-shadow:0 1px 3px rgba(0,0,0,0.8); pointer-events:none; z-index:10; font-size:1.2rem; transition:opacity 0.3s;"></div>
-        </div>
-        <p style="text-align: center; color: #888; font-size: 0.9rem;">
-            ${i18n.t('scan_desc')}
-        </p>
-        <button id="btn-close-scanner" class="btn-primary" style="background:#333; margin-top:15px;">${i18n.t('scan_btn_close')}</button>
-    `;
-
-    openModal(wrapper);
-
-    // Give time for DOM to paint
-    setTimeout(() => {
-        Scanner.startScanner("reader", (decodedText, decodedResult) => {
-            return onScan(decodedText);
-        }, (errorMessage) => {
-        });
-    }, 100);
-
-    // Set cleanup for when modal closes
-    modalCleanup = () => {
-        Scanner.stopScanner();
-    };
-
-    wrapper.querySelector('#btn-close-scanner').onclick = () => {
-        closeModal();
-    };
-}
-
-export function setScannerFeedback(message, isError = false) {
-    const el = document.getElementById('scanner-feedback');
-    if (el) {
-        el.innerHTML = message;
-        el.style.color = isError ? '#ff4444' : 'white';
-        // Allow clicks on interactive elements (buttons) in feedback
-        el.style.pointerEvents = message.includes('<button') ? 'auto' : 'none';
-        if (isError) {
-            el.style.textShadow = '0 0 5px red';
-        } else {
-            el.style.textShadow = '0 1px 3px rgba(0,0,0,0.8)';
-        }
-    }
-}
 
 export function renderStats(allBeers, userData, container) {
     const allBeerIds = new Set(allBeers.map(b => String(b.id)));
@@ -5846,16 +5767,6 @@ const TutorialSystem = {
             message: () => `
                 <h3>${i18n.t('tuto_search_title')}</h3>
                 <p>${i18n.t('tuto_search_msg')}</p>
-                <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">${i18n.t('tuto_btn_next')}</button>
-            `
-        },
-        {
-            id: 'scan',
-            target: '#fab-scan',
-            position: 'top',
-            message: () => `
-                <h3>${i18n.t('tuto_scan_title')}</h3>
-                <p>${i18n.t('tuto_scan_msg')}</p>
                 <button class="btn-primary mt-10" style="font-size:0.8rem;" onclick="TutorialSystem.next()">${i18n.t('tuto_btn_next')}</button>
             `
         },
