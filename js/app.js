@@ -3,7 +3,6 @@ import * as UI from './ui.js';
 import * as Storage from './storage.js';
 import * as Achievements from './achievements.js';
 import * as API from './api.js';
-import { fetchProductByBarcode, searchProducts } from './off-api.js';
 import * as Env from './env.js';
 import { Feedback } from './feedback.js';
 import { Analytics } from './analytics.js';
@@ -484,47 +483,7 @@ function setupEventListeners() {
     const searchBar = document.getElementById('search-bar');
     const searchInput = document.getElementById('search-input');
     const searchClose = document.getElementById('search-close');
-    const btnApi = document.getElementById('btn-search-api-bar');
 
-    if (btnApi) {
-        btnApi.addEventListener('click', async () => {
-            const query = searchInput.value.trim();
-            if (query.length < 2) {
-                UI.showToast(i18n.t('search_at_least_2'));
-                return;
-            }
-
-            // Visual Feedback
-            const originalContent = btnApi.innerHTML;
-            btnApi.disabled = true;
-            btnApi.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;"></span>';
-
-            try {
-                const { products } = await searchProducts(query);
-
-                // Render Results
-                const main = document.getElementById('main-content');
-
-                // Stop local pagination
-                if (state.observer) state.observer.disconnect();
-
-                UI.renderApiSearchResults(products, main);
-
-                if (products.length > 0) {
-                    UI.showToast(i18n.t('search_results_found', { count: products.length }));
-                } else {
-                    UI.showToast(i18n.t('search_no_results'));
-                }
-
-            } catch (e) {
-                console.error(e);
-                UI.showToast(i18n.t('search_api_error'));
-            } finally {
-                btnApi.disabled = false;
-                btnApi.innerHTML = originalContent;
-            }
-        });
-    }
 
     searchToggle.addEventListener('click', () => {
         const isOpening = searchBar.classList.contains('hidden');

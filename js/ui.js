@@ -7,7 +7,6 @@ import * as Share from './share.js';
 import Match from './match.js';
 import * as Map from './map.js';
 import * as API from './api.js';
-import { fetchProductByBarcode, searchProducts } from './off-api.js';
 import { Feedback } from './feedback.js';
 import * as BAC from './bac.js';
 import * as Achievements from './achievements.js';
@@ -62,25 +61,7 @@ export { checkAutoBackup, renderImportModal, renderExportModal, renderShareLink 
  * @param {boolean} isOnline 
  */
 export function updateNetworkStatus(isOnline) {
-    // Target all API-related buttons
-    const apiButtons = [
-        document.getElementById('btn-search-api-bar'),
-        document.getElementById('btn-search-api'),
-        document.getElementById('btn-search-api-footer')
-    ];
-
-    apiButtons.forEach(btn => {
-        if (!btn) return;
-        if (isOnline) {
-            btn.style.opacity = '1';
-            btn.style.filter = 'none';
-        } else {
-            btn.style.opacity = '0.5';
-            btn.style.filter = 'grayscale(1)';
-        }
-    });
-
-
+    // Network status hook (OFF API removed)
 }
 
 export function showToast(message, type = 'default') {
@@ -699,78 +680,23 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
             return;
         }
 
-        // --- NEW: Empty Search State -> Propose API Search ---
-        if (!isDiscoveryCallback && filters.query && filters.query.length > 2) {
+        if (!isDiscoveryCallback && filters && filters.query && filters.query.length > 2) {
             container.innerHTML = `
-                <div style="text-align:center; padding: 30px 20px; color: #666;">
-                    <h3 style="margin-bottom:10px;">${i18n.t('list_no_local_results')}</h3>
-                    <p style="font-size:0.9rem;">${i18n.t('list_search_further')}</p>
-                    <button id="btn-search-api" class="btn-primary" style="margin-top:15px; background:var(--accent-gold); color:black;">
-                        ${i18n.t('list_btn_search_api')}
-                    </button>
-                    <div id="api-results-area" style="margin-top:20px;"></div>
+                <div style="text-align:center; padding: 40px 20px; color: #888;">
+                    <p style="font-size: 1.1rem; margin-bottom: 10px;">🔍 ${i18n.t('search_no_results')}</p>
+                    <p style="font-size: 0.9rem; color: #666; margin-bottom: 20px;">${i18n.t('search_not_found') || 'Aucune bière ne correspond à votre recherche.'}</p>
+                    <button id="btn-create-manual-empty" class="form-input" style="max-width: 250px; margin: 0 auto;">➕ ${i18n.t('search_btn_create_manual') || 'Ajouter une bière'}</button>
                 </div>`;
-
-            // Bind Click
-            setTimeout(() => {
-                const btn = document.getElementById('btn-search-api');
-                if (btn) {
-                    btn.onclick = async () => {
-                        if (!navigator.onLine) {
-                            showToast(i18n.t('error_offline_api'), "error");
-                            return;
-                        }
-                        btn.disabled = true;
-                        btn.innerHTML = `<span class="spinner"></span> ${i18n.t('list_searching')}`;
-                        try {
-                            const { products, count, status } = await searchProducts(filters.query);
-                            const area = document.getElementById('api-results-area');
-
-                            if (status === 'offline') {
-                                showToast(i18n.t('error_offline_api'), "error");
-                                btn.disabled = false;
-                                return;
-                            }
-
-                            if (products.length === 0) {
-                                btn.innerHTML = i18n.t('list_nothing_found');
-                            } else {
-                                btn.style.display = 'none'; // Hide button
-                                // Render API Results
-                                const grid = document.createElement('div');
-                                grid.className = 'beer-grid';
-
-                                products.forEach(p => {
-                                    // Use basic card render logic or reuse renderBeerList helper (tricky due to innerHTML reset)
-                                    // We'll create a simple specific renderer here for API results
-                                    const card = createApiBeerCard(p);
-                                    grid.appendChild(card);
-                                });
-                                area.appendChild(grid);
-
-                                // Show manual add button at bottom if still not found
-                                const manualDiv = document.createElement('div');
-                                manualDiv.innerHTML = `
-                                    <p style="margin-top:30px; color:#666;">${i18n.t('search_not_found')}</p>
-                                    <button id="btn-create-manual" class="form-input">➕ ${i18n.t('search_btn_create_manual')}</button>
-                                `;
-                                area.appendChild(manualDiv);
-                                manualDiv.querySelector('#btn-create-manual').onclick = () => {
-                                    renderAddBeerForm((newBeer) => {
-                                        Storage.saveCustomBeer(newBeer);
-                                        // Trigger refresh via custom event or reload
-                                        window.dispatchEvent(new CustomEvent('beerdex-action'));
-                                        location.reload();
-                                    });
-                                };
-                            }
-                        } catch (e) {
-                            btn.innerHTML = i18n.t('search_error_limit');
-                            showAlertModal(e.message, { icon: '⚠️' });
-                        }
-                    };
-                }
-            }, 0);
+            const btnManual = container.querySelector('#btn-create-manual-empty');
+            if (btnManual) {
+                btnManual.onclick = () => {
+                    renderAddBeerForm((newBeer) => {
+                        Storage.saveCustomBeer(newBeer);
+                        window.dispatchEvent(new CustomEvent('beerdex-action'));
+                        location.reload();
+                    });
+                };
+            }
             return;
         }
 
@@ -797,15 +723,6 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
     }
 
     filteredBeers.forEach((beer, index) => {
-        // ... (existing logic)
-        // CHECK IF API BEER (Mixed results support)
-        const isApi = beer.fromAPI;
-        if (isApi) {
-            const card = createApiBeerCard(beer);
-            grid.appendChild(card);
-            return; // Skip normal render
-        }
-
         const u = userData[beer.id];
         const isDrunk = u && u.count > 0;
         const card = document.createElement('div');
@@ -996,137 +913,6 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
     // Apply rarity animations directly (replaces MutationObserver)
     applyRarityAnimations(grid);
 
-    // --- CASE 2: Results exist BUT text search is active -> Propose API search at the bottom ---
-    // Make sure we are not already in a callback or empty state that handles it
-    if (!isDiscoveryCallback && filters && filters.query && filters.query.length > 2) {
-
-        // Check if API Search Button Area already exists in this container (avoid dupes on append)
-        let apiArea = container.querySelector('#api-search-container');
-        if (!apiArea) {
-            apiArea = document.createElement('div');
-            apiArea.id = 'api-search-container';
-            apiArea.style.borderTop = '1px solid rgba(255,255,255,0.1)';
-            apiArea.style.marginTop = '30px';
-            apiArea.style.paddingTop = '20px';
-            apiArea.style.textAlign = 'center';
-            container.appendChild(apiArea);
-        }
-
-        apiArea.innerHTML = `
-            <p style="color:#666; font-size:0.9rem; margin-bottom:15px;">Pas ce que vous cherchez ?</p>
-            <button id="btn-search-api-footer" class="btn-primary" style="background:var(--accent-gold); color:black;">
-                🌍 Recherche Approfondie (OFF API)
-            </button>
-            <div id="api-results-area-footer" style="margin-top:20px;"></div>
-        `;
-
-        // Bind Click (Footer)
-        setTimeout(() => {
-            const btn = document.getElementById('btn-search-api-footer');
-            if (btn) {
-                btn.onclick = async () => {
-                    btn.disabled = true;
-                    btn.innerHTML = '<span class="spinner"></span> Recherche...';
-                    try {
-                        const { products } = await searchProducts(filters.query);
-                        const area = document.getElementById('api-results-area-footer');
-
-                        if (products.length === 0) {
-                            btn.innerHTML = '❌ Rien trouvé...';
-                        } else {
-                            btn.style.display = 'none';
-                            const grid = document.createElement('div');
-                            grid.className = 'beer-grid';
-                            products.forEach(p => {
-                                grid.appendChild(createApiBeerCard(p));
-                            });
-                            area.appendChild(grid);
-                        }
-                    } catch (e) {
-                        btn.innerHTML = '⚠️ Erreur';
-                        showAlertModal(e.message, { icon: '⚠️' });
-                    }
-                };
-            }
-        }, 0);
-    }
-}
-
-
-export function renderApiSearchResults(products, container) {
-    container.innerHTML = '';
-
-    if (!products || products.length === 0) {
-        container.innerHTML = `
-            <div style="text-align:center; padding:40px; color:var(--text-secondary);">
-                <h3>Aucun résultat en ligne 😢</h3>
-                <p>Essayez avec d'autres mots-clés.</p>
-            </div>`;
-        return;
-    }
-
-    const grid = document.createElement('div');
-    grid.className = 'beer-grid';
-
-    products.forEach(product => {
-        grid.appendChild(createApiBeerCard(product));
-    });
-
-    container.appendChild(grid);
-}
-
-// Helper to create API cards
-function createApiBeerCard(beer) {
-    const card = document.createElement('div');
-    card.className = 'beer-card api-card'; // Special styling maybe
-    card.dataset.id = beer.id;
-    card.style.borderColor = 'var(--accent-gold)';
-    card.style.opacity = '0.9';
-
-    // Badge "API"
-    const apiBadge = '<div style="position:absolute; top:5px; right:5px; background:var(--accent-gold); color:black; font-size:0.6rem; padding:2px 6px; border-radius:10px; font-weight:bold;">🌍 WEB</div>';
-
-    // Image fallback
-    let displayImage = beer.image || 'images/beer/default.png';
-
-    card.innerHTML = `
-        ${apiBadge}
-        <div style="width:100%; height:120px; display:flex; justify-content:center; align-items:center;">
-             <img src="${displayImage}" alt="${beer.title}" class="beer-image" loading="lazy" 
-                  onerror="this.src='images/beer/default.png';">
-        </div>
-        <div class="beer-info">
-            <h3 class="beer-title">${beer.title}</h3>
-            <p class="beer-brewery">${beer.brewery}</p>
-            <div style="display:flex; gap:5px; justify-content:center; margin-top:5px; color:#aaa; flex-wrap:wrap;">
-                <span>${beer.alcohol}</span> <span>${Utils.formatVolume(beer.volume)}</span>
-            </div>
-            <button class="btn-add-api" style="width:100%; margin-top:10px; font-size:0.8rem; padding:5px; background:#333; color:#fff; border:1px solid #555;">${i18n.t('btn_add_api')}</button>
-        </div>
-    `;
-
-    // Click handler for "Add" or "Details"
-    // If click on card body -> Show Details (API Preview)
-    card.onclick = (e) => {
-        if (e.target.classList.contains('btn-add-api')) {
-            e.stopPropagation();
-            // Quick Add -> Convert to Custom
-            renderAddBeerForm((newBeer) => {
-                Storage.saveCustomBeer(newBeer);
-                window.dispatchEvent(new CustomEvent('beerdex-action'));
-                showToast(i18n.t('toast_beer_imported'));
-                // Optional: Refresh triggers 
-                setTimeout(() => location.reload(), 500);
-            }, null, beer); // Autofill with API data
-        } else {
-            renderBeerDetail(beer, (data) => {
-                // Save rating -> implies converting to Custom Beer first IF not exists
-                // We need to handle this "Save Rating on API Beer" flow in renderBeerDetail's onSave
-            });
-        }
-    };
-
-    return card;
 }
 
 export function renderFilterModal(allBeers, activeFilters, onApply) {
@@ -1935,6 +1721,8 @@ export function renderBeerDetail(beer, onSave) {
                 </button>
 
                 ${customActionsHtml}
+
+                <div id="similar-beers-container"></div>
                 `;
 
     // Fetch and display BrewBrother match if applicable
@@ -1994,6 +1782,63 @@ export function renderBeerDetail(beer, onSave) {
                 }
             }
         }).catch(err => console.error("BrewBrother error:", err));
+    }
+
+    // ── Similar Beers ("Vous aimerez aussi") ──────────────────
+    if (window.Recommendation && typeof window.Recommendation.getSimilarBeers === 'function') {
+        try {
+            const similarResults = window.Recommendation.getSimilarBeers(beer, { limit: 5, minScore: 0.70 });
+            if (similarResults && similarResults.length > 0) {
+                const simContainer = wrapper.querySelector('#similar-beers-container');
+                if (simContainer) {
+                    const isKegFn = (v) => {
+                        if (!v) return false;
+                        v = String(v).toUpperCase();
+                        return v.includes('20 L') || v.includes('30 L') || v.includes('50 L') || v.includes('FUT');
+                    };
+
+                    const cardsHtml = similarResults.map(item => {
+                        const sb = item.beer;
+                        const pct = Math.round(item.score * 100);
+                        const badgeClass = pct >= 80 ? 'high' : 'medium';
+                        const fallback = isKegFn(sb.volume) ? 'images/beer/FUT.jpg' : 'images/beer/default.png';
+                        let img = sb.image;
+                        if (!img || (img.includes('FUT.jpg') && !isKegFn(sb.volume))) img = fallback;
+
+                        return `
+                            <div class="similar-beer-card" data-beer-id="${sb.id}">
+                                <img src="${img}" alt="${sb.title}" class="similar-beer-img" loading="lazy"
+                                     onerror="if(this.src.includes('${fallback}')) return; this.src='${fallback}';">
+                                <div class="similar-beer-name">${sb.title}</div>
+                                <div class="similar-beer-brewery">${sb.brewery || ''}</div>
+                                <span class="similar-beer-badge ${badgeClass}">${i18n.t('similar_beers_match', { pct })}</span>
+                            </div>`;
+                    }).join('');
+
+                    simContainer.innerHTML = `
+                        <div class="similar-beers-section">
+                            <h4>🍻 ${i18n.t('similar_beers_title')}</h4>
+                            <div class="similar-beers-track-wrapper">
+                                <div class="similar-beers-track">${cardsHtml}</div>
+                            </div>
+                        </div>`;
+
+                    // Bind click to navigate to similar beer detail
+                    simContainer.querySelectorAll('.similar-beer-card').forEach(card => {
+                        card.addEventListener('click', () => {
+                            const targetId = card.dataset.beerId;
+                            // Find the beer in the Recommendation cache
+                            const targetBeer = similarResults.find(r => String(r.beer.id) === String(targetId));
+                            if (targetBeer) {
+                                renderBeerDetail(targetBeer.beer, onSave);
+                            }
+                        });
+                    });
+                }
+            }
+        } catch (err) {
+            console.error('Similar beers error:', err);
+        }
     }
 
     // Volume Presets Logic
@@ -2124,65 +1969,6 @@ export function renderBeerDetail(beer, onSave) {
 
     // Re-binding Logic for Consumption
     wrapper.querySelector('#btn-drink').onclick = async () => {
-        // --- SMART CACHING LOGIC ---
-        // If beer is from API (Transient), we must save it first!
-        if (beer.fromAPI) {
-            const newBeer = { ...beer };
-            // Use timestamp ID for permanent storage
-            newBeer.id = 'CUSTOM_' + Date.now();
-            delete newBeer.fromAPI; // Remove flag
-
-            // Save
-            Storage.saveCustomBeer(newBeer);
-
-            // Update local beer reference in Modal
-            // We can't easily swap the whole object reference for the caller, but we can update IDs
-            // Actually it's better to update the 'beer' variable in this scope
-            // But existingData is fetched by ID.
-
-            // 1. Show Toast
-            showToast(i18n.t('toast_beer_saved_dex'));
-
-            // 2. Mock the switch
-            const oldId = beer.id;
-            beer.id = newBeer.id;
-            beer.fromAPI = false;
-
-            // 3. Since we changed ID, existingData (rating) is theoretically empty (which is true for new API beer)
-            // But we are about to add consumption.
-
-            // 4. IMPORTANT: We must signal the app to reload the list because we added a beer
-            // We can dispatch event, but current view might not update instantly if we don't force it.
-            window.dispatchEvent(new CustomEvent('beerdex-action'));
-
-            // 5. Inject Edit/Delete buttons now that it's a CUSTOM_ beer
-            const actionsContainer = wrapper.querySelector('#custom-actions-container');
-            if (actionsContainer && !actionsContainer.querySelector('#btn-edit-beer')) {
-                actionsContainer.innerHTML = `
-                    <button id="btn-edit-beer" class="form-input" style="flex:1;">${i18n.t('detail_btn_edit')}</button>
-                    <button id="btn-delete-beer" class="form-input" style="flex:1; color:var(--danger); border-color:var(--danger);">${i18n.t('detail_btn_delete')}</button>
-                `;
-                actionsContainer.style.cssText = 'margin-top:20px; border-top:1px solid #333; padding-top:20px; display:flex; gap:10px;';
-                actionsContainer.querySelector('#btn-delete-beer').onclick = async () => {
-                    if (await showConfirmModal(i18n.t('modal_confirm_delete_beer'))) {
-                        Storage.deleteCustomBeer(beer.id);
-                        closeModal();
-                        showToast(i18n.t('toast_beer_deleted'));
-                        setTimeout(() => location.reload(), 500);
-                    }
-                };
-                actionsContainer.querySelector('#btn-edit-beer').onclick = () => {
-                    closeModal();
-                    setTimeout(() => {
-                        renderAddBeerForm((updatedBeer) => {
-                            showToast(i18n.t('toast_beer_modified'));
-                            setTimeout(() => location.reload(), 500);
-                        }, beer);
-                    }, 60);
-                };
-            }
-        }
-
         const wasLocked = !existingData.count || existingData.count === 0;
 
         if (beer.id === 'NEVER_GONNA_GIVE_YOU_ALE_AMBREE_0.50') {
@@ -2458,51 +2244,7 @@ export function renderBeerDetail(beer, onSave) {
             });
         }
 
-        // If API beer, we must save likely (auto-save on rate?)
-        // Similar logic to drink. If user rates, we save the beer.
-        if (beer.fromAPI) {
-            const newBeer = { ...beer };
-            newBeer.id = 'CUSTOM_' + Date.now();
-            delete newBeer.fromAPI;
-            Storage.saveCustomBeer(newBeer);
-            beer.id = newBeer.id; // Switch ref
-            beer.fromAPI = false;
-
-            // Now save the rating with new ID
-            Storage.saveBeerRating(newBeer.id, data);
-
-            window.dispatchEvent(new CustomEvent('beerdex-action'));
-            showToast(i18n.t('toast_beer_note_saved'));
-
-            // Inject Edit/Delete buttons now that it's a CUSTOM_ beer
-            const actionsContainer = wrapper.querySelector('#custom-actions-container');
-            if (actionsContainer && !actionsContainer.querySelector('#btn-edit-beer')) {
-                actionsContainer.innerHTML = `
-                    <button id="btn-edit-beer" class="form-input" style="flex:1;">${i18n.t('detail_btn_edit')}</button>
-                    <button id="btn-delete-beer" class="form-input" style="flex:1; color:var(--danger); border-color:var(--danger);">${i18n.t('detail_btn_delete')}</button>
-                `;
-                actionsContainer.style.cssText = 'margin-top:20px; border-top:1px solid #333; padding-top:20px; display:flex; gap:10px;';
-                actionsContainer.querySelector('#btn-delete-beer').onclick = async () => {
-                    if (await showConfirmModal(i18n.t('modal_confirm_delete_beer'))) {
-                        Storage.deleteCustomBeer(beer.id);
-                        closeModal();
-                        showToast(i18n.t('toast_beer_deleted'));
-                        setTimeout(() => location.reload(), 500);
-                    }
-                };
-                actionsContainer.querySelector('#btn-edit-beer').onclick = () => {
-                    closeModal();
-                    setTimeout(() => {
-                        renderAddBeerForm((updatedBeer) => {
-                            showToast(i18n.t('toast_beer_modified'));
-                            setTimeout(() => location.reload(), 500);
-                        }, beer);
-                    }, 60);
-                };
-            }
-        } else {
-            showToast(i18n.t('toast_rating_saved'));
-        }
+        showToast(i18n.t('toast_rating_saved'));
 
         wrapper.querySelector('details').open = false;
         wrapper.querySelector('summary').innerHTML = "📝 Note de dégustation ✅";
@@ -2563,12 +2305,7 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
     `;
 
     wrapper.innerHTML = `
-                <h2 style="margin-bottom: 5px;">${title}</h2>
-                <div style="display:flex; gap:10px; margin-bottom:15px;">
-                    <button type="button" id="btn-autofill-name" class="form-input" style="font-size:0.8rem; padding: 5px; flex:1; display:flex; align-items:center; justify-content:center; gap:5px; background:rgba(255,255,255,0.1);">
-                        🔍 ${i18n.t('btn_autofill_name') || 'Remplir via Nom'}
-                    </button>
-                </div>
+                <h2 style="margin-bottom: 15px;">${title}</h2>
                 <form id="add-beer-form">
                     <div class="form-group">
                         <label class="form-label">${i18n.t('label_beer_name')}</label>
@@ -2715,45 +2452,6 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
         return 2; // Default
     };
 
-    // --- Bind Auto-Fill Logic ---
-    setTimeout(() => {
-        const btnName = wrapper.querySelector('#btn-autofill-name');
-
-        if (btnName) {
-            btnName.onclick = async () => {
-                const titleInput = wrapper.querySelector('#title');
-                const currentName = titleInput ? titleInput.value : '';
-
-                if (!currentName || currentName.length < 3) {
-                    showAlertModal(`${i18n.t('toast_enter_at_least')} 3 ${i18n.t('letters_of_name')}`, { icon: '✏️' });
-                    return;
-                }
-
-                const originalText = btnName.innerHTML;
-                btnName.innerHTML = "⏳...";
-                btnName.disabled = true;
-
-                try {
-                    const { products } = await searchProducts(currentName);
-                    if (products && products.length > 0) {
-                        const product = products[0];
-                        // Merge image if exists in product, otherwise keep current? 
-                        // Logic of renderAddBeerForm prefers passed prefillData.
-                        renderAddBeerForm(onSave, editModeBeer, product);
-                        showToast(i18n.t('toast_match_applied'));
-                    } else {
-                        showToast(i18n.t('toast_nothing_found'));
-                        btnName.innerHTML = originalText;
-                        btnName.disabled = false;
-                    }
-                } catch (e) {
-                    showAlertModal(e.message, { icon: '⚠️' });
-                    btnName.innerHTML = originalText;
-                    btnName.disabled = false;
-                }
-            };
-        }
-    }, 100);
 
     wrapper.querySelector('form').onsubmit = (e) => {
         e.preventDefault();

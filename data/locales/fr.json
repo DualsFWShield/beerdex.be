@@ -741,6 +741,8 @@
     "search_not_found": "Non trouvé",
     "search_placeholder": "Rechercher une bière...",
     "search_results_found": "{count} résultats trouvés !",
+    "similar_beers_title": "Vous aimerez aussi",
+    "similar_beers_match": "{pct}% similaire",
     "settings_active_preset": "Modèle de notation actif",
     "settings_add_field": "Ajouter un champ",
     "settings_air_expired": "Air expiré",

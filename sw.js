@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Beerdex-v104'; // Remove barcode scanner feature
+const CACHE_NAME = 'Beerdex-v105'; // Remove Open Food Facts API
 const ASSETS = [
     './index.html',
     './style.css',
@@ -20,7 +20,6 @@ const ASSETS = [
     './js/fx.js',
     './js/map.js',
     './js/match.js',
-    './js/off-api.js',
     './js/share.js',
     './js/wrapped.js',
     './js/widget-bridge.js',

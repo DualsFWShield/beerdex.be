@@ -743,6 +743,8 @@
     "search_not_found": "Not found",
     "search_placeholder": "Search for a beer...",
     "search_results_found": "{count} results found!",
+    "similar_beers_title": "You might also like",
+    "similar_beers_match": "{pct}% similar",
     "settings_active_preset": "Active Rating Model",
     "settings_add_field": "Add a field",
     "settings_air_expired": "Expired Air",
