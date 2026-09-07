@@ -203,5 +203,24 @@ export const Recommendation = {
             topBreweries: sortedBreweries.slice(0, 5),
             topFlavors: sortedFlavors.slice(0, 5)
         };
+    },
+
+    /**
+     * Return up to `limit` beers similar to `targetBeer` (score >= minScore).
+     * @param {Object} targetBeer
+     * @param {Object} [opts] { limit: 5, minScore: 0.70, allBeers?: [] }
+     * @returns {Array<{beer, score}>}
+     */
+    getSimilarBeers: function(targetBeer, opts) {
+        opts = opts || {};
+        const beers = opts.allBeers || lastAllBeers || [];
+        if (!window.BrewBrother || !window.BrewBrother.utils || !window.BrewBrother.utils.findSimilarBeers) {
+            console.warn('BrewBrother.utils.findSimilarBeers not available');
+            return [];
+        }
+        return window.BrewBrother.utils.findSimilarBeers(targetBeer, beers, {
+            limit: opts.limit || 5,
+            minScore: opts.minScore != null ? opts.minScore : 0.70
+        });
     }
 };

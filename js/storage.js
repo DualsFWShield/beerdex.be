@@ -58,7 +58,7 @@ export function getAllConsumedBeerIds() {
 
 export function isFavorite(id) {
     const data = getAllUserData();
-    return data[id] && data[id].favorite === true;
+    return Boolean(data[id] && data[id].favorite === true);
 }
 
 export function toggleFavorite(id) {

@@ -571,10 +571,34 @@
         return counts[key] || 0;
     };
 
+    /**
+     * Find beers similar to `targetBeer` among `candidates`.
+     * @param {Object} targetBeer  - The reference beer.
+     * @param {Array}  candidates  - Full beer catalogue.
+     * @param {Object} [opts]      - { limit: 5, minScore: 0.70 }
+     * @returns {Array<{beer, score}>} sorted by score desc.
+     */
+    function findSimilarBeers(targetBeer, candidates, opts) {
+        opts = opts || {};
+        var limit    = opts.limit    || 5;
+        var minScore = opts.minScore != null ? opts.minScore : 0.70;
+        if (!targetBeer || !Array.isArray(candidates)) return [];
+
+        var scored = [];
+        for (var i = 0; i < candidates.length; i++) {
+            var c = candidates[i];
+            if (!c || String(c.id) === String(targetBeer.id)) continue;
+            var s = beerSimilarity(targetBeer, c);
+            if (s >= minScore) scored.push({ beer: c, score: s });
+        }
+        scored.sort(function(a, b) { return b.score - a.score; });
+        return scored.slice(0, limit);
+    }
+
     BrewBrother.DEFAULTS = DEFAULTS;
     BrewBrother.FLAVOR_LEXICON = FLAVOR_LEXICON;
     BrewBrother.FLAVOR_KEYWORDS = Object.keys(FLAVOR_LEXICON);
-    BrewBrother.utils = { extractFlavors, beerSimilarity, parseAbv };
+    BrewBrother.utils = { extractFlavors, beerSimilarity, parseAbv, findSimilarBeers };
 
     if (typeof module !== 'undefined' && module.exports) module.exports = BrewBrother;
     else { 

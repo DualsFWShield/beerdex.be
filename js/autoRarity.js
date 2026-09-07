@@ -54,28 +54,28 @@ export function calculateRarity(beer) {
     }
 
     // --- 2. Type / Style ---
-    if (type.match(/pils|lager|blonde|pale ale|blanche|weizen/)) {
-        score += 0; // Neutral
-    }
-    else if (type.match(/ipa|stout|porter|saison|tripel|double|quadrupel|abbaye|trappiste/)) {
-        score += 2;
-        reasons.push("Style Craft Standard (+2)");
-    }
-    else if (type.match(/sour|gose|berliner|wild|farmhouse/)) {
-        score += 3;
-        reasons.push("Style Fermentation Mixte/Sauvage (+3)");
-    }
-    else if (type.match(/gueuze|lambic|kriek (traditionnelle)/)) {
-        score += 5;
-        reasons.push("Lambic/Gueuze (+5)");
-    }
-    else if (type.match(/barrel aged|vieillie en f|barrique|ba /)) {
+    if (type.match(/barrel aged|vieillie en f|barrique|ba /)) {
         score += 6;
         reasons.push("Vieillissement Barrique (+6)");
     }
     else if (type.match(/eisbock/)) {
         score += 5;
         reasons.push("Eisbock (+5)");
+    }
+    else if (type.match(/gueuze|lambic|kriek (traditionnelle)/)) {
+        score += 5;
+        reasons.push("Lambic/Gueuze (+5)");
+    }
+    else if (type.match(/sour|gose|berliner|wild|farmhouse/)) {
+        score += 3;
+        reasons.push("Style Fermentation Mixte/Sauvage (+3)");
+    }
+    else if (type.match(/ipa|stout|porter|saison|tripel|double|quadrupel|abbaye|trappiste/)) {
+        score += 2;
+        reasons.push("Style Craft Standard (+2)");
+    }
+    else if (type.match(/pils|lager|blonde|pale ale|blanche|weizen/)) {
+        score += 0; // Neutral
     }
 
     // --- 3. ABV ---

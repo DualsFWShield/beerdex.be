@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeerDex QA Lab — Test Suite</title>
+    <meta name="description" content="Suite de tests automatisés pour BeerDex — Vérification complète de l'application.">
+    <link rel="icon" type="image/png" href="../icons/logo-bnr.png">
+    <link rel="stylesheet" href="test-style.css">
+</head>
+<body>
+
+    <header class="lab-header">
+        <h1><span>🧪</span> BeerDex QA Lab</h1>
+        <p class="lab-subtitle">Suite de tests automatisés — Vérification complète de l'application</p>
+
+        <!-- Dashboard Stats -->
+        <div class="dashboard">
+            <div class="stat-chip total">
+                <span>Total</span>
+                <span class="stat-value" id="stat-total">0</span>
+            </div>
+            <div class="stat-chip passed">
+                <span>Réussis</span>
+                <span class="stat-value" id="stat-passed">0</span>
+            </div>
+            <div class="stat-chip failed">
+                <span>Échoués</span>
+                <span class="stat-value" id="stat-failed">0</span>
+            </div>
+            <div class="stat-chip skipped">
+                <span>Ignorés</span>
+                <span class="stat-value" id="stat-skipped">0</span>
+            </div>
+            <div class="stat-chip time">
+                <span>Durée</span>
+                <span class="stat-value" id="stat-time">—</span>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="actions">
+            <button class="btn btn-primary" id="btn-run-all">▶️ Exécuter tous les tests</button>
+            <button class="btn btn-secondary" id="btn-copy-report">📋 Copier le rapport Markdown</button>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-track" id="progress-track">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+    </header>
+
+    <!-- Category Tabs -->
+    <div class="category-tabs" id="category-tabs">
+        <!-- Populated by runner.js -->
+    </div>
+
+    <!-- Search & Filters -->
+    <div class="filter-bar">
+        <input type="text" class="search-input" id="search-tests" placeholder="Rechercher un test..." autocomplete="off">
+        <button class="filter-status" id="btn-filter-failed">❌ Échoués uniquement</button>
+    </div>
+
+    <!-- Test Results -->
+    <div class="results-container" id="results-container">
+        <!-- Populated by runner.js -->
+    </div>
+
+    <!-- Runner Script -->
+    <script type="module" src="runner.js"></script>
+
+</body>
+</html>

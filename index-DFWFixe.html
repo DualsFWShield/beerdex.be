@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#ffc107">
+    <title>Beerdex</title>
+    <meta name="description" content="Le Pokedex ultime pour vos bières. Collectionnez, notez et savourez." data-i18n="meta_desc">
+    <!-- CSP for Security -->
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: data: blob:;">
+    <meta name="keywords" content="Beerdex, Pokedex, bières, collection, notes, savourez">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Beerdex">
+    <meta property="og:description" content="Le Dex ultime pour vos bières." data-i18n="og_desc">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://beerdex.dualsfwshield.be">
+    <meta property="og:image" content="https://beerdex.dualsfwshield.be/icons/logo-bnr.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="icons/logo-bnr.png">
+    <link rel="apple-touch-icon" href="icons/logo-bnr.png">
+
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&family=Russo+One&family=Playfair+Display:wght@400;700;900&display=swap"
+        rel="stylesheet">
+
+
+
+    <!-- Scripts -->
+    <script src="js/vendor/lz-string.min.js"></script>
+    <script src="js/vendor/qrcode.min.js"></script>
+    <script src="js/vendor/html5-qrcode.min.js"></script>
+    <script src="js/vendor/brewbrother.js"></script>
+    <script src="js/vendor/brewbrother_nlp.js"></script>
+    <!-- Premium FX Libraries -->
+    <link rel="stylesheet" href="css/vendor/animate.min.css">
+    <script src="js/vendor/confetti.browser.min.js"></script>
+    <script src="js/vendor/vanilla-tilt.min.js"></script>
+    
+    <!-- Chart.js is loaded dynamically when needed -->
+
+    <!-- Theme Styles -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/wrapped.css">
+    <link rel="stylesheet" href="style-museum.css" id="css-museum" disabled>
+</head>
+
+<body>
+
+    <!-- Museum Curtain Opening Animation -->
+    <div id="curtain-overlay">
+        <div class="curtain-left"></div>
+        <div class="curtain-right"></div>
+    </div>
+
+    <div id="app">
+        <header class="app-header">
+            <div class="logo">
+                <img src="icons/logo-bnr.png" width="32" height="32" alt="Beerdex Logo">
+                <h1>Beerdex</h1>
+                <span id="offline-badge" class="offline-badge" data-i18n="status_offline">OFFLINE</span>
+            </div>
+            <div class="header-toolbar" style="display: flex; gap: 10px; align-items: center;">
+                <button type="button" id="filter-toggle" class="icon-btn" aria-label="Ouvrir les filtres" data-i18n-label="aria_open_filters">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        aria-hidden="true">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                </button>
+                <button type="button" id="view-toggle" class="icon-btn" aria-label="Changer la vue" title="Vue Carte / Liste" data-i18n-label="aria_change_view">
+                    <svg id="view-toggle-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <!-- Default: Grid icon (will toggle to list) -->
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                    </svg>
+                </button>
+                <button type="button" id="btn-add-header" class="icon-btn" aria-label="Ajouter manuellement" data-i18n-label="aria_add_manual">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </button>
+
+                <!-- Search Container: Will expand when active -->
+                <div id="header-search-container" style="display:flex; align-items:center; transition: all 0.3s;">
+                    <button type="button" id="search-toggle" class="icon-btn" aria-label="Ouvrir la recherche" data-i18n-label="aria_open_search">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" aria-hidden="true">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Search Bar Overlay (Initially Hidden) -->
+        <div id="search-bar" class="search-bar hidden">
+            <input type="text" id="search-input" placeholder="Rechercher une bière..." autocomplete="off"
+                aria-label="Champs de recherche" data-i18n-placeholder="search_placeholder">
+
+
+            <button type="button" id="search-close" class="icon-btn" aria-label="Fermer la recherche" data-i18n-label="aria_close_search">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <main id="main-content" class="scroll-container">
+            <!-- Dynamic Content Injected Here -->
+            <div class="loading-state">
+                <div class="spinner"></div>
+                <p data-i18n="loading_app">Chargement du Beerdex...</p>
+            </div>
+        </main>
+
+
+
+        <!-- Navigation Bar -->
+        <nav class="bottom-nav">
+            <button type="button" class="nav-item active" data-view="home" aria-label="Accueil - Liste des bières" data-i18n-label="aria_nav_home">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                <span data-i18n="nav_home">Dex</span>
+            </button>
+            <button type="button" class="nav-item" data-view="drunk" aria-label="Historique de consommation" data-i18n-label="aria_nav_history">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21.5C16.9706 21.5 21 17.2467 21 12C21 6.75329 16.9706 2.5 12 2.5C7.02944 2.5 3 6.75329 3 12C3 17.2467 7.02944 21.5 12 21.5Z" /><path d="M9 12L11 14L15 10" /></svg>
+                <span data-i18n="nav_history">Bus</span>
+            </button>
+            <button type="button" class="nav-item" data-view="stats" aria-label="Statistiques et Succès" data-i18n-label="aria_nav_stats">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                <span data-i18n="nav_stats">Stats</span>
+            </button>
+            <button type="button" class="nav-item" data-view="beerpedia" aria-label="Beerpedia - L'encyclopédie de la bière" data-i18n-label="aria_nav_beerpedia">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                <span data-i18n="nav_beerpedia">Beerpedia</span>
+            </button>
+            <button type="button" class="nav-item" data-view="settings" aria-label="Paramètres" data-i18n-label="aria_nav_settings">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <span data-i18n="nav_settings">Paramètres</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Modals/Overlays -->
+    <div id="modal-container" class="modal-overlay hidden" aria-hidden="true">
+        <!-- Content injected dynamically -->
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+
+</html>
