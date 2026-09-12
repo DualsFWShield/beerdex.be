@@ -185,25 +185,45 @@ export function migrateBeerData(oldId, newId) {
  * Cleanup orphaned user data entries whose beer IDs no longer exist in the database.
  * This handles the case where beers are removed from JSON files (e.g. deduplication).
  * 
+ * Safety features (v2 — post-Capacitor corruption fix):
+ * - Archives orphaned entries in localStorage before any deletion (recoverable)
+ * - Aborts if too many entries (>20%) would be orphaned (sign of partial data load)
+ * - Uses a strict fuzzy match threshold (0.75) to prevent false migrations
+ * 
  * For each orphaned entry:
  * 1. Try to find a fuzzy match in the current beer list (same beer under a different ID).
  * 2. If a match is found, migrate (merge) the user data to the matched beer's ID.
- * 3. If no match is found, remove the orphaned entry entirely.
- * 
- * This ensures the unique beer count stays accurate after DB changes.
+ * 3. If no match is found, archive and remove the orphaned entry.
  * 
  * @param {Array} allBeers - The full beer list currently loaded in the app
- * @returns {{ migrated: number, removed: number, details: Array }}
+ * @returns {{ migrated: number, removed: number, aborted: boolean, details: Array }}
  */
 export function cleanupOrphanedUserData(allBeers) {
     const data = getAllUserData();
     const userIds = Object.keys(data);
     const beerIdSet = new Set(allBeers.map(b => String(b.id)));
 
+    // --- Pre-flight: count orphans to detect partial loads ---
+    const meaningfulIds = userIds.filter(id => {
+        if (id.startsWith('CUSTOM_') || id.startsWith('API_') || id.startsWith('OFF_')) return false;
+        const d = data[id];
+        return (d.count && d.count > 0) || d.score !== undefined || d.favorite;
+    });
+    const orphanCount = meaningfulIds.filter(id => !beerIdSet.has(id)).length;
+    const orphanRatio = meaningfulIds.length > 0 ? orphanCount / meaningfulIds.length : 0;
+
+    // Safety: if more than 20% of meaningful entries would be orphaned, abort.
+    // This is almost certainly a partial data load (network failure on Capacitor).
+    if (orphanRatio > 0.20 && orphanCount > 5) {
+        console.warn(`[Storage] Orphan cleanup ABORTED: ${orphanCount}/${meaningfulIds.length} entries (${Math.round(orphanRatio * 100)}%) would be orphaned. Likely partial data load.`);
+        return { migrated: 0, removed: 0, aborted: true, details: [] };
+    }
+
     let migrated = 0;
     let removed = 0;
     const details = [];
     let changed = false;
+    const archived = {};
 
     for (const userId of userIds) {
         // Skip IDs that exist in the current DB
@@ -223,7 +243,6 @@ export function cleanupOrphanedUserData(allBeers) {
 
         // Try to find a fuzzy match in the current beer list
         // Extract meaningful parts from the ID to reconstruct a title for matching
-        // IDs look like: PAIX_DIEU_BLONDE_0.33 or CHIMAY_ROUGE_ROUGERUBIS_033
         const idNorm = Utils.normalize(userId.replace(/_/g, ' '));
 
         let bestMatch = null;
@@ -241,8 +260,9 @@ export function cleanupOrphanedUserData(allBeers) {
             }
         }
 
-        // Threshold: 0.55 is fairly generous since IDs contain type/volume suffixes
-        if (bestMatch && bestScore >= 0.55) {
+        // Threshold: 0.75 — strict to prevent false positive migrations.
+        // Previous 0.55 caused incorrect merges with unrelated beers.
+        if (bestMatch && bestScore >= 0.75) {
             const targetId = String(bestMatch.id);
 
             // Merge data into the matched beer
@@ -277,13 +297,16 @@ export function cleanupOrphanedUserData(allBeers) {
                 }
             }
 
+            // Archive before deleting
+            archived[userId] = { ...userData, _migratedTo: targetId };
             delete data[userId];
             changed = true;
             migrated++;
             details.push({ action: 'migrated', oldId: userId, newId: targetId, title: bestMatch.title, score: Math.round(bestScore * 100) });
             console.log(`[Storage] Migrated orphaned data: "${userId}" → "${targetId}" (${bestMatch.title}, ${Math.round(bestScore * 100)}% match)`);
         } else {
-            // No match found — remove the orphan
+            // No match found — archive and remove the orphan
+            archived[userId] = { ...userData, _reason: 'no_match', _bestCandidate: bestMatch ? { id: bestMatch.id, title: bestMatch.title, score: Math.round(bestScore * 100) } : null };
             delete data[userId];
             changed = true;
             removed++;
@@ -297,11 +320,69 @@ export function cleanupOrphanedUserData(allBeers) {
         _invalidateCache();
     }
 
+    // Archive orphans for potential recovery
+    if (Object.keys(archived).length > 0) {
+        try {
+            const existingArchive = JSON.parse(localStorage.getItem('beerdex_orphan_archive') || '{}');
+            const merged = { ...existingArchive, ...archived };
+            localStorage.setItem('beerdex_orphan_archive', JSON.stringify(merged));
+            localStorage.setItem('beerdex_orphan_archive_date', new Date().toISOString());
+            console.log(`[Storage] Archived ${Object.keys(archived).length} orphaned entries for recovery.`);
+        } catch (e) {
+            console.warn('[Storage] Failed to archive orphaned data:', e);
+        }
+    }
+
     if (migrated > 0 || removed > 0) {
         console.log(`[Storage] Orphan cleanup complete: ${migrated} migrated, ${removed} removed.`);
     }
 
-    return { migrated, removed, details };
+    return { migrated, removed, aborted: false, details };
+}
+
+/**
+ * Restore orphaned user data from the archive.
+ * Use this to recover data that was incorrectly removed by cleanupOrphanedUserData.
+ * 
+ * @returns {{ restored: number, ids: string[] }}
+ */
+export function restoreOrphanedData() {
+    try {
+        const archive = JSON.parse(localStorage.getItem('beerdex_orphan_archive') || '{}');
+        const ids = Object.keys(archive);
+        if (ids.length === 0) {
+            console.log('[Storage] No orphaned data to restore.');
+            return { restored: 0, ids: [] };
+        }
+
+        const data = getAllUserData();
+        let restored = 0;
+
+        for (const id of ids) {
+            const entry = { ...archive[id] };
+            // Remove internal metadata
+            delete entry._migratedTo;
+            delete entry._reason;
+            delete entry._bestCandidate;
+
+            // Only restore if the ID doesn't already have data
+            if (!data[id] || (!data[id].count && data[id].score === undefined)) {
+                data[id] = entry;
+                restored++;
+            }
+        }
+
+        if (restored > 0) {
+            localStorage.setItem(STORAGE_KEY_RATINGS, JSON.stringify(data));
+            _invalidateCache();
+            console.log(`[Storage] Restored ${restored} orphaned entries.`);
+        }
+
+        return { restored, ids };
+    } catch (e) {
+        console.error('[Storage] Failed to restore orphaned data:', e);
+        return { restored: 0, ids: [] };
+    }
 }
 
 // --- Consumption Logic ---

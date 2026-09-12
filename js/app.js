@@ -130,9 +130,15 @@ async function init() {
                 // If user is searching right now, they'll show up on next input.
             }
 
-            // Cleanup orphaned user data (beers removed from DB due to deduplication etc.)
-            // Must run after all beers are loaded so we have the full ID set
-            Storage.cleanupOrphanedUserData(state.beers);
+            // Cleanup orphaned user data — ONLY if we loaded a meaningful number of beers.
+            // Guard against network failures that would leave us with a partial set,
+            // which would cause false orphan detection and data loss on Capacitor.
+            const MIN_BEERS_FOR_CLEANUP = 200;
+            if (state.beers.length >= MIN_BEERS_FOR_CLEANUP) {
+                Storage.cleanupOrphanedUserData(state.beers);
+            } else {
+                console.warn(`[App] Skipped orphan cleanup: only ${state.beers.length} beers loaded (min: ${MIN_BEERS_FOR_CLEANUP})`);
+            }
 
             // Check for Achievements on Load (Syncs import/offline data with full database)
             Achievements.checkAchievements(state.beers);

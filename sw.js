@@ -165,7 +165,7 @@ self.addEventListener('fetch', event => {
                 
                 // --- JSON Robustness ---
                 if (isJSON) {
-                    return new Response('{}', { 
+                    return new Response('[]', { 
                         status: 200, 
                         statusText: 'Offline Fallback',
                         headers: new Headers({ 'Content-Type': 'application/json' })
