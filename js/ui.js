@@ -1490,8 +1490,9 @@ export function renderBeerDetail(beer, onSave) {
     // Always render the container; buttons are injected dynamically
     const customActionsHtml = beer.id.startsWith('CUSTOM_') ? `
         <div id="custom-actions-container" style="margin-top:20px; border-top:1px solid #333; padding-top:20px; display:flex; gap:10px;">
-            <button id="btn-edit-beer" class="form-input" style="flex:1;">${i18n.t('detail_btn_edit')}</button>
-            <button id="btn-delete-beer" class="form-input" style="flex:1; color:var(--danger); border-color:var(--danger);">${i18n.t('detail_btn_delete')}</button>
+            <button id="btn-edit-beer" class="form-input" style="flex:1; padding:8px;">${i18n.t('detail_btn_edit')}</button>
+            <button id="btn-delete-beer" class="form-input" style="flex:1; padding:8px; color:var(--danger); border-color:var(--danger);">${i18n.t('detail_btn_delete')}</button>
+            <button id="btn-share-custom" class="form-input" style="flex:1; padding:8px; color:var(--accent-gold); border-color:var(--accent-gold);">Partager</button>
         </div>
     ` : `<div id="custom-actions-container"></div>`;
 
@@ -2191,6 +2192,7 @@ export function renderBeerDetail(beer, onSave) {
     // Binding for Custom Actions (only if buttons already exist, i.e. beer was CUSTOM_ from the start)
     const existingEditBtn = wrapper.querySelector('#btn-edit-beer');
     const existingDeleteBtn = wrapper.querySelector('#btn-delete-beer');
+    const btnShareCustom = wrapper.querySelector('#btn-share-custom');
     if (existingDeleteBtn) {
         existingDeleteBtn.onclick = async () => {
             if (await showConfirmModal(i18n.t('modal_confirm_delete_beer'))) {
@@ -2198,6 +2200,13 @@ export function renderBeerDetail(beer, onSave) {
                 closeModal();
                 showToast(i18n.t('toast_beer_deleted'));
                 setTimeout(() => location.reload(), 500);
+            }
+        };
+    }
+    if (btnShareCustom) {
+        btnShareCustom.onclick = () => {
+            if (window.UI && window.UI.renderShareOptionsModal) {
+                window.UI.renderShareOptionsModal(beer);
             }
         };
     }
@@ -4220,6 +4229,9 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                             <button id="btn-manage-export" class="setting-btn primary" style="flex:1;">📤 ${i18n.t('export_btn_submit')}</button>
                             <button id="btn-manage-import" class="setting-btn" style="flex:1;">📥 ${i18n.t('import_title')}</button>
                         </div>
+                        <div style="display:flex; gap:8px; margin-top:8px;">
+                            <button id="btn-manage-bulk-share" class="setting-btn" style="flex:1; background:var(--accent-gold); color:#000; border:none; font-weight:bold;">📦 Partage Multiple (Bières perso)</button>
+                        </div>
                     </div>
                 </div>
 
@@ -6150,31 +6162,72 @@ export function renderMatchModal(allBeersMap) {
                 </div>
                 
                 <div id="view-join" style="display:block;">
-                    <p style="color:#aaa; font-size:0.9rem; margin-bottom:15px;">Entrez le code de la salle pour rejoindre vos amis.</p>
-                    <input type="text" id="join-code" placeholder="CODE A 6 LETTRES" class="form-input" style="font-size:1.2rem; text-align:center; text-transform:uppercase; margin-bottom:10px;" maxlength="6">
-                    <button id="btn-join" class="btn-primary" style="width:100%; margin-top:10px;">Rejoindre la Party</button>
+                    <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 15px;">
+                        <label style="display:block; margin-bottom:10px; color:#ddd; font-size:0.9rem; font-weight:600;">Code de la salle</label>
+                        <input type="text" id="join-code" placeholder="CODE A 6 LETTRES" class="form-input" style="font-size:1.2rem; text-align:center; text-transform:uppercase; margin-bottom:15px; background:rgba(0,0,0,0.3); border:1px solid #444; letter-spacing:3px; font-family:monospace;" maxlength="6">
+                        <div style="display:flex; gap:10px;">
+                            <button id="btn-join" class="btn-primary" style="flex:2; background: linear-gradient(135deg, var(--accent-gold), #d4af37); color:#000; font-weight:800; border:none; box-shadow: 0 4px 15px rgba(255,215,0,0.3);">Rejoindre</button>
+                            <button id="btn-scan" class="btn-primary" style="flex:1; background: #333; color:white; font-weight:bold; border:1px solid #555; display:flex; justify-content:center; align-items:center; gap:5px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-qr-code" viewBox="0 0 16 16">
+                                  <path d="M2 2h2v2H2z"/>
+                                  <path d="M6 0v6H0V0zM5 1H1v4h4zM4 12H2v2h2z"/>
+                                  <path d="M6 10v6H0v-6zm-5 1v4h4v-4zm11-9h2v2h-2z"/>
+                                  <path d="M10 0v6h6V0zm5 1v4h-4V1zM8 1V0h1v2H8v2H7V1zm0 5V4h1v2zM6 8V7h1V6h1v2h1V7h5v1h-4v1H7V8zm0 0v1H2V8H1v1H0V7h3v1zm10 1h-1V7h1zm-1 0h-1v2h2v-1h-1zm-4 0h2v1h-1v1h-1zm2 3v-1h-1v1h-1v1H9v1h3v-2zm0 0h3v1h-2v1h-1zm-4-1v1h1v-2H7v1z"/>
+                                  <path d="M7 12h1v3h4v1H7zm9 2v2h-3v-1h2v-1z"/>
+                                </svg> QR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-scan" style="display:none; text-align:center;">
+                    <div id="party-reader" style="border-radius:12px; overflow:hidden; border:2px solid var(--accent-gold); margin-bottom:15px; background:#111;"></div>
+                    <button id="btn-cancel-scan" class="btn-primary" style="width:100%; background:#444; color:white; border:none;">Annuler</button>
                 </div>
                 
                 <div id="view-host" style="display:none; text-align:center;">
-                    <p style="color:#aaa; font-size:0.9rem; margin-bottom:15px;">Créez une salle et partagez le code.</p>
-                    <button id="btn-host" class="btn-primary" style="background:var(--accent-gold); color:black; width:100%;">Héberger une Party</button>
+                    <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                        <p style="color:#ccc; font-size:0.9rem; margin-bottom:20px;">Créez une salle et partagez le code à vos amis.</p>
+                        <button id="btn-host" class="btn-primary" style="background: linear-gradient(135deg, var(--accent-gold), #d4af37); color:black; width:100%; font-weight:800; border:none; box-shadow: 0 4px 15px rgba(255,215,0,0.3); padding: 12px;">Héberger une Party</button>
+                    </div>
                 </div>
             </div>
 
             <div id="party-room" style="display:none; text-align:center;">
-                <h3 style="color:var(--accent-gold); margin-bottom:5px;">Salle: <span id="room-code-display" style="font-family:monospace; background:#333; padding:2px 8px; border-radius:4px; font-size:1.2em; letter-spacing: 2px;"></span></h3>
-                <p id="room-status" style="font-size:0.8rem; color:#aaa; margin-bottom:15px;">Connecté en tant que <strong id="my-pseudo" style="color:white;"></strong></p>
+                <div style="background: rgba(255, 215, 0, 0.05); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 16px; padding: 20px; margin-bottom: 25px; text-align:center; box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 10px 20px rgba(0,0,0,0.2); position:relative;">
+                    <button id="btn-show-qr" style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--accent-gold); filter:drop-shadow(0 0 5px rgba(255,215,0,0.5)); display:flex; justify-content:center; align-items:center; width:30px; height:30px;" title="Afficher QR">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-qr-code" viewBox="0 0 16 16">
+                          <path d="M2 2h2v2H2z"/>
+                          <path d="M6 0v6H0V0zM5 1H1v4h4zM4 12H2v2h2z"/>
+                          <path d="M6 10v6H0v-6zm-5 1v4h4v-4zm11-9h2v2h-2z"/>
+                          <path d="M10 0v6h6V0zm5 1v4h-4V1zM8 1V0h1v2H8v2H7V1zm0 5V4h1v2zM6 8V7h1V6h1v2h1V7h5v1h-4v1H7V8zm0 0v1H2V8H1v1H0V7h3v1zm10 1h-1V7h1zm-1 0h-1v2h2v-1h-1zm-4 0h2v1h-1v1h-1zm2 3v-1h-1v1h-1v1H9v1h3v-2zm0 0h3v1h-2v1h-1zm-4-1v1h1v-2H7v1z"/>
+                          <path d="M7 12h1v3h4v1H7zm9 2v2h-3v-1h2v-1z"/>
+                        </svg>
+                    </button>
+                    <p style="margin: 0; color: rgba(255,255,255,0.5); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; font-weight:bold;">Code de la Salle</p>
+                    
+                    <div id="room-qr-container" style="display:none; background:#fff; padding:10px; border-radius:8px; margin: 15px auto; width: fit-content; box-shadow: 0 4px 15px rgba(0,0,0,0.5);"></div>
+                    <h3 id="room-code-display" style="margin: 5px 0 15px; font-family: 'Courier New', monospace; font-size: 2.8rem; color: var(--accent-gold); letter-spacing: 8px; text-shadow: 0 0 20px rgba(255, 215, 0, 0.5); font-weight: 900;"></h3>
+                    
+                    <div style="display:inline-block; background: rgba(0,0,0,0.4); padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);">
+                        <span style="font-size:0.8rem; color:#aaa;">Connecté en tant que</span> <strong id="my-pseudo" style="color:#fff; font-size:0.85rem; margin-left:4px;"></strong>
+                    </div>
+                </div>
                 
-                <div id="members-list" style="background:#222; border-radius:8px; padding:10px; text-align:left; margin-bottom:15px; max-height:200px; overflow-y:auto;">
+                <div id="members-list" style="background:rgba(0,0,0,0.2); border-radius:12px; padding:10px; text-align:left; margin-bottom:20px; max-height:250px; overflow-y:auto; border: 1px solid rgba(255,255,255,0.05); display:flex; flex-direction:column; gap:8px;">
                     <!-- Members inserted here -->
                 </div>
                 
-                <div id="group-stats" style="display:none; text-align:left; border-top:1px solid #444; padding-top:15px;">
-                    <h4 style="color:var(--accent-gold); margin-bottom:10px;">📊 Statistiques du Groupe</h4>
+                <div id="group-stats" style="display:none; text-align:left; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px;">
+                    <h4 style="color:var(--accent-gold); margin-bottom:15px; text-transform:uppercase; font-size:0.9rem; letter-spacing:1px; font-weight:800; display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:1.2rem;">📊</span> Statistiques du Groupe
+                    </h4>
                     <div id="stats-content"></div>
                 </div>
 
-                <button id="btn-leave" class="form-input" style="background:#440000; color:#ff6666; border:1px solid #ff6666; margin-top:20px; width:100%;">Quitter la Party</button>
+                <button id="btn-party-share-custom" class="form-input" style="background: linear-gradient(135deg, var(--accent-gold), #d4af37); color:#000; border:none; margin-top:10px; width:100%; padding:12px; border-radius:10px; font-weight:bold;">📦 Partager vos bières perso</button>
+
+                <button id="btn-leave" class="form-input" style="background:rgba(68, 0, 0, 0.5); color:#ff6666; border:1px solid rgba(255, 102, 102, 0.3); margin-top:20px; width:100%; padding:12px; border-radius:10px; font-weight:bold; transition: background 0.3s;" onmouseover="this.style.background='rgba(68,0,0,0.8)'" onmouseout="this.style.background='rgba(68,0,0,0.5)'">Quitter la Party</button>
             </div>
         </div>
     `;
@@ -6183,22 +6236,76 @@ export function renderMatchModal(allBeersMap) {
     const tabHost = wrapper.querySelector('#tab-host');
     const viewJoin = wrapper.querySelector('#view-join');
     const viewHost = wrapper.querySelector('#view-host');
+    const viewScan = wrapper.querySelector('#view-scan');
     const lobbyDiv = wrapper.querySelector('#party-lobby');
     const roomDiv = wrapper.querySelector('#party-room');
     
+    let partyScanner = null;
+    let isQrShowing = false;
+
+    const stopPartyScanner = async () => {
+        if (partyScanner) {
+            try { await partyScanner.stop(); } catch(e){}
+            partyScanner.clear();
+            partyScanner = null;
+        }
+    };
+
     const switchTab = (tab) => {
+        stopPartyScanner();
         if (tab === 'join') {
             tabJoin.style.color = 'var(--accent-gold)'; tabJoin.style.borderBottom = '2px solid var(--accent-gold)';
             tabHost.style.color = '#666'; tabHost.style.borderBottom = 'none';
-            viewJoin.style.display = 'block'; viewHost.style.display = 'none';
+            viewJoin.style.display = 'block'; viewHost.style.display = 'none'; viewScan.style.display = 'none';
+        } else if (tab === 'scan') {
+            viewJoin.style.display = 'none'; viewHost.style.display = 'none'; viewScan.style.display = 'block';
         } else {
             tabHost.style.color = 'var(--accent-gold)'; tabHost.style.borderBottom = '2px solid var(--accent-gold)';
             tabJoin.style.color = '#666'; tabJoin.style.borderBottom = 'none';
-            viewJoin.style.display = 'none'; viewHost.style.display = 'block';
+            viewJoin.style.display = 'none'; viewHost.style.display = 'block'; viewScan.style.display = 'none';
         }
     };
     tabJoin.onclick = () => switchTab('join');
     tabHost.onclick = () => switchTab('host');
+
+    wrapper.querySelector('.close-btn').onclick = () => closeRoom();
+
+    wrapper.querySelector('#btn-scan').onclick = () => {
+        switchTab('scan');
+        if (!window.Html5Qrcode) return showAlertModal("Scanner non disponible");
+        partyScanner = new window.Html5Qrcode("party-reader");
+        partyScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (text) => {
+            stopPartyScanner();
+            if (text.startsWith('BEERDEX:')) {
+                const beerData = JSON.parse(text.replace('BEERDEX:', ''));
+                if (window.UI && window.UI.renderSharedBeerModal) {
+                    window.UI.renderSharedBeerModal(beerData, "Scan QR");
+                }
+            } else {
+                wrapper.querySelector('#join-code').value = text.trim();
+                switchTab('join');
+                wrapper.querySelector('#btn-join').click(); // auto join
+            }
+        }).catch(err => {
+            showAlertModal("Impossible d'accéder à la caméra");
+            switchTab('join');
+        });
+    };
+    
+    wrapper.querySelector('#btn-cancel-scan').onclick = () => switchTab('join');
+
+    wrapper.querySelector('#btn-show-qr').onclick = () => {
+        const qrContainer = wrapper.querySelector('#room-qr-container');
+        const codeDisplay = wrapper.querySelector('#room-code-display');
+        isQrShowing = !isQrShowing;
+        if (isQrShowing) {
+            qrContainer.style.display = 'block';
+            codeDisplay.style.display = 'none';
+        } else {
+            qrContainer.style.display = 'none';
+            codeDisplay.style.display = 'block';
+        }
+    };
 
     const updateRoomUI = (state) => {
         const membersDiv = wrapper.querySelector('#members-list');
@@ -6217,9 +6324,21 @@ export function renderMatchModal(allBeersMap) {
         wrapper.querySelector('#my-pseudo').textContent = Match.myProfile ? Match.myProfile.pseudo : 'Anonyme';
         
         for (const [id, m] of members.entries()) {
-            membersDiv.innerHTML += `<div style="padding:8px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-weight:bold;">${m.pseudo} ${m.isHost ? '👑' : ''} ${m.me ? '(Vous)' : ''}</span>
-                <span style="color:var(--accent-gold); font-size:0.8rem; background:rgba(255,215,0,0.1); padding:2px 6px; border-radius:10px;">${m.totalBeers || 0} bières</span>
+            const volStr = m.totalLiters ? `${m.totalLiters.toFixed(1)} L` : '0 L';
+            const alcStr = m.totalAlcoholLiters ? `(${m.totalAlcoholLiters.toFixed(2)} L alc. pur)` : '';
+            const topBeer = m.topBeers && m.topBeers.length > 0 ? (allBeers.get ? allBeers.get(m.topBeerId) : allBeers.find(b=>b.id===m.topBeerId)) : null;
+            const topBeerStr = topBeer ? `⭐ ${topBeer.title}` : '';
+            
+            membersDiv.innerHTML += `
+            <div style="padding:10px; background:rgba(0,0,0,0.3); border-radius:8px; border:1px solid rgba(255,255,255,0.05); margin-bottom:5px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                    <span style="font-weight:bold; color:#fff;">${m.pseudo} ${m.isHost ? '👑' : ''} ${m.me ? '<span style="color:#888; font-size:0.8rem;">(Vous)</span>' : ''}</span>
+                    <span style="color:var(--accent-gold); font-weight:bold; font-size:0.9rem; background:rgba(255,215,0,0.1); padding:2px 8px; border-radius:12px;">${m.totalBeers || 0} bières</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#aaa;">
+                    <span>💧 ${volStr} <span style="color:#d9534f;">${alcStr}</span></span>
+                    <span style="color:#ffd700; max-width:50%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${topBeerStr}</span>
+                </div>
             </div>`;
         }
         
@@ -6230,29 +6349,50 @@ export function renderMatchModal(allBeersMap) {
             
             let commonHtml = '';
             if (stats.commonBeers.length > 0) {
-                commonHtml = `<div style="margin-top:15px;">
-                    <strong style="color:var(--accent-gold);">🍻 Bières en commun (${stats.commonBeers.length}) :</strong>
-                    <div style="font-size:0.85rem; color:#aaa; margin-top:5px; line-height:1.4;">${stats.commonBeers.map(b=>b.title).join(', ')}</div>
+                const tags = stats.commonBeers.map(item => {
+                    const opacity = item.count === item.total ? 1 : 0.6;
+                    const border = item.count === item.total ? 'var(--accent-gold)' : '#666';
+                    return `<span style="display:inline-block; margin:3px; padding:4px 8px; background:rgba(0,0,0,0.4); border:1px solid ${border}; border-radius:12px; font-size:0.75rem; color:#fff; opacity:${opacity};">
+                        ${item.beer.title} <span style="color:var(--accent-gold); margin-left:4px;">${item.count}/${item.total}</span>
+                    </span>`;
+                }).join('');
+                
+                commonHtml = `<div style="margin-top:20px;">
+                    <strong style="color:var(--accent-gold); font-size:0.85rem; text-transform:uppercase; letter-spacing:1px;">🍻 Bières en commun (${stats.commonBeers.length}) :</strong>
+                    <div style="margin-top:8px; display:flex; flex-wrap:wrap;">${tags}</div>
                 </div>`;
             } else {
-                commonHtml = `<div style="margin-top:15px; font-size:0.85rem; color:#888; font-style:italic;">Aucune bière goûtée par la totalité du groupe.</div>`;
+                commonHtml = `<div style="margin-top:15px; font-size:0.85rem; color:#888; font-style:italic; padding:10px; background:rgba(255,255,255,0.02); border-radius:8px; text-align:center;">Aucune bière en commun.</div>`;
             }
             
+            const groupVol = stats.totalGroupLiters ? `${stats.totalGroupLiters.toFixed(1)} L` : '0 L';
+            const groupAlc = stats.totalGroupAlcoholLiters ? `${stats.totalGroupAlcoholLiters.toFixed(2)} L alc. pur` : '0 L alc.';
+            const topGroupTitle = stats.topGroupBeer ? stats.topGroupBeer.title : '-';
+            
             wrapper.querySelector('#stats-content').innerHTML = `
-                <div style="display:flex; justify-content:space-between; margin-bottom:15px; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px; background:rgba(0,0,0,0.4); padding:15px; border-radius:12px; border:1px solid rgba(255,215,0,0.1);">
                     <div style="text-align:center;">
-                        <div style="font-size:1.5rem; font-weight:bold; color:#fff;">${stats.totalGroupBeers}</div>
-                        <div style="font-size:0.7rem; color:#aaa; text-transform:uppercase;">Dégustées (Total)</div>
+                        <div style="font-size:1.4rem; font-weight:900; color:#fff;">${stats.totalGroupBeers}</div>
+                        <div style="font-size:0.65rem; color:#aaa; text-transform:uppercase; letter-spacing:1px; margin-top:4px;">Total Bières</div>
                     </div>
                     <div style="text-align:center;">
-                        <div style="font-size:1.5rem; font-weight:bold; color:var(--accent-gold);">${stats.uniqueGroupBeers}</div>
-                        <div style="font-size:0.7rem; color:#aaa; text-transform:uppercase;">Uniques (Groupe)</div>
+                        <div style="font-size:1.4rem; font-weight:900; color:#4fc3f7;">${groupVol}</div>
+                        <div style="font-size:0.65rem; color:#aaa; text-transform:uppercase; letter-spacing:1px; margin-top:4px;">Volume Bus</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:1.4rem; font-weight:900; color:#ff6b6b;">${groupAlc}</div>
+                        <div style="font-size:0.65rem; color:#aaa; text-transform:uppercase; letter-spacing:1px; margin-top:4px;">Alcool Pur</div>
                     </div>
                 </div>
+                
+                <div style="background:rgba(255,215,0,0.05); padding:10px; border-radius:8px; border:1px solid rgba(255,215,0,0.2); margin-bottom:15px; text-align:center;">
+                    <div style="font-size:0.7rem; color:var(--accent-gold); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px;">⭐ Bière Préférée du Groupe</div>
+                    <div style="font-size:1rem; font-weight:bold; color:#fff;">${topGroupTitle}</div>
+                </div>
+                
                 <div style="font-size:0.85rem; color:#ccc; display:flex; flex-direction:column; gap:8px;">
-                    <div style="background:rgba(0,0,0,0.2); padding:8px; border-radius:6px;">🏆 <b>Pilier de bar:</b> <span style="float:right; color:#fff;">${stats.podiums.pilier.name} (${stats.podiums.pilier.val})</span></div>
-                    <div style="background:rgba(0,0,0,0.2); padding:8px; border-radius:6px;">🧭 <b>Explorateur:</b> <span style="float:right; color:#fff;">${stats.podiums.explorateur.name} (${stats.podiums.explorateur.val})</span></div>
-                    <div style="background:rgba(0,0,0,0.2); padding:8px; border-radius:6px;">🏅 <b>Chasseur de succès:</b> <span style="float:right; color:#fff;">${stats.podiums.chasseur.name} (${stats.podiums.chasseur.val})</span></div>
+                    <div style="background:rgba(0,0,0,0.2); padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.05);">🏆 <b>Pilier de bar:</b> <span style="float:right; color:#fff; font-weight:bold;">${stats.podiums.pilier.name} (${stats.podiums.pilier.val})</span></div>
+                    <div style="background:rgba(0,0,0,0.2); padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.05);">🧭 <b>Explorateur:</b> <span style="float:right; color:#fff; font-weight:bold;">${stats.podiums.explorateur.name} (${stats.podiums.explorateur.val})</span></div>
                 </div>
                 ${commonHtml}
             `;
@@ -6265,6 +6405,22 @@ export function renderMatchModal(allBeersMap) {
         lobbyDiv.style.display = 'none';
         roomDiv.style.display = 'block';
         wrapper.querySelector('#room-code-display').textContent = code;
+        
+        // Generate QR Code
+        const qrContainer = wrapper.querySelector('#room-qr-container');
+        qrContainer.innerHTML = '';
+        if (window.QRCode) {
+            new window.QRCode(qrContainer, {
+                text: code,
+                width: 150,
+                height: 150,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: window.QRCode.CorrectLevel.M
+            });
+        } else {
+            qrContainer.innerHTML = '<span style="color:#000;">QR non dispo</span>';
+        }
     };
 
     wrapper.querySelector('#btn-host').onclick = async () => {
@@ -6272,6 +6428,11 @@ export function renderMatchModal(allBeersMap) {
         try {
             const code = await Match.createParty(allBeers, (state) => {
                 if (state.type === 'update') updateRoomUI(state);
+                if (state.type === 'share_custom_beer') {
+                    if (state.sender !== Match.myProfile.pseudo) {
+                        renderSharedBeerModal(state.beer, state.sender);
+                    }
+                }
             });
             enterRoom(code);
             updateRoomUI();
@@ -6292,6 +6453,11 @@ export function renderMatchModal(allBeersMap) {
                 if (state.type === 'host_disconnected') {
                     showAlertModal("L'hôte a quitté la partie.", { icon: '🚪' });
                     closeRoom();
+                }
+                if (state.type === 'share_custom_beer') {
+                    if (state.sender !== Match.myProfile.pseudo) {
+                        renderSharedBeerModal(state.beer, state.sender);
+                    }
                 }
             });
             enterRoom(code);
@@ -7074,3 +7240,278 @@ export function renderBreweryView(breweryName, breweryBeers, container, activeFi
     renderBeerList(breweryBeers, beersContainer, activeFilters, false, null, false);
 }
 
+
+window.UI = window.UI || {};
+window.UI.openUniversalScanner = openUniversalScanner;
+
+export function openUniversalScanner() {
+    if (!window.Html5Qrcode) return showAlertModal("Scanner non disponible", { icon: '❌' });
+
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = `
+        <div class="modal-content" style="width: min(90%, 400px); padding: 25px; text-align: center; background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(15px); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 20px;">
+            <h2 style="color:var(--accent-gold); margin-bottom:15px; font-family:'Russo One'; font-size:1.4rem;">Scanner Universel</h2>
+            <p style="color:#ccc; font-size:0.85rem; margin-bottom:15px;">Scannez un code de Party ou une Bière Personnalisée.</p>
+            <div id="universal-reader" style="width: 100%; max-width: 300px; margin: 0 auto 15px auto; border-radius: 12px; overflow: hidden; background: #000;"></div>
+            <button id="btn-close-scanner" class="form-input" style="width:100%; border:none; background:#333; color:white; font-weight:bold;">Annuler</button>
+        </div>
+    `;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-backdrop';
+    modal.style.zIndex = '9999';
+    modal.appendChild(wrapper);
+    document.body.appendChild(modal);
+
+    const html5QrCode = new window.Html5Qrcode("universal-reader");
+    
+    const stopScanner = () => {
+        if (html5QrCode && html5QrCode.isScanning) {
+            html5QrCode.stop().then(() => {
+                html5QrCode.clear();
+            }).catch(e => console.warn(e));
+        }
+        if (document.body.contains(modal)) {
+            document.body.removeChild(modal);
+        }
+    };
+
+    wrapper.querySelector('#btn-close-scanner').onclick = stopScanner;
+
+    html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (text) => {
+            stopScanner();
+            
+            if (text.startsWith('BEERDEX:')) {
+                try {
+                    const beerData = JSON.parse(text.replace('BEERDEX:', ''));
+                    if (Array.isArray(beerData)) {
+                        beerData.forEach(b => {
+                            if (!String(b.id).startsWith('CUSTOM_')) b.id = 'CUSTOM_' + b.id;
+                            window.Storage.saveCustomBeer(b);
+                        });
+                        showAlertModal(`${beerData.length} bières importées avec succès !`, { icon: '✅' });
+                        if (typeof window.renderCatalog === 'function' && document.getElementById('catalog').style.display === 'block') window.renderCatalog();
+                    } else {
+                        window.UI.renderSharedBeerModal(beerData, "Scan QR");
+                    }
+                } catch(e) {
+                    showAlertModal("Code QR invalide ou corrompu.", { icon: '❌' });
+                }
+            } else if (text.trim().length === 6) {
+                // Potential party code
+                const code = text.trim().toUpperCase();
+                // We need to switch to party tab and join
+                if (window.switchTab) window.switchTab('join');
+                const joinInput = document.getElementById('join-code');
+                const joinBtn = document.getElementById('btn-join');
+                if (joinInput && joinBtn) {
+                    joinInput.value = code;
+                    joinBtn.click();
+                } else {
+                    showAlertModal("Veuillez vous rendre dans l'onglet Party pour utiliser ce code.");
+                }
+            } else {
+                showAlertModal("QR Code non reconnu par Beerdex.", { icon: '❓' });
+            }
+        },
+        (errorMessage) => {
+            // ignore scan errors
+        }
+    ).catch(err => {
+        showAlertModal("Impossible d'accéder à la caméra", { icon: '❌' });
+        stopScanner();
+    });
+}
+
+window.UI.renderBulkShareModal = renderBulkShareModal;
+
+export function renderBulkShareModal() {
+    const customBeers = window.Storage.getCustomBeers();
+    if (customBeers.length === 0) {
+        return window.UI.showAlertModal("Vous n'avez aucune bière personnalisée à partager.", { icon: 'ℹ️' });
+    }
+
+    const wrapper = document.createElement('div');
+    const inParty = window.Match && window.Match.roomCode;
+
+    // Create checkbox list for beers
+    const listHtml = customBeers.map(b => `
+        <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px; margin-bottom:8px; text-align:left;">
+            <div>
+                <strong style="color:#fff; display:block;">${b.title}</strong>
+                <span style="color:#aaa; font-size:0.75rem;">${b.brewery || 'Inconnue'}</span>
+            </div>
+            <input type="checkbox" class="bulk-share-cb" value="${b.id}" style="width:20px; height:20px; accent-color:var(--accent-gold);" checked>
+        </div>
+    `).join('');
+
+    wrapper.innerHTML = `
+        <div class="modal-content" style="width: min(90%, 500px); padding: 25px; text-align: center; background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(15px); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 20px; max-height:80vh; display:flex; flex-direction:column;">
+            <h2 style="color:var(--accent-gold); margin-bottom:15px; font-family:'Russo One'; font-size:1.4rem;">Partage Multiple</h2>
+            <p style="color:#ccc; font-size:0.85rem; margin-bottom:15px;">Sélectionnez les bières personnalisées à partager.</p>
+            
+            <div style="flex:1; overflow-y:auto; margin-bottom:15px; padding-right:5px; border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:10px;">
+                ${listHtml}
+            </div>
+
+            ${inParty ? `
+                <button id="btn-share-bulk-party" class="btn-primary" style="width:100%; margin-bottom:15px; background: linear-gradient(135deg, var(--accent-gold), #d4af37); color:#000; font-weight:bold;">
+                    Partager dans la Beer Party
+                </button>
+            ` : `
+                <div style="font-size:0.85rem; color:#888; margin-bottom:15px; font-style:italic; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;">
+                    Vous n'êtes pas dans une Beer Party. Rejoignez-en une pour envoyer directement en P2P (Recommandé).
+                </div>
+            `}
+            
+            <div style="border-top:1px solid rgba(255,255,255,0.1); margin:15px 0; padding-top:20px;">
+                <p style="color:#ccc; font-size:0.9rem; margin-bottom:15px;">Ou générez un QR Code Multiple :</p>
+                <div id="bulk-qr-container" style="background:#fff; padding:15px; border-radius:12px; margin: 0 auto 15px auto; width: fit-content; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display:none;"></div>
+                <button id="btn-generate-bulk-qr" class="form-input" style="width:100%; border:1px solid var(--accent-gold); color:var(--accent-gold); font-weight:bold;">Générer le QR Code</button>
+            </div>
+            
+            <button id="btn-close-bulk" class="form-input" style="width:100%; margin-top:10px; border:none; background:#333; color:white; font-weight:bold;">Fermer</button>
+        </div>
+    `;
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-backdrop';
+    modal.style.zIndex = '9999';
+    modal.appendChild(wrapper);
+    document.body.appendChild(modal);
+    
+    wrapper.querySelector('#btn-close-bulk').onclick = () => document.body.removeChild(modal);
+    
+    const getSelectedBeers = () => {
+        const cbs = Array.from(wrapper.querySelectorAll('.bulk-share-cb:checked'));
+        const ids = cbs.map(cb => cb.value);
+        return customBeers.filter(b => ids.includes(b.id));
+    };
+
+    const btnShareParty = wrapper.querySelector('#btn-share-bulk-party');
+    if (btnShareParty) {
+        btnShareParty.onclick = () => {
+            const selected = getSelectedBeers();
+            if (selected.length === 0) return window.UI.showAlertModal("Veuillez sélectionner au moins une bière.");
+            
+            // Share each one via P2P (or we can send the array, but Match.shareCustomBeer currently expects a single beer. Wait! We can send the array!)
+            window.Match.shareCustomBeer(selected); 
+            // In handleSharedCustomBeer, we must handle Arrays.
+            
+            document.body.removeChild(modal);
+            window.UI.showAlertModal(`${selected.length} bières envoyées dans la Party !`, { icon: '✅' });
+        };
+    }
+    
+    wrapper.querySelector('#btn-generate-bulk-qr').onclick = () => {
+        const selected = getSelectedBeers();
+        if (selected.length === 0) return window.UI.showAlertModal("Veuillez sélectionner au moins une bière.");
+        
+        // Strip out large fields for QR
+        const pruned = selected.map(b => ({
+            id: b.id,
+            title: b.title,
+            brewery: b.brewery,
+            type: b.type,
+            alcohol: b.alcohol,
+            volume: b.volume,
+            description: b.description ? b.description.substring(0, 50) : ''
+        }));
+        
+        const jsonStr = JSON.stringify(pruned);
+        
+        // Check size (QR can hold ~2.9KB max, but realistically less for reliable scanning)
+        if (jsonStr.length > 2000) {
+            return window.UI.showAlertModal("Trop de bières sélectionnées pour un seul QR Code. Utilisez le partage P2P en rejoignant une Party.", { icon: '⚠️' });
+        }
+        
+        const qrContainer = wrapper.querySelector('#bulk-qr-container');
+        qrContainer.style.display = 'block';
+        qrContainer.innerHTML = '';
+        
+        if (window.QRCode) {
+            new window.QRCode(qrContainer, {
+                text: 'BEERDEX:' + jsonStr,
+                width: 250,
+                height: 250,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: window.QRCode.CorrectLevel.L
+            });
+            wrapper.querySelector('#btn-generate-bulk-qr').style.display = 'none';
+        } else {
+            qrContainer.innerHTML = '<span style="color:#000;">QR non dispo</span>';
+        }
+    };
+}
+
+window.UI.renderSharedBeerModal = renderSharedBeerModal;
+
+export function renderSharedBeerModal(beerData, sender) {
+    // Check if it's multiple beers
+    if (Array.isArray(beerData)) {
+        if (beerData.length === 0) return;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'modal-content';
+        wrapper.innerHTML = `
+            <h2 style="color:var(--accent-gold);">${sender} a partagé ${beerData.length} bière(s) !</h2>
+            <div style="max-height: 200px; overflow-y: auto; text-align: left; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                ${beerData.map(b => `<div style="margin-bottom: 5px;">🍺 <strong>${b.title}</strong> <span style="font-size:0.8rem; color:#aaa;">(${b.brewery || 'Inconnue'})</span></div>`).join('')}
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button id="btn-accept-shared" class="btn-primary" style="flex:1;">Ajouter au Catalogue</button>
+                <button class="close-btn form-input" style="flex:1; border:none; background:#333; color:white;">Refuser</button>
+            </div>
+        `;
+        wrapper.querySelector('#btn-accept-shared').onclick = () => {
+            beerData.forEach(b => {
+                if (!String(b.id).startsWith('CUSTOM_')) b.id = 'CUSTOM_' + b.id;
+                window.Storage.saveCustomBeer(b);
+            });
+            closeModal();
+            showAlertModal(`${beerData.length} bières importées avec succès !`, { icon: '✅' });
+            if (typeof window.renderCatalog === 'function' && document.getElementById('catalog').style.display === 'block') window.renderCatalog();
+        };
+        wrapper.querySelector('.close-btn').onclick = () => closeModal();
+        openModal(wrapper);
+        return;
+    }
+
+    // Single beer logic
+    const wrapper = document.createElement('div');
+    wrapper.className = 'modal-content';
+    const hasImg = beerData.image && beerData.image.startsWith('data:image');
+    
+    wrapper.innerHTML = `
+        <h2 style="color:var(--accent-gold);">${sender} a partagé une bière !</h2>
+        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 15px; display:flex; align-items:center; gap:15px; text-align:left;">
+            <div style="width: 60px; height: 60px; border-radius: 8px; overflow: hidden; flex-shrink:0; background:#000;">
+                ${hasImg ? `<img src="${beerData.image}" style="width:100%; height:100%; object-fit:cover;">` : `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:24px;">🍺</div>`}
+            </div>
+            <div>
+                <strong style="font-size:1.1rem; color:#fff; display:block; margin-bottom:4px;">${beerData.title}</strong>
+                <span style="font-size:0.85rem; color:#aaa; display:block;">${beerData.brewery || 'Inconnue'}</span>
+                <span style="font-size:0.8rem; color:var(--accent-gold);">${beerData.type || 'Non spécifié'} • ${beerData.alcohol || '?'}%</span>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button id="btn-accept-shared" class="btn-primary" style="flex:1;">Ajouter au Catalogue</button>
+            <button class="close-btn form-input" style="flex:1; border:none; background:#333; color:white;">Refuser</button>
+        </div>
+    `;
+
+    wrapper.querySelector('#btn-accept-shared').onclick = () => {
+        if (!String(beerData.id).startsWith('CUSTOM_')) beerData.id = 'CUSTOM_' + beerData.id;
+        window.Storage.saveCustomBeer(beerData);
+        closeModal();
+        showAlertModal(`${beerData.title} a été importée avec succès !`, { icon: '✅' });
+        if (typeof window.renderCatalog === 'function' && document.getElementById('catalog').style.display === 'block') window.renderCatalog();
+    };
+    
+    wrapper.querySelector('.close-btn').onclick = () => closeModal();
+
+    openModal(wrapper);
+}

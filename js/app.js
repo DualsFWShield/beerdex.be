@@ -490,6 +490,19 @@ function setupEventListeners() {
     const searchBar = document.getElementById('search-bar');
     const searchInput = document.getElementById('search-input');
     const searchClose = document.getElementById('search-close');
+    const btnUniversalScan = document.getElementById('btn-universal-scan');
+
+    if (btnUniversalScan) {
+        btnUniversalScan.addEventListener('click', () => {
+            if (window.UI && window.UI.openUniversalScanner) {
+                // Close search bar if open
+                if (!searchBar.classList.contains('hidden')) {
+                    searchBar.classList.add('hidden');
+                }
+                window.UI.openUniversalScanner();
+            }
+        });
+    }
 
 
     searchToggle.addEventListener('click', () => {
@@ -626,7 +639,7 @@ function setupEventListeners() {
 
     // Magical Search Bar: auto open on keypress (PC)
     window.addEventListener('keydown', (e) => {
-        if (e.key.length !== 1 || e.ctrlKey || e.altKey || e.metaKey) return;
+        if (!e.key || e.key.length !== 1 || e.ctrlKey || e.altKey || e.metaKey) return;
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
         const modalContainer = document.getElementById('modal-container');

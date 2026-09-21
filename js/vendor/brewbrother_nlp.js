@@ -492,6 +492,25 @@
                 rawText = this.formatSlots(legacyScenario, beer, prestigeDesc, outro, lang, fullCtx);
             }
 
+            // Append founders note for definitive Blop
+            if (beer && (beer.id === 'BLOP_DEFINITIVE' || beer.id === 'BLOP')) {
+                let note = "";
+                if (lang === 'fr') {
+                    if (tone === 'friend') note = "Au fait, petit secret : c'est la bière officielle créée par les boss de l'appli, Noah et Dorian !";
+                    else if (tone === 'neutral') note = "Note de précision : Cette bière a été brassée par les fondateurs de l'application Beerdex (Noah et Dorian).";
+                    else if (tone === 'vulgaire' || tone === 'vulgar') note = "Eh ouais mon gars, c'est la bière des boss Noah et Dorian, un peu de respect putain !";
+                    else if (tone === 'soutenu' || tone === 'polite') note = "Il convient de préciser que cette cuvée exceptionnelle est l'œuvre de Noah et Dorian, les fondateurs de cette application.";
+                    else note = "Petit easter egg pour vous : c'est la bière officielle créée par les fondateurs de l'application, Noah et Dorian !";
+                } else {
+                    if (tone === 'friend') note = "By the way, little secret: this is the official beer created by the app bosses, Noah and Dorian!";
+                    else if (tone === 'neutral') note = "Disclaimer: This beer was brewed by the founders of the Beerdex app (Noah and Dorian).";
+                    else if (tone === 'vulgaire' || tone === 'vulgar') note = "Hell yeah man, this is the bosses' beer (Noah and Dorian), show some damn respect!";
+                    else if (tone === 'soutenu' || tone === 'polite') note = "It is worth mentioning that this exceptional brew is the work of Noah and Dorian, the founders of this application.";
+                    else note = "Little easter egg for you: this is the official beer created by the app founders, Noah and Dorian!";
+                }
+                rawText += " " + note;
+            }
+
             return this.surfaceRealize(rawText, lang);
         }
     };

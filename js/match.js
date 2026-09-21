@@ -42,26 +42,57 @@ const Match = {
         const userData = Storage.getAllUserData();
         const ratings = userData.ratings || userData;
         
-        // Get all original keys of consumed beers
         const validKeys = Object.keys(ratings).filter(k => ratings[k] && ratings[k].count > 0);
-        // Map to base ID (stripping size suffix) for sharing unique identities
-        const allConsumedIds = Array.from(new Set(validKeys.map(k => k.split('_').slice(0, -1).join('_') || k)));
-        // Fallback: If split leaves empty (e.g. no _ format), just use k. Wait, in Beerdex, IDs are like BE_GORDON_050. The base ID is often the full ID without the last part. Or simply what UI does: split('_')[0] is WRONG because it yields 'BE' for 'BE_GORDON_050'. Wait!
-        // Actually, the ID is the full key! So k is the ID! Why did I do k.split('_')[0]? That would just be "BE"!
-        // Let's just use the full key `k` as the ID. The UI uses the full key for beer matching.
+        const allConsumed = validKeys; 
+        
+        let total = 0;
+        let totalLiters = 0;
+        let totalAlcoholLiters = 0;
+        
+        const isMap = allBeers instanceof window.Map;
 
-        const allConsumed = validKeys; // Full IDs
+        validKeys.forEach(k => { 
+            const count = parseInt(ratings[k].count) || 1;
+            total += count; 
+            
+            let beerObj = null;
+            if (isMap) beerObj = allBeers.get(k);
+            else if (Array.isArray(allBeers)) beerObj = allBeers.find(b => b.id === k);
+            
+            if (beerObj) {
+                let volL = 0;
+                let abv = 0;
+                if (beerObj.volume) {
+                    const v = parseFloat(String(beerObj.volume).replace(',', '.'));
+                    if (!isNaN(v)) {
+                        const vStr = String(beerObj.volume).toLowerCase();
+                        if (vStr.includes('cl')) volL = v / 100;
+                        else if (vStr.includes('ml')) volL = v / 1000;
+                        else volL = v; // assume L
+                    }
+                }
+                if (beerObj.alcohol || beerObj.abv) {
+                    const abvStr = String(beerObj.alcohol || beerObj.abv);
+                    const a = parseFloat(abvStr.replace(',', '.'));
+                    if (!isNaN(a)) abv = a;
+                }
+                
+                totalLiters += volL * count;
+                totalAlcoholLiters += volL * (abv / 100) * count;
+            }
+        });
 
         if (Storage.getPreference('beermatch_share_total', true)) {
-            let total = 0;
-            validKeys.forEach(k => { total += (parseInt(ratings[k].count) || 1); });
             p.totalBeers = total;
+            p.totalLiters = totalLiters;
+            p.totalAlcoholLiters = totalAlcoholLiters;
         }
         if (Storage.getPreference('beermatch_share_unique', true)) {
             p.uniqueBeers = allConsumed.length;
         }
-        if (Storage.getPreference('beermatch_share_top', true)) {
+        if (Storage.getPreference('beermatch_share_top', true) && validKeys.length > 0) {
             const sorted = [...validKeys].sort((a,b) => (ratings[b].count||0) - (ratings[a].count||0));
+            p.topBeerId = sorted[0];
             p.topBeers = sorted.slice(0, 5);
         }
         if (Storage.getPreference('beermatch_share_catalog', true)) {
@@ -148,6 +179,12 @@ const Match = {
                 this.members.set(peerId, data.profile);
                 this.broadcastState();
             }
+            if (data.type === 'share_custom_beer') {
+                // Broadcast to all other peers
+                this.p2p.sendMessage(data);
+                // Trigger local UI
+                if (this.onStateChange) this.onStateChange(data);
+            }
         } else {
             if (data.type === 'party_state') {
                 this.members.clear();
@@ -155,6 +192,9 @@ const Match = {
                     this.members.set(id, profile);
                 }
                 if (this.onStateChange) this.onStateChange({ type: 'update', members: this.members });
+            }
+            if (data.type === 'share_custom_beer') {
+                if (this.onStateChange) this.onStateChange(data);
             }
         }
     },
@@ -166,11 +206,30 @@ const Match = {
         if (this.onStateChange) this.onStateChange({ type: 'update', members: this.members });
     },
 
+    shareCustomBeer: function(customBeer) {
+        if (!this.p2p || !this.roomCode) return false;
+        
+        const payload = {
+            type: 'share_custom_beer',
+            sender: this.myProfile.pseudo,
+            beer: customBeer
+        };
+        
+        if (this.isHost) {
+            this.p2p.sendMessage(payload); // Broadcast to all
+        } else {
+            this.p2p.sendMessage(payload, [`beerdex-party-${this.roomCode}`]); // Send to host for rebroadcast
+        }
+        return true;
+    },
+
     computeGroupAnalytics: function(allBeersMap) {
         const members = Array.from(this.members.values());
         if (members.length === 0) return null;
 
         let totalGroupBeers = 0;
+        let totalGroupLiters = 0;
+        let totalGroupAlcoholLiters = 0;
         const allUniqueBeers = new Set();
         const beerCounts = new Map(); 
         const memberCount = members.length;
@@ -186,6 +245,9 @@ const Match = {
                 totalGroupBeers += m.totalBeers;
                 if (m.totalBeers > podiums.pilier.val) podiums.pilier = { name: m.pseudo, val: m.totalBeers };
             }
+            if (m.totalLiters) totalGroupLiters += m.totalLiters;
+            if (m.totalAlcoholLiters) totalGroupAlcoholLiters += m.totalAlcoholLiters;
+            
             if (m.uniqueBeers && m.uniqueBeers > podiums.explorateur.val) {
                 podiums.explorateur = { name: m.pseudo, val: m.uniqueBeers };
             }
@@ -202,15 +264,19 @@ const Match = {
         });
 
         const sortedBeers = Array.from(beerCounts.entries()).sort((a,b) => b[1] - a[1]);
-        const commonBeers = sortedBeers.filter(e => e[1] > 1 && e[1] === memberCount).map(e => allBeersMap.get(e[0])).filter(b=>b);
+        const commonBeers = sortedBeers.filter(e => e[1] > 1).map(e => ({ beer: allBeersMap.get(e[0]), count: e[1], total: memberCount })).filter(e=>e.beer);
         const popularBeers = sortedBeers.slice(0, 5).map(e => allBeersMap.get(e[0])).filter(b=>b);
+        const topGroupBeer = sortedBeers.length > 0 ? allBeersMap.get(sortedBeers[0][0]) : null;
 
         return {
             totalGroupBeers,
+            totalGroupLiters,
+            totalGroupAlcoholLiters,
             uniqueGroupBeers: allUniqueBeers.size,
             podiums,
             commonBeers,
-            popularBeers
+            popularBeers,
+            topGroupBeer
         };
     },
     
