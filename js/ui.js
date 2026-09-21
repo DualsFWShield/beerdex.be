@@ -3852,14 +3852,37 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                     </div>
                 </div>
 
-                <div class="setting-row" data-keywords="beer match tinder">
+                <div class="setting-row" data-keywords="beer match tinder party">
                     <div class="setting-info">
-                        <span class="setting-title">${i18n.t('settings_toggle_beermatch') || 'Beer Match'}</span>
-                        <span class="setting-desc" data-i18n="settings_beermatch_desc">Découvrez de nouvelles bières avec des recommandations</span>
+                        <span class="setting-title">${i18n.t('settings_toggle_beermatch') || 'Beer Party'}</span>
+                        <span class="setting-desc" data-i18n="settings_beermatch_desc">Organisez des dégustations à plusieurs.</span>
                     </div>
                     <div class="setting-action">
                         <label class="switch">
                             <input type="checkbox" class="toggle-switch" id="toggle-feat-beermatch" ${Storage.getPreference('feat_beermatch_enabled', true) ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-row" style="padding-left:15px; border-left:2px solid var(--accent-gold); display:${Storage.getPreference('feat_beermatch_enabled', true) ? 'flex' : 'none'};" id="party-pseudo-row">
+                    <div class="setting-info">
+                        <span class="setting-title">Pseudo Party</span>
+                        <span class="setting-desc">Votre nom affiché dans la salle.</span>
+                    </div>
+                    <div class="setting-action">
+                        <input type="text" id="input-party-pseudo" class="form-input" placeholder="Buveur..." value="${Storage.getPreference('beermatch_pseudo', '')}" style="width:120px; font-size:0.8rem; text-align:right;">
+                    </div>
+                </div>
+                
+                <div class="setting-row" style="padding-left:15px; border-left:2px solid var(--accent-gold); display:${Storage.getPreference('feat_beermatch_enabled', true) ? 'flex' : 'none'};" id="party-privacy-row">
+                    <div class="setting-info">
+                        <span class="setting-title">Partage de statistiques</span>
+                        <span class="setting-desc">Inclure mon total et mon historique dans le résumé de groupe.</span>
+                    </div>
+                    <div class="setting-action">
+                        <label class="switch">
+                            <input type="checkbox" class="toggle-switch" id="toggle-party-stats" ${Storage.getPreference('beermatch_share_total', true) ? 'checked' : ''}>
                             <span class="slider round"></span>
                         </label>
                     </div>
@@ -4429,6 +4452,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
         { id: '#toggle-feat-reminders', key: 'feat_reminders_enabled' },
         { id: '#toggle-feat-equivalences', key: 'feat_equivalences_enabled' },
         { id: '#toggle-feat-beermatch', key: 'feat_beermatch_enabled' },
+        { id: '#toggle-party-stats', key: 'beermatch_share_total' },
         { id: '#toggle-feat-wrapped', key: 'feat_wrapped_enabled' }
     ];
 
@@ -6108,311 +6132,190 @@ export function showAchievementDetails(title, desc, icon, isUnlocked, rarity) {
 
 // --- Beer Match (QR) ---
 
-export function renderMatchModal(allBeers) {
+export function renderMatchModal(allBeersMap) {
+    const allBeers = (allBeersMap instanceof window.Map) ? allBeersMap : new window.Map(allBeersMap.map(b=>[b.id, b])); // ensure Map
+
     const wrapper = document.createElement('div');
-    // Fix: Max-height logic for small screens, and better width
     wrapper.innerHTML = `
-        <div class="modal-content text-center" style="width: min(95%, 450px); max-height: 85vh; padding: 20px;">
+        <div class="modal-content" style="width: min(95%, 500px); max-height: 85vh; padding: 20px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h2 style="margin:0; font-family:'Russo One'; color:var(--accent-gold); font-size:1.5rem;">⚔️ Beer Match</h2>
+                <h2 style="margin:0; font-family:'Russo One'; color:var(--accent-gold); font-size:1.5rem;">🍻 Beer Party</h2>
                 <button type="button" class="close-btn" style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
             </div>
 
-            <div style="display:flex; border-bottom:1px solid #333; margin-bottom:20px;">
-                <button id="tab-qr" style="flex:1; background:none; border:none; color:var(--accent-gold); padding:10px; border-bottom:2px solid var(--accent-gold); cursor:pointer;">${i18n.t('match_tab_my_code')}</button>
-                <button id="tab-scan" style="flex:1; background:none; border:none; color:#666; padding:10px; cursor:pointer;">${i18n.t('match_tab_scan')}</button>
-            </div>
-
-            <div id="view-qr" style="display:block;">
-                <p style="color:#aaa; font-size:0.9rem; margin-bottom:15px;">${i18n.t('match_show_friend')}</p>
-                <div id="qrcode-container" style="background:#FFF; padding:15px; border-radius:10px; display:inline-block; margin-bottom:15px;"></div>
+            <div id="party-lobby">
+                <div style="display:flex; border-bottom:1px solid #333; margin-bottom:20px;">
+                    <button id="tab-join" style="flex:1; background:none; border:none; color:var(--accent-gold); padding:10px; border-bottom:2px solid var(--accent-gold); cursor:pointer;">Rejoindre</button>
+                    <button id="tab-host" style="flex:1; background:none; border:none; color:#666; padding:10px; cursor:pointer;">Créer</button>
+                </div>
                 
-                <!-- Text Fallback -->
-                <div style="text-align:left;">
-                    <p style="font-size:0.8rem; color:#888; margin-bottom:5px;">${i18n.t('match_text_fallback')}</p>
-                    <textarea id="my-qr-text" readonly style="width:100%; height:60px; background:#222; border:1px solid #444; color:#aaa; font-size:0.7rem; padding:5px; border-radius:4px; resize:none;"></textarea>
-                    <button id="btn-copy-code" class="form-input" style="padding:5px 10px; font-size:0.8rem; margin-top:5px; width:100%;">${i18n.t('match_btn_copy')}</button>
+                <div id="view-join" style="display:block;">
+                    <p style="color:#aaa; font-size:0.9rem; margin-bottom:15px;">Entrez le code de la salle pour rejoindre vos amis.</p>
+                    <input type="text" id="join-code" placeholder="CODE A 6 LETTRES" class="form-input" style="font-size:1.2rem; text-align:center; text-transform:uppercase; margin-bottom:10px;" maxlength="6">
+                    <button id="btn-join" class="btn-primary" style="width:100%; margin-top:10px;">Rejoindre la Party</button>
+                </div>
+                
+                <div id="view-host" style="display:none; text-align:center;">
+                    <p style="color:#aaa; font-size:0.9rem; margin-bottom:15px;">Créez une salle et partagez le code.</p>
+                    <button id="btn-host" class="btn-primary" style="background:var(--accent-gold); color:black; width:100%;">Héberger une Party</button>
                 </div>
             </div>
 
-            <div id="view-scan" style="display:none;">
-                <p style="color:#aaa; font-size:0.9rem; margin-bottom:15px;">${i18n.t('match_scan_desc')}</p>
-                <div id="reader" style="width:100%; height:250px; background:#000; border-radius:8px; overflow:hidden; position:relative;"></div>
-                <div id="scan-feedback" style="margin-top:10px; color:var(--accent-gold); font-size:0.8rem; height:20px;"></div>
+            <div id="party-room" style="display:none; text-align:center;">
+                <h3 style="color:var(--accent-gold); margin-bottom:5px;">Salle: <span id="room-code-display" style="font-family:monospace; background:#333; padding:2px 8px; border-radius:4px; font-size:1.2em; letter-spacing: 2px;"></span></h3>
+                <p id="room-status" style="font-size:0.8rem; color:#aaa; margin-bottom:15px;">Connecté en tant que <strong id="my-pseudo" style="color:white;"></strong></p>
                 
-                <details style="margin-top:15px; text-align:left;">
-                    <summary style="color:#555; cursor:pointer; font-size:0.8rem;">${i18n.t('match_camera_issue')}</summary>
-                    <textarea id="manual-paste" placeholder="${i18n.t('match_paste_placeholder')}" style="width:100%; height:60px; background:#222; border:1px solid #444; color:#FFF; margin-top:5px; font-size:0.7rem; padding:5px;"></textarea>
-                    <button id="btn-manual-compare" class="form-input" style="padding:5px 10px; font-size:0.8rem; margin-top:5px;">${i18n.t('match_btn_compare')}</button>
-                </details>
-            </div>
+                <div id="members-list" style="background:#222; border-radius:8px; padding:10px; text-align:left; margin-bottom:15px; max-height:200px; overflow-y:auto;">
+                    <!-- Members inserted here -->
+                </div>
+                
+                <div id="group-stats" style="display:none; text-align:left; border-top:1px solid #444; padding-top:15px;">
+                    <h4 style="color:var(--accent-gold); margin-bottom:10px;">📊 Statistiques du Groupe</h4>
+                    <div id="stats-content"></div>
+                </div>
 
-            <div id="view-result" style="display:none;"></div>
+                <button id="btn-leave" class="form-input" style="background:#440000; color:#ff6666; border:1px solid #ff6666; margin-top:20px; width:100%;">Quitter la Party</button>
+            </div>
         </div>
     `;
 
-    const tabQr = wrapper.querySelector('#tab-qr');
-    const tabScan = wrapper.querySelector('#tab-scan');
-    const viewQr = wrapper.querySelector('#view-qr');
-    const viewScan = wrapper.querySelector('#view-scan');
-    const viewResult = wrapper.querySelector('#view-result');
-    let html5QrcodeScanner = null;
-    let isScanning = false;
-
-    // Stop Scanner Safely
-    const stopScanner = async () => {
-        if (!html5QrcodeScanner) return;
-        try {
-            if (html5QrcodeScanner.isScanning) {
-                await html5QrcodeScanner.stop();
-            }
-            html5QrcodeScanner.clear();
-        } catch (e) {
-            console.warn("Scanner stop warning:", e);
-        }
-        html5QrcodeScanner = null;
-        isScanning = false;
-    };
-
+    const tabJoin = wrapper.querySelector('#tab-join');
+    const tabHost = wrapper.querySelector('#tab-host');
+    const viewJoin = wrapper.querySelector('#view-join');
+    const viewHost = wrapper.querySelector('#view-host');
+    const lobbyDiv = wrapper.querySelector('#party-lobby');
+    const roomDiv = wrapper.querySelector('#party-room');
+    
     const switchTab = (tab) => {
-        if (tab === 'qr') {
-            tabQr.style.color = 'var(--accent-gold)'; tabQr.style.borderBottom = '2px solid var(--accent-gold)';
-            tabScan.style.color = '#666'; tabScan.style.borderBottom = 'none';
-            viewQr.style.display = 'block';
-            viewScan.style.display = 'none';
-            viewResult.style.display = 'none';
-            stopScanner(); // Stop if switching to QR
+        if (tab === 'join') {
+            tabJoin.style.color = 'var(--accent-gold)'; tabJoin.style.borderBottom = '2px solid var(--accent-gold)';
+            tabHost.style.color = '#666'; tabHost.style.borderBottom = 'none';
+            viewJoin.style.display = 'block'; viewHost.style.display = 'none';
         } else {
-            tabScan.style.color = 'var(--accent-gold)'; tabScan.style.borderBottom = '2px solid var(--accent-gold)';
-            tabQr.style.color = '#666'; tabQr.style.borderBottom = 'none';
-            viewQr.style.display = 'none';
-            viewScan.style.display = 'block';
-            viewResult.style.display = 'none';
-            // Start scanner with slight delay for UI render
-            setTimeout(() => { if (!isScanning) startScanner(); }, 200);
+            tabHost.style.color = 'var(--accent-gold)'; tabHost.style.borderBottom = '2px solid var(--accent-gold)';
+            tabJoin.style.color = '#666'; tabJoin.style.borderBottom = 'none';
+            viewJoin.style.display = 'none'; viewHost.style.display = 'block';
         }
     };
+    tabJoin.onclick = () => switchTab('join');
+    tabHost.onclick = () => switchTab('host');
 
-    tabQr.onclick = () => switchTab('qr');
-    tabScan.onclick = () => switchTab('scan');
-
-    const generateMyQR = () => {
-        const userData = Storage.getAllUserData();
-        // Robust ID extraction: handle if userData is directly ratings or wrapper
-        const ratings = userData.ratings || userData;
-        const myIds = Object.keys(ratings).filter(k => ratings[k] && ratings[k].count > 0).map(k => k.split('_')[0]);
-
-        if (myIds.length === 0) {
-            wrapper.querySelector('#qrcode-container').innerHTML = `<p style='color:#ccc; padding:20px;'>${i18n.t('match_no_beers')}</p>`;
-            wrapper.querySelector('#my-qr-text').value = i18n.t('match_nothing_to_share');
-            return;
-        }
-
-        if (typeof LZString === 'undefined') {
-            console.error("LZString missing");
-            wrapper.querySelector('#qrcode-container').innerHTML = i18n.t('match_lib_missing');
-            return;
-        }
-
-        const qrString = Match.generateQRData(myIds, "Ami");
-
-        // set Text FIRST so it appears even if QR fails
-        const txtArea = wrapper.querySelector('#my-qr-text');
-        if (txtArea) txtArea.value = qrString;
-
-        // QR Code
-        const container = wrapper.querySelector('#qrcode-container');
-        container.innerHTML = '';
-
-        // Delay slightly to ensure modal is rendered and dimensions are known
-        setTimeout(() => {
-            if (window.QRCode) {
-                try {
-                    new QRCode(container, {
-                        text: qrString,
-                        width: 180,
-                        height: 180,
-                        colorDark: "#000000",
-                        colorLight: "#ffffff",
-                        correctLevel: QRCode.CorrectLevel.M
-                    });
-                } catch (e) {
-                    console.error("QR Gen Error", e);
-                    container.innerHTML = i18n.t('match_qr_error');
-                }
+    const updateRoomUI = (state) => {
+        const membersDiv = wrapper.querySelector('#members-list');
+        membersDiv.innerHTML = '';
+        
+        let members = Match.members;
+        if (state && state.members) {
+            // Reconstruct map from object if necessary, or just use values
+            if (state.members instanceof window.Map) {
+                members = state.members;
             } else {
-                container.innerHTML = "Lib QR manquante";
+                members = new window.Map(Object.entries(state.members));
             }
-        }, 150);
-
-        const btnCopy = wrapper.querySelector('#btn-copy-code');
-        if (btnCopy) btnCopy.onclick = () => {
-            if (window.navigator && window.navigator.clipboard) {
-                txtArea.select();
-                navigator.clipboard.writeText(qrString).then(() => {
-                    showToast(i18n.t('match_code_copied'));
-                }).catch(() => showToast(i18n.t('match_copy_error')));
+        }
+        
+        wrapper.querySelector('#my-pseudo').textContent = Match.myProfile ? Match.myProfile.pseudo : 'Anonyme';
+        
+        for (const [id, m] of members.entries()) {
+            membersDiv.innerHTML += `<div style="padding:8px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:bold;">${m.pseudo} ${m.isHost ? '👑' : ''} ${m.me ? '(Vous)' : ''}</span>
+                <span style="color:var(--accent-gold); font-size:0.8rem; background:rgba(255,215,0,0.1); padding:2px 6px; border-radius:10px;">${m.totalBeers || 0} bières</span>
+            </div>`;
+        }
+        
+        // Show analytics
+        const stats = Match.computeGroupAnalytics(allBeers);
+        if (stats && members.size > 1) {
+            wrapper.querySelector('#group-stats').style.display = 'block';
+            
+            let commonHtml = '';
+            if (stats.commonBeers.length > 0) {
+                commonHtml = `<div style="margin-top:15px;">
+                    <strong style="color:var(--accent-gold);">🍻 Bières en commun (${stats.commonBeers.length}) :</strong>
+                    <div style="font-size:0.85rem; color:#aaa; margin-top:5px; line-height:1.4;">${stats.commonBeers.map(b=>b.title).join(', ')}</div>
+                </div>`;
             } else {
-                txtArea.select();
-                document.execCommand('copy');
-                showToast(i18n.t('match_code_copied'));
+                commonHtml = `<div style="margin-top:15px; font-size:0.85rem; color:#888; font-style:italic;">Aucune bière goûtée par la totalité du groupe.</div>`;
             }
-        };
-    };
-
-    const startScanner = () => {
-        const feedback = wrapper.querySelector('#scan-feedback');
-        feedback.textContent = i18n.t('match_camera_init');
-
-        if (!window.Html5Qrcode) {
-            feedback.textContent = i18n.t('match_lib_missing');
-            return;
-        }
-
-        const html5QrCode = new Html5Qrcode("reader");
-        html5QrcodeScanner = html5QrCode;
-
-        const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-            feedback.textContent = i18n.t('match_code_detected');
-            stopScanner().then(() => {
-                processMatch(decodedText);
-            });
-        };
-
-        const config = { fps: 10, qrbox: { width: 200, height: 200 } };
-
-        html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback)
-            .then(() => {
-                isScanning = true;
-                feedback.textContent = i18n.t('match_scan_prompt');
-            })
-            .catch(err => {
-                console.error("Camera Error", err);
-                feedback.textContent = i18n.t('match_camera_error');
-                isScanning = false;
-            });
-    };
-
-    const processMatch = (qrString) => {
-        const friendData = Match.parseQRData(qrString);
-        if (!friendData) {
-            showAlertModal(i18n.t('match_invalid_code'), { icon: '❌' });
-            // Restart scanner if valid fail? No, easier to stay stopped.
-            return;
-        }
-
-        const userData = Storage.getAllUserData();
-        const ratings = userData.ratings || userData;
-        const myIdsList = Object.keys(ratings).filter(k => ratings[k] && ratings[k].count > 0).map(k => k.split('_')[0]);
-
-        const results = Match.compare(allBeers, myIdsList, friendData);
-        displayMatchResults(results);
-    };
-
-    const displayMatchResults = (results) => {
-        viewQr.style.display = 'none';
-        viewScan.style.display = 'none';
-        viewResult.style.display = 'block';
-
-        // Hide tabs
-        tabQr.style.display = 'none';
-        tabScan.style.display = 'none';
-
-        const getStrokeColor = (score) => {
-            if (score >= 80) return "var(--accent-gold)"; // Very High
-            if (score >= 50) return "var(--success)"; // High
-            if (score >= 20) return "var(--accent-amber, #FF9800)"; // Medium
-            return "var(--danger)"; // Low
-        };
-        const circleColor = getStrokeColor(results.score);
-
-        viewResult.innerHTML = `
-            <div style="text-align:center; margin-bottom:20px;">
-                <h3 style="color:var(--accent-gold); margin:0; font-family:'Russo One', sans-serif;">${i18n.t('match_with', { name: results.userName })}</h3>
-                
-                <div style="width:160px; height:160px; margin:20px auto; position:relative;">
-                    <svg viewBox="0 0 36 36" style="width:100%; height:100%; transform: rotate(-90deg);">
-                        <path class="circle-bg"
-                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                            fill="none" stroke="#222" stroke-width="3" />
-                        <path class="circle"
-                            stroke-dasharray="${results.score}, 100"
-                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                            fill="none" stroke="${circleColor}" stroke-width="3"
-                            style="transition: stroke-dasharray 1s ease-out;" />
-                    </svg>
-                    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); text-align:center;">
-                        <span style="font-size:2.5rem; font-family:'Russo One', sans-serif; color:${circleColor}; text-shadow:0 0 15px ${circleColor}66;">${results.score}%</span>
-                        <span style="display:block; font-size:0.75rem; color:#888; text-transform:uppercase; letter-spacing:1px; margin-top:-5px;">${i18n.t('match_compatibility')}</span>
+            
+            wrapper.querySelector('#stats-content').innerHTML = `
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
+                    <div style="text-align:center;">
+                        <div style="font-size:1.5rem; font-weight:bold; color:#fff;">${stats.totalGroupBeers}</div>
+                        <div style="font-size:0.7rem; color:#aaa; text-transform:uppercase;">Dégustées (Total)</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:1.5rem; font-weight:bold; color:var(--accent-gold);">${stats.uniqueGroupBeers}</div>
+                        <div style="font-size:0.7rem; color:#aaa; text-transform:uppercase;">Uniques (Groupe)</div>
                     </div>
                 </div>
-            </div>
-
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
-                <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:15px; border-radius:12px; text-align:center;">
-                    <div style="font-size:2rem; font-weight:bold; color:#FFF;">${results.commonCount}</div>
-                    <div style="font-size:0.8rem; color:#aaa; text-transform:uppercase;">${i18n.t('match_common_labels')}</div>
+                <div style="font-size:0.85rem; color:#ccc; display:flex; flex-direction:column; gap:8px;">
+                    <div style="background:rgba(0,0,0,0.2); padding:8px; border-radius:6px;">🏆 <b>Pilier de bar:</b> <span style="float:right; color:#fff;">${stats.podiums.pilier.name} (${stats.podiums.pilier.val})</span></div>
+                    <div style="background:rgba(0,0,0,0.2); padding:8px; border-radius:6px;">🧭 <b>Explorateur:</b> <span style="float:right; color:#fff;">${stats.podiums.explorateur.name} (${stats.podiums.explorateur.val})</span></div>
+                    <div style="background:rgba(0,0,0,0.2); padding:8px; border-radius:6px;">🏅 <b>Chasseur de succès:</b> <span style="float:right; color:#fff;">${stats.podiums.chasseur.name} (${stats.podiums.chasseur.val})</span></div>
                 </div>
-                 <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:15px; border-radius:12px; text-align:center;">
-                    <div style="font-size:2rem; font-weight:bold; color:var(--accent-gold);">${results.friendTotal}</div>
-                    <div style="font-size:0.8rem; color:#aaa; text-transform:uppercase;">${i18n.t('match_friend_total')}</div>
-                </div>
-            </div>
-
-            ${results.commonCount > 0 ? `
-            <div style="text-align:left; margin-bottom:20px;">
-                <strong style="color:var(--accent-gold); display:block; margin-bottom:10px; font-size:0.9rem; text-transform:uppercase; font-weight:bold;">${i18n.t('match_common_title')}</strong>
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    ${results.common.slice(0, 5).map(b => `
-                        <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.05); padding:10px; border-radius:8px; display:flex; align-items:center; gap:12px;">
-                            ${b.image ? `<img src="${b.image}" style="height:35px; width:20px; object-fit:contain;">` : '<span style="font-size:1.2rem">🍻</span>'}
-                            <span style="font-weight:bold; font-size:0.95rem; color:#fff;">${b.title}</span>
-                        </div>`).join('')}
-                    ${results.common.length > 5 ? `<div style="color:#666; font-style:italic; text-align:center; font-size:0.85rem; margin-top:5px;">${i18n.t('match_common_others', { count: results.common.length - 5 })}</div>` : ''}
-                </div>
-            </div>
-            ` : ''}
-
-            ${results.discovery.length > 0 ? `
-            <div style="text-align:left; margin-bottom:10px;">
-                <strong style="color:#2196F3; display:block; margin-bottom:10px; font-size:0.9rem; text-transform:uppercase; font-weight:bold;">${i18n.t('match_discoveries_title')}</strong>
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                     ${results.discovery.slice(0, 3).map(b => `
-                        <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.05); padding:10px; border-radius:8px; display:flex; align-items:center; gap:12px;">
-                            ${b.image ? `<img src="${b.image}" style="height:35px; width:20px; object-fit:contain; filter:grayscale(1) opacity(0.6);">` : '<span style="font-size:1.2rem; filter:grayscale(1) opacity(0.6);">⭐</span>'}
-                            <span style="font-weight:bold; color:#ccc; font-size:0.95rem;">${b.title}</span>
-                        </div>`).join('')}
-                </div>
-            </div>
-            ` : ''}
-            
-            <button id="btn-restart" class="form-input text-center mt-20" style="background:#333; margin-top:25px; padding:15px; border-radius:12px; font-weight:bold; cursor:pointer;">${i18n.t('match_btn_restart')}</button>
-        `;
-
-        wrapper.querySelector('#btn-restart').onclick = () => {
-            // Reset UI
-            tabQr.style.display = '';
-            tabQr.style.color = '#666'; tabQr.style.borderBottom = 'none';
-            tabScan.style.display = '';
-
-            // Switch to scan
-            switchTab('scan');
-        };
+                ${commonHtml}
+            `;
+        } else {
+             wrapper.querySelector('#group-stats').style.display = 'none';
+        }
     };
 
-    wrapper.querySelector('#btn-manual-compare').onclick = () => {
-        const txt = wrapper.querySelector('#manual-paste').value;
-        if (txt) processMatch(txt);
+    const enterRoom = (code) => {
+        lobbyDiv.style.display = 'none';
+        roomDiv.style.display = 'block';
+        wrapper.querySelector('#room-code-display').textContent = code;
     };
 
-    const close = () => {
-        stopScanner();
+    wrapper.querySelector('#btn-host').onclick = async () => {
+        wrapper.querySelector('#btn-host').textContent = 'Création en cours...';
+        try {
+            const code = await Match.createParty(allBeers, (state) => {
+                if (state.type === 'update') updateRoomUI(state);
+            });
+            enterRoom(code);
+            updateRoomUI();
+        } catch (e) {
+            showAlertModal('Erreur de connexion P2P: ' + e.message, { icon: '❌' });
+            wrapper.querySelector('#btn-host').textContent = 'Héberger une Party';
+        }
+    };
+
+    wrapper.querySelector('#btn-join').onclick = async () => {
+        const code = wrapper.querySelector('#join-code').value.trim();
+        if (code.length !== 6) return showAlertModal('Le code doit comporter 6 caractères.', { icon: '⚠️' });
+        
+        wrapper.querySelector('#btn-join').textContent = 'Connexion...';
+        try {
+            await Match.joinParty(code, allBeers, (state) => {
+                if (state.type === 'update') updateRoomUI(state);
+                if (state.type === 'host_disconnected') {
+                    showAlertModal("L'hôte a quitté la partie.", { icon: '🚪' });
+                    closeRoom();
+                }
+            });
+            enterRoom(code);
+            updateRoomUI();
+        } catch (e) {
+            showAlertModal('Salle introuvable ou erreur de connexion.', { icon: '❌' });
+            wrapper.querySelector('#btn-join').textContent = 'Rejoindre la Party';
+        }
+    };
+
+    const closeRoom = () => {
+        Match.leaveParty();
+        lobbyDiv.style.display = 'block';
+        roomDiv.style.display = 'none';
+        wrapper.querySelector('#btn-host').textContent = 'Héberger une Party';
+        wrapper.querySelector('#btn-join').textContent = 'Rejoindre la Party';
+    };
+
+    wrapper.querySelector('#btn-leave').onclick = closeRoom;
+
+    wrapper.querySelector('.close-btn').onclick = () => {
+        Match.leaveParty();
         closeModal();
     };
-    wrapper.querySelector('.close-btn').onclick = close;
-
-    // INITIAL CALL
-    generateMyQR();
 
     openModal(wrapper);
 }

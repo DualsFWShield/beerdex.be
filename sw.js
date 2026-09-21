@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Beerdex-v105'; // Remove Open Food Facts API
+const CACHE_NAME = 'Beerdex-v106'; // Add P2P
 const ASSETS = [
     './index.html',
     './style.css',
@@ -30,6 +30,8 @@ const ASSETS = [
     './js/vendor/lz-string.min.js',
     './js/vendor/qrcode.min.js',
     './js/vendor/html5-qrcode.min.js',
+    './js/vendor/peerjs.min.js',
+    './js/vendor/p2p.js',
     './js/vendor/confetti.browser.min.js',
     './js/vendor/vanilla-tilt.min.js',
     './js/vendor/haptics-shim.js',

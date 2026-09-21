@@ -3650,12 +3650,12 @@
         "rarity_rank":  "Ultra Légendaire"
     },
     {
-        "title":  "BLOUP BLOUP MARK I",
+        "title":  "Blop v0",
         "brewery":  "Noah \u0026 Dorian",
         "type":  "Triple",
         "volume":  "0.33 L",
         "alcohol":  "11.0°",
-        "id":  "BLOUP_BLOUP_MARK_I",
+        "id":  "BLOP_V0",
         "image":  "images/mistery.png",
         "production_volume":  "Micro-brasserie",
         "distribution":  "Introuvable (Proches uniquement)",
@@ -3665,18 +3665,33 @@
         "rarity_rank":  "Fondateur"
     },
     {
-        "title":  "BLOUP BLOUP MARK II",
-        "brewery":  "Noah \u0026 Dorian",
+        "title":  "Blop v1",
+        "brewery":  "Noah & Dorian",
         "type":  "Triple",
         "volume":  "0.33 L",
         "alcohol":  "8.0°",
-        "id":  "BLOUP_BLOUP_MARK_II",
+        "id":  "BLOP_V1",
         "image":  "images/mistery.png",
         "production_volume":  "Micro-brasserie",
         "distribution":  "Introuvable (Proches uniquement)",
         "barrel_aged":  false,
         "community_rating":  4.5,
         "ingredients":  "Houblons Target et Goldings, malts Pils et Abbaye. Légèrement trop amère mais très bonne.",
+        "rarity_rank":  "Fondateur"
+    },
+    {
+        "title":  "Blop",
+        "brewery":  "Noah & Dorian",
+        "type":  "Triple",
+        "volume":  "0.33 L",
+        "alcohol":  "8.5°",
+        "id":  "BLOP_DEFINITIVE",
+        "image":  "images/mistery.png",
+        "production_volume":  "Micro-brasserie",
+        "distribution":  "Introuvable (Proches uniquement)",
+        "barrel_aged":  false,
+        "community_rating":  5.0,
+        "ingredients":  "La recette définitive et équilibrée. Brassée avec passion par les créateurs de Beerdex.",
         "rarity_rank":  "Fondateur"
     },
     {
@@ -4067,6 +4082,21 @@
         "barrel_aged":  false,
         "community_rating":  3.2,
         "ingredients":  "Eau, malt d\u0027orge, maïs, houblon",
+        "rarity_rank":  "Commun"
+    },
+    {
+        "title":  "Gordon Revolución",
+        "brewery":  "Gordon Finest Beers",
+        "type":  "Blonde Aromatisée",
+        "volume":  "0.50 L",
+        "alcohol":  "5.9°",
+        "id":  "BE_GORDON_REVOLUCION_050",
+        "image":  "images/beer/be/gordon-revolucion.jpg",
+        "production_volume":  "Industrielle",
+        "distribution":  "Partout",
+        "barrel_aged":  false,
+        "community_rating":  3.5,
+        "ingredients":  "Eau, malt d'orge, sirop de glucose, houblon, acide citrique, acide lactique, arômes (Citron Vert)",
         "rarity_rank":  "Commun"
     }
 ]

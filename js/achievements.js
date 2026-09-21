@@ -176,6 +176,7 @@ const ACHIEVEMENTS = [
     ...[
         { id: 'founder_mark_1', titleKey: 'ach_founder_1_title', descKey: 'ach_founder_1_desc', icon: '🛡️', condition: (s) => s.hasBloupI, rarity: 'fondateur', hidden: true },
         { id: 'founder_mark_2', titleKey: 'ach_founder_2_title', descKey: 'ach_founder_2_desc', icon: '⚜️', condition: (s) => s.hasBloupII, rarity: 'fondateur', hidden: true },
+        { id: 'founder_mark_3', titleKey: 'ach_founder_3_title', descKey: 'ach_founder_3_desc', icon: '👑', condition: (s) => s.hasBloupDefinitive, rarity: 'fondateur', hidden: true },
     ].map(a => ({ ...a, categoryKey: 'ach_cat_founder' })),
 ];
 
@@ -243,6 +244,7 @@ export function checkAchievements(allBeers) {
         hasRickRoll: false,
         hasBloupI: false,
         hasBloupII: false,
+        hasBloupDefinitive: false,
         
         // UX & Preferences
         prefs: {
@@ -287,12 +289,16 @@ export function checkAchievements(allBeers) {
             stats.hasRickRoll = true;
         }
 
-        if (isConsumed && id === 'BLOUP_BLOUP_MARK_I') {
+        if (isConsumed && (id === 'BLOUP_BLOUP_MARK_I' || id === 'BLOP_V0')) {
             stats.hasBloupI = true;
         }
 
-        if (isConsumed && id === 'BLOUP_BLOUP_MARK_II') {
+        if (isConsumed && (id === 'BLOUP_BLOUP_MARK_II' || id === 'BLOP_V1')) {
             stats.hasBloupII = true;
+        }
+
+        if (isConsumed && (id === 'BLOP_DEFINITIVE' || id === 'BLOP')) {
+            stats.hasBloupDefinitive = true;
         }
 
         if (isConsumed && id.startsWith('CUSTOM_')) {

@@ -391,11 +391,11 @@
         generateExplanation: async function (beer, match, tone = 'brewbrother', lang = 'fr', isAlreadyTasted = false) {
             // Easter eggs interception
             if (beer && beer.id) {
-                if (beer.id === 'BLOUP_BLOUP_MARK_I') {
+                if (beer.id === 'BLOUP_BLOUP_MARK_I' || beer.id === 'BLOP_V0') {
                     return lang === 'fr' ? "Je vous déconseille fortement cette bière, c'est un prototype complètement raté, beaucoup trop amer et avec une texture de bouillasse..." : "I strongly advise against this beer. It's a completely failed prototype, way too bitter and muddy.";
                 }
-                if (beer.id === 'BLOUP_BLOUP_MARK_II') {
-                    return lang === 'fr' ? "Ah, la Mark II ! Celle-ci est bien meilleure, le début d'une réussite. Elle mérite vraiment d'être goûtée !" : "Ah, the Mark II! Much better, the start of a success story. Definitely worth tasting!";
+                if (beer.id === 'BLOUP_BLOUP_MARK_II' || beer.id === 'BLOP_V1') {
+                    return lang === 'fr' ? "Ah, la v1 ! Celle-ci est bien meilleure, le début d'une réussite. Elle mérite vraiment d'être goûtée !" : "Ah, the v1! Much better, the start of a success story. Definitely worth tasting!";
                 }
                 if (beer.id === 'NEVER_GONNA_GIVE_YOU_ALE_AMBREE_0.50') {
                     if (tone === 'vulgaire' || tone === 'vulgar') {
