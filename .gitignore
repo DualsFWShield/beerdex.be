@@ -5,6 +5,11 @@ release/
 scratch/
 .vscode
 
+# OneDrive conflict files
+*-DFWFixe*
+*-DFWFixe.*
+*-*Fixe*
+
 # Project documentation & internal dev files
 AI_DB_GUIDE.md
 AI_FORUM.md

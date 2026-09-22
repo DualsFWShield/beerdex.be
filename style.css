@@ -1272,20 +1272,23 @@ body.is-offline .offline-badge {
     display: inline-flex;
     align-items: center;
     background: rgba(255, 192, 0, 0.12);
+    background: color-mix(in srgb, var(--accent-gold) 14%, transparent);
     border: 1px solid rgba(255, 192, 0, 0.35);
+    border: 1px solid color-mix(in srgb, var(--accent-gold) 35%, transparent);
     border-radius: 20px;
     padding: 3px 6px 3px 8px;
     margin-left: 6px;
     gap: 6px;
     backdrop-filter: blur(8px);
     box-shadow: 0 0 12px rgba(255, 192, 0, 0.2);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--accent-gold) 20%, transparent);
     transition: all 0.2s ease;
     flex-shrink: 0;
 }
 
 .header-party-widget:hover {
     border-color: var(--accent-gold);
-    box-shadow: 0 0 16px rgba(255, 192, 0, 0.35);
+    box-shadow: 0 0 16px color-mix(in srgb, var(--accent-gold) 40%, rgba(255, 192, 0, 0.35));
 }
 
 .header-party-pill {
@@ -2331,7 +2334,7 @@ body.modal-open {
 }
 
 .modal-dialog p {
-    color: #ddd;
+    color: var(--text-secondary);
     font-size: 0.95rem;
     line-height: 1.5;
     margin: 0 0 20px 0;

@@ -129,14 +129,14 @@ export class AromaWheel {
         this.container.innerHTML = `
             <div style="text-align: center; width: 100%; display: flex; flex-direction: column; align-items: center;">
                 <svg width="100%" viewBox="0 0 ${size} ${size}" style="max-width: ${size}px; height: auto; display: block;">
-                    <circle cx="${center}" cy="${center}" r="${innerRadius}" fill="#1a1a1a" />
-                    <text x="${center}" y="${center}" font-size="12" fill="#fff" text-anchor="middle" dominant-baseline="middle" font-weight="bold" letter-spacing="1">ARÔMES</text>
+                    <circle cx="${center}" cy="${center}" r="${innerRadius}" fill="var(--bg-card, #1a1a1a)" stroke="var(--border-color, #2d2d2d)" stroke-width="1.5" />
+                    <text x="${center}" y="${center}" font-size="12" fill="var(--text-primary, #fff)" text-anchor="middle" dominant-baseline="middle" font-weight="bold" letter-spacing="1">ARÔMES</text>
                     ${svgItems}
                 </svg>
-                <div style="margin-top: 15px; font-size: 0.9rem; color: #aaa; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px;">
+                <div style="margin-top: 15px; font-size: 0.9rem; color: var(--text-secondary, #aaa); background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px; border: 1px solid var(--border-color, rgba(255,255,255,0.08));">
                     Sélectionnés : <span id="aroma-count" style="color:var(--accent-gold); font-weight:bold;">${this.selectedAromas.size}</span>
                 </div>
-                <div style="margin-top: 8px; font-size: 0.75rem; color: #777;">
+                <div style="margin-top: 8px; font-size: 0.75rem; color: var(--text-secondary, #777);">
                     💡 Cliquez sur un arôme précis ou sur la catégorie entière.
                 </div>
             </div>

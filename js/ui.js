@@ -3767,12 +3767,12 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                         <div id="theme-presets-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:8px; margin-top:8px;">
                             ${Object.entries(Theme.THEME_PRESETS).map(([key, preset]) => {
                                 const isActive = Theme.getActivePreset() === key;
-                                return `<button class="theme-preset-btn form-input" data-preset="${key}" style="font-size:0.85rem; padding:10px 14px; display:flex; align-items:center; gap:8px; justify-content:flex-start; ${isActive ? 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 8px rgba(255,192,0,0.3);' : ''}">
+                                return `<button class="theme-preset-btn form-input" data-preset="${key}" style="font-size:0.85rem; padding:10px 14px; display:flex; align-items:center; gap:8px; justify-content:flex-start; ${isActive ? 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 8px color-mix(in srgb, var(--accent-gold) 40%, transparent);' : ''}">
                                     <div style="font-size:1.2rem;">${preset.emoji}</div>
                                     <span>${preset.name}</span>
                                 </button>`;
                             }).join('')}
-                            <button class="theme-preset-btn form-input" data-preset="custom" style="font-size:0.85rem; padding:10px 14px; display:flex; align-items:center; gap:8px; justify-content:flex-start; ${Theme.getActivePreset() === 'custom' ? 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 8px rgba(255,192,0,0.3);' : ''}">
+                            <button class="theme-preset-btn form-input" data-preset="custom" style="font-size:0.85rem; padding:10px 14px; display:flex; align-items:center; gap:8px; justify-content:flex-start; ${Theme.getActivePreset() === 'custom' ? 'border:1px solid var(--accent-gold); color:var(--accent-gold); box-shadow:0 0 8px color-mix(in srgb, var(--accent-gold) 40%, transparent);' : ''}">
                                 <div style="font-size:1.2rem;">✏️</div>
                                 <span>Custom</span>
                             </button>
@@ -4410,7 +4410,7 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                 </div>
                 
                 <div style="margin-top:30px; font-size:0.7rem; color:#444; border-top:1px solid #222; padding-top:15px; width:50%; margin-left:auto; margin-right:auto;">
-                    Beerdex v4.1 &copy; 2026
+                    Beerdex v5.0 &copy; 2026
                     <!-- Légal -->
                     <div style="border-top:1px dashed #333; padding-top:20px; margin-top:20px;">
                         <h4 style="color:#888; margin-bottom:12px; font-size:0.85rem; text-transform:uppercase; letter-spacing:1px;" data-i18n="settings_legal_section">${i18n.t('settings_legal_section')}</h4>
@@ -6243,7 +6243,7 @@ export function renderMatchModal(allBeersMap) {
                         <label style="display:block; margin-bottom:10px; color:#ddd; font-size:0.9rem; font-weight:600;">Code de la salle</label>
                         <input type="text" id="join-code" placeholder="CODE A 6 LETTRES" class="form-input" style="font-size:1.2rem; text-align:center; text-transform:uppercase; margin-bottom:15px; background:rgba(0,0,0,0.3); border:1px solid #444; letter-spacing:3px; font-family:monospace;" maxlength="6">
                         <div style="display:flex; gap:10px;">
-                            <button id="btn-join" class="btn-primary" style="flex:2; background: linear-gradient(135deg, var(--accent-gold), #d4af37); color:#000; font-weight:800; border:none; box-shadow: 0 4px 15px rgba(255,215,0,0.3);">Rejoindre</button>
+                            <button id="btn-join" class="btn-primary" style="flex:2; background: linear-gradient(135deg, var(--accent-gold), var(--accent-amber)); color:#000; font-weight:800; border:none; box-shadow: 0 4px 15px color-mix(in srgb, var(--accent-gold) 35%, transparent);">Rejoindre</button>
                             <button id="btn-scan" class="btn-primary" style="flex:1; background: #333; color:white; font-weight:bold; border:1px solid #555; display:flex; justify-content:center; align-items:center; gap:5px;">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-qr-code" viewBox="0 0 16 16">
                                   <path d="M2 2h2v2H2z"/>
@@ -6265,14 +6265,14 @@ export function renderMatchModal(allBeersMap) {
                 <div id="view-host" style="display:none; text-align:center;">
                     <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
                         <p style="color:#ccc; font-size:0.9rem; margin-bottom:20px;">Créez une salle et partagez le code à vos amis.</p>
-                        <button id="btn-host" class="btn-primary" style="background: linear-gradient(135deg, var(--accent-gold), #d4af37); color:black; width:100%; font-weight:800; border:none; box-shadow: 0 4px 15px rgba(255,215,0,0.3); padding: 12px;">Héberger une Party</button>
+                        <button id="btn-host" class="btn-primary" style="background: linear-gradient(135deg, var(--accent-gold), var(--accent-amber)); color:black; width:100%; font-weight:800; border:none; box-shadow: 0 4px 15px color-mix(in srgb, var(--accent-gold) 35%, transparent); padding: 12px;">Héberger une Party</button>
                     </div>
                 </div>
             </div>
 
             <div id="party-room" style="display:none; text-align:center;">
-                <div style="background: rgba(255, 215, 0, 0.05); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 16px; padding: 20px; margin-bottom: 25px; text-align:center; box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 10px 20px rgba(0,0,0,0.2); position:relative;">
-                    <button id="btn-show-qr" style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--accent-gold); filter:drop-shadow(0 0 5px rgba(255,215,0,0.5)); display:flex; justify-content:center; align-items:center; width:30px; height:30px;" title="Afficher QR">
+                <div style="background: color-mix(in srgb, var(--accent-gold) 6%, transparent); border: 1px solid color-mix(in srgb, var(--accent-gold) 25%, transparent); border-radius: 16px; padding: 20px; margin-bottom: 25px; text-align:center; box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 10px 20px rgba(0,0,0,0.2); position:relative;">
+                    <button id="btn-show-qr" style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--accent-gold); filter:drop-shadow(0 0 5px color-mix(in srgb, var(--accent-gold) 50%, transparent)); display:flex; justify-content:center; align-items:center; width:30px; height:30px;" title="Afficher QR">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-qr-code" viewBox="0 0 16 16">
                           <path d="M2 2h2v2H2z"/>
                           <path d="M6 0v6H0V0zM5 1H1v4h4zM4 12H2v2h2z"/>
@@ -6284,7 +6284,7 @@ export function renderMatchModal(allBeersMap) {
                     <p style="margin: 0; color: rgba(255,255,255,0.5); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; font-weight:bold;">Code de la Salle (cliquer pour copier)</p>
                     
                     <div id="room-qr-container" style="display:none; background:#fff; padding:10px; border-radius:12px; margin: 15px auto; width: fit-content; box-shadow: 0 4px 15px rgba(0,0,0,0.5);"></div>
-                    <h3 id="room-code-display" style="margin: 5px 0 15px; font-family: 'Courier New', monospace; font-size: 2.8rem; color: var(--accent-gold); letter-spacing: 8px; text-shadow: 0 0 20px rgba(255, 215, 0, 0.5); font-weight: 900; cursor:pointer; user-select:all;" title="Cliquer pour copier le code"></h3>
+                    <h3 id="room-code-display" style="margin: 5px 0 15px; font-family: 'Courier New', monospace; font-size: 2.8rem; color: var(--accent-gold); letter-spacing: 8px; text-shadow: 0 0 20px color-mix(in srgb, var(--accent-gold) 50%, transparent); font-weight: 900; cursor:pointer; user-select:all;" title="Cliquer pour copier le code"></h3>
                     
                     <div style="display:inline-block; background: rgba(0,0,0,0.4); padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);">
                         <span style="font-size:0.8rem; color:#aaa;">Connecté en tant que</span> <strong id="my-pseudo" style="color:#fff; font-size:0.85rem; margin-left:4px;"></strong>
@@ -6302,7 +6302,7 @@ export function renderMatchModal(allBeersMap) {
                     <div id="stats-content"></div>
                 </div>
 
-                <button id="btn-party-share-custom" class="form-input" style="background: linear-gradient(135deg, var(--accent-gold), #d4af37); color:#000; border:none; margin-top:10px; width:100%; padding:12px; border-radius:25px; font-weight:bold; cursor:pointer;">📦 Partager vos bières perso</button>
+                <button id="btn-party-share-custom" class="form-input" style="background: linear-gradient(135deg, var(--accent-gold), var(--accent-amber)); color:#000; border:none; margin-top:10px; width:100%; padding:12px; border-radius:25px; font-weight:bold; cursor:pointer;">📦 Partager vos bières perso</button>
 
                 <button id="btn-leave" class="form-input" style="background:rgba(68, 0, 0, 0.5); color:#ff6666; border:1px solid rgba(255, 102, 102, 0.3); margin-top:15px; width:100%; padding:12px; border-radius:25px; font-weight:bold; cursor:pointer; transition: background 0.3s;" onmouseover="this.style.background='rgba(68,0,0,0.8)'" onmouseout="this.style.background='rgba(68,0,0,0.5)'">Quitter la Party</button>
             </div>

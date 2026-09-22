@@ -646,6 +646,7 @@
     "patchnote_5.0.0_item_3": "📦 Bulk Sharing: Select and share multiple custom beers simultaneously into the Beer Party or via QR Code.",
     "patchnote_5.0.0_item_4": "✨ Harmonized Design System: Complete visual overhaul of sharing and reception modals, perfectly tailored to Beerdex DA (Russo One, gold, dark glass).",
     "patchnote_5.0.0_item_5": "🐛 Fixes & Stability: Fixed custom beer import issue (saveCustomBeer) and unified single-party room management.",
+    "patchnote_5.0.0_item_6": "🎡 Aroma Wheel: It is now possible to deselect one or more specific aromas or an entire category with a single click.",
     "patchnote_5.0.0_title": "v5.0 — P2P Beer Party & Direct Sharing",
     "patchnote_versions": "5.0.0,4.2.0,4.1.0,4.0.0,3.1.0,3.0.0,2.9.0,2.8.0,2.7.0,2.6.0,2.5.0,2.1.0",
 

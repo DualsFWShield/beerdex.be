@@ -646,6 +646,7 @@
     "patchnote_5.0.0_item_3": "📦 Partage Multiple : Sélectionnez et partagez plusieurs bières personnalisées simultanément dans la Party ou via QR Code.",
     "patchnote_5.0.0_item_4": "✨ Design System Harmonisé : Refonte esthétique complète des modales de partage et réception, parfaitement intégrées à la charte Beerdex (Russo One, or, dark glass).",
     "patchnote_5.0.0_item_5": "🐛 Correctifs : Correction du bug d'importation des bières personnalisées (saveCustomBeer) et fiabilisation de la gestion de salle unique.",
+    "patchnote_5.0.0_item_6": "🎡 Roue des arômes : Possibilité de désélectionner un ou des arômes spécifiques ou la catégorie en entier.",
     "patchnote_5.0.0_title": "v5.0 — Beer Party P2P & Partage Direct",
     "patchnote_versions": "5.0.0,4.2.0,4.1.0,4.0.0,3.1.0,3.0.0,2.9.0,2.8.0,2.7.0,2.6.0,2.5.0,2.1.0",
     "migration_error": "Erreur lors du transfert.",
