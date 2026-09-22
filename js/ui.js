@@ -7369,28 +7369,28 @@ export function openUniversalScanner() {
             <span>📷</span> Scanner Universel
         </h2>
         <p style="color:#aaa; font-size:0.82rem; margin-bottom:14px; line-height:1.4;">
-            Scannez un QR code (Beer Party, DraftSync, Bière perso) ou tapez un code de salon ci-dessous.
+            ${i18n.t('uni_scanner_desc')}
         </p>
         <div id="universal-reader" style="width: 100%; max-width: 280px; margin: 0 auto 15px auto; border-radius: 12px; overflow: hidden; background: #000; border: 2px solid rgba(255, 215, 0, 0.3); aspect-ratio: 1/1;"></div>
 
         <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px 14px; margin-bottom: 15px; text-align: left;">
             <div style="font-size:0.8rem; color:#ddd; font-weight:700; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;">
-                <span>⌨️ Entrer un code de salon (6 lettres)</span>
+                <span>⌨️ ${i18n.t('uni_scanner_code_prompt')}</span>
             </div>
             <div style="margin-bottom:10px;">
                 <input type="text" id="universal-manual-code" placeholder="EX: A1B2C3" maxlength="15" style="width:100%; box-sizing:border-box; text-align:center; font-family:monospace; font-size:1.2rem; font-weight:bold; letter-spacing:3px; text-transform:uppercase; background:rgba(0,0,0,0.6); border:1px solid rgba(255,215,0,0.4); border-radius:10px; color:#fff; padding:10px;">
             </div>
             <div style="display:flex; gap:8px;">
                 <button type="button" id="btn-uni-join-party" class="btn-primary" style="flex:1; padding:10px 8px; font-size:0.82rem; background:linear-gradient(135deg, var(--accent-gold), var(--accent-amber)); color:#000; font-weight:bold; border:none; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 3px 10px rgba(255,215,0,0.2);">
-                    🍻 Beer Party
+                    🍻 ${i18n.t('uni_btn_beerparty')}
                 </button>
                 <button type="button" id="btn-uni-join-draftsync" class="btn-primary" style="flex:1; padding:10px 8px; font-size:0.82rem; background:linear-gradient(135deg, #3b82f6, #1d4ed8); color:#fff; font-weight:bold; border:none; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 3px 10px rgba(59,130,246,0.3);">
-                    📡 DraftSync
+                    📡 ${i18n.t('uni_btn_draftsync')}
                 </button>
             </div>
         </div>
 
-        <button id="btn-close-scanner" class="btn-cancel" style="width:100%; padding:10px; border-radius:20px; font-weight:bold; cursor:pointer;">Annuler</button>
+        <button id="btn-close-scanner" class="btn-cancel" style="width:100%; padding:10px; border-radius:20px; font-weight:bold; cursor:pointer;">${i18n.t('ota_btn_close')}</button>
     `;
 
     openModal(wrapper);
@@ -7426,7 +7426,7 @@ export function openUniversalScanner() {
     const handleJoinParty = (codeToUse) => {
         const cleanCode = extractCleanCode(codeToUse);
         if (!cleanCode || cleanCode.length !== 6) {
-            showToast("Veuillez saisir un code valide à 6 caractères.", "error");
+            showToast(i18n.t('ota_code_length_error'), "error");
             return;
         }
         stopScanner();
@@ -7436,7 +7436,7 @@ export function openUniversalScanner() {
     const handleJoinDraftSync = (codeToUse) => {
         const cleanCode = extractCleanCode(codeToUse);
         if (!cleanCode || cleanCode.length !== 6) {
-            showToast("Veuillez saisir un code valide à 6 caractères.", "error");
+            showToast(i18n.t('ota_code_length_error'), "error");
             return;
         }
         stopScanner();
@@ -7458,19 +7458,19 @@ export function openUniversalScanner() {
         choiceWrapper.style.textAlign = 'center';
         choiceWrapper.innerHTML = `
             <div class="dialog-icon">⚡</div>
-            <h3 style="color:var(--accent-gold); font-family:'Russo One'; margin-bottom:8px;">Salon détecté : ${detectedCode}</h3>
+            <h3 style="color:var(--accent-gold); font-family:'Russo One'; margin-bottom:8px;">${i18n.t('uni_room_detected', { code: detectedCode })}</h3>
             <p style="color:#ccc; font-size:0.85rem; margin-bottom:18px;">
-                Ce code peut correspondre à une Beer Party ou à une session DraftSync. Quel salon souhaitez-vous rejoindre ?
+                ${i18n.t('uni_room_choice_desc')}
             </p>
             <div style="display:flex; flex-direction:column; gap:10px;">
                 <button id="choice-btn-party" class="btn-confirm" style="padding:12px; font-weight:bold; background:linear-gradient(135deg, var(--accent-gold), var(--accent-amber)); color:#000; border:none; border-radius:12px; cursor:pointer;">
-                    🍻 Rejoindre la Beer Party
+                    ${i18n.t('uni_btn_join_beerparty')}
                 </button>
                 <button id="choice-btn-draftsync" class="btn-confirm" style="padding:12px; font-weight:bold; background:linear-gradient(135deg, #3b82f6, #1d4ed8); color:#fff; border:none; border-radius:12px; cursor:pointer;">
-                    📡 Rejoindre DraftSync (P2P)
+                    ${i18n.t('uni_btn_join_draftsync')}
                 </button>
                 <button id="choice-btn-cancel" class="btn-cancel" style="padding:10px; border-radius:12px; margin-top:5px; cursor:pointer;">
-                    Annuler
+                    ${i18n.t('ota_btn_close')}
                 </button>
             </div>
         `;

@@ -16,6 +16,7 @@ class P2PEngine {
         // Multi-peer maps
         this.connections = new Map(); // peerId -> DataConnection
         this.incomingFiles = new Map(); // peerId -> incomingFile state
+        this.incomingChunkMessages = new Map(); // transferId -> incoming chunked JSON message
 
         // Active connection event listeners
         this.eventListeners = {
@@ -280,7 +281,51 @@ class P2PEngine {
      */
     _handleIncomingData(data, peerId) {
         try {
-            if (data.type === 'meta') {
+            if (data && data.type === '__p2p_bye__') {
+                console.log(`[P2P] Received graceful bye from ${peerId}`);
+                if (this.connections.has(peerId)) {
+                    try { this.connections.get(peerId).close(); } catch(e){}
+                    this.connections.delete(peerId);
+                }
+                this.incomingFiles.delete(peerId);
+                this._emit('disconnected', peerId);
+                return;
+            } else if (data.type === '__p2p_chunk_start__') {
+                console.log(`[P2P] Receiving chunked payload (${data.totalSize} chars, ${data.totalChunks} chunks) from ${peerId}`);
+                this.incomingChunkMessages.set(data.transferId, {
+                    totalChunks: data.totalChunks,
+                    totalSize: data.totalSize,
+                    chunks: new Array(data.totalChunks),
+                    receivedCount: 0
+                });
+                return;
+            } else if (data.type === '__p2p_chunk_data__') {
+                const stream = this.incomingChunkMessages.get(data.transferId);
+                if (stream) {
+                    stream.chunks[data.index] = data.chunk;
+                    stream.receivedCount++;
+                }
+                return;
+            } else if (data.type === '__p2p_chunk_end__') {
+                const stream = this.incomingChunkMessages.get(data.transferId);
+                if (stream) {
+                    this.incomingChunkMessages.delete(data.transferId);
+                    if (stream.receivedCount !== stream.totalChunks) {
+                        console.error(`[P2P] Incomplete chunked payload from ${peerId}: received ${stream.receivedCount}/${stream.totalChunks}`);
+                        this._emit('error', new Error(`Incomplete chunked payload: ${stream.receivedCount}/${stream.totalChunks}`), peerId);
+                        return;
+                    }
+                    try {
+                        const fullStr = stream.chunks.join('');
+                        const fullData = JSON.parse(fullStr);
+                        console.log(`[P2P] Reassembled chunked payload (${fullStr.length} chars) from ${peerId}`);
+                        this._emit('message', peerId, fullData);
+                    } catch(parseErr) {
+                        console.error('[P2P] Failed to parse reassembled chunked payload:', parseErr);
+                    }
+                }
+                return;
+            } else if (data.type === 'meta') {
                 console.log(`[P2P] Incoming file metadata from ${peerId}:`, data.filename, data.size);
                 this.incomingFiles.set(peerId, {
                     meta: data,
@@ -350,11 +395,81 @@ class P2PEngine {
     }
 
     /**
+     * Internal: Stream large JSON message in safe 8KB chunks with backpressure.
+     * @private
+     */
+    async _sendLargeMessage(jsonStr, targets) {
+        // Safe 8KB chunk size strictly under PeerJS JSON channel limit (16300 bytes)
+        const CHUNK_SIZE = 8 * 1024;
+        const transferId = 'msg_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
+        const totalSize = jsonStr.length;
+        const totalChunks = Math.ceil(totalSize / CHUNK_SIZE);
+
+        console.log(`[P2P] Chunking large message (${totalSize} chars, ${totalChunks} chunks) to ${targets.length} peer(s)...`);
+
+        const startHeader = {
+            type: '__p2p_chunk_start__',
+            transferId,
+            totalChunks,
+            totalSize
+        };
+        for (const conn of targets) {
+            try { conn.send(startHeader); } catch(e){ console.error(e); }
+        }
+
+        for (let index = 0; index < totalChunks; index++) {
+            const start = index * CHUNK_SIZE;
+            const end = Math.min(start + CHUNK_SIZE, totalSize);
+            const chunk = jsonStr.substring(start, end);
+            const chunkPacket = {
+                type: '__p2p_chunk_data__',
+                transferId,
+                index,
+                chunk
+            };
+
+            for (const conn of targets) {
+                try { conn.send(chunkPacket); } catch(e){ console.error(e); }
+            }
+
+            // Yield and check bufferedAmount every 8 chunks (~64KB)
+            if (index > 0 && index % 8 === 0) {
+                await Promise.all(targets.map(async (conn) => {
+                    const dc = conn.dataChannel;
+                    if (dc && dc.bufferedAmount > 64 * 1024) {
+                        return new Promise(resolve => {
+                            const check = () => {
+                                if (!dc || dc.readyState !== 'open' || dc.bufferedAmount < 16 * 1024) {
+                                    resolve();
+                                } else {
+                                    setTimeout(check, 10);
+                                }
+                            };
+                            check();
+                        });
+                    }
+                }));
+                await new Promise(r => setTimeout(r, 4));
+            }
+        }
+
+        const endPacket = {
+            type: '__p2p_chunk_end__',
+            transferId
+        };
+        for (const conn of targets) {
+            try { conn.send(endPacket); } catch(e){ console.error(e); }
+        }
+        console.log(`[P2P] Large message ${transferId} transmitted successfully.`);
+    }
+
+    /**
      * Send arbitrary JSON/data message to peers.
+     * Automatically chunks payloads exceeding 8KB to prevent PeerJS / SCTP MTU errors.
      * @param {any} data 
      * @param {Array<string>} [targetPeerIds] 
      */
-    sendMessage(data, targetPeerIds = null) {
+    async sendMessage(data, targetPeerIds = null) {
         if (!this.isConnected()) return false;
 
         let targets = [];
@@ -362,6 +477,25 @@ class P2PEngine {
             targets = targetPeerIds.map(id => this.connections.get(id)).filter(c => c && c.open);
         } else {
             targets = Array.from(this.connections.values()).filter(c => c && c.open);
+        }
+
+        if (targets.length === 0) return false;
+
+        let serialized = null;
+        try {
+            serialized = (typeof data === 'string') ? data : JSON.stringify(data);
+        } catch(e) {
+            serialized = null;
+        }
+
+        if (serialized && serialized.length > 8 * 1024) {
+            try {
+                await this._sendLargeMessage(serialized, targets);
+                return true;
+            } catch (err) {
+                console.error('[P2P] Error sending chunked message:', err);
+                return false;
+            }
         }
 
         for (const conn of targets) {
@@ -501,6 +635,9 @@ class P2PEngine {
         if (peerId) {
             const conn = this.connections.get(peerId);
             if (conn) {
+                try {
+                    if (conn.open) conn.send({ type: '__p2p_bye__' });
+                } catch(e) {}
                 try { conn.close(); } catch(e){}
                 this.connections.delete(peerId);
                 this.incomingFiles.delete(peerId);
@@ -508,6 +645,9 @@ class P2PEngine {
             }
         } else {
             for (const [id, conn] of this.connections.entries()) {
+                try {
+                    if (conn.open) conn.send({ type: '__p2p_bye__' });
+                } catch(e) {}
                 try { conn.close(); } catch(e){}
                 this.incomingFiles.delete(id);
                 this._emit('disconnected', id);
@@ -555,6 +695,7 @@ class P2PEngine {
         this.peerId = null;
         this._initPromise = null;
         this.incomingFiles.clear();
+        this.incomingChunkMessages.clear();
         this.eventListeners = {
             connected: [],
             disconnected: [],

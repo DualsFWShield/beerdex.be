@@ -59,6 +59,53 @@ export const OTASyncManager = {
     // Internal collection state for bilateral sync
     _bilateralCollector: null,
 
+    // Heartbeat & watchdog timers
+    _pingTimer: null,
+    _guestWatchdogTimer: null,
+    lastHostPingTime: 0,
+
+    _startPingTimer: function() {
+        this._stopPingTimer();
+        this._pingTimer = setInterval(() => {
+            if (this.isHost && this.p2p && this.p2p.isConnected()) {
+                this.p2p.sendMessage({
+                    type: 'ota_ping',
+                    timestamp: Date.now()
+                }).catch(() => {});
+            }
+        }, 4000);
+    },
+
+    _stopPingTimer: function() {
+        if (this._pingTimer) {
+            clearInterval(this._pingTimer);
+            this._pingTimer = null;
+        }
+    },
+
+    _startGuestWatchdog: function() {
+        this._stopGuestWatchdog();
+        this.lastHostPingTime = Date.now();
+        this._guestWatchdogTimer = setInterval(() => {
+            if (!this.isHost && this.roomCode && this.lastHostPingTime > 0) {
+                // If more than 12s without a ping from host, host connection was lost
+                if (Date.now() - this.lastHostPingTime > 12000) {
+                    console.warn('[OTA] Host heartbeat lost (timeout 12s)');
+                    this._stopGuestWatchdog();
+                    this._emitUpdate({ type: 'host_disconnected' });
+                    this.closeSession();
+                }
+            }
+        }, 3000);
+    },
+
+    _stopGuestWatchdog: function() {
+        if (this._guestWatchdogTimer) {
+            clearInterval(this._guestWatchdogTimer);
+            this._guestWatchdogTimer = null;
+        }
+    },
+
     /**
      * Initialize the P2P engine instance if not already ready.
      */
@@ -82,7 +129,7 @@ export const OTASyncManager = {
      * @returns {Promise<string>} The generated room code
      */
     createSession: async function(initialScopes = {}, syncMode = 'unilateral', onUpdate = null) {
-        this.closeSession();
+        await this.closeSession();
         this._ensureP2P();
         this.isHost = true;
         this.onUpdate = onUpdate;
@@ -112,6 +159,7 @@ export const OTASyncManager = {
             status: 'online'
         });
 
+        this._startPingTimer();
         this._emitUpdate({ type: 'session_ready', roomCode: this.roomCode });
         return this.roomCode;
     },
@@ -122,7 +170,7 @@ export const OTASyncManager = {
      * @param {Function} onUpdate - UI update handler
      */
     joinSession: async function(roomCode, onUpdate = null) {
-        this.closeSession();
+        await this.closeSession();
         this._ensureP2P();
         this.isHost = false;
         this.onUpdate = onUpdate;
@@ -149,8 +197,10 @@ export const OTASyncManager = {
         // Connect to host
         await this.p2p.connectTo(hostPeerId);
 
+        this._startGuestWatchdog();
+
         // Handshake: introduce ourselves
-        this.p2p.sendMessage({
+        await this.p2p.sendMessage({
             type: 'ota_hello',
             peerId: this.myPeerId,
             name: this.myDeviceName
@@ -232,6 +282,37 @@ export const OTASyncManager = {
         if (!data || !data.type) return;
 
         switch (data.type) {
+            case 'ota_ping': {
+                if (!this.isHost) {
+                    this.lastHostPingTime = Date.now();
+                }
+                break;
+            }
+
+            case 'ota_host_closed': {
+                if (!this.isHost) {
+                    console.log('[OTA] Host closed session notification received');
+                    this._stopGuestWatchdog();
+                    this._emitUpdate({ type: 'host_disconnected' });
+                    this.closeSession();
+                }
+                break;
+            }
+
+            case 'ota_guest_left': {
+                if (this.isHost) {
+                    console.log('[OTA] Guest left:', peerId);
+                    this.members.delete(peerId);
+                    this._broadcastConfig();
+                    this._emitUpdate({ type: 'peer_left', peerId });
+                    if (this._bilateralCollector && this._bilateralCollector.waitingFor.has(peerId)) {
+                        this._bilateralCollector.waitingFor.delete(peerId);
+                        this._checkBilateralCollectionDone();
+                    }
+                }
+                break;
+            }
+
             case 'ota_hello': {
                 if (this.isHost) {
                     this.members.set(peerId, {
@@ -347,7 +428,7 @@ export const OTASyncManager = {
         if (this.syncMode === 'unilateral') {
             // Unilateral: Host exports and pushes directly to all clients
             const payload = Storage.generateExportObject(this._mapScopesToStorageExport(hostExportOptions));
-            this.p2p.sendMessage({
+            await this.p2p.sendMessage({
                 type: 'ota_push_payload',
                 payload,
                 scopes: hostExportOptions
@@ -363,7 +444,7 @@ export const OTASyncManager = {
                 startTime: Date.now()
             };
 
-            this.p2p.sendMessage({
+            await this.p2p.sendMessage({
                 type: 'ota_req_bilateral_data',
                 allowedScopes: this.allowedScopes
             });
@@ -387,7 +468,7 @@ export const OTASyncManager = {
     /**
      * Guest responds to host's bilateral request by sending its permitted data.
      */
-    sendGuestBilateralPayload: function(guestOutgoingOptions) {
+    sendGuestBilateralPayload: async function(guestOutgoingOptions) {
         if (this.isHost) return;
         const hostPeerId = `beerdex-ota-${this.roomCode}`;
         
@@ -398,7 +479,7 @@ export const OTASyncManager = {
         });
 
         const payload = Storage.generateExportObject(this._mapScopesToStorageExport(sanitizedOptions));
-        this.p2p.sendMessage({
+        await this.p2p.sendMessage({
             type: 'ota_guest_bilateral_payload',
             payload
         }, [hostPeerId]);
@@ -419,7 +500,7 @@ export const OTASyncManager = {
     /**
      * Consolidate bilateral data on the host, then broadcast master payload to all.
      */
-    _finishBilateralSync: function() {
+    _finishBilateralSync: async function() {
         if (!this._bilateralCollector) return;
         const collector = this._bilateralCollector;
         this._bilateralCollector = null;
@@ -450,7 +531,7 @@ export const OTASyncManager = {
             );
 
             // 3. Broadcast master payload to all connected peers
-            this.p2p.sendMessage({
+            await this.p2p.sendMessage({
                 type: 'ota_master_bilateral_payload',
                 payload: masterPayload,
                 scopes: collector.hostExportOptions
@@ -573,19 +654,57 @@ export const OTASyncManager = {
     /**
      * Close the current session cleanly.
      */
-    closeSession: function() {
+    closeSession: async function() {
+        this._stopPingTimer();
+        this._stopGuestWatchdog();
+
         if (this.p2p) {
+            if (this.isHost && this.p2p.isConnected()) {
+                try {
+                    await this.p2p.sendMessage({
+                        type: 'ota_host_closed',
+                        roomCode: this.roomCode
+                    });
+                } catch (e) {}
+            } else if (!this.isHost && this.roomCode && this.p2p.isConnected()) {
+                try {
+                    const hostPeerId = `beerdex-ota-${this.roomCode}`;
+                    await this.p2p.sendMessage({
+                        type: 'ota_guest_left',
+                        peerId: this.myPeerId
+                    }, [hostPeerId]);
+                } catch (e) {}
+            }
+
+            // Yield briefly to ensure packets are flushed
+            await new Promise(r => setTimeout(r, 60));
+
             try {
                 this.p2p.destroy();
             } catch (e) { /* ignore */ }
             this.p2p = null;
         }
+
         this.members.clear();
         this.isHost = false;
         this.roomCode = null;
         this.myPeerId = null;
         this._bilateralCollector = null;
+        this.lastHostPingTime = 0;
     }
 };
+
+if (typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', () => {
+        if (OTASyncManager.isHost && OTASyncManager.p2p && OTASyncManager.p2p.isConnected()) {
+            try {
+                OTASyncManager.p2p.sendMessage({
+                    type: 'ota_host_closed',
+                    roomCode: OTASyncManager.roomCode
+                });
+            } catch (e) {}
+        }
+    });
+}
 
 window.OTASyncManager = OTASyncManager;

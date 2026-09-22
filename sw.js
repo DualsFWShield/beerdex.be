@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Beerdex-v5.0.1'; // v5.0.1 fixes
+const CACHE_NAME = 'Beerdex-v5.0.3'; // v5.0.3 DraftSync & OTA i18n translations completed
 const ASSETS = [
     './index.html',
     './style.css',
@@ -6,6 +6,7 @@ const ASSETS = [
     './js/app.js',
     './js/ui.js',
     './js/import-export.js',
+    './js/ota-sync.js',
     './js/storage.js',
     './js/achievements.js',
     './js/data.js',

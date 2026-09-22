@@ -525,8 +525,28 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
         }
     };
 
+    let syncWatchdog = null;
+    const setSyncWatchdog = () => {
+        if (syncWatchdog) clearTimeout(syncWatchdog);
+        syncWatchdog = setTimeout(() => {
+            if (isSyncing) {
+                console.warn('[OTA] Sync watchdog timeout triggered (30s).');
+                isSyncing = false;
+                showToast("Délai de synchronisation dépassé.", "error");
+                renderContent();
+            }
+        }, 30000);
+    };
+    const clearSyncWatchdog = () => {
+        if (syncWatchdog) {
+            clearTimeout(syncWatchdog);
+            syncWatchdog = null;
+        }
+    };
+
     const closeAndCleanup = () => {
         stopScanner();
+        clearSyncWatchdog();
         OTASyncManager.closeSession();
         closeModal();
     };
@@ -539,23 +559,25 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
             renderContent();
         } else if (event.type === 'peer_joined') {
             membersList = event.members || (data && data.members) || [];
-            showToast(i18n.t('ota_device_connected') || "Un appareil a rejoint la session !", "info");
+            showToast(i18n.t('ota_device_connected'), "info");
             renderContent();
         } else if (event.type === 'peer_left') {
             membersList = event.members || (data && data.members) || [];
-            showToast(i18n.t('ota_device_left') || "Un appareil s'est déconnecté.", "info");
+            showToast(i18n.t('ota_device_left'), "info");
             renderContent();
         } else if (event.type === 'sync_sent') {
             isSyncing = false;
             syncResultSummary = { success: true, count: event.count || (data && data.count) || 1, mode: 'unilateral' };
             renderContent();
+        } else if (event.type === 'peer_sync_completed') {
+            showToast(i18n.t('ota_peer_sync_completed'), "success");
         } else if (event.type === 'bilateral_master_completed') {
             isSyncing = false;
             syncResultSummary = { success: true, contributors: event.contributors || (data && data.contributors) || 1, mode: 'bilateral' };
             renderContent();
         } else if (event.type === 'sync_error') {
             isSyncing = false;
-            showToast(event.error || "Erreur de synchronisation", "error");
+            showToast(event.error || i18n.t('ota_sync_error'), "error");
             renderContent();
         }
     };
@@ -582,17 +604,20 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
         } else if (event.type === 'payload_received') {
             // Unilateral payload from host
             isSyncing = true;
+            setSyncWatchdog();
             renderContent();
             setTimeout(() => {
                 const payload = event.payload || (data && data.payload);
                 if (!payload) {
                     console.error('[OTA] Received empty payload from host!', event, data);
-                    showToast("Erreur: Données de synchronisation non reçues", "error");
+                    showToast(i18n.t('ota_sync_error'), "error");
+                    clearSyncWatchdog();
                     isSyncing = false;
                     renderContent();
                     return;
                 }
                 const summary = OTASyncManager.applyReceivedData(payload, guestImportScopes, guestOverwriteMode);
+                clearSyncWatchdog();
                 isSyncing = false;
                 syncResultSummary = summary;
                 renderContent();
@@ -600,30 +625,37 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
         } else if (event.type === 'bilateral_request_received') {
             // Host requested data for bilateral merge
             isSyncing = true;
+            setSyncWatchdog();
             renderContent();
-            OTASyncManager.sendGuestBilateralPayload(guestExportScopes);
+            OTASyncManager.sendGuestBilateralPayload(guestExportScopes).catch(err => {
+                console.error('[OTA] Error sending guest bilateral payload:', err);
+            });
         } else if (event.type === 'master_bilateral_received') {
             // Final master bilateral payload from host
             isSyncing = true;
+            setSyncWatchdog();
             renderContent();
             setTimeout(() => {
                 const payload = event.payload || (data && data.payload);
                 if (!payload) {
                     console.error('[OTA] Received empty bilateral payload from host!', event, data);
-                    showToast("Erreur: Données bilatérales non reçues", "error");
+                    showToast(i18n.t('ota_sync_error'), "error");
+                    clearSyncWatchdog();
                     isSyncing = false;
                     renderContent();
                     return;
                 }
                 const summary = OTASyncManager.applyReceivedData(payload, guestImportScopes, guestOverwriteMode);
+                clearSyncWatchdog();
                 isSyncing = false;
                 syncResultSummary = summary;
                 renderContent();
             }, 300);
         } else if (event.type === 'host_disconnected') {
+            clearSyncWatchdog();
             isConnectedToHost = false;
             isSyncing = false;
-            showToast(i18n.t('ota_host_disconnected') || "L'hôte a fermé la session.", "error");
+            showToast(i18n.t('ota_host_disconnected'), "error");
             renderContent();
         }
     };
@@ -638,18 +670,18 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
                         ${i18n.t('ota_sync_success')}
                     </h2>
                     <p style="font-size:0.85rem;color:#aaa;margin-bottom:20px;">
-                        Toutes les données sélectionnées ont été synchronisées avec succès en direct via Peer-to-Peer !
+                        ${i18n.t('ota_sync_success_desc')}
                     </p>
 
                     <div style="${sec}background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);text-align:center;">
                         <div style="font-size:0.9rem;color:#ddd;margin-bottom:4px;">
                             ${syncResultSummary.mode === 'unilateral' 
-                                ? (OTASyncManager.isHost ? `🚀 Données diffusées à ${syncResultSummary.count} appareil(s)` : `📥 Données reçues et appliquées`)
-                                : `🔄 Fusion bilatérale consolidée et partagée avec succès !`}
+                                ? (OTASyncManager.isHost ? i18n.t('ota_sync_sent_count', { count: syncResultSummary.count }) : i18n.t('ota_sync_received'))
+                                : i18n.t('ota_sync_bilateral_done')}
                         </div>
                         ${syncResultSummary.customBeersAdded !== undefined ? `
                             <div style="font-size:0.82rem;color:var(--accent-gold);margin-top:6px;">
-                                🍺 Bières ajoutées : <strong>+${syncResultSummary.customBeersAdded}</strong> | ⭐ Notes mises à jour : <strong>+${syncResultSummary.ratingsUpdated}</strong>
+                                ${i18n.t('ota_sync_stats', { beers: syncResultSummary.customBeersAdded, ratings: syncResultSummary.ratingsUpdated })}
                             </div>
                         ` : ''}
                     </div>
@@ -657,14 +689,14 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
                     <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px;">
                         ${OTASyncManager.isHost ? `
                             <button id="btn-ota-back-lobby" class="btn-primary" style="padding:13px;border-radius:12px;font-weight:bold;font-size:0.95rem;background:linear-gradient(135deg,var(--accent-gold),var(--accent-amber));color:#000;border:none;cursor:pointer;box-shadow:0 4px 15px rgba(245,158,11,0.25);">
-                                👑 Rester dans le salon / Nouvelle synchronisation
+                                ${i18n.t('ota_btn_stay_lobby')}
                             </button>
                         ` : ''}
                         <button id="btn-ota-reload" class="btn-primary" style="padding:12px;border-radius:12px;font-weight:bold;font-size:0.95rem;background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.15);cursor:pointer;">
-                            🔄 Recharger pour voir les données
+                            ${i18n.t('ota_btn_reload')}
                         </button>
                         <button id="btn-ota-finish" class="btn-cancel" style="padding:10px;border-radius:12px;background:none;color:#888;border:1px solid rgba(255,255,255,0.1);cursor:pointer;">
-                            Fermer
+                            ${i18n.t('ota_btn_close')}
                         </button>
                     </div>
                 </div>
@@ -695,7 +727,7 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
                         ${i18n.t('ota_sync_in_progress')}
                     </h3>
                     <p style="font-size:0.85rem;color:#888;max-width:320px;margin:0 auto;">
-                        Transfert WebRTC et calcul de la fusion en temps réel... Veuillez patienter quelques instants.
+                        ${i18n.t('ota_sync_in_progress_desc')}
                     </p>
                 </div>
             `;
@@ -769,7 +801,7 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
                     <div style="font-size:0.75rem;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">
                         ${i18n.t('ota_room_code_label')}
                     </div>
-                    <div id="ota-room-code-badge" style="font-family:'Russo One',monospace;font-size:1.9rem;letter-spacing:4px;color:var(--accent-gold);margin-bottom:10px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;" title="Cliquer pour copier">
+                    <div id="ota-room-code-badge" style="font-family:'Russo One',monospace;font-size:1.9rem;letter-spacing:4px;color:var(--accent-gold);margin-bottom:10px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;" title="${i18n.t('ota_code_copied')}">
                         <span>${currentRoomCode || '......'}</span>
                         <span style="font-size:1rem;opacity:0.7;">📋</span>
                     </div>
@@ -778,7 +810,7 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
                     <div id="ota-host-qr-box" style="background:#fff;padding:10px;border-radius:14px;width:150px;height:150px;margin:0 auto 12px auto;box-shadow:0 4px 18px rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;">
                         <div id="ota-host-qr"></div>
                     </div>
-                    <div style="font-size:0.72rem;color:#777;">Faites scanner ce QR Code ou transmettez le code à vos amis.</div>
+                    <div style="font-size:0.72rem;color:#777;">${i18n.t('ota_host_qr_hint')}</div>
                 </div>
 
                 <!-- Sync Mode Selector -->
@@ -807,7 +839,7 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
                 <div style="${sec}">
                     ${secHead('📦', i18n.t('ota_scope_label'))}
                     <div style="font-size:0.72rem;color:#777;margin-bottom:8px;">
-                        Les invités suivront ces catégories et ne pourront pas en ajouter d'autres.
+                        ${i18n.t('ota_scope_hint')}
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
                         ${Object.keys(hostScopes).map(k => `
@@ -824,7 +856,7 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                         ${secHead('🟢', `${membersList.length} ${i18n.t('ota_connected_devices')}`)}
                         <span style="font-size:0.72rem;color:var(--accent-gold);background:rgba(245,158,11,0.12);padding:2px 8px;border-radius:10px;">
-                            ${remotePeersCount > 0 ? `${remotePeersCount} invité(s)` : 'En attente...'}
+                            ${remotePeersCount > 0 ? i18n.t('ota_guests_count', { count: remotePeersCount }) : i18n.t('ota_status_waiting')}
                         </span>
                     </div>
 
@@ -833,7 +865,7 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
                             <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);padding:5px 10px;border-radius:16px;font-size:0.75rem;display:flex;align-items:center;gap:6px;">
                                 <span>${m.isHost ? '👑' : '📱'}</span>
                                 <span style="color:${m.isHost ? 'var(--accent-gold)' : '#ccc'};">${m.name || m.peerId}</span>
-                                ${m.isHost ? '<span style="font-size:0.65rem;color:#888;">(Hôte)</span>' : ''}
+                                ${m.isHost ? `<span style="font-size:0.65rem;color:#888;">(${i18n.t('ota_host_badge')})</span>` : ''}
                             </div>
                         `).join('')}
                     </div>
@@ -841,7 +873,7 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
 
                 <!-- Start Action Button -->
                 <button id="btn-ota-host-start" class="btn-primary" style="width:100%;background:linear-gradient(135deg,#f59e0b,#d97706);color:#000;font-weight:bold;padding:15px;font-size:1rem;border-radius:12px;box-shadow:0 4px 20px rgba(245,158,11,0.3);letter-spacing:0.3px;${remotePeersCount===0?'opacity:0.5;pointer-events:none;':''}">
-                    ${remotePeersCount > 0 ? `${i18n.t('ota_btn_start')} (${remotePeersCount})` : 'En attente d\'appareils...'}
+                    ${remotePeersCount > 0 ? `${i18n.t('ota_btn_start')} (${remotePeersCount})` : i18n.t('ota_waiting_peers')}
                 </button>
             `;
 
@@ -850,7 +882,7 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
             if (codeBadge && currentRoomCode) {
                 codeBadge.onclick = () => {
                     navigator.clipboard.writeText(currentRoomCode).then(() => {
-                        showToast(i18n.t('toast_copied') || "Code copié !", "success");
+                        showToast(i18n.t('ota_code_copied'), "success");
                     });
                 };
             }
@@ -892,11 +924,11 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
             if (btnStart) {
                 btnStart.onclick = async () => {
                     btnStart.disabled = true;
-                    btnStart.innerHTML = '<span class="spinner" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:6px;"></span> Synchronisation...';
+                    btnStart.innerHTML = `<span class="spinner" style="width:18px;height:18px;display:inline-block;vertical-align:middle;margin-right:6px;"></span> ${i18n.t('ota_sync_in_progress')}`;
                     try {
                         await OTASyncManager.startSync(hostScopes, { overwriteMode: false });
                     } catch (e) {
-                        showToast(e.message || "Erreur de synchro", "error");
+                        showToast(e.message || i18n.t('ota_sync_error'), "error");
                         btnStart.disabled = false;
                         btnStart.innerHTML = i18n.t('ota_btn_start');
                     }
@@ -928,7 +960,7 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
                         <div id="ota-scanner-wrapper" style="display:none;margin-top:14px;border-radius:12px;overflow:hidden;background:#000;position:relative;">
                             <div id="ota-scanner-view" style="width:100%;max-width:320px;margin:0 auto;"></div>
                             <button id="btn-ota-stop-scanner" class="btn-cancel" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);padding:6px 14px;font-size:0.75rem;border-radius:16px;">
-                                Fermer la caméra
+                                ${i18n.t('ota_btn_close_camera')}
                             </button>
                         </div>
                     </div>
@@ -943,18 +975,18 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
                 const doJoin = async (code) => {
                     const cleanCode = (code || '').toUpperCase().trim();
                     if (cleanCode.length !== 6) {
-                        showToast("Veuillez entrer un code à 6 caractères.", "error");
+                        showToast(i18n.t('ota_code_length_error'), "error");
                         return;
                     }
                     stopScanner();
                     btnConnect.disabled = true;
-                    btnConnect.innerHTML = '<span class="spinner" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></span> Connexion...';
+                    btnConnect.innerHTML = `<span class="spinner" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:6px;"></span> ${i18n.t('ota_btn_connecting')}`;
 
                     try {
                         await OTASyncManager.joinSession(cleanCode, onGuestUpdate);
                         currentRoomCode = cleanCode;
                     } catch (e) {
-                        showToast(e.message || "Impossible de rejoindre le salon", "error");
+                        showToast(e.message || i18n.t('ota_join_error'), "error");
                         btnConnect.disabled = false;
                         btnConnect.innerHTML = i18n.t('ota_btn_connect');
                     }
@@ -969,7 +1001,7 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
                 // Camera Scanner Handler
                 btnToggleScanner.onclick = () => {
                     if (!window.Html5Qrcode) {
-                        showToast("Scanner caméra non disponible sur cet appareil.", "error");
+                        showToast(i18n.t('ota_camera_unavailable'), "error");
                         return;
                     }
                     scannerWrapper.style.display = 'block';
@@ -991,7 +1023,7 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
                         () => {}
                     ).catch(err => {
                         console.error(err);
-                        showToast("Accès à la caméra refusé.", "error");
+                        showToast(i18n.t('ota_camera_denied'), "error");
                         scannerWrapper.style.display = 'none';
                     });
                 };
@@ -1008,15 +1040,15 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
                 contentContainer.innerHTML = `
                     <div style="${sec};background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.3);text-align:center;">
                         <div style="font-size:0.75rem;color:var(--accent-gold);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">
-                            🟢 Connecté au salon <strong>${currentRoomCode}</strong>
+                            ${i18n.t('ota_connected_badge', { code: `<strong>${currentRoomCode}</strong>` })}
                         </div>
                         <div style="font-size:0.85rem;color:#eee;font-weight:600;margin-bottom:4px;">
                             ${isBilateral ? i18n.t('ota_mode_bilateral') : i18n.t('ota_mode_unilateral')}
                         </div>
                         <div style="font-size:0.72rem;color:#aaa;">
                             ${isBilateral 
-                                ? 'Échange mutuel : vos données sélectionnées seront fusionnées avec le groupe.'
-                                : 'L\'hôte va diffuser ses données sur votre appareil.'}
+                                ? i18n.t('ota_bilateral_exchange_desc')
+                                : i18n.t('ota_unilateral_exchange_desc')}
                         </div>
                     </div>
 
@@ -1109,7 +1141,7 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
             try {
                 await OTASyncManager.createSession(hostScopes, hostSyncMode, onHostUpdate);
             } catch (e) {
-                showToast(e.message || "Erreur d'initialisation de la session", "error");
+                showToast(e.message || i18n.t('ota_sync_error'), "error");
             }
         }
     };
@@ -1123,7 +1155,7 @@ export function renderOtaSyncModal(initialExportOptions = null, defaultTab = 'ho
                 currentRoomCode = autoConnectCode;
                 renderContent();
             } catch (e) {
-                showToast(e.message || "Impossible de rejoindre le salon", "error");
+                showToast(e.message || i18n.t('ota_join_error'), "error");
             }
         }, 150);
     }
