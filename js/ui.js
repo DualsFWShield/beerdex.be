@@ -2208,34 +2208,39 @@ export function renderBeerDetail(beer, onSave) {
             const wrapperShare = document.createElement('div');
             wrapperShare.className = 'modal-dialog';
             wrapperShare.style.maxWidth = '400px';
+            wrapperShare.style.padding = '24px 20px';
             const inParty = Match && Match.roomCode;
             
             wrapperShare.innerHTML = `
-                <div class="dialog-icon">🍻</div>
-                <h3>Partager la bière</h3>
-                <p style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">
-                    Partagez <strong>${beer.title}</strong> directement avec vos amis via Beer Party P2P.
-                </p>
+                <div style="display:flex; justify-content:flex-end; margin-top:-6px; margin-bottom:4px;">
+                    <button type="button" class="close-btn" style="background:none; border:none; color:var(--text-secondary); font-size:1.6rem; cursor:pointer; padding:2px 8px; line-height:1;">&times;</button>
+                </div>
+                <div class="dialog-icon" style="font-size:2.2rem; margin-bottom:8px;">🍻</div>
+                <h3 style="margin:0 0 12px 0; color:var(--accent-gold); font-size:1.3rem;">Partager la bière</h3>
+                <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:12px 14px; margin-bottom:18px;">
+                    <strong style="display:block; font-size:1rem; color:#fff; margin-bottom:4px;">${beer.title}</strong>
+                    <span style="font-size:0.8rem; color:#aaa;">Partagez directement avec vos amis via Beer Party P2P</span>
+                </div>
                 ${inParty ? `
-                    <div style="background: rgba(255,192,0,0.08); border: 1px solid rgba(255,192,0,0.25); border-radius: 12px; padding: 12px; margin-bottom: 15px;">
-                        <span style="font-size:0.8rem; color:#aaa; display:block; margin-bottom:4px;">Beer Party active</span>
+                    <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--accent-gold); border-radius: 12px; padding: 12px; margin-bottom: 15px;">
+                        <span style="font-size:0.75rem; color:#aaa; display:block; margin-bottom:4px; text-transform:uppercase; letter-spacing:1px;">Beer Party active</span>
                         <span style="font-family:'Courier New', monospace; font-size:1.4rem; color:var(--accent-gold); font-weight:bold; letter-spacing:3px;">${Match.roomCode}</span>
                     </div>
                     <div style="display:flex; flex-direction:column; gap:10px;">
-                        <button id="btn-share-single-party" class="btn-confirm">
-                            Partager dans la Party
+                        <button id="btn-share-single-party" class="btn-confirm" style="padding:12px 18px; border-radius:25px; font-weight:700;">
+                            🚀 Partager dans la Party
                         </button>
-                        <button class="close-btn btn-cancel">Fermer</button>
+                        <button class="close-btn btn-cancel" style="padding:10px 18px; border-radius:25px;">Fermer</button>
                     </div>
                 ` : `
                     <div style="display:flex; flex-direction:column; gap:10px;">
-                        <button id="btn-create-host-party" class="btn-confirm">
+                        <button id="btn-create-host-party" class="btn-confirm" style="padding:12px 18px; border-radius:25px; font-weight:700;">
                             👑 Créer une Beer Party (Hôte)
                         </button>
-                        <button id="btn-join-party-opt" class="btn-cancel">
+                        <button id="btn-join-party-opt" class="btn-cancel" style="padding:11px 18px; border-radius:25px;">
                             Rejoindre une Party existante
                         </button>
-                        <button class="close-btn btn-cancel">Fermer</button>
+                        <button class="close-btn btn-cancel" style="padding:10px 18px; border-radius:25px;">Fermer</button>
                     </div>
                 `}
             `;
@@ -2257,6 +2262,9 @@ export function renderBeerDetail(beer, onSave) {
                         Match.shareCustomBeer([beer]);
                         closeModal();
                         showToast(`Party ${code} créée ! Bière partagée.`);
+                        if (window.UI && window.UI.renderPartyQRModal) {
+                            window.UI.renderPartyQRModal(code);
+                        }
                     } catch (err) {
                         showAlertModal("Erreur de création de la Party : " + err.message, { icon: '❌' });
                         btnHost.textContent = "👑 Créer une Beer Party (Hôte)";
@@ -7419,9 +7427,13 @@ window.Match = Match;
 export function updateHeaderPartyUI() {
     const widget = document.getElementById('header-party-widget');
     const codeEl = document.getElementById('header-party-code');
+    const hasParty = !!(Match && Match.roomCode);
+    if (document.body) {
+        document.body.classList.toggle('has-active-party', hasParty);
+    }
     if (!widget || !codeEl) return;
     
-    if (Match && Match.roomCode) {
+    if (hasParty) {
         codeEl.textContent = Match.roomCode;
         widget.style.display = 'inline-flex';
     } else {
@@ -7562,6 +7574,7 @@ export function renderBulkShareModal() {
     wrapper.className = 'modal-dialog';
     wrapper.style.maxWidth = '440px';
     wrapper.style.maxHeight = '85vh';
+    wrapper.style.padding = '24px 20px';
     wrapper.style.display = 'flex';
     wrapper.style.flexDirection = 'column';
     const inParty = Match && Match.roomCode;
@@ -7577,8 +7590,11 @@ export function renderBulkShareModal() {
     `).join('');
 
     wrapper.innerHTML = `
-        <div class="dialog-icon">📦</div>
-        <h3>Partage Multiple</h3>
+        <div style="display:flex; justify-content:flex-end; margin-top:-6px; margin-bottom:4px;">
+            <button type="button" class="close-btn" style="background:none; border:none; color:var(--text-secondary); font-size:1.6rem; cursor:pointer; padding:2px 8px; line-height:1;">&times;</button>
+        </div>
+        <div class="dialog-icon" style="font-size:2.2rem; margin-bottom:8px;">📦</div>
+        <h3 style="margin:0 0 8px 0; color:var(--accent-gold); font-size:1.3rem;">Partage Multiple</h3>
         <p style="color:#aaa; font-size:0.85rem; margin-bottom:15px;">Sélectionnez les bières personnalisées à envoyer.</p>
         
         <div style="flex:1; max-height:220px; overflow-y:auto; margin-bottom:15px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:8px;">
@@ -7586,29 +7602,29 @@ export function renderBulkShareModal() {
         </div>
 
         ${inParty ? `
-            <button id="btn-share-bulk-party" class="btn-confirm" style="width:100%; margin-bottom:10px; padding:12px;">
-                Partager dans la Beer Party (${Match.roomCode})
+            <button id="btn-share-bulk-party" class="btn-confirm" style="width:100%; margin-bottom:10px; padding:12px 18px; border-radius:25px; font-weight:700;">
+                🚀 Partager dans la Beer Party (${Match.roomCode})
             </button>
         ` : `
-            <button id="btn-create-bulk-host" class="btn-confirm" style="width:100%; margin-bottom:10px; padding:12px;">
+            <button id="btn-create-bulk-host" class="btn-confirm" style="width:100%; margin-bottom:10px; padding:12px 18px; border-radius:25px; font-weight:700;">
                 👑 Créer une Party et Partager (Hôte)
             </button>
-            <button id="btn-join-bulk-opt" class="btn-cancel" style="width:100%; margin-bottom:10px; padding:10px;">
+            <button id="btn-join-bulk-opt" class="btn-cancel" style="width:100%; margin-bottom:10px; padding:11px 18px; border-radius:25px;">
                 Rejoindre une Party existante
             </button>
         `}
         
         <div style="border-top:1px solid rgba(255,255,255,0.1); margin:10px 0 12px 0; padding-top:12px;">
             <div id="bulk-qr-container" style="background:#fff; padding:12px; border-radius:12px; margin: 0 auto 12px auto; width: fit-content; box-shadow: 0 4px 15px rgba(0,0,0,0.5); display:none;"></div>
-            <button id="btn-generate-bulk-qr" class="btn-cancel" style="width:100%; border-color:var(--accent-gold); color:var(--accent-gold); padding:10px; font-weight:600;">Générer un QR Code Multiple</button>
+            <button id="btn-generate-bulk-qr" class="btn-cancel" style="width:100%; border-color:var(--accent-gold); color:var(--accent-gold); padding:10px 18px; font-weight:600; border-radius:25px;">Générer un QR Code Multiple</button>
         </div>
         
-        <button id="btn-close-bulk" class="btn-cancel close-btn" style="width:100%; padding:10px;">Fermer</button>
+        <button id="btn-close-bulk" class="btn-cancel close-btn" style="width:100%; padding:10px 18px; border-radius:25px;">Fermer</button>
     `;
 
     openModal(wrapper);
     
-    wrapper.querySelector('#btn-close-bulk').onclick = () => closeModal();
+    wrapper.querySelectorAll('.close-btn').forEach(btn => btn.onclick = () => closeModal());
     
     const getSelectedBeers = () => {
         const cbs = Array.from(wrapper.querySelectorAll('.bulk-share-cb:checked'));
@@ -7640,6 +7656,9 @@ export function renderBulkShareModal() {
                 Match.shareCustomBeer(selected);
                 closeModal();
                 showToast(`Party ${code} créée ! ${selected.length} bière(s) partagée(s).`);
+                if (window.UI && window.UI.renderPartyQRModal) {
+                    window.UI.renderPartyQRModal(code);
+                }
             } catch (err) {
                 showAlertModal("Erreur de création : " + err.message, { icon: '❌' });
                 btnCreateBulkHost.textContent = "👑 Créer une Party et Partager (Hôte)";

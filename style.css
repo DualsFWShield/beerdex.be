@@ -421,25 +421,24 @@
     content: '';
     position: absolute;
     top: 0;
-    left: -100%;
-    width: 50%;
+    left: 0;
+    width: 60%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(46, 204, 113, 0.12), transparent);
-    transform: skewX(-20deg);
+    background: linear-gradient(90deg, transparent, rgba(46, 204, 113, 0.18), transparent);
+    transform: translateX(-150%) skewX(-20deg);
     animation: card-shimmer-slow 5s ease-in-out infinite;
     pointer-events: none;
     z-index: 1;
+    will-change: transform;
+    backface-visibility: hidden;
 }
 
 @keyframes card-glow-commun {
-
-    0%,
-    100% {
-        box-shadow: 0 0 6px rgba(46, 204, 113, 0.15), inset 0 0 8px rgba(46, 204, 113, 0.03);
+    0%, 100% {
+        box-shadow: 0 0 6px rgba(46, 204, 113, 0.2);
     }
-
     50% {
-        box-shadow: 0 0 16px rgba(46, 204, 113, 0.35), inset 0 0 15px rgba(46, 204, 113, 0.06);
+        box-shadow: 0 0 12px rgba(46, 204, 113, 0.4);
     }
 }
 
@@ -461,40 +460,40 @@
     border-radius: inherit;
     background: linear-gradient(115deg,
             rgba(255, 255, 255, 0) 0%,
-            rgba(52, 152, 219, 0.4) 45%,
-            rgba(255, 255, 255, 0.8) 50%,
-            rgba(52, 152, 219, 0.4) 55%,
+            rgba(52, 152, 219, 0.25) 45%,
+            rgba(255, 255, 255, 0.5) 50%,
+            rgba(52, 152, 219, 0.25) 55%,
             rgba(255, 255, 255, 0) 100%);
     background-size: 250% 250%;
-    mix-blend-mode: color-dodge;
     animation: holographic-shift 4s ease-in-out infinite alternate;
     pointer-events: none;
     z-index: 10;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 .card-rarity-rare::after {
     content: '';
     position: absolute;
     top: 0;
-    left: -150%;
+    left: 0;
     width: 60%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-    transform: skewX(-25deg);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+    transform: translateX(-150%) skewX(-25deg);
     animation: card-shimmer 3s infinite;
     pointer-events: none;
     z-index: 11;
+    will-change: transform;
+    backface-visibility: hidden;
 }
 
 @keyframes card-glow-rare {
-
-    0%,
-    100% {
-        box-shadow: 0 0 8px rgba(52, 152, 219, 0.3), inset 0 0 12px rgba(52, 152, 219, 0.1);
+    0%, 100% {
+        box-shadow: 0 0 8px rgba(52, 152, 219, 0.25);
     }
-
     50% {
-        box-shadow: 0 0 20px rgba(52, 152, 219, 0.6), inset 0 0 20px rgba(52, 152, 219, 0.2);
+        box-shadow: 0 0 16px rgba(52, 152, 219, 0.5);
     }
 }
 
@@ -502,7 +501,6 @@
     0% {
         background-position: 100% 100%;
     }
-
     100% {
         background-position: 0% 0%;
     }
@@ -510,21 +508,19 @@
 
 @keyframes card-shimmer {
     0% {
-        left: -150%;
+        transform: translateX(-150%) skewX(-25deg);
     }
-
     100% {
-        left: 250%;
+        transform: translateX(350%) skewX(-25deg);
     }
 }
 
 @keyframes card-shimmer-slow {
     0% {
-        left: -100%;
+        transform: translateX(-150%) skewX(-20deg);
     }
-
     100% {
-        left: 250%;
+        transform: translateX(350%) skewX(-20deg);
     }
 }
 
@@ -545,15 +541,17 @@
     height: 200%;
     background: conic-gradient(from 0deg,
             transparent 0%,
-            rgba(0, 188, 212, 0.4) 10%,
+            rgba(0, 188, 212, 0.35) 10%,
             transparent 20%,
             transparent 50%,
-            rgba(0, 188, 212, 0.4) 60%,
+            rgba(0, 188, 212, 0.35) 60%,
             transparent 70%);
     animation: rarity-spin 6s linear infinite;
     pointer-events: none;
     z-index: 1;
-    mix-blend-mode: screen;
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 .card-rarity-super_rare::after {
@@ -565,26 +563,24 @@
     height: 100%;
     background: linear-gradient(125deg,
             rgba(0, 255, 255, 0) 0%,
-            rgba(0, 188, 212, 0.2) 30%,
-            rgba(255, 255, 255, 0.6) 50%,
-            rgba(0, 188, 212, 0.2) 70%,
+            rgba(0, 188, 212, 0.15) 30%,
+            rgba(255, 255, 255, 0.35) 50%,
+            rgba(0, 188, 212, 0.15) 70%,
             rgba(0, 255, 255, 0) 100%);
     background-size: 200% 200%;
     animation: holographic-shift 5s ease-in-out infinite alternate;
     pointer-events: none;
     z-index: 2;
-    mix-blend-mode: overlay;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 @keyframes card-glow-super_rare {
-
-    0%,
-    100% {
-        box-shadow: 0 0 10px rgba(0, 188, 212, 0.4), 0 0 25px rgba(0, 188, 212, 0.1);
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(0, 188, 212, 0.35);
     }
-
     50% {
-        box-shadow: 0 0 25px rgba(0, 188, 212, 0.7), 0 0 50px rgba(0, 188, 212, 0.3);
+        box-shadow: 0 0 20px rgba(0, 188, 212, 0.65);
     }
 }
 
@@ -608,32 +604,35 @@
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle at center, rgba(155, 89, 182, 0.5) 0%, transparent 60%),
+    background: radial-gradient(circle at center, rgba(155, 89, 182, 0.35) 0%, transparent 60%),
         conic-gradient(from 0deg,
             transparent 0%,
-            rgba(255, 107, 223, 0.3) 15%,
+            rgba(255, 107, 223, 0.25) 15%,
             transparent 25%,
-            rgba(155, 89, 182, 0.4) 40%,
+            rgba(155, 89, 182, 0.35) 40%,
             transparent 50%);
     animation: rarity-spin 4s linear infinite, reverse-pulse 2s ease-in-out infinite alternate;
     pointer-events: none;
     z-index: 1;
-    mix-blend-mode: color-dodge;
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 .card-rarity-epique::after {
     content: '';
     position: absolute;
     top: 0;
-    left: -150%;
+    left: 0;
     width: 60%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 180, 255, 0.5), rgba(155, 89, 182, 0.3), transparent);
-    transform: skewX(-20deg);
+    background: linear-gradient(90deg, transparent, rgba(255, 180, 255, 0.35), rgba(155, 89, 182, 0.25), transparent);
+    transform: translateX(-150%) skewX(-20deg);
     animation: card-shimmer 2s infinite;
     pointer-events: none;
     z-index: 2;
-    mix-blend-mode: overlay;
+    will-change: transform;
+    backface-visibility: hidden;
 }
 
 @keyframes reverse-pulse {
@@ -641,7 +640,6 @@
         transform: scale(1);
         opacity: 0.7;
     }
-
     100% {
         transform: scale(1.1);
         opacity: 1;
@@ -649,14 +647,11 @@
 }
 
 @keyframes card-glow-epique {
-
-    0%,
-    100% {
-        box-shadow: 0 0 15px rgba(155, 89, 182, 0.5), 0 0 30px rgba(155, 89, 182, 0.2);
+    0%, 100% {
+        box-shadow: 0 0 12px rgba(155, 89, 182, 0.35);
     }
-
     50% {
-        box-shadow: 0 0 35px rgba(155, 89, 182, 0.8), 0 0 70px rgba(155, 89, 182, 0.4);
+        box-shadow: 0 0 22px rgba(155, 89, 182, 0.65);
     }
 }
 
@@ -664,7 +659,6 @@
     0% {
         background-position: 100% 100%, 0% 50%;
     }
-
     100% {
         background-position: 100% 100%, 300% 50%;
     }
@@ -683,7 +677,7 @@
     overflow: hidden;
 }
 
-/* Pure CSS Flame Core - More Intense */
+/* Pure CSS Flame Core */
 .card-rarity-mythique::before {
     content: '';
     position: absolute;
@@ -691,12 +685,13 @@
     left: -10%;
     width: 120%;
     height: 100px;
-    background: radial-gradient(ellipse at center bottom, rgba(255, 150, 0, 1) 0%, rgba(255, 0, 0, 0.8) 40%, transparent 70%);
+    background: radial-gradient(ellipse at center bottom, rgba(255, 150, 0, 0.7) 0%, rgba(255, 0, 0, 0.5) 40%, transparent 70%);
     filter: blur(5px);
     z-index: 3;
     animation: css-flame-flicker 1s infinite alternate;
     pointer-events: none;
-    mix-blend-mode: color-dodge;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 /* Inner fire wash effect */
@@ -708,38 +703,31 @@
     width: 100%;
     height: 100%;
     background: linear-gradient(0deg,
-            rgba(255, 60, 0, 0.6) 0%,
-            rgba(255, 107, 107, 0.2) 30%,
+            rgba(255, 60, 0, 0.35) 0%,
+            rgba(255, 107, 107, 0.15) 30%,
             transparent 80%);
     pointer-events: none;
     z-index: 1;
     animation: fire-flicker 1.5s ease-in-out infinite;
-    mix-blend-mode: overlay;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 @keyframes mythic-border {
     0% {
         background-position: 100% 100%, 0% 50%;
     }
-
     100% {
         background-position: 100% 100%, 400% 50%;
     }
 }
 
 @keyframes card-glow-mythique {
-
-    0%,
-    100% {
-        box-shadow: 0 0 20px rgba(255, 50, 0, 0.5),
-            0 0 50px rgba(231, 76, 60, 0.3),
-            inset 0 0 20px rgba(255, 50, 0, 0.2);
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(255, 50, 0, 0.4);
     }
-
     50% {
-        box-shadow: 0 0 40px rgba(255, 50, 0, 0.8),
-            0 0 90px rgba(231, 76, 60, 0.5),
-            inset 0 0 40px rgba(255, 50, 0, 0.4);
+        box-shadow: 0 0 25px rgba(255, 50, 0, 0.7);
     }
 }
 
@@ -748,34 +736,28 @@
         transform: scaleY(1) translateY(0);
         opacity: 0.8;
     }
-
     33% {
-        transform: scaleY(1.4) translateY(-10px);
+        transform: scaleY(1.3) translateY(-6px);
         opacity: 1;
     }
-
     66% {
-        transform: scaleY(0.8) translateY(-2px);
-        opacity: 0.9;
+        transform: scaleY(0.9) translateY(-2px);
+        opacity: 0.85;
     }
-
     100% {
-        transform: scaleY(1.2) translateY(-15px);
+        transform: scaleY(1.2) translateY(-10px);
         opacity: 1;
     }
 }
 
 @keyframes fire-flicker {
-
-    0%,
-    100% {
+    0%, 100% {
         opacity: 0.6;
         transform: scaleY(1);
     }
-
     50% {
-        opacity: 1;
-        transform: scaleY(1.05);
+        opacity: 0.9;
+        transform: scaleY(1.04);
     }
 }
 
@@ -802,82 +784,72 @@
     height: 6px;
     background: #fff;
     border-radius: 50%;
-    box-shadow: 0 0 15px 5px #fff, 0 0 30px 10px gold;
+    box-shadow: 0 0 10px 3px #fff, 0 0 20px 6px gold;
     z-index: 3;
     animation: css-sparkle-float 3s ease-in-out infinite alternate;
     pointer-events: none;
-    mix-blend-mode: screen;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 /* Golden light sweep and foil */
 .card-rarity-legendaire::after {
     content: '';
     position: absolute;
-    top: -20%;
-    left: -120%;
-    width: 80%;
-    height: 140%;
+    top: 0;
+    left: 0;
+    width: 60%;
+    height: 100%;
     background: linear-gradient(90deg,
             transparent,
-            rgba(255, 255, 255, 0.4),
-            rgba(255, 215, 0, 0.8),
-            rgba(255, 255, 255, 0.4),
+            rgba(255, 255, 255, 0.3),
+            rgba(255, 215, 0, 0.5),
+            rgba(255, 255, 255, 0.3),
             transparent);
-    transform: skewX(-15deg);
+    transform: translateX(-150%) skewX(-15deg);
     animation: golden-sweep 3s ease-in-out infinite;
     pointer-events: none;
     z-index: 2;
-    mix-blend-mode: color-dodge;
+    will-change: transform;
+    backface-visibility: hidden;
 }
 
 @keyframes legendary-border {
     0% {
         background-position: 100% 100%, 0% 50%;
     }
-
     100% {
         background-position: 100% 100%, 400% 50%;
     }
 }
 
 @keyframes card-glow-legendaire {
-
-    0%,
-    100% {
-        box-shadow: 0 0 15px rgba(243, 156, 18, 0.35),
-            0 0 40px rgba(243, 196, 15, 0.12),
-            0 0 80px rgba(243, 156, 18, 0.05);
+    0%, 100% {
+        box-shadow: 0 0 12px rgba(243, 156, 18, 0.3);
     }
-
     50% {
-        box-shadow: 0 0 30px rgba(243, 156, 18, 0.6),
-            0 0 70px rgba(243, 196, 15, 0.25),
-            0 0 120px rgba(243, 156, 18, 0.1);
+        box-shadow: 0 0 24px rgba(243, 156, 18, 0.55);
     }
 }
 
 @keyframes css-sparkle-float {
-
-    0%,
-    100% {
+    0%, 100% {
         transform: translateY(0) scale(0.8);
         opacity: 0.5;
     }
-
     50% {
-        transform: translateY(-8px) scale(1.5);
+        transform: translateY(-8px) scale(1.4);
         opacity: 1;
-        box-shadow: 0 0 12px 3px gold, 0 0 25px 8px rgba(255, 215, 0, 0.8);
+        box-shadow: 0 0 10px 2px gold, 0 0 20px 6px rgba(255, 215, 0, 0.8);
     }
 }
 
 @keyframes golden-sweep {
     0% {
-        left: -120%;
+        transform: translateX(-150%) skewX(-15deg);
     }
-
     100% {
-        left: 220%;
+        transform: translateX(350%) skewX(-15deg);
     }
 }
 
@@ -1185,6 +1157,12 @@ ul::-webkit-scrollbar-thumb:hover {
 }
 
 /* Reset & Base */
+html {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -1197,6 +1175,9 @@ body {
     color: var(--text-primary);
     font-family: var(--font-family-primary, 'Outfit', sans-serif);
     overflow: hidden;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
     /* App-like feel */
     height: 100vh;
     /* Fallback */
@@ -1221,11 +1202,11 @@ h3 {
     flex: 1;
     min-height: 0;
     width: 100%;
-    position: relative;
     max-width: 600px;
-    /* Tablet/Desktop constraint */
+    position: relative;
     margin: 0 auto;
     background: var(--bg-dark);
+    overflow-x: hidden;
 }
 
 /* Header */
@@ -1241,6 +1222,10 @@ h3 {
     position: sticky;
     top: 0;
     z-index: 100; /* Higher z-index */
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .logo {
@@ -1248,6 +1233,14 @@ h3 {
     align-items: center;
     gap: var(--spacing-sm);
     color: var(--accent-gold);
+    min-width: 0;
+    flex-shrink: 1;
+}
+
+.logo h1 {
+    font-size: 1.35rem;
+    margin: 0;
+    line-height: 1;
 }
 
 .offline-badge {
@@ -1287,6 +1280,7 @@ body.is-offline .offline-badge {
     backdrop-filter: blur(8px);
     box-shadow: 0 0 12px rgba(255, 192, 0, 0.2);
     transition: all 0.2s ease;
+    flex-shrink: 0;
 }
 
 .header-party-widget:hover {
@@ -1354,6 +1348,13 @@ body.is-offline .offline-badge {
     transform: scale(1.1);
 }
 
+.header-toolbar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
 .icon-btn {
     background: none;
     border: none;
@@ -1366,6 +1367,43 @@ body.is-offline .offline-badge {
 
 .icon-btn:active {
     background: rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 480px) {
+    .app-header {
+        padding-left: var(--spacing-sm);
+        padding-right: var(--spacing-sm);
+    }
+    .logo {
+        gap: 6px;
+    }
+    .logo h1 {
+        font-size: 1.1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .header-toolbar {
+        gap: 4px !important;
+    }
+    .header-toolbar .icon-btn {
+        padding: 6px 4px;
+    }
+    .header-party-widget {
+        margin-left: 4px;
+        padding: 2px 6px;
+        gap: 4px;
+    }
+    .header-party-pill {
+        font-size: 0.75rem;
+        gap: 4px;
+    }
+}
+
+@media (max-width: 400px) {
+    body.has-active-party .logo h1 {
+        display: none;
+    }
 }
 
 /* Main Content */
@@ -1382,11 +1420,18 @@ body.is-offline .offline-badge {
 /* Beer Grid */
 .beer-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--spacing-md);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .beer-card {
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
     background: var(--bg-card);
     border: var(--glass-border);
     border-radius: 16px;
@@ -1400,9 +1445,13 @@ body.is-offline .offline-badge {
     transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
     position: relative;
     overflow: hidden;
-    /* GPU optimization: skip rendering for off-screen cards */
+    /* GPU optimization: skip rendering for off-screen cards & isolate compositing layers */
     content-visibility: auto;
     contain-intrinsic-size: auto 280px;
+    contain: paint layout;
+    isolation: isolate;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 .beer-card:active {
@@ -1444,17 +1493,22 @@ body.is-offline .offline-badge {
 .beer-info {
     text-align: center;
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .beer-title {
     font-family: 'Russo One', sans-serif;
     font-size: 0.95rem;
     margin-bottom: 4px;
-    /* Allow wrapping */
+    /* Allow wrapping without breaking columns */
     white-space: normal;
     overflow: visible;
     text-overflow: clip;
     line-height: 1.2;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .beer-brewery {
@@ -1462,6 +1516,9 @@ body.is-offline .offline-badge {
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 
@@ -2251,23 +2308,25 @@ body.modal-open {
 
 /* Compact dialog modals (prompt/confirm/alert) */
 .modal-dialog {
-    background: #1a1a1a;
-    border: 1px solid rgba(255, 192, 0, 0.15);
-    border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(16px);
     max-width: 400px;
     width: calc(100% - 40px);
     margin: auto;
-    padding: 30px 25px;
+    padding: 26px 22px;
     text-align: center;
+    position: relative;
     animation: dialogPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .modal-dialog h3 {
-    margin: 0 0 18px 0;
+    margin: 0 0 16px 0;
     color: var(--accent-gold);
     font-family: 'Russo One', sans-serif;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     letter-spacing: 0.5px;
 }
 
@@ -2275,7 +2334,7 @@ body.modal-open {
     color: #ddd;
     font-size: 0.95rem;
     line-height: 1.5;
-    margin: 0 0 22px 0;
+    margin: 0 0 20px 0;
     white-space: pre-line;
 }
 
@@ -2320,25 +2379,27 @@ body.modal-open {
 }
 
 .modal-dialog .btn-cancel {
-    background: #2a2a2a;
-    border: 1px solid #444;
-    color: #ccc;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
 }
 
 .modal-dialog .btn-confirm {
-    background: var(--accent-gold);
+    background: linear-gradient(135deg, var(--accent-gold), var(--accent-amber));
     border: none;
     color: #000;
     font-weight: 700;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .modal-dialog .btn-confirm.danger {
     background: #e53935;
     color: #fff;
+    box-shadow: 0 4px 15px rgba(229, 57, 53, 0.35);
 }
 
 .modal-dialog .btn-ok {
-    background: var(--accent-gold);
+    background: linear-gradient(135deg, var(--accent-gold), var(--accent-amber));
     border: none;
     color: #000;
     font-weight: 700;
@@ -2347,6 +2408,7 @@ body.modal-open {
     border-radius: 25px;
     font-size: 0.95rem;
     cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     transition: transform 0.1s;
 }
 
@@ -3952,7 +4014,7 @@ body.modal-open {
 /* Mobile Performance Optimizations        */
 /* ======================================= */
 
-/* Add will-change to heavy animated elements to force GPU acceleration */
+/* Add will-change and transform promotion to animated elements */
 .card-anim-ultra_legendary,
 .card-anim-ultra_legendary::before,
 .card-rarity-mythique::before,
@@ -3966,11 +4028,13 @@ body.modal-open {
 .card-rarity-rare::before,
 .card-rarity-rare::after,
 .card-rarity-commun::after {
-    will-change: transform, opacity;
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
 }
 
 @media (max-width: 1024px) {
-    /* Disable expensive blend modes on mobile/tablets */
+    /* Ensure no expensive blend modes on mobile/tablets */
     .card-anim-ultra_legendary::before,
     .card-rarity-mythique::before,
     .card-rarity-mythique::after,
@@ -3986,26 +4050,8 @@ body.modal-open {
         mix-blend-mode: normal !important;
     }
     
-    /* Reduce or remove heavy animated box-shadows/glows */
     .card-anim-ultra_legendary {
-        animation: ultra-glow 3s ease-in-out infinite !important; /* Remove background-position animation */
-    }
-    .card-rarity-mythique {
-        box-shadow: none !important;
-    }
-    .card-rarity-epique {
-        box-shadow: none !important;
-    }
-    .card-rarity-legendaire {
-        box-shadow: none !important;
-    }
-    
-    /* Simplify keyframe animations by applying opacity instead of heavy calculations */
-    .card-rarity-mythique::before,
-    .card-rarity-mythique::after,
-    .card-rarity-epique::before,
-    .card-rarity-super_rare::before {
-        opacity: 0.5;
+        animation: ultra-glow 3s ease-in-out infinite !important;
     }
 }
 
