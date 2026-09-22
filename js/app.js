@@ -94,6 +94,7 @@ async function init() {
         const staticBeers = await Data.fetchAllBeers(coreFiles);
         const customBeers = Storage.getCustomBeers().map(b => Data.enrichBeerMetadata(b));
         state.beers = [...customBeers, ...staticBeers];
+        window.allBeers = state.beers;
 
         if (window.Recommendation) {
             window.Recommendation.init(state.beers);
@@ -124,6 +125,7 @@ async function init() {
             
             if (newBeersToAdd.length > 0) {
                 state.beers = [...state.beers, ...newBeersToAdd];
+                window.allBeers = state.beers;
                 if (window.Recommendation) window.Recommendation.init(state.beers);
                 applyFilters();
                 // We don't forcefully re-render to avoid jumping, but next paginate will include them.
@@ -1189,4 +1191,31 @@ function renderCurrentView() {
         });
     }
 }
+
+window.renderCurrentView = renderCurrentView;
+window.renderCatalog = () => renderCurrentView();
+
+window.addImportedCustomBeers = (newBeers) => {
+    if (!newBeers) return;
+    const list = Array.isArray(newBeers) ? newBeers : [newBeers];
+    if (list.length === 0) return;
+
+    list.forEach(b => {
+        if (!String(b.id).startsWith('CUSTOM_')) b.id = 'CUSTOM_' + b.id;
+        const enriched = Data.enrichBeerMetadata(b);
+        const existingIdx = state.beers.findIndex(x => String(x.id) === String(b.id));
+        if (existingIdx >= 0) {
+            state.beers[existingIdx] = enriched;
+        } else {
+            state.beers.unshift(enriched);
+        }
+    });
+
+    window.allBeers = state.beers;
+    Achievements.checkAchievements(state.beers);
+    if (window.Recommendation) {
+        window.Recommendation.init(state.beers);
+    }
+    renderCurrentView();
+};
 

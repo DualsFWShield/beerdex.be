@@ -70,16 +70,32 @@ export class AromaWheel {
             // Draw Category Slice
             const midAngle = startAngle + (catAngle / 2);
             const textPos = this.polarToCartesian(center, center, (innerRadius + midRadius) / 2, midAngle);
-            const isCatSelected = cat.sub.some(s => this.selectedAromas.has(`${cat.id}:${s}`));
+            const catAromaId = `${cat.id}:${cat.name}`;
+            const isCatPicked = this.selectedAromas.has(catAromaId) || this.selectedAromas.has(cat.id);
+            const hasSubSelected = cat.sub.some(s => this.selectedAromas.has(`${cat.id}:${s}`));
+
+            let catOpacity = '0.5';
+            let catStroke = '#1a1a1a';
+            let catStrokeWidth = '2';
+            let catCheck = '';
+
+            if (isCatPicked) {
+                catOpacity = '1';
+                catStroke = 'var(--accent-gold, #FFC000)';
+                catStrokeWidth = '3';
+                catCheck = ' ✓';
+            } else if (hasSubSelected) {
+                catOpacity = '0.85';
+            }
 
             svgItems += `
-                <g class="wheel-group" style="cursor:default;">
+                <g class="wheel-group wheel-cat-slice" style="cursor:pointer; transition: opacity 0.2s;" data-cat="${cat.id}" data-cat-name="${cat.name}">
                     <path d="${this.describeArc(center, center, innerRadius, midRadius, startAngle + 0.5, endAngle - 0.5)}" 
                           fill="${cat.color}" 
-                          opacity="${isCatSelected ? '1' : '0.6'}"
-                          stroke="#1a1a1a" stroke-width="2"/>
-                    <text x="${textPos.x}" y="${textPos.y}" font-size="11" fill="#fff" text-anchor="middle" dominant-baseline="middle" font-weight="bold" transform="rotate(${getRadialRotation(midAngle)}, ${textPos.x}, ${textPos.y})">
-                        ${cat.name}
+                          opacity="${catOpacity}"
+                          stroke="${catStroke}" stroke-width="${catStrokeWidth}"/>
+                    <text x="${textPos.x}" y="${textPos.y}" font-size="11" fill="#fff" text-anchor="middle" dominant-baseline="middle" font-weight="${isCatPicked ? '900' : 'bold'}" transform="rotate(${getRadialRotation(midAngle)}, ${textPos.x}, ${textPos.y})">
+                        ${cat.name}${catCheck}
                     </text>
                 </g>
             `;
@@ -94,14 +110,15 @@ export class AromaWheel {
                 
                 const sMidAngle = sStart + (subAngle / 2);
                 const sTextPos = this.polarToCartesian(center, center, (midRadius + outerRadius) / 2, sMidAngle);
+                const subOpacity = isSelected ? '1' : (isCatPicked ? '0.2' : '0.35');
                 
                 svgItems += `
-                    <g class="wheel-slice" style="cursor:pointer; transition: opacity 0.2s;" data-aroma="${aromaId}">
+                    <g class="wheel-slice" style="cursor:pointer; transition: opacity 0.2s;" data-aroma="${aromaId}" data-cat="${cat.id}">
                         <path d="${this.describeArc(center, center, midRadius, outerRadius, sStart + 0.2, sEnd - 0.2)}" 
                               fill="${cat.color}" 
-                              opacity="${isSelected ? '1' : '0.3'}"
+                              opacity="${subOpacity}"
                               stroke="#1a1a1a" stroke-width="2" class="slice-path"/>
-                        <text x="${sTextPos.x}" y="${sTextPos.y}" font-size="9" fill="${isSelected ? '#fff' : '#ccc'}" text-anchor="middle" dominant-baseline="middle" font-weight="${isSelected ? 'bold' : 'normal'}" transform="rotate(${getRadialRotation(sMidAngle)}, ${sTextPos.x}, ${sTextPos.y})">
+                        <text x="${sTextPos.x}" y="${sTextPos.y}" font-size="9" fill="${isSelected ? '#fff' : (isCatPicked ? '#777' : '#ccc')}" text-anchor="middle" dominant-baseline="middle" font-weight="${isSelected ? 'bold' : 'normal'}" transform="rotate(${getRadialRotation(sMidAngle)}, ${sTextPos.x}, ${sTextPos.y})">
                             ${subName}
                         </text>
                     </g>
@@ -119,6 +136,9 @@ export class AromaWheel {
                 <div style="margin-top: 15px; font-size: 0.9rem; color: #aaa; background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 20px;">
                     Sélectionnés : <span id="aroma-count" style="color:var(--accent-gold); font-weight:bold;">${this.selectedAromas.size}</span>
                 </div>
+                <div style="margin-top: 8px; font-size: 0.75rem; color: #777;">
+                    💡 Cliquez sur un arôme précis ou sur la catégorie entière.
+                </div>
             </div>
         `;
 
@@ -126,16 +146,52 @@ export class AromaWheel {
     }
 
     bindEvents() {
+        // Sub-aromas
         const slices = this.container.querySelectorAll('.wheel-slice');
         slices.forEach(slice => {
             slice.onclick = () => {
                 const aroma = slice.getAttribute('data-aroma');
+                const catId = slice.getAttribute('data-cat');
+                const cat = this.categories.find(c => c.id === catId);
+
+                // Unselect whole category if specific sub-aroma is picked
+                if (cat) {
+                    this.selectedAromas.delete(`${cat.id}:${cat.name}`);
+                    this.selectedAromas.delete(cat.id);
+                }
+
                 if (this.selectedAromas.has(aroma)) {
                     this.selectedAromas.delete(aroma);
                 } else {
                     this.selectedAromas.add(aroma);
                 }
-                this.render(); // Re-render for visual feedback
+                this.render();
+                if (this.onChange) this.onChange(Array.from(this.selectedAromas));
+            };
+        });
+
+        // Whole categories
+        const catSlices = this.container.querySelectorAll('.wheel-cat-slice');
+        catSlices.forEach(catSlice => {
+            catSlice.onclick = () => {
+                const catId = catSlice.getAttribute('data-cat');
+                const catName = catSlice.getAttribute('data-cat-name');
+                const catKey = `${catId}:${catName}`;
+                const cat = this.categories.find(c => c.id === catId);
+
+                const isAlreadyPicked = this.selectedAromas.has(catKey) || this.selectedAromas.has(catId);
+                if (isAlreadyPicked) {
+                    this.selectedAromas.delete(catKey);
+                    this.selectedAromas.delete(catId);
+                } else {
+                    // If whole category is chosen, clear specific sub-aromas of this category
+                    if (cat && cat.sub) {
+                        cat.sub.forEach(s => this.selectedAromas.delete(`${cat.id}:${s}`));
+                    }
+                    this.selectedAromas.delete(catId);
+                    this.selectedAromas.add(catKey);
+                }
+                this.render();
                 if (this.onChange) this.onChange(Array.from(this.selectedAromas));
             };
         });
