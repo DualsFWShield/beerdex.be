@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Beerdex-v106'; // Add P2P
+const CACHE_NAME = 'Beerdex-v5.0.0'; // v5 Party P2P
 const ASSETS = [
     './index.html',
     './style.css',

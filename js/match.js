@@ -155,6 +155,8 @@ const Match = {
         }
         this.members.clear();
         this.roomCode = null;
+        this.isHost = false;
+        if (this.onStateChange) this.onStateChange({ type: 'leave' });
     },
 
     handlePeerConnected: function(peerId) {

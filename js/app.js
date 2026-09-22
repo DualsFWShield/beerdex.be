@@ -156,6 +156,9 @@ async function init() {
         // Setup Event Listeners
         setupEventListeners();
 
+        // Initialize Header Party Widget
+        UI.initHeaderParty();
+
         // Check Consent -> which checks Welcome
         UI.checkAndShowConsent();
 

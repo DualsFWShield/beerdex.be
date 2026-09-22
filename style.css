@@ -1274,6 +1274,86 @@ body.is-offline .offline-badge {
     100% { opacity: 1; transform: scale(1); }
 }
 
+/* Header Party Widget */
+.header-party-widget {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(255, 192, 0, 0.12);
+    border: 1px solid rgba(255, 192, 0, 0.35);
+    border-radius: 20px;
+    padding: 3px 6px 3px 8px;
+    margin-left: 6px;
+    gap: 6px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 0 12px rgba(255, 192, 0, 0.2);
+    transition: all 0.2s ease;
+}
+
+.header-party-widget:hover {
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 16px rgba(255, 192, 0, 0.35);
+}
+
+.header-party-pill {
+    background: none;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 0;
+    color: var(--accent-gold);
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.party-pulse-dot {
+    width: 7px;
+    height: 7px;
+    background: #2ecc71;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 8px #2ecc71;
+    animation: partyPulse 1.8s infinite;
+}
+
+@keyframes partyPulse {
+    0% { transform: scale(0.9); opacity: 0.7; }
+    50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 12px #2ecc71; }
+    100% { transform: scale(0.9); opacity: 0.7; }
+}
+
+.party-qr-icon {
+    display: inline-flex;
+    align-items: center;
+    opacity: 0.8;
+}
+
+.header-party-close {
+    background: rgba(255, 255, 255, 0.12);
+    border: none;
+    color: #ccc;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 14px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 0;
+}
+
+.header-party-close:hover {
+    background: var(--danger);
+    color: #fff;
+    transform: scale(1.1);
+}
+
 .icon-btn {
     background: none;
     border: none;
