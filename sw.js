@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Beerdex-v5.0.3'; // v5.0.3 DraftSync & OTA i18n translations completed
+const CACHE_NAME = 'Beerdex-v5.0.4'; // v5.0.4 BeerParty & DraftSync privacy policy and i18n update
 const ASSETS = [
     './index.html',
     './style.css',

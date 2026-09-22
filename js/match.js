@@ -1,11 +1,131 @@
 import * as Storage from './storage.js';
 
-const ANIMAL_NAMES = ["Renard", "Chouette", "Loup", "Ours", "Castor", "Faucon", "Aigle", "Tigre", "Lion", "Cerf", "Pangolin", "Loutre", "Pingouin", "Koala"];
-const ADJECTIVES = ["Joyeux", "Anonyme", "Rapide", "Furieux", "Discret", "Rusé", "Majestueux", "Brillant", "Féroce", "Assoiffé"];
+const ANIMAL_NAMES = [
+    // Faune forestière & européenne
+    "Renard", "Loup", "Ours", "Castor", "Cerf", "Sanglier", "Blaireau", "Hérisson", "Écureuil", 
+    "Loutre", "Lynx", "Chamois", "Bouquetin", "Chevreuil", "Lièvre", "Marmotte", "Furet", 
+    "Martre", "Hermine", "Raton-laveur", "Glouton",
+    
+    // Félins & grands prédateurs
+    "Tigre", "Lion", "Guépard", "Léopard", "Panthère", "Jaguar", "Caracal", "Serval", "Puma", "Ocelot",
+    
+    // Rapaces, oiseaux & nocturnes
+    "Chouette", "Hibou", "Grand-Duc", "Faucon", "Aigle", "Corbeau", "Épervier", "Milan", "Toucan", 
+    "Colibri", "Albatros", "Héron", "Cygne", "Canard", "Flamant", "Pélican", "Geai", "Pie", 
+    "Manchot", "Pingouin", "Condor",
+    
+    // Exotiques, attachants & insolites
+    "Pangolin", "Koala", "Panda", "Panda roux", "Suricate", "Lémurien", "Kangourou", "Wombat", 
+    "Quokka", "Paresseux", "Tatou", "Caméléon", "Gecko", "Axolotl", "Fennec", "Dingo", "Tapir", 
+    "Ornithorynque", "Capybara", "Wallaby",
+    
+    // Monde aquatique & marin
+    "Poulpe", "Calmar", "Morse", "Béluga", "Phoque", "Narval", "Dauphin", "Orque", "Espadon", 
+    "Hippocampe", "Raie",
+    
+    // Créatures fantastiques & mythologiques
+    "Phénix", "Dragon", "Griffon", "Pégase", "Yéti", "Kraken", "Gargouille"
+];
+
+const ADJECTIVES = [
+    // Zythologie, bière & dégustation
+    "Houblonné", "Malté", "Pétillant", "Ambré", "Doré", "Cuivré", "Givré", "Torréfié", "Boisé", 
+    "Moelleux", "Fruité", "Épicé", "Rafraîchissant", "Brasseur", "Sommelier", "Gourmet", "Assoiffé", 
+    "Écumeux", "Velouté", "Charpenté", "Corsé",
+    
+    // Ambiance festive, humeur & caractère
+    "Joyeux", "Festif", "Convivial", "Hilare", "Pétulant", "Farceur", "Espiègle", "Chaleureux", 
+    "Généreux", "Décontracté", "Rayonnant", "Ébouriffé", "Bon-vivant", "Passionné",
+    
+    // Ruse, furtivité & mystère
+    "Rusé", "Discret", "Furtif", "Rapide", "Agile", "Énigmatique", "Nocturne", "Mystique", 
+    "Silencieux", "Clairvoyant", "Sage", "Anonyme", "Masqué", "Insaisissable", "Fantôme",
+    
+    // Héroïsme, bravoure & majesté
+    "Majestueux", "Brillant", "Féroce", "Furieux", "Intrépide", "Vaillant", "Épique", "Légendaire", 
+    "Indomptable", "Flamboyant", "Invincible", "Inarrêtable", "Audacieux", "Baroudeur", "Cosmique", 
+    "Solaire", "Zen", "Serein", "Magique", "Impérial", "Colossal", "Héroïque", "Inoxydable", "Hardi"
+];
+
+const TITLES = [
+    "Capitaine", "Maître", "Baron", "Docteur", "Professeur", "Sir", "Lord", "Grand", "Chef", "Agent", "Comte", "Général"
+];
+
+const FEMININE_ANIMALS = new Set([
+    "Chouette", "Loutre", "Marmotte", "Martre", "Hermine", "Panthère", "Pie", "Raie", "Gargouille"
+]);
+
+const FEMININE_TITLES = {
+    "Baron": "Baronne",
+    "Comte": "Comtesse",
+    "Sir": "Lady",
+    "Lord": "Lady",
+    "Grand": "Grande"
+};
+
+const FEMININE_ADJECTIVES = {
+    "Houblonné": "Houblonnée",
+    "Malté": "Maltée",
+    "Pétillant": "Pétillante",
+    "Ambré": "Ambrée",
+    "Doré": "Dorée",
+    "Cuivré": "Cuivrée",
+    "Givré": "Givrée",
+    "Torréfié": "Torréfiée",
+    "Boisé": "Boisée",
+    "Fruité": "Fruitée",
+    "Épicé": "Épicée",
+    "Rafraîchissant": "Rafraîchissante",
+    "Brasseur": "Brasseuse",
+    "Gourmet": "Gourmande",
+    "Assoiffé": "Assoiffée",
+    "Écumeux": "Écumeuse",
+    "Charpenté": "Charpentée",
+    "Corsé": "Corsée",
+    "Joyeux": "Joyeuse",
+    "Festif": "Festive",
+    "Farceur": "Farceuse",
+    "Chaleureux": "Chaleureuse",
+    "Généreux": "Généreuse",
+    "Décontracté": "Décontractée",
+    "Rayonnant": "Rayonnante",
+    "Ébouriffé": "Ébouriffée",
+    "Bon-vivant": "Bonne-vivante",
+    "Passionné": "Passionnée",
+    "Rusé": "Rusée",
+    "Discret": "Discrète",
+    "Furtif": "Furtive",
+    "Clairvoyant": "Clairvoyante",
+    "Masqué": "Masquée",
+    "Majestueux": "Majestueuse",
+    "Brillant": "Brillante",
+    "Vaillant": "Vaillante",
+    "Flamboyant": "Flamboyante",
+    "Audacieux": "Audacieuse",
+    "Baroudeur": "Baroudeuse",
+    "Impérial": "Impériale",
+    "Colossal": "Colossale",
+    "Hardi": "Hardie"
+};
 
 function getRandomPseudo() {
     const animal = ANIMAL_NAMES[Math.floor(Math.random() * ANIMAL_NAMES.length)];
-    const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
+    const isFeminine = FEMININE_ANIMALS.has(animal);
+    
+    // Variante 1 (~20% de chance) : Titre honorifique + Animal (ex: Capitaine Renard, Baronne Loutre)
+    if (Math.random() < 0.2) {
+        let title = TITLES[Math.floor(Math.random() * TITLES.length)];
+        if (isFeminine && FEMININE_TITLES[title]) {
+            title = FEMININE_TITLES[title];
+        }
+        return `${title} ${animal}`;
+    }
+    
+    // Variante 2 (~80% de chance) : Animal + Adjectif (ex: Renard Houblonné, Chouette Discrète)
+    let adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
+    if (isFeminine && FEMININE_ADJECTIVES[adj]) {
+        adj = FEMININE_ADJECTIVES[adj];
+    }
     return `${animal} ${adj}`;
 }
 
@@ -308,8 +428,31 @@ const Match = {
             common: commonIds.map(id => allBeersMap.get(id)).filter(b=>b),
             discoveries: discoveriesIds.map(id => allBeersMap.get(id)).filter(b=>b)
         };
+    },
+
+    updateMyPseudo: function(newPseudo) {
+        if (!newPseudo) newPseudo = getRandomPseudo();
+        if (this.myProfile) {
+            this.myProfile.pseudo = newPseudo;
+        }
+        if (this.isHost && this.members && this.p2p && this.p2p.peerId) {
+            const myMem = this.members.get(this.p2p.peerId);
+            if (myMem) myMem.pseudo = newPseudo;
+            this.broadcastState();
+        } else if (!this.isHost && this.p2p) {
+            this.p2p.sendToHost({
+                type: 'update_profile',
+                profile: this.myProfile
+            });
+        }
     }
 };
 
+Match.getRandomPseudo = getRandomPseudo;
+Match.ANIMAL_NAMES = ANIMAL_NAMES;
+Match.ADJECTIVES = ADJECTIVES;
+Match.TITLES = TITLES;
+
 window.Match = Match;
 export default Match;
+export { getRandomPseudo, ANIMAL_NAMES, ADJECTIVES, TITLES };

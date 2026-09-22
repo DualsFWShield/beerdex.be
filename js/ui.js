@@ -2820,13 +2820,78 @@ export function renderStats(allBeers, userData, container) {
 
     const currentOrder = Storage.getPreference('stats_order', ['progression', 'equivalences', 'bac', 'streak', 'history', 'calendar', 'achievements', 'map', 'brewbrother']);
 
-    const matchBlock = Storage.getPreference('feat_beermatch_enabled', true) ? `
-        <div class="stat-card mt-20 text-center">
-            <h3 style="margin-bottom:10px;">${i18n.t('stats_match_title')}</h3>
-            <p style="font-size:0.8rem; color:#888; margin-bottom:15px;" data-i18n="stats_match_desc">${i18n.t('stats_match_desc')}</p>
-            <button type="button" id="btn-match" class="btn-primary" style="background:#222; border:1px solid var(--accent-gold); color:var(--accent-gold);">
-                ${i18n.t('stats_match_btn')}
+    const currentPseudo = Storage.getPreference('beermatch_pseudo', '') || 'Anonyme';
+    const isPartyActive = !!(window.Match && window.Match.roomCode);
+    const activeCode = isPartyActive ? window.Match.roomCode : '';
+    const activeMembersCount = isPartyActive && window.Match.members ? window.Match.members.size : 1;
+
+    const partyActiveHtml = isPartyActive ? `
+        <div class="beerparty-active-box">
+            <div class="beerparty-active-header">
+                <span class="party-pulse-dot"></span>
+                <span>${i18n.t('party_active_badge') || 'SALON EN COURS'} (${activeMembersCount} participant${activeMembersCount > 1 ? 's' : ''})</span>
+            </div>
+            <div class="beerparty-active-code" id="beerparty-card-code" title="Cliquer pour copier le code">${activeCode}</div>
+            <div style="display:flex; gap:8px; width:100%; justify-content:center; flex-wrap:wrap;">
+                <button type="button" id="btn-party-open-active" class="beerparty-btn-primary" style="flex:1;">
+                    ${i18n.t('party_btn_open') || '🍻 Accéder au Salon'}
+                </button>
+                <button type="button" id="btn-party-leave-active" class="beerparty-btn-danger">
+                    ${i18n.t('party_btn_leave') || 'Quitter'}
+                </button>
+            </div>
+        </div>
+    ` : `
+        <div class="beerparty-features-grid">
+            <div class="beerparty-feature-pill">
+                <span class="beerparty-feature-icon">👥</span>
+                <span>${i18n.t('party_feat_rooms') || 'Salons P2P en direct'}</span>
+            </div>
+            <div class="beerparty-feature-pill">
+                <span class="beerparty-feature-icon">📊</span>
+                <span>${i18n.t('party_feat_stats') || 'Stats collectives'}</span>
+            </div>
+            <div class="beerparty-feature-pill">
+                <span class="beerparty-feature-icon">🏆</span>
+                <span>${i18n.t('party_feat_podiums') || 'Podiums du groupe'}</span>
+            </div>
+            <div class="beerparty-feature-pill">
+                <span class="beerparty-feature-icon">📦</span>
+                <span>${i18n.t('party_feat_share') || 'Partage de bières perso'}</span>
+            </div>
+        </div>
+
+        <div class="beerparty-pseudo-strip">
+            <span>${i18n.t('party_pseudo_label') || 'Connecté en tant que'} :</span>
+            <strong id="beerparty-display-pseudo">${currentPseudo}</strong>
+            <button type="button" id="btn-edit-party-pseudo" class="beerparty-pseudo-edit-btn" title="${i18n.t('party_change_pseudo') || 'Modifier'}">✏️</button>
+            <button type="button" id="btn-dice-party-pseudo" class="beerparty-pseudo-edit-btn" title="Générer un animal aléatoire">🎲</button>
+        </div>
+
+        <div class="beerparty-actions">
+            <button type="button" id="btn-match" class="beerparty-btn-primary">
+                ${i18n.t('stats_match_btn') || '🎉 Lancer la Beer Party'}
             </button>
+            <button type="button" id="btn-party-quick-scan" class="beerparty-btn-secondary" title="${i18n.t('party_btn_scan') || 'Scanner un QR'}">
+                ${i18n.t('party_btn_scan') || '📷 Scanner un QR'}
+            </button>
+        </div>
+    `;
+
+    const matchBlock = Storage.getPreference('feat_beermatch_enabled', true) ? `
+        <div class="beerparty-hero-card">
+            <div class="beerparty-badge">
+                <span class="party-pulse-dot"></span>
+                <span>${i18n.t('party_badge_live') || 'COMPARAISON EN DIRECT'}</span>
+            </div>
+            <div class="beerparty-title">
+                <span>🍻</span>
+                <span>${i18n.t('stats_match_title') || 'Beer Party'}</span>
+            </div>
+            <p class="beerparty-pitch" data-i18n="party_pitch">
+                ${i18n.t('party_pitch') || 'Connectez vos téléphones sans serveur : partagez vos verres en direct, comparez vos collections, découvrez vos bières en commun et suivez les trophées du groupe !'}
+            </p>
+            ${partyActiveHtml}
         </div>
     ` : '';
 
@@ -2854,6 +2919,86 @@ export function renderStats(allBeers, userData, container) {
     // Hook up events
     const btnMatch = container.querySelector('#btn-match');
     if (btnMatch) btnMatch.onclick = () => renderMatchModal(allBeers);
+
+    const btnPartyOpenActive = container.querySelector('#btn-party-open-active');
+    if (btnPartyOpenActive) btnPartyOpenActive.onclick = () => renderMatchModal(allBeers);
+
+    const cardCodeEl = container.querySelector('#beerparty-card-code');
+    if (cardCodeEl && activeCode) {
+        cardCodeEl.onclick = () => {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(activeCode).then(() => showToast(`Code ${activeCode} copié !`)).catch(() => showToast(`Code : ${activeCode}`));
+            } else {
+                showToast(`Code : ${activeCode}`);
+            }
+        };
+    }
+
+    const btnPartyLeaveActive = container.querySelector('#btn-party-leave-active');
+    if (btnPartyLeaveActive) {
+        btnPartyLeaveActive.onclick = async () => {
+            const ok = await showConfirmModal("Voulez-vous vraiment quitter la Beer Party ?", {
+                confirmText: "Quitter",
+                cancelText: "Rester",
+                danger: true
+            });
+            if (!ok) return;
+            if (window.Match) window.Match.leaveParty();
+            if (window.UI && window.UI.updateHeaderPartyUI) window.UI.updateHeaderPartyUI();
+            renderStatsView(container, allBeers, userData);
+        };
+    }
+
+    const btnPartyQuickScan = container.querySelector('#btn-party-quick-scan');
+    if (btnPartyQuickScan) {
+        btnPartyQuickScan.onclick = () => {
+            if (window.UI && window.UI.renderUniversalScannerModal) {
+                window.UI.renderUniversalScannerModal();
+            } else {
+                renderMatchModal(allBeers);
+            }
+        };
+    }
+
+    const btnEditPseudo = container.querySelector('#btn-edit-party-pseudo');
+    if (btnEditPseudo) {
+        btnEditPseudo.onclick = async () => {
+            const oldP = Storage.getPreference('beermatch_pseudo', '');
+            const sampleP = window.Match && window.Match.getRandomPseudo ? window.Match.getRandomPseudo() : "Renard Houblonné";
+            const newP = await showPromptModal("Choisissez votre pseudo pour la Beer Party :", {
+                defaultValue: oldP,
+                placeholder: `Ex: ${sampleP}`
+            });
+            if (newP !== null) {
+                const trimmed = newP.trim();
+                Storage.savePreference('beermatch_pseudo', trimmed);
+                if (window.Match) {
+                    if (window.Match.updateMyPseudo) window.Match.updateMyPseudo(trimmed);
+                    else if (window.Match.myProfile) window.Match.myProfile.pseudo = trimmed || 'Anonyme';
+                    if (window.Match.broadcastState) window.Match.broadcastState();
+                }
+                const pseudoEl = container.querySelector('#beerparty-display-pseudo');
+                if (pseudoEl) pseudoEl.textContent = trimmed || 'Anonyme';
+                showToast(`Pseudo mis à jour : ${trimmed || 'Anonyme'}`);
+            }
+        };
+    }
+
+    const btnDicePseudo = container.querySelector('#btn-dice-party-pseudo');
+    if (btnDicePseudo) {
+        btnDicePseudo.onclick = () => {
+            const randomP = window.Match && window.Match.getRandomPseudo ? window.Match.getRandomPseudo() : 'Renard Houblonné';
+            Storage.savePreference('beermatch_pseudo', randomP);
+            if (window.Match) {
+                if (window.Match.updateMyPseudo) window.Match.updateMyPseudo(randomP);
+                else if (window.Match.myProfile) window.Match.myProfile.pseudo = randomP;
+                if (window.Match.broadcastState) window.Match.broadcastState();
+            }
+            const pseudoEl = container.querySelector('#beerparty-display-pseudo');
+            if (pseudoEl) pseudoEl.textContent = randomP;
+            showToast(`Nouveau pseudo : ${randomP}`);
+        };
+    }
 
     const btnWrapped = container.querySelector('#btn-open-wrapped');
     if (btnWrapped) {
@@ -3936,10 +4081,10 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                     </div>
                 </div>
 
-                <div class="setting-row" data-keywords="beer match tinder party">
+                <div class="setting-row" data-keywords="beer party dégustation salon direct">
                     <div class="setting-info">
                         <span class="setting-title">${i18n.t('settings_toggle_beermatch') || 'Beer Party'}</span>
-                        <span class="setting-desc" data-i18n="settings_beermatch_desc">Organisez des dégustations à plusieurs.</span>
+                        <span class="setting-desc" data-i18n="settings_beermatch_desc">${i18n.t('settings_beermatch_desc') || 'Salons de dégustation en direct, statistiques collectives et partage P2P'}</span>
                     </div>
                     <div class="setting-action">
                         <label class="switch">
@@ -3949,24 +4094,77 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
                     </div>
                 </div>
 
-                <div class="setting-row" style="padding-left:15px; border-left:2px solid var(--accent-gold); display:${Storage.getPreference('feat_beermatch_enabled', true) ? 'flex' : 'none'};" id="party-pseudo-row">
+                <div class="setting-row party-sub-row" style="padding-left:15px; border-left:2px solid var(--accent-gold); display:${Storage.getPreference('feat_beermatch_enabled', true) ? 'flex' : 'none'};" id="party-pseudo-row">
                     <div class="setting-info">
                         <span class="setting-title">Pseudo Party</span>
                         <span class="setting-desc">Votre nom affiché dans la salle.</span>
                     </div>
-                    <div class="setting-action">
-                        <input type="text" id="input-party-pseudo" class="form-input" placeholder="Buveur..." value="${Storage.getPreference('beermatch_pseudo', '')}" style="width:120px; font-size:0.8rem; text-align:right;">
+                    <div class="setting-action" style="display:flex; gap:6px; align-items:center;">
+                        <input type="text" id="input-party-pseudo" class="form-input" placeholder="Anonyme" value="${Storage.getPreference('beermatch_pseudo', '')}" style="width:120px; font-size:0.8rem; text-align:right;">
+                        <button type="button" id="btn-settings-dice-pseudo" class="beerparty-pseudo-edit-btn" title="Générer un animal aléatoire">🎲</button>
                     </div>
                 </div>
-                
-                <div class="setting-row" style="padding-left:15px; border-left:2px solid var(--accent-gold); display:${Storage.getPreference('feat_beermatch_enabled', true) ? 'flex' : 'none'};" id="party-privacy-row">
+
+                <div class="setting-row party-sub-row" style="padding-left:15px; border-left:2px solid var(--accent-gold); display:${Storage.getPreference('feat_beermatch_enabled', true) ? 'flex' : 'none'};" id="party-privacy-total-row">
                     <div class="setting-info">
-                        <span class="setting-title">Partage de statistiques</span>
-                        <span class="setting-desc">Inclure mon total et mon historique dans le résumé de groupe.</span>
+                        <span class="setting-title">${i18n.t('settings_party_share_total') || 'Partager volumes & total bu'}</span>
+                        <span class="setting-desc" data-i18n="settings_party_share_total_desc">${i18n.t('settings_party_share_total_desc') || 'Partager vos verres, litres et alcool pur pour le cumul du groupe.'}</span>
                     </div>
                     <div class="setting-action">
                         <label class="switch">
-                            <input type="checkbox" class="toggle-switch" id="toggle-party-stats" ${Storage.getPreference('beermatch_share_total', true) ? 'checked' : ''}>
+                            <input type="checkbox" class="toggle-switch" id="toggle-party-share-total" ${Storage.getPreference('beermatch_share_total', true) ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-row party-sub-row" style="padding-left:15px; border-left:2px solid var(--accent-gold); display:${Storage.getPreference('feat_beermatch_enabled', true) ? 'flex' : 'none'};" id="party-privacy-catalog-row">
+                    <div class="setting-info">
+                        <span class="setting-title">${i18n.t('settings_party_share_catalog') || 'Partager bières en commun'}</span>
+                        <span class="setting-desc" data-i18n="settings_party_share_catalog_desc">${i18n.t('settings_party_share_catalog_desc') || 'Comparer vos bières goûtées pour découvrir vos affinités.'}</span>
+                    </div>
+                    <div class="setting-action">
+                        <label class="switch">
+                            <input type="checkbox" class="toggle-switch" id="toggle-party-share-catalog" ${Storage.getPreference('beermatch_share_catalog', true) ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-row party-sub-row" style="padding-left:15px; border-left:2px solid var(--accent-gold); display:${Storage.getPreference('feat_beermatch_enabled', true) ? 'flex' : 'none'};" id="party-privacy-top-row">
+                    <div class="setting-info">
+                        <span class="setting-title">${i18n.t('settings_party_share_top') || 'Partager bières favorites'}</span>
+                        <span class="setting-desc" data-i18n="settings_party_share_top_desc">${i18n.t('settings_party_share_top_desc') || 'Afficher votre bière préférée et participer à la bière reine du groupe.'}</span>
+                    </div>
+                    <div class="setting-action">
+                        <label class="switch">
+                            <input type="checkbox" class="toggle-switch" id="toggle-party-share-top" ${Storage.getPreference('beermatch_share_top', true) ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-row party-sub-row" style="padding-left:15px; border-left:2px solid var(--accent-gold); display:${Storage.getPreference('feat_beermatch_enabled', true) ? 'flex' : 'none'};" id="party-privacy-unique-row">
+                    <div class="setting-info">
+                        <span class="setting-title">${i18n.t('settings_party_share_unique') || 'Partager bières uniques'}</span>
+                        <span class="setting-desc" data-i18n="settings_party_share_unique_desc">${i18n.t('settings_party_share_unique_desc') || 'Diffuser votre total de bières différentes (podium Explorateur).'}</span>
+                    </div>
+                    <div class="setting-action">
+                        <label class="switch">
+                            <input type="checkbox" class="toggle-switch" id="toggle-party-share-unique" ${Storage.getPreference('beermatch_share_unique', true) ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-row party-sub-row" style="padding-left:15px; border-left:2px solid var(--accent-gold); display:${Storage.getPreference('feat_beermatch_enabled', true) ? 'flex' : 'none'};" id="party-privacy-achievements-row">
+                    <div class="setting-info">
+                        <span class="setting-title">${i18n.t('settings_party_share_achievements') || 'Partager trophées & badges'}</span>
+                        <span class="setting-desc" data-i18n="settings_party_share_achievements_desc">${i18n.t('settings_party_share_achievements_desc') || 'Diffuser vos succès débloqués (podium Chasseur).'}</span>
+                    </div>
+                    <div class="setting-action">
+                        <label class="switch">
+                            <input type="checkbox" class="toggle-switch" id="toggle-party-share-achievements" ${Storage.getPreference('beermatch_share_achievements', true) ? 'checked' : ''}>
                             <span class="slider round"></span>
                         </label>
                     </div>
@@ -4539,7 +4737,11 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
         { id: '#toggle-feat-reminders', key: 'feat_reminders_enabled' },
         { id: '#toggle-feat-equivalences', key: 'feat_equivalences_enabled' },
         { id: '#toggle-feat-beermatch', key: 'feat_beermatch_enabled' },
-        { id: '#toggle-party-stats', key: 'beermatch_share_total' },
+        { id: '#toggle-party-share-total', key: 'beermatch_share_total' },
+        { id: '#toggle-party-share-catalog', key: 'beermatch_share_catalog' },
+        { id: '#toggle-party-share-top', key: 'beermatch_share_top' },
+        { id: '#toggle-party-share-unique', key: 'beermatch_share_unique' },
+        { id: '#toggle-party-share-achievements', key: 'beermatch_share_achievements' },
         { id: '#toggle-feat-wrapped', key: 'feat_wrapped_enabled' }
     ];
 
@@ -4548,9 +4750,41 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
         if (el) {
             el.addEventListener('change', (e) => {
                 Storage.savePreference(t.key, e.target.checked);
+                if (t.key === 'feat_beermatch_enabled') {
+                    const partySubRows = container.querySelectorAll('.party-sub-row');
+                    partySubRows.forEach(r => r.style.display = e.target.checked ? 'flex' : 'none');
+                }
             });
         }
     });
+
+    const inputPartyPseudo = container.querySelector('#input-party-pseudo');
+    if (inputPartyPseudo) {
+        inputPartyPseudo.addEventListener('input', (e) => {
+            const trimmed = e.target.value.trim();
+            Storage.savePreference('beermatch_pseudo', trimmed);
+            if (window.Match) {
+                if (window.Match.updateMyPseudo) window.Match.updateMyPseudo(trimmed);
+                else if (window.Match.myProfile) window.Match.myProfile.pseudo = trimmed || 'Anonyme';
+                if (window.Match.broadcastState) window.Match.broadcastState();
+            }
+        });
+    }
+
+    const btnSettingsDice = container.querySelector('#btn-settings-dice-pseudo');
+    if (btnSettingsDice) {
+        btnSettingsDice.addEventListener('click', () => {
+            const randomP = window.Match && window.Match.getRandomPseudo ? window.Match.getRandomPseudo() : 'Renard Houblonné';
+            Storage.savePreference('beermatch_pseudo', randomP);
+            if (inputPartyPseudo) inputPartyPseudo.value = randomP;
+            if (window.Match) {
+                if (window.Match.updateMyPseudo) window.Match.updateMyPseudo(randomP);
+                else if (window.Match.myProfile) window.Match.myProfile.pseudo = randomP;
+                if (window.Match.broadcastState) window.Match.broadcastState();
+            }
+            showToast(`Nouveau pseudo : ${randomP}`);
+        });
+    }
 
     container.querySelector('#btn-template').onclick = () => renderTemplateEditor();
 
@@ -5353,6 +5587,7 @@ function renderTemplateEditor() {
 function renderLegalPage(type) {
     const wrapper = document.createElement('div');
     wrapper.className = 'modal-dialog legal-dialog';
+    wrapper.style.maxWidth = '520px';
 
     const title = i18n.t(`legal_${type}_title`);
     const content = i18n.t(`legal_${type}_content`);
@@ -5362,10 +5597,10 @@ function renderLegalPage(type) {
             <h2>${title}</h2>
             <div class="legal-title-underline"></div>
         </div>
-        <div class="legal-body">
-            <p>${content}</p>
+        <div class="legal-body" style="text-align:left; font-size:0.86rem; line-height:1.55; color:#ccc; max-height:65vh; overflow-y:auto; padding:4px 2px;">
+            <div>${content}</div>
         </div>
-        <div class="legal-actions">
+        <div class="legal-actions" style="margin-top:16px;">
             <button id="btn-close-legal" class="btn-outline">${i18n.t('btn_close') || 'Fermer'}</button>
         </div>
     `;
@@ -6225,19 +6460,54 @@ export function showAchievementDetails(title, desc, icon, isUnlocked, rarity) {
 
 export function renderMatchModal(allBeersMap, initialCode = null) {
     const allBeers = (allBeersMap instanceof window.Map) ? allBeersMap : new window.Map(allBeersMap.map(b=>[b.id, b])); // ensure Map
+    const currentPseudo = Storage.getPreference('beermatch_pseudo', '') || 'Anonyme';
 
     const wrapper = document.createElement('div');
     wrapper.innerHTML = `
-        <div class="modal-content" style="width: min(95%, 500px); max-height: 85vh; padding: 20px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h2 style="margin:0; font-family:'Russo One'; color:var(--accent-gold); font-size:1.5rem;">🍻 Beer Party</h2>
-                <button type="button" class="close-btn" style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
+        <div class="modal-content" style="width: min(95%, 500px); max-height: 88vh; padding: 20px; overflow-y: auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <h2 style="margin:0; font-family:'Russo One'; color:var(--accent-gold); font-size:1.5rem;">🍻 Beer Party</h2>
+                    <span style="font-size:0.65rem; background:color-mix(in srgb, var(--accent-gold) 15%, transparent); color:var(--accent-gold); border:1px solid color-mix(in srgb, var(--accent-gold) 35%, transparent); padding:2px 8px; border-radius:12px; font-weight:800; letter-spacing:0.8px;">P2P DIRECT</span>
+                </div>
+                <button type="button" class="close-btn" style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;" aria-label="Fermer">&times;</button>
             </div>
 
             <div id="party-lobby">
-                <div style="display:flex; border-bottom:1px solid #333; margin-bottom:20px;">
-                    <button id="tab-join" style="flex:1; background:none; border:none; color:var(--accent-gold); padding:10px; border-bottom:2px solid var(--accent-gold); cursor:pointer;">Rejoindre</button>
-                    <button id="tab-host" style="flex:1; background:none; border:none; color:#666; padding:10px; cursor:pointer;">Créer</button>
+                <div id="lobby-profile-bar" style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.08); padding:8px 14px; border-radius:12px; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+                    <div style="display:flex; align-items:center; gap:6px; font-size:0.82rem; color:#aaa;">
+                        <span>👤 Pseudo :</span>
+                        <strong id="lobby-pseudo-text" style="color:#fff; font-size:0.88rem;">${currentPseudo}</strong>
+                    </div>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <button type="button" id="btn-lobby-dice-pseudo" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#ddd; font-size:0.75rem; padding:4px 8px; border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:4px;" title="Générer un animal aléatoire">🎲 Aléatoire</button>
+                        <button type="button" id="btn-lobby-edit-pseudo" style="background:none; border:none; color:var(--accent-gold); font-size:0.8rem; font-weight:bold; cursor:pointer; text-decoration:underline;">✏️ Modifier</button>
+                        <button type="button" id="btn-lobby-privacy" style="background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); color:#ddd; font-size:0.75rem; padding:4px 8px; border-radius:8px; cursor:pointer; display:flex; align-items:center; gap:4px;" title="Choisir ce que vous partagez">🛡️ Partage</button>
+                    </div>
+                </div>
+
+                <div id="lobby-features-summary" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px;">
+                    <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:8px 10px; font-size:0.75rem; color:#ccc; display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:1.1rem;">📊</span>
+                        <span>Stats & volumes cumulés</span>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:8px 10px; font-size:0.75rem; color:#ccc; display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:1.1rem;">🏆</span>
+                        <span>Podiums en temps réel</span>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:8px 10px; font-size:0.75rem; color:#ccc; display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:1.1rem;">🍻</span>
+                        <span>Bières en commun</span>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:8px 10px; font-size:0.75rem; color:#ccc; display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:1.1rem;">📦</span>
+                        <span>Partage P2P direct</span>
+                    </div>
+                </div>
+
+                <div style="display:flex; border-bottom:1px solid rgba(255,255,255,0.12); margin-bottom:16px;">
+                    <button id="tab-join" style="flex:1; background:none; border:none; color:var(--accent-gold); padding:10px; border-bottom:2px solid var(--accent-gold); cursor:pointer; font-weight:800; font-size:0.9rem;">🍻 Rejoindre</button>
+                    <button id="tab-host" style="flex:1; background:none; border:none; color:#888; padding:10px; cursor:pointer; font-weight:800; font-size:0.9rem;">👑 Créer une Salle</button>
                 </div>
                 
                 <div id="view-join" style="display:block;">
@@ -6266,8 +6536,8 @@ export function renderMatchModal(allBeersMap, initialCode = null) {
                 
                 <div id="view-host" style="display:none; text-align:center;">
                     <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
-                        <p style="color:#ccc; font-size:0.9rem; margin-bottom:20px;">Créez une salle et partagez le code à vos amis.</p>
-                        <button id="btn-host" class="btn-primary" style="background: linear-gradient(135deg, var(--accent-gold), var(--accent-amber)); color:black; width:100%; font-weight:800; border:none; box-shadow: 0 4px 15px color-mix(in srgb, var(--accent-gold) 35%, transparent); padding: 12px;">Héberger une Party</button>
+                        <p style="color:#ccc; font-size:0.9rem; margin-bottom:20px; line-height:1.45;">Créez une salle instantanée et partagez le code ou le QR Code à vos amis pour démarrer la dégustation collective en direct !</p>
+                        <button id="btn-host" class="btn-primary" style="background: linear-gradient(135deg, var(--accent-gold), var(--accent-amber)); color:black; width:100%; font-weight:800; border:none; box-shadow: 0 4px 15px color-mix(in srgb, var(--accent-gold) 35%, transparent); padding: 12px;">👑 Héberger une Beer Party</button>
                     </div>
                 </div>
             </div>
@@ -6346,6 +6616,118 @@ export function renderMatchModal(allBeersMap, initialCode = null) {
     };
     tabJoin.onclick = () => switchTab('join');
     tabHost.onclick = () => switchTab('host');
+
+    const btnLobbyEditPseudo = wrapper.querySelector('#btn-lobby-edit-pseudo');
+    if (btnLobbyEditPseudo) {
+        btnLobbyEditPseudo.onclick = async () => {
+            const oldP = Storage.getPreference('beermatch_pseudo', '');
+            const sampleP = Match && Match.getRandomPseudo ? Match.getRandomPseudo() : "Renard Houblonné";
+            const newP = await showPromptModal("Votre pseudo pour la Beer Party :", {
+                defaultValue: oldP,
+                placeholder: `Ex: ${sampleP}`
+            });
+            if (newP !== null) {
+                const trimmed = newP.trim();
+                Storage.savePreference('beermatch_pseudo', trimmed);
+                if (Match) {
+                    if (Match.updateMyPseudo) Match.updateMyPseudo(trimmed);
+                    else if (Match.myProfile) Match.myProfile.pseudo = trimmed || 'Anonyme';
+                    if (Match.broadcastState) Match.broadcastState();
+                }
+                const lobbyPseudo = wrapper.querySelector('#lobby-pseudo-text');
+                if (lobbyPseudo) lobbyPseudo.textContent = trimmed || 'Anonyme';
+                const roomMyPseudo = wrapper.querySelector('#my-pseudo');
+                if (roomMyPseudo) roomMyPseudo.textContent = trimmed || 'Anonyme';
+                showToast(`Pseudo mis à jour : ${trimmed || 'Anonyme'}`);
+            }
+        };
+    }
+
+    const btnLobbyDicePseudo = wrapper.querySelector('#btn-lobby-dice-pseudo');
+    if (btnLobbyDicePseudo) {
+        btnLobbyDicePseudo.onclick = () => {
+            const randomP = Match && Match.getRandomPseudo ? Match.getRandomPseudo() : 'Renard Houblonné';
+            Storage.savePreference('beermatch_pseudo', randomP);
+            if (Match) {
+                if (Match.updateMyPseudo) Match.updateMyPseudo(randomP);
+                else if (Match.myProfile) Match.myProfile.pseudo = randomP;
+                if (Match.broadcastState) Match.broadcastState();
+            }
+            const lobbyPseudo = wrapper.querySelector('#lobby-pseudo-text');
+            if (lobbyPseudo) lobbyPseudo.textContent = randomP;
+            const roomMyPseudo = wrapper.querySelector('#my-pseudo');
+            if (roomMyPseudo) roomMyPseudo.textContent = randomP;
+            showToast(`Nouveau pseudo : ${randomP}`);
+        };
+    }
+
+    const btnLobbyPrivacy = wrapper.querySelector('#btn-lobby-privacy');
+    if (btnLobbyPrivacy) {
+        btnLobbyPrivacy.onclick = () => {
+            const privDialog = document.createElement('div');
+            privDialog.className = 'modal-dialog';
+            privDialog.style.maxWidth = '420px';
+            privDialog.innerHTML = `
+                <div class="dialog-icon">🛡️</div>
+                <h3 style="color:var(--accent-gold); font-family:'Russo One'; margin-bottom:8px;">${i18n.t('settings_party_privacy_section')}</h3>
+                <p style="color:#aaa; font-size:0.8rem; margin-bottom:12px;">${i18n.t('party_privacy_modal_desc') || 'Choisissez précisément ce que vous souhaitez diffuser aux autres membres dans la salle.'}</p>
+                <div style="background:rgba(46,204,113,0.08); border:1px solid rgba(46,204,113,0.25); border-radius:8px; padding:8px 10px; font-size:0.75rem; color:#a3e635; margin-bottom:14px; text-align:left; line-height:1.35; display:flex; align-items:flex-start; gap:8px;">
+                    <span style="font-size:0.95rem;">🔒</span>
+                    <span>${i18n.t('party_privacy_p2p_notice')}</span>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:10px; text-align:left; margin-bottom:20px;">
+                    <label style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:10px 12px; border-radius:10px; cursor:pointer;">
+                        <div>
+                            <div style="font-size:0.85rem; color:#eee; font-weight:bold;">${i18n.t('settings_party_share_total') || 'Volumes & total bu'}</div>
+                            <div style="font-size:0.75rem; color:#888;">${i18n.t('settings_party_share_total_desc') || 'Verres, litres et alcool pur pour le cumul du groupe.'}</div>
+                        </div>
+                        <input type="checkbox" id="modal-priv-total" class="toggle-switch" ${Storage.getPreference('beermatch_share_total', true) ? 'checked' : ''}>
+                    </label>
+                    <label style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:10px 12px; border-radius:10px; cursor:pointer;">
+                        <div>
+                            <div style="font-size:0.85rem; color:#eee; font-weight:bold;">${i18n.t('settings_party_share_catalog') || 'Bières en commun'}</div>
+                            <div style="font-size:0.75rem; color:#888;">${i18n.t('settings_party_share_catalog_desc') || 'Comparer les bières goûtées pour vos affinités.'}</div>
+                        </div>
+                        <input type="checkbox" id="modal-priv-catalog" class="toggle-switch" ${Storage.getPreference('beermatch_share_catalog', true) ? 'checked' : ''}>
+                    </label>
+                    <label style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:10px 12px; border-radius:10px; cursor:pointer;">
+                        <div>
+                            <div style="font-size:0.85rem; color:#eee; font-weight:bold;">${i18n.t('settings_party_share_top') || 'Bières favorites'}</div>
+                            <div style="font-size:0.75rem; color:#888;">${i18n.t('settings_party_share_top_desc') || 'Participer au top bière du groupe.'}</div>
+                        </div>
+                        <input type="checkbox" id="modal-priv-top" class="toggle-switch" ${Storage.getPreference('beermatch_share_top', true) ? 'checked' : ''}>
+                    </label>
+                    <label style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:10px 12px; border-radius:10px; cursor:pointer;">
+                        <div>
+                            <div style="font-size:0.85rem; color:#eee; font-weight:bold;">${i18n.t('settings_party_share_unique') || 'Bières uniques'}</div>
+                            <div style="font-size:0.75rem; color:#888;">${i18n.t('settings_party_share_unique_desc') || 'Podium de l\'Explorateur.'}</div>
+                        </div>
+                        <input type="checkbox" id="modal-priv-unique" class="toggle-switch" ${Storage.getPreference('beermatch_share_unique', true) ? 'checked' : ''}>
+                    </label>
+                    <label style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:10px 12px; border-radius:10px; cursor:pointer;">
+                        <div>
+                            <div style="font-size:0.85rem; color:#eee; font-weight:bold;">${i18n.t('settings_party_share_achievements') || 'Trophées & badges'}</div>
+                            <div style="font-size:0.75rem; color:#888;">${i18n.t('settings_party_share_achievements_desc') || 'Podium du Chasseur.'}</div>
+                        </div>
+                        <input type="checkbox" id="modal-priv-achievements" class="toggle-switch" ${Storage.getPreference('beermatch_share_achievements', true) ? 'checked' : ''}>
+                    </label>
+                </div>
+                <button id="btn-priv-save" class="btn-primary" style="width:100%; padding:10px; font-weight:bold;">${i18n.t('party_privacy_modal_save') || i18n.t('btn_save') || 'Enregistrer'}</button>
+            `;
+            openModal(privDialog);
+            privDialog.querySelector('#btn-priv-save').onclick = () => {
+                Storage.savePreference('beermatch_share_total', privDialog.querySelector('#modal-priv-total').checked);
+                Storage.savePreference('beermatch_share_catalog', privDialog.querySelector('#modal-priv-catalog').checked);
+                Storage.savePreference('beermatch_share_top', privDialog.querySelector('#modal-priv-top').checked);
+                Storage.savePreference('beermatch_share_unique', privDialog.querySelector('#modal-priv-unique').checked);
+                Storage.savePreference('beermatch_share_achievements', privDialog.querySelector('#modal-priv-achievements').checked);
+                if (Match) Match.myProfile = Match.generateLocalProfile(allBeers);
+                if (Match && Match.broadcastState) Match.broadcastState();
+                closeModal();
+                showToast("Préférences de partage enregistrées");
+            };
+        };
+    }
 
 
 
