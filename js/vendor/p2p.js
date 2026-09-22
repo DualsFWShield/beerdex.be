@@ -63,7 +63,14 @@ class P2PEngine {
      */
     async init(customId = null) {
         if (this.peer && !this.peer.destroyed && this.peerId) {
-            return this.peerId;
+            if (customId === null || customId === this.peerId) {
+                if (this.peer.disconnected) {
+                    try { this.peer.reconnect(); } catch (e) {}
+                }
+                return this.peerId;
+            }
+            // ID mismatch: destroy previous peer to allow registering the requested customId cleanly
+            this.destroy();
         }
 
         if (this._initPromise) return this._initPromise;
@@ -93,6 +100,7 @@ class P2PEngine {
                 this.peerId = id;
                 console.log('[P2P] My peer ID:', id);
                 this._initPromise = null;
+                this._startHeartbeat();
                 resolve(id);
             });
 
@@ -118,7 +126,9 @@ class P2PEngine {
 
             this.peer.on('disconnected', () => {
                 console.log('[P2P] Peer disconnected from signaling server. Reconnecting...');
-                try { this.peer.reconnect(); } catch (e) { console.error(e); }
+                if (this.peer && !this.peer.destroyed) {
+                    try { this.peer.reconnect(); } catch (e) { console.error(e); }
+                }
             });
         });
 
@@ -162,20 +172,31 @@ class P2PEngine {
         // Automatically init without customId if not already connected
         await this.init();
 
+        if (this.peer && this.peer.disconnected && !this.peer.destroyed) {
+            console.log('[P2P] Peer disconnected from signaling server before connectTo, reconnecting...');
+            try { this.peer.reconnect(); } catch (e) {}
+            await new Promise(r => setTimeout(r, 400));
+        }
+
         if (remotePeerId === this.peerId) {
             throw new Error('Cannot connect to yourself.');
         }
 
         if (this.connections.has(remotePeerId)) {
-            console.log('[P2P] Already connected to:', remotePeerId);
-            return;
+            const existing = this.connections.get(remotePeerId);
+            if (existing && existing.open) {
+                console.log('[P2P] Already connected to:', remotePeerId);
+                return;
+            }
+            try { existing.close(); } catch(e){}
+            this.connections.delete(remotePeerId);
         }
 
         return new Promise((resolve, reject) => {
             console.log('[P2P] Connecting to peer:', remotePeerId);
             const conn = this.peer.connect(remotePeerId, {
                 reliable: true,
-                serialization: 'binary'
+                serialization: 'json'
             });
 
             const timeout = setTimeout(() => {
@@ -495,10 +516,37 @@ class P2PEngine {
         }
     }
 
+    _startHeartbeat() {
+        this._stopHeartbeat();
+        this._heartbeatInterval = setInterval(() => {
+            if (!this.peer || this.peer.destroyed) {
+                this._stopHeartbeat();
+                return;
+            }
+            if (this.peer.disconnected) {
+                console.log('[P2P] Peer disconnected from signaling, attempting reconnect...');
+                try { this.peer.reconnect(); } catch (e) {}
+            } else if (this.peer.socket && this.peer.socket._socket && this.peer.socket._socket.readyState === 1) {
+                // Keep signaling WebSocket active on PeerServer
+                try {
+                    this.peer.socket._socket.send(JSON.stringify({ type: 'HEARTBEAT' }));
+                } catch (e) {}
+            }
+        }, 12000);
+    }
+
+    _stopHeartbeat() {
+        if (this._heartbeatInterval) {
+            clearInterval(this._heartbeatInterval);
+            this._heartbeatInterval = null;
+        }
+    }
+
     /**
      * Destroy peer and cleanup completely.
      */
     destroy() {
+        this._stopHeartbeat();
         this.disconnect();
         if (this.peer) {
             try { this.peer.destroy(); } catch (e) { /* ignore */ }
@@ -506,13 +554,15 @@ class P2PEngine {
         }
         this.peerId = null;
         this._initPromise = null;
+        this.incomingFiles.clear();
         this.eventListeners = {
             connected: [],
             disconnected: [],
             meta: [],
             progress: [],
             complete: [],
-            error: []
+            error: [],
+            message: []
         };
     }
 }

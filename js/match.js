@@ -110,6 +110,7 @@ const Match = {
     },
 
     createParty: async function(allBeers, onStateChange) {
+        this.leaveParty();
         this.onStateChange = onStateChange;
         this.isHost = true;
         this.members.clear();
@@ -134,6 +135,7 @@ const Match = {
     },
 
     joinParty: async function(roomCode, allBeers, onStateChange) {
+        this.leaveParty();
         this.onStateChange = onStateChange;
         this.isHost = false;
         this.roomCode = roomCode.toUpperCase().trim();
@@ -151,7 +153,10 @@ const Match = {
 
     leaveParty: function() {
         if (this.p2p) {
-            this.p2p.disconnect();
+            try {
+                this.p2p.destroy();
+            } catch(e){}
+            this.p2p = null;
         }
         this.members.clear();
         this.roomCode = null;

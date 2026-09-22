@@ -53,8 +53,10 @@ function loadChartJs() {
     return chartJsPromise;
 }
 
-import { checkAutoBackup, renderImportModal, renderExportModal, renderShareLink } from './import-export.js';
-export { checkAutoBackup, renderImportModal, renderExportModal, renderShareLink };
+import { checkAutoBackup, renderImportModal, renderExportModal, renderShareLink, renderOtaSyncModal } from './import-export.js';
+export { checkAutoBackup, renderImportModal, renderExportModal, renderShareLink, renderOtaSyncModal };
+window.UI = window.UI || {};
+window.UI.renderOtaSyncModal = renderOtaSyncModal;
 
 
 /**
@@ -6221,7 +6223,7 @@ export function showAchievementDetails(title, desc, icon, isUnlocked, rarity) {
 
 // --- Beer Match (QR) ---
 
-export function renderMatchModal(allBeersMap) {
+export function renderMatchModal(allBeersMap, initialCode = null) {
     const allBeers = (allBeersMap instanceof window.Map) ? allBeersMap : new window.Map(allBeersMap.map(b=>[b.id, b])); // ensure Map
 
     const wrapper = document.createElement('div');
@@ -6359,7 +6361,8 @@ export function renderMatchModal(allBeersMap) {
                     window.UI.renderSharedBeerModal(beerData, "Scan QR");
                 }
             } else {
-                wrapper.querySelector('#join-code').value = text.trim();
+                const cleanCode = text.replace(/^(BEERDEX-PARTY:|PARTY:)/i, '').trim().toUpperCase();
+                wrapper.querySelector('#join-code').value = cleanCode;
                 switchTab('join');
                 wrapper.querySelector('#btn-join').click(); // auto join
             }
@@ -6500,7 +6503,7 @@ export function renderMatchModal(allBeersMap) {
         qrContainer.innerHTML = '';
         if (window.QRCode) {
             new window.QRCode(qrContainer, {
-                text: code,
+                text: `BEERDEX-PARTY:${code}`,
                 width: 150,
                 height: 150,
                 colorDark: "#000000",
@@ -6540,6 +6543,16 @@ export function renderMatchModal(allBeersMap) {
             wrapper.querySelector('#btn-join').textContent = 'Rejoindre la Party';
         }
     };
+
+    if (initialCode && initialCode.trim().length === 6) {
+        const cleanCode = initialCode.trim().toUpperCase();
+        const joinInput = wrapper.querySelector('#join-code');
+        if (joinInput) joinInput.value = cleanCode;
+        setTimeout(() => {
+            const btnJoin = wrapper.querySelector('#btn-join');
+            if (btnJoin) btnJoin.click();
+        }, 120);
+    }
 
     const closeRoom = async () => {
         const ok = await showConfirmModal("Voulez-vous vraiment quitter / fermer la Beer Party ?", {
@@ -7350,15 +7363,44 @@ export function openUniversalScanner() {
 
     const wrapper = document.createElement('div');
     wrapper.className = 'modal-content';
-    wrapper.style.cssText = 'width: min(90%, 400px); padding: 25px; text-align: center; background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(15px); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 20px;';
+    wrapper.style.cssText = 'width: min(92%, 420px); padding: 22px; text-align: center; background: rgba(20, 20, 20, 0.95); backdrop-filter: blur(15px); border: 1px solid rgba(255, 215, 0, 0.25); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);';
     wrapper.innerHTML = `
-        <h2 style="color:var(--accent-gold); margin-bottom:15px; font-family:'Russo One'; font-size:1.4rem;">Scanner Universel</h2>
-        <p style="color:#ccc; font-size:0.85rem; margin-bottom:15px;">Scannez un code de Party ou une Bière Personnalisée.</p>
-        <div id="universal-reader" style="width: 100%; max-width: 300px; margin: 0 auto 15px auto; border-radius: 12px; overflow: hidden; background: #000;"></div>
-        <button id="btn-close-scanner" class="btn-cancel" style="width:100%; padding:12px; border-radius:25px; font-weight:bold; cursor:pointer;">Annuler</button>
+        <h2 style="color:var(--accent-gold); margin-bottom:8px; font-family:'Russo One'; font-size:1.35rem; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <span>📷</span> Scanner Universel
+        </h2>
+        <p style="color:#aaa; font-size:0.82rem; margin-bottom:14px; line-height:1.4;">
+            Scannez un QR code (Beer Party, DraftSync, Bière perso) ou tapez un code de salon ci-dessous.
+        </p>
+        <div id="universal-reader" style="width: 100%; max-width: 280px; margin: 0 auto 15px auto; border-radius: 12px; overflow: hidden; background: #000; border: 2px solid rgba(255, 215, 0, 0.3); aspect-ratio: 1/1;"></div>
+
+        <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px 14px; margin-bottom: 15px; text-align: left;">
+            <div style="font-size:0.8rem; color:#ddd; font-weight:700; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;">
+                <span>⌨️ Entrer un code de salon (6 lettres)</span>
+            </div>
+            <div style="margin-bottom:10px;">
+                <input type="text" id="universal-manual-code" placeholder="EX: A1B2C3" maxlength="15" style="width:100%; box-sizing:border-box; text-align:center; font-family:monospace; font-size:1.2rem; font-weight:bold; letter-spacing:3px; text-transform:uppercase; background:rgba(0,0,0,0.6); border:1px solid rgba(255,215,0,0.4); border-radius:10px; color:#fff; padding:10px;">
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button type="button" id="btn-uni-join-party" class="btn-primary" style="flex:1; padding:10px 8px; font-size:0.82rem; background:linear-gradient(135deg, var(--accent-gold), var(--accent-amber)); color:#000; font-weight:bold; border:none; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 3px 10px rgba(255,215,0,0.2);">
+                    🍻 Beer Party
+                </button>
+                <button type="button" id="btn-uni-join-draftsync" class="btn-primary" style="flex:1; padding:10px 8px; font-size:0.82rem; background:linear-gradient(135deg, #3b82f6, #1d4ed8); color:#fff; font-weight:bold; border:none; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 3px 10px rgba(59,130,246,0.3);">
+                    📡 DraftSync
+                </button>
+            </div>
+        </div>
+
+        <button id="btn-close-scanner" class="btn-cancel" style="width:100%; padding:10px; border-radius:20px; font-weight:bold; cursor:pointer;">Annuler</button>
     `;
 
     openModal(wrapper);
+
+    const manualInput = wrapper.querySelector('#universal-manual-code');
+    if (manualInput) {
+        manualInput.addEventListener('input', () => {
+            manualInput.value = manualInput.value.toUpperCase();
+        });
+    }
 
     const html5QrCode = new window.Html5Qrcode("universal-reader");
     
@@ -7373,15 +7415,97 @@ export function openUniversalScanner() {
 
     wrapper.querySelector('#btn-close-scanner').onclick = stopScanner;
 
+    const extractCleanCode = (inputVal) => {
+        if (!inputVal) return '';
+        return inputVal.trim()
+            .replace(/^(DRAFTSYNC:|BEERDEX-OTA:|BEERDEX-PARTY:|PARTY:)/i, '')
+            .trim()
+            .toUpperCase();
+    };
+
+    const handleJoinParty = (codeToUse) => {
+        const cleanCode = extractCleanCode(codeToUse);
+        if (!cleanCode || cleanCode.length !== 6) {
+            showToast("Veuillez saisir un code valide à 6 caractères.", "error");
+            return;
+        }
+        stopScanner();
+        renderMatchModal(window.allBeers || [], cleanCode);
+    };
+
+    const handleJoinDraftSync = (codeToUse) => {
+        const cleanCode = extractCleanCode(codeToUse);
+        if (!cleanCode || cleanCode.length !== 6) {
+            showToast("Veuillez saisir un code valide à 6 caractères.", "error");
+            return;
+        }
+        stopScanner();
+        renderOtaSyncModal(null, 'join', cleanCode);
+    };
+
+    wrapper.querySelector('#btn-uni-join-party').onclick = () => {
+        handleJoinParty(manualInput ? manualInput.value : '');
+    };
+
+    wrapper.querySelector('#btn-uni-join-draftsync').onclick = () => {
+        handleJoinDraftSync(manualInput ? manualInput.value : '');
+    };
+
+    const showCodeChoiceModal = (detectedCode) => {
+        const choiceWrapper = document.createElement('div');
+        choiceWrapper.className = 'modal-dialog';
+        choiceWrapper.style.maxWidth = '360px';
+        choiceWrapper.style.textAlign = 'center';
+        choiceWrapper.innerHTML = `
+            <div class="dialog-icon">⚡</div>
+            <h3 style="color:var(--accent-gold); font-family:'Russo One'; margin-bottom:8px;">Salon détecté : ${detectedCode}</h3>
+            <p style="color:#ccc; font-size:0.85rem; margin-bottom:18px;">
+                Ce code peut correspondre à une Beer Party ou à une session DraftSync. Quel salon souhaitez-vous rejoindre ?
+            </p>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <button id="choice-btn-party" class="btn-confirm" style="padding:12px; font-weight:bold; background:linear-gradient(135deg, var(--accent-gold), var(--accent-amber)); color:#000; border:none; border-radius:12px; cursor:pointer;">
+                    🍻 Rejoindre la Beer Party
+                </button>
+                <button id="choice-btn-draftsync" class="btn-confirm" style="padding:12px; font-weight:bold; background:linear-gradient(135deg, #3b82f6, #1d4ed8); color:#fff; border:none; border-radius:12px; cursor:pointer;">
+                    📡 Rejoindre DraftSync (P2P)
+                </button>
+                <button id="choice-btn-cancel" class="btn-cancel" style="padding:10px; border-radius:12px; margin-top:5px; cursor:pointer;">
+                    Annuler
+                </button>
+            </div>
+        `;
+        openModal(choiceWrapper);
+        choiceWrapper.querySelector('#choice-btn-party').onclick = () => {
+            closeModal();
+            renderMatchModal(window.allBeers || [], detectedCode);
+        };
+        choiceWrapper.querySelector('#choice-btn-draftsync').onclick = () => {
+            closeModal();
+            renderOtaSyncModal(null, 'join', detectedCode);
+        };
+        choiceWrapper.querySelector('#choice-btn-cancel').onclick = () => {
+            closeModal();
+        };
+    };
+
     html5QrCode.start(
         { facingMode: "environment" },
         { fps: 10, qrbox: { width: 250, height: 250 } },
         (text) => {
-            stopScanner();
+            const trimmed = text.trim();
             
-            if (text.startsWith('BEERDEX:')) {
+            if (trimmed.startsWith('DRAFTSYNC:') || trimmed.startsWith('BEERDEX-OTA:')) {
+                const code = extractCleanCode(trimmed);
+                stopScanner();
+                renderOtaSyncModal(null, 'join', code);
+            } else if (trimmed.startsWith('BEERDEX-PARTY:') || trimmed.startsWith('PARTY:')) {
+                const code = extractCleanCode(trimmed);
+                stopScanner();
+                renderMatchModal(window.allBeers || [], code);
+            } else if (trimmed.startsWith('BEERDEX:')) {
+                stopScanner();
                 try {
-                    const beerData = JSON.parse(text.replace('BEERDEX:', ''));
+                    const beerData = JSON.parse(trimmed.replace('BEERDEX:', ''));
                     if (Array.isArray(beerData)) {
                         beerData.forEach(b => {
                             if (!String(b.id).startsWith('CUSTOM_')) b.id = 'CUSTOM_' + b.id;
@@ -7395,20 +7519,12 @@ export function openUniversalScanner() {
                 } catch(e) {
                     showAlertModal("Code QR invalide ou corrompu.", { icon: '❌' });
                 }
-            } else if (text.trim().length === 6) {
-                // Potential party code
-                const code = text.trim().toUpperCase();
-                // We need to switch to party tab and join
-                if (window.switchTab) window.switchTab('join');
-                const joinInput = document.getElementById('join-code');
-                const joinBtn = document.getElementById('btn-join');
-                if (joinInput && joinBtn) {
-                    joinInput.value = code;
-                    joinBtn.click();
-                } else {
-                    showAlertModal("Veuillez vous rendre dans l'onglet Party pour utiliser ce code.");
-                }
+            } else if (extractCleanCode(trimmed).length === 6) {
+                const code = extractCleanCode(trimmed);
+                stopScanner();
+                showCodeChoiceModal(code);
             } else {
+                stopScanner();
                 showAlertModal("QR Code non reconnu par Beerdex.", { icon: '❓' });
             }
         },
@@ -7475,7 +7591,7 @@ export function renderPartyQRModal(code) {
     const qrContainer = wrapper.querySelector('#header-party-qr-box');
     if (window.QRCode) {
         new window.QRCode(qrContainer, {
-            text: partyCode,
+            text: `BEERDEX-PARTY:${partyCode}`,
             width: 200,
             height: 200,
             colorDark: "#000000",
