@@ -9,9 +9,6 @@
     "allowNavigation": ["beerdex.be"]
   },
   "plugins": {
-    "StatusBar": {
-      "style": "DARK"
-    },
     "Keyboard": {
       "resize": "body",
       "style": "dark",
