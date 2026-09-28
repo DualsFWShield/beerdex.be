@@ -121,6 +121,13 @@ export const Sandbox = {
     },
 
     /**
+     * Clear the virtual store (alias for reset).
+     */
+    clear(newData = {}) {
+        this.reset(newData);
+    },
+
+    /**
      * Get a snapshot of the virtual store for debugging.
      * @returns {Object}
      */

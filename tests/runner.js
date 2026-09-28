@@ -24,6 +24,12 @@ const SUITE_MODULES = [
     { id: 'importexp',  label: '📁 Import/Export',   path: './suites/09_import_export.test.js' },
     { id: 'ui',         label: '🖥️ UI Smoke',       path: './suites/10_ui_smoke.test.js' },
     { id: 'pwa',        label: '📶 PWA/Offline',     path: './suites/11_pwa_offline.test.js' },
+    { id: 'utils',      label: '🔍 Utils & Fuzzy',   path: './suites/12_utils_search.test.js' },
+    { id: 'match',      label: '🍻 Match & Social',  path: './suites/13_social_match.test.js' },
+    { id: 'map',        label: '🗺️ Carte & Brasseries', path: './suites/14_map_breweries.test.js' },
+    { id: 'eventswheel',label: '🎡 Saveurs & Événements', path: './suites/15_events_wheel.test.js' },
+    { id: 'telemetry',  label: '📊 Télémétrie & Wrapped', path: './suites/16_wrapped_analytics_bridge.test.js' },
+    { id: 'p2p',        label: '📡 P2P & Sync OTA',  path: './suites/17_p2p_sync.test.js' },
 ];
 
 // ============================================================ //
@@ -100,8 +106,12 @@ async function handleRunAll() {
         // Import all test modules (each call describe() on import)
         for (const mod of SUITE_MODULES) {
             try {
-                // Dynamic import — each module self-registers via describe()
+                const countBefore = getSuites().length;
                 await import(mod.path + '?t=' + Date.now());
+                const countAfter = getSuites().length;
+                for (let i = countBefore; i < countAfter; i++) {
+                    getSuites()[i].moduleId = mod.id;
+                }
             } catch (err) {
                 console.error(`Failed to load test module: ${mod.path}`, err);
             }
@@ -156,7 +166,7 @@ function updateBadges(results) {
     SUITE_MODULES.forEach((mod, index) => {
         const badge = $(`#badge-${mod.id}`);
         if (!badge) return;
-        const suite = suiteResults[index];
+        const suite = suiteResults.find(s => s.moduleId === mod.id) || suiteResults[index];
         if (!suite) { badge.textContent = '—'; return; }
 
         if (suite.failed > 0) {
@@ -193,13 +203,14 @@ function renderResults(results) {
 
     let html = '';
     results.suites.forEach((suite, sIdx) => {
-        const mod = SUITE_MODULES[sIdx];
+        const mod = SUITE_MODULES.find(m => m.id === suite.moduleId) || SUITE_MODULES[sIdx];
+        const categoryId = mod ? mod.id : (suite.moduleId || 'unknown');
         const hasFailures = suite.failed > 0;
         const statusClass = hasFailures ? 'has-failures' : 'all-passed';
         const expandedClass = hasFailures ? 'expanded' : '';
 
         html += `
-        <div class="suite-block ${statusClass} ${expandedClass}" data-category="${mod ? mod.id : 'unknown'}">
+        <div class="suite-block ${statusClass} ${expandedClass}" data-category="${categoryId}">
             <div class="suite-header" onclick="this.parentElement.classList.toggle('expanded')">
                 <div class="suite-name">
                     <span class="icon">${hasFailures ? '❌' : '✅'}</span>

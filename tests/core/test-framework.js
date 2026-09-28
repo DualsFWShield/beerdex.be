@@ -385,6 +385,7 @@ export async function runAllSuites(onProgress) {
         const suiteStart = performance.now();
         const suiteResult = {
             name: suite.name,
+            moduleId: suite.moduleId || null,
             tests: [],
             passed: 0,
             failed: 0,
