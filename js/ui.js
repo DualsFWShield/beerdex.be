@@ -5269,11 +5269,20 @@ export function renderDeduplicationWizard(allBeers) {
     let currentIndex = 0;
     let mergedCount = 0;
 
+    let handleKeyDown = null;
+    const exitWizard = () => {
+        if (handleKeyDown) {
+            document.removeEventListener('keydown', handleKeyDown);
+            handleKeyDown = null;
+        }
+        modalContainer.style.display = '';
+        modalContainer.classList.add('hidden');
+        modalContainer.innerHTML = '';
+    };
+
     const showNext = () => {
         if (currentIndex >= matches.length) {
-            modalContainer.style.display = '';
-            modalContainer.classList.add('hidden');
-            modalContainer.innerHTML = '';
+            exitWizard();
             if (mergedCount > 0) {
                 Storage.savePreference('dedup_manually_triggered', true);
                 window.dispatchEvent(new Event('beerdex-action'));
@@ -5300,7 +5309,7 @@ export function renderDeduplicationWizard(allBeers) {
         const isFav = !!customData.favorite;
 
         const migrationTitleText = i18n.t('migration_title') || 'Transfert disponible';
-        const migrationSubtitleText = `${currentIndex + 1} / ${matches.length} - ${i18n.t('migration_subtitle') || 'Voulez-vous fusionner ces entrées ?'}`;
+        const migrationSubtitleText = `${currentIndex + 1} / ${matches.length} — Remplacer votre bière personnalisée par l'entrée officielle`;
         const migrationCustomLabel = i18n.t('migration_label_custom') || 'Personnalisée';
         const migrationOfficialLabel = i18n.t('migration_label_official') || 'Officielle';
         const migrationSimilarityText = i18n.t('migration_similarity') || 'Similarité :';
@@ -5311,9 +5320,13 @@ export function renderDeduplicationWizard(allBeers) {
         const migrationDismissText = i18n.t('migration_btn_dismiss') || 'Ignorer';
         const migrationTransferText = i18n.t('migration_btn_reconcile') || 'Fusionner et remplacer';
 
+        const warningActionText = `⚠️ <strong>Action définitive :</strong> La bière personnalisée sera <u>définitivement supprimée</u> de votre collection après la fusion complète de vos consommations, notes et historique vers la bière officielle.`;
+
         modalContainer.innerHTML = `
             <div class="modal-overlay active" id="migration-overlay">
-                <div class="modal-content" style="max-width: 440px; border: 1px solid rgba(255,192,0,0.3); background: var(--bg-card); max-height: 90vh; overflow-y: auto;">
+                <div class="modal-content" style="max-width: 440px; border: 1px solid rgba(255,192,0,0.3); background: var(--bg-card); max-height: 90vh; overflow-y: auto; position: relative;">
+                    <button id="btn-wiz-top-close" aria-label="Fermer l'assistant" title="Fermer l'assistant" style="position: absolute; top: 12px; right: 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; transition: all 0.2s; z-index: 10;">✕</button>
+
                     <div style="text-align: center; padding: 20px 20px 10px;">
                         <div style="font-size: 2rem; margin-bottom: 8px;">🧹</div>
                         <h3 style="color: var(--accent-gold); font-family: 'Russo One', sans-serif; margin-bottom: 5px;">
@@ -5373,19 +5386,37 @@ export function renderDeduplicationWizard(allBeers) {
                                 <span>Statut</span>
                                 <span style="color: var(--accent-gold);">⭐ Favori</span>
                             </div>` : ''}
+                            ${match.canonicalDisplay ? `<div style="font-size:0.75rem; color:#aaa; margin-top:8px; padding:6px 8px; background:rgba(0,0,0,0.25); border-radius:6px; text-align:center;">✨ Cible Thanos : <strong style="color:var(--accent-gold);">${match.canonicalDisplay}</strong></div>` : ''}
                         </div>
                     </div>
 
+                    ${match.uniqueImpact === -1 ? `
+                    <div style="margin: 0 15px 12px; padding: 10px 12px; background: rgba(255,152,0,0.15); border: 1px solid rgba(255,152,0,0.4); border-radius: 8px; color: #ffb74d; font-size: 0.75rem; line-height: 1.4; text-align: left;">
+                        ⚠️ <strong>Impact sur vos bières uniques (-1) :</strong><br>
+                        Vous possédez déjà cette bière officielle (${match.officialExistingCount} dégustation${match.officialExistingCount > 1 ? 's' : ''}). Fusionner cumulera vos consommations (${drinkCount} + ${match.officialExistingCount} = ${drinkCount + match.officialExistingCount}) mais réduira votre compteur unique de <strong>1</strong>.
+                    </div>
+                    ` : `
+                    <div style="margin: 0 15px 12px; padding: 10px 12px; background: rgba(76,175,80,0.12); border: 1px solid rgba(76,175,80,0.35); border-radius: 8px; color: #81c784; font-size: 0.75rem; line-height: 1.4; text-align: left;">
+                        ✅ <strong>Transfert neutre (0 perte) :</strong><br>
+                        Cette bière officielle n'a jamais été bue dans votre Dex. Votre compteur de bières uniques reste <u>strictement inchangé</u>.
+                    </div>
+                    `}
+
                     <div style="margin: 0 15px 15px; padding: 10px 12px; background: rgba(244,67,54,0.12); border: 1px solid rgba(244,67,54,0.35); border-radius: 8px; color: #ff8a80; font-size: 0.75rem; line-height: 1.4; text-align: center;">
-                        ⚠️ <strong>Action définitive :</strong> La bière personnalisée sera <u>définitivement supprimée</u> de votre collection après la fusion complète de vos consommations, notes et historique vers la bière officielle.
+                        ${warningActionText}
                     </div>
 
-                    <div style="display: flex; gap: 10px; padding: 0 15px 20px;">
+                    <div style="display: flex; gap: 10px; padding: 0 15px 10px;">
                         <button id="btn-wiz-dismiss" class="btn-primary" style="flex: 1; background: #222; border: 1px solid #444; color: #aaa; margin: 0; padding: 10px;">
                             ${migrationDismissText}
                         </button>
                         <button id="btn-wiz-confirm" class="btn-primary" style="flex: 1; background: var(--accent-gold); color: #000; font-weight: bold; margin: 0; padding: 10px;">
                             ${migrationTransferText}
+                        </button>
+                    </div>
+                    <div style="text-align: center; padding-bottom: 16px;">
+                        <button id="btn-wiz-exit" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #bbb; font-size: 0.82rem; padding: 6px 16px; border-radius: 20px; cursor: pointer; transition: all 0.2s;">
+                            ✕ Quitter l'assistant
                         </button>
                     </div>
                 </div>
@@ -5394,14 +5425,20 @@ export function renderDeduplicationWizard(allBeers) {
 
         modalContainer.classList.remove('hidden');
 
+        if (!handleKeyDown) {
+            handleKeyDown = (e) => {
+                if (e.key === 'Escape') exitWizard();
+            };
+            document.addEventListener('keydown', handleKeyDown);
+        }
+
         const overlay = document.getElementById('migration-overlay');
         overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
-                modalContainer.style.display = '';
-                modalContainer.classList.add('hidden');
-                modalContainer.innerHTML = '';
-            }
+            if (e.target === overlay) exitWizard();
         });
+
+        document.getElementById('btn-wiz-top-close')?.addEventListener('click', exitWizard);
+        document.getElementById('btn-wiz-exit')?.addEventListener('click', exitWizard);
 
         document.getElementById('btn-wiz-dismiss').addEventListener('click', () => {
             Deduplicator.dismissMatch(customBeer.id, officialBeer.id);

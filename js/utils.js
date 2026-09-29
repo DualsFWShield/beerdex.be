@@ -5,6 +5,7 @@
 
 import * as BAC from './bac.js';
 import * as Storage from './storage.js';
+import * as Thanos from './thanos.js';
 
 // ============================== //
 // Volume Formatting & Parsing    //
@@ -261,7 +262,8 @@ export function hasVariantConflict(titleA, titleB) {
 export function fuzzyMatchBeers(beers, query) {
     if (!query || query.trim() === '') return beers;
     
-    const normQuery = normalize(query);
+    const rawQuery = query.trim();
+    const normQuery = normalize(rawQuery);
     const queryParts = normQuery.split(' ').filter(p => p.length > 0);
     
     if (queryParts.length === 0) return beers;
@@ -269,51 +271,17 @@ export function fuzzyMatchBeers(beers, query) {
     const scoredBeers = [];
 
     for (const beer of beers) {
-        const normTitle = normalize(beer.title);
-        const normBrewery = normalize(beer.brewery);
+        // Thanos relevance scoring (permutations, synonyms, CamelCase, volume, ABV, barcode)
+        let score = Thanos.scoreSearchRelevance(beer, rawQuery);
+
+        // Region & Country metadata matching: ONLY apply if user explicitly searched for a full country/region name
         const normRegion = normalize(beer.searchRegion);
         const normCountry = normalize(beer.searchCountry);
-        
-        let score = 0;
 
-        // Perfect matches
-        if (normTitle === normQuery) score += 100;
-        if (normBrewery === normQuery) score += 50;
-
-        // Starts with (very good match)
-        if (normTitle.startsWith(normQuery)) score += 60;
-        else if (normTitle.includes(normQuery)) score += 30; // Contains full query string
-        
-        if (normBrewery.startsWith(normQuery)) score += 20;
-
-        // Partial word matching (for multi-word queries like "tripe karm")
-        let partsMatched = 0;
-        for (const part of queryParts) {
-            let partScore = 0;
-            if (normTitle.includes(part)) partScore += 10;
-            else if (normBrewery.includes(part)) partScore += 5;
-            else if (normRegion.includes(part) || normCountry.includes(part)) partScore += 2;
-            
-            // Levenshtein fuzziness for slightly misspelled words (if length >= 4)
-            if (partScore === 0 && part.length >= 4) {
-                const titleWords = normTitle.split(' ');
-                for (const word of titleWords) {
-                    if (word.length >= 4 && similarity(part, word) > 0.7) {
-                        partScore += 5;
-                        break;
-                    }
-                }
-            }
-            
-            if (partScore > 0) {
-                score += partScore;
-                partsMatched++;
-            }
-        }
-        
-        // Bonus if all words are matched
-        if (partsMatched === queryParts.length && queryParts.length > 1) {
-            score += 20;
+        if (normCountry && (normCountry === normQuery || (normQuery.length >= 4 && normCountry.includes(normQuery)))) {
+            score += 40;
+        } else if (normRegion && (normRegion === normQuery || (normQuery.length >= 4 && normRegion.includes(normQuery)))) {
+            score += 30;
         }
 
         if (score > 0) {

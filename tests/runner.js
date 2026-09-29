@@ -7,6 +7,7 @@
 
 import { getSuites, clearSuites, runAllSuites } from './core/test-framework.js';
 import { Sandbox } from './core/sandbox.js';
+import * as Thanos from '../js/thanos.js';
 
 // ============================================================ //
 //  Suite Registry (modules to import)                          //
@@ -30,6 +31,7 @@ const SUITE_MODULES = [
     { id: 'eventswheel',label: '🎡 Saveurs & Événements', path: './suites/15_events_wheel.test.js' },
     { id: 'telemetry',  label: '📊 Télémétrie & Wrapped', path: './suites/16_wrapped_analytics_bridge.test.js' },
     { id: 'p2p',        label: '📡 P2P & Sync OTA',  path: './suites/17_p2p_sync.test.js' },
+    { id: 'thanos',     label: '⚡ Thanos Engine',   path: './suites/18_thanos.test.js' }
 ];
 
 // ============================================================ //
@@ -54,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function bindEvents() {
     $('#btn-run-all').addEventListener('click', handleRunAll);
     $('#btn-copy-report').addEventListener('click', handleCopyReport);
+    $('#btn-thanos-audit')?.addEventListener('click', handleThanosAudit);
     $('#search-tests').addEventListener('input', handleSearchFilter);
     $('#btn-filter-failed').addEventListener('click', handleToggleFailedFilter);
 }
@@ -386,4 +389,173 @@ function cleanStack(stack) {
         .filter(line => !line.includes('test-framework.js'))
         .slice(0, 6)
         .join('\n');
+}
+
+// ============================================================ //
+//  Thanos DB Audit (Official Database Duplicates Scanner)      //
+// ============================================================ //
+
+async function handleThanosAudit() {
+    const container = $('#thanos-audit-container');
+    if (!container) return;
+
+    if (container.style.display !== 'none' && container.dataset.loaded === 'true') {
+        container.style.display = 'none';
+        return;
+    }
+
+    const btn = $('#btn-thanos-audit');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Analyse Thanos en cours...';
+    btn.disabled = true;
+
+    try {
+        const [resBelg, resNew] = await Promise.all([
+            fetch('../data/belgiumbeer.json').then(r => r.json()),
+            fetch('../data/newbeer.json').then(r => r.json())
+        ]);
+        const allOfficial = [...resBelg, ...resNew].filter(b => b && b.id && !String(b.id).startsWith('CUSTOM_'));
+        const duplicates = Thanos.findCatalogDuplicatesFast(allOfficial, 80);
+
+        renderThanosAuditView(container, duplicates, allOfficial);
+        container.dataset.loaded = 'true';
+        container.style.display = 'block';
+        container.scrollIntoView({ behavior: 'smooth' });
+    } catch (err) {
+        console.error('Erreur audit Thanos:', err);
+        alert('Impossible de charger les fichiers de données: ' + err.message);
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+function renderThanosAuditView(container, duplicates, allOfficial) {
+    const deleteIds = duplicates.map(d => d.customBeer.id);
+
+    container.innerHTML = `
+        <div style="background: var(--bg-card); border: 1px solid var(--accent-gold); border-radius: var(--radius); padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <h2 style="color: var(--accent-gold); font-size: 1.25rem; display: flex; align-items: center; gap: 8px;">
+                        <span>⚡</span> Thanos DB Audit — Doublons Officiels Identifiés (${duplicates.length})
+                    </h2>
+                    <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 2px;">
+                        Ces doublons ont été identifiés dans la base officielle (belgiumbeer.json / newbeer.json) pour examen et suppression.
+                    </p>
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn btn-secondary" id="btn-copy-thanos-json" style="font-size: 0.8rem; padding: 6px 12px;">
+                        📋 Copier IDs (JSON)
+                    </button>
+                    <button class="btn btn-secondary" id="btn-download-thanos-json" style="font-size: 0.8rem; padding: 6px 12px;">
+                        💾 Télécharger IDs (.json)
+                    </button>
+                    <button class="btn btn-secondary" id="btn-copy-thanos-md" style="font-size: 0.8rem; padding: 6px 12px;">
+                        📝 Rapport Markdown
+                    </button>
+                    <button class="btn btn-secondary" id="btn-close-thanos-audit" style="font-size: 0.8rem; padding: 6px 12px;">
+                        ✕ Fermer
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <input type="text" id="thanos-audit-search" class="search-input" placeholder="Filtrer un doublon (ex: Le Fort, Bush, Orval)..." style="flex: 1; min-width: 250px; padding: 8px 12px;">
+                <span style="font-size: 0.8rem; color: var(--text-secondary);">Commande CLI : <code style="color: var(--accent-gold); background: rgba(0,0,0,0.3); padding: 3px 8px; border-radius: 4px;">node scripts/thanos_cleanup_official_dupes.js --apply</code></span>
+            </div>
+
+            <div id="thanos-audit-list" style="display: flex; flex-direction: column; gap: 10px; max-height: 600px; overflow-y: auto;">
+                ${duplicates.map((d) => `
+                    <div class="thanos-dupe-card" data-search="${escapeHtml((d.customBeer.title + ' ' + d.officialBeer.title + ' ' + (d.customBeer.brewery || '')).toLowerCase())}" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 12px; display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 250px;">
+                            <div style="font-size: 0.75rem; color: #e74c3c; font-weight: bold; text-transform: uppercase;">🗑️ Doublon à supprimer :</div>
+                            <div style="font-weight: 600; color: #fff; font-size: 0.95rem;">${escapeHtml(d.customBeer.title)}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary);">${escapeHtml(d.customBeer.brewery || '')} · ${escapeHtml(d.customBeer.alcohol || '')} · ${escapeHtml(d.customBeer.volume || '')}</div>
+                            <code style="font-size: 0.7rem; color: #ff8a80; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;">ID: ${escapeHtml(d.customBeer.id)}</code>
+                        </div>
+
+                        <div style="text-align: center; flex-shrink: 0;">
+                            <span class="badge" style="background: rgba(255, 192, 0, 0.15); color: var(--accent-gold); border: 1px solid rgba(255, 192, 0, 0.4); padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.85rem;">${d.score}%</span>
+                            <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 4px;">Similarité</div>
+                        </div>
+
+                        <div style="flex: 1; min-width: 250px;">
+                            <div style="font-size: 0.75rem; color: var(--success); font-weight: bold; text-transform: uppercase;">✨ Cible à conserver :</div>
+                            <div style="font-weight: 600; color: #fff; font-size: 0.95rem;">${escapeHtml(d.officialBeer.title)}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary);">${escapeHtml(d.officialBeer.brewery || '')} · ${escapeHtml(d.officialBeer.alcohol || '')} · ${escapeHtml(d.officialBeer.volume || '')}</div>
+                            <code style="font-size: 0.7rem; color: #81c784; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;">ID: ${escapeHtml(d.officialBeer.id)}</code>
+                        </div>
+
+                        <div style="flex-shrink: 0;">
+                            <button class="btn btn-secondary btn-copy-single-id" data-id="${escapeHtml(d.customBeer.id)}" style="font-size: 0.75rem; padding: 6px 10px;">
+                                Copier ID
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+
+    // Event listeners
+    container.querySelector('#btn-close-thanos-audit').addEventListener('click', () => {
+        container.style.display = 'none';
+    });
+
+    container.querySelector('#btn-copy-thanos-json').addEventListener('click', (e) => {
+        const json = JSON.stringify(deleteIds, null, 2);
+        navigator.clipboard.writeText(json).then(() => {
+            const btn = e.target;
+            const orig = btn.innerText;
+            btn.innerText = '✅ IDs Copiés !';
+            setTimeout(() => btn.innerText = orig, 2000);
+        });
+    });
+
+    container.querySelector('#btn-download-thanos-json').addEventListener('click', () => {
+        const json = JSON.stringify(deleteIds, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `thanos_official_duplicate_ids_${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+
+    container.querySelector('#btn-copy-thanos-md').addEventListener('click', (e) => {
+        let md = `# ⚡ Thanos DB Audit — ${duplicates.length} Doublons Détectés\n\n`;
+        md += `| Score | Doublon à supprimer (ID) | Cible à conserver (ID) | Brasserie |\n`;
+        md += `|---|---|---|---|\n`;
+        duplicates.forEach(d => {
+            md += `| ${d.score}% | \`${d.customBeer.id}\` (${d.customBeer.title}) | \`${d.officialBeer.id}\` (${d.officialBeer.title}) | ${d.officialBeer.brewery || ''} |\n`;
+        });
+        navigator.clipboard.writeText(md).then(() => {
+            const btn = e.target;
+            const orig = btn.innerText;
+            btn.innerText = '✅ Markdown Copié !';
+            setTimeout(() => btn.innerText = orig, 2000);
+        });
+    });
+
+    container.querySelectorAll('.btn-copy-single-id').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = btn.dataset.id;
+            navigator.clipboard.writeText(id).then(() => {
+                const orig = btn.innerText;
+                btn.innerText = 'Copié !';
+                setTimeout(() => btn.innerText = orig, 1500);
+            });
+        });
+    });
+
+    const searchInput = container.querySelector('#thanos-audit-search');
+    searchInput.addEventListener('input', () => {
+        const q = searchInput.value.toLowerCase().trim();
+        container.querySelectorAll('.thanos-dupe-card').forEach(card => {
+            const text = card.dataset.search || '';
+            card.style.display = (!q || text.includes(q)) ? '' : 'none';
+        });
+    });
 }

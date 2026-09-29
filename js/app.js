@@ -131,6 +131,9 @@ async function init() {
                 // If user is searching right now, they'll show up on next input.
             }
 
+            // Thanos: Apply historical ID alias migrations (retroactive data safety)
+            Storage.applyHistoricalAliases(state.beers).catch(err => console.warn('[Thanos] Alias migration error:', err));
+
             // Cleanup orphaned user data — ONLY if we loaded a meaningful number of beers.
             // Guard against network failures that would leave us with a partial set,
             // which would cause false orphan detection and data loss on Capacitor.

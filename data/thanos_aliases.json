@@ -1,0 +1,571 @@
+{
+  "GRISETTE BLANCHE_BLANCHE_20": {
+    "targetId": "GRISETTE BLANCHE_BLANCHE_0.25",
+    "targetTitle": "GRISETTE BLANCHE",
+    "targetBrewery": "SAINT FEUILLIEN",
+    "originalTitle": "GRISETTE BLANCHE",
+    "originalBrewery": "SAINT FEUILLIEN"
+  },
+  "STELLA_ARTOIS_BLONDE_0.25": {
+    "targetId": "STELLA_BLONDE_6",
+    "targetTitle": "Stella Artois",
+    "targetBrewery": "Stella Artois",
+    "originalTitle": "Stella Artois",
+    "originalBrewery": "Ab Inbev"
+  },
+  "WESTMALLE_TRAPPIST_DOUBLE_BRUNE_0.75": {
+    "targetId": "WESTMALLE_TRAPPIST_DOUBLE_BRUNE_0.33",
+    "targetTitle": "Westmalle Trappist Double",
+    "targetBrewery": "Westmalle",
+    "originalTitle": "Westmalle Trappist Double",
+    "originalBrewery": "Westmalle"
+  },
+  "LA_TRAPPE_DOUBLE_NL_BRUNE_0.75": {
+    "targetId": null,
+    "originalTitle": "La Trappe Double  (NL)",
+    "originalBrewery": "Koningshoeven"
+  },
+  "LA_TRAPPE_WITTE_TRAPPIST_BLANCHE_NL_BLANCHE_0.75": {
+    "targetId": "LA TRAPPE WITTE_BLANCHE_0.33",
+    "targetTitle": "LA TRAPPE WITTE",
+    "targetBrewery": "ABBAYE DE KONINGSHOEVEN",
+    "originalTitle": "La Trappe Witte Trappist Blanche  (NL)",
+    "originalBrewery": "Koningshoeven"
+  },
+  "MORT_SUBITE_GEUZE_BIERE_0.25": {
+    "targetId": "MORT_SUBITE_GEUZE_BIERE_0.38",
+    "targetTitle": "Mort Subite Geuze",
+    "targetBrewery": "Alken-Maes",
+    "originalTitle": "Mort Subite Geuze",
+    "originalBrewery": "Mort Subite (Alken-Maes)"
+  },
+  "LA_GAULOISE_BLONDE_BLONDE_0.75": {
+    "targetId": "LA_GAULOISE_BLONDE_BLONDE_0.33",
+    "targetTitle": "La Gauloise Blonde",
+    "targetBrewery": "Du Bocq",
+    "originalTitle": "La Gauloise Blonde",
+    "originalBrewery": "Du Bocq"
+  },
+  "BOON_GUEUZE_VIEILLE_BLONDE_0.25": {
+    "targetId": "BOON_GUEUZE_VIEILLE_BLONDE_0.38",
+    "targetTitle": "Boon Gueuze Vieille",
+    "targetBrewery": "Boon",
+    "originalTitle": "Boon Gueuze Vieille",
+    "originalBrewery": "Boon"
+  },
+  "BOON_FRAMBOISE_AMBREE_0.38": {
+    "targetId": "BOON_FRAMBOISE_ROUGE___FRUIT_0.25",
+    "targetTitle": "Boon Framboise",
+    "targetBrewery": "Boon",
+    "originalTitle": "Boon Framboise",
+    "originalBrewery": "Boon"
+  },
+  "LINDEMANS_CASSIS_ROUGE___FRUIT_0.35": {
+    "targetId": "LINDEMANS_CASSIS_AMBREE_0.25",
+    "targetTitle": "Lindemans Cassis",
+    "targetBrewery": "Lindemans",
+    "originalTitle": "Lindemans Cassis",
+    "originalBrewery": "Lindemans"
+  },
+  "MC_CHOUFFE_BRUNE_0.75": {
+    "targetId": "MC_CHOUFFE_BRUNE_0.33",
+    "targetTitle": "MC CHOUFFE",
+    "targetBrewery": "BRASSERIE D'ACHOUFFE",
+    "originalTitle": "Mc Chouffe",
+    "originalBrewery": "Duvel Moortgat"
+  },
+  "BOON_CERISE_ROUGE___FRUIT_0.25": {
+    "targetId": "BOON_CERISE_ROUGE___FRUIT_0.38",
+    "targetTitle": "Boon  Cerise",
+    "targetBrewery": "Boon",
+    "originalTitle": "Boon  Cerise",
+    "originalBrewery": "Boon"
+  },
+  "LUPULUS_ORGANICUS_BLONDE_0.75": {
+    "targetId": "LUPULUS ORGANICUS BIO",
+    "targetTitle": "LUPULUS ORGANICUS BIO",
+    "targetBrewery": "Lupulus",
+    "originalTitle": "Lupulus Organicus",
+    "originalBrewery": "Les 3 Fourquets"
+  },
+  "DOMINICAINS_TRIPEL_8_BLONDE_0.75": {
+    "targetId": "DOMINICAINS_TRIPEL_8_BLONDE_0.33",
+    "targetTitle": "Dominicains Tripel 8",
+    "targetBrewery": "Brasserie des 3F",
+    "originalTitle": "Dominicains Tripel 8",
+    "originalBrewery": "Brasserie des 3F"
+  },
+  "DESPERADOS_AROMATISEE_0.33": {
+    "targetId": "DESPERADOS_BLONDE_0.33",
+    "targetTitle": "DESPERADOS",
+    "targetBrewery": "HEINEKEN",
+    "originalTitle": "DESPERADOS",
+    "originalBrewery": "FISCHER"
+  },
+  "ES_AGUILA_ORIGINAL": {
+    "targetId": "CO_AGUILA_ORIGINAL",
+    "targetTitle": "Aguila Original",
+    "targetBrewery": "Cervecería Bavaria",
+    "originalTitle": "Aguila Original",
+    "originalBrewery": "Heineken España S.A."
+  },
+  "CIDRE BRUT VAL DE RANCE_DOREE_30": {
+    "targetId": null,
+    "originalTitle": "CIDRE BRUT VAL DE RANCE",
+    "originalBrewery": "Empty"
+  },
+  "CIDRE DOUX VAL DE RANCE_DOREE_20": {
+    "targetId": null,
+    "originalTitle": "CIDRE DOUX VAL DE RANCE",
+    "originalBrewery": "Empty"
+  },
+  "UNAN 4.8%_BLONDE_30": {
+    "targetId": null,
+    "originalTitle": "UNAN 4.8%",
+    "originalBrewery": "THE FRENCH FACTORY"
+  },
+  "PAIX_DIEU_TRIPLE_BLONDE_0.33": {
+    "targetId": "PAIX DIEU_BLONDE_0.33",
+    "targetTitle": "PAIX DIEU",
+    "targetBrewery": "CAULIER",
+    "originalTitle": "Paix Dieu Triple",
+    "originalBrewery": "Caulier"
+  },
+  "LA_CORNE_BLOND_BLONDE_0.33": {
+    "targetId": "LA CORNE BLONDE_BLONDE_0.33",
+    "targetTitle": "LA CORNE BLONDE",
+    "targetBrewery": "EBLY",
+    "originalTitle": "La Corne Blond",
+    "originalBrewery": "d'Ebly"
+  },
+  "LA_TRAPPE_BLONDE_NL_BLONDE_0.33": {
+    "targetId": "LA TRAPPE BLOND_BLONDE_0.33",
+    "targetTitle": "LA TRAPPE BLONDE",
+    "targetBrewery": "ABBAYE DE KONINGSHOEVEN",
+    "originalTitle": "La Trappe Blonde  (NL)",
+    "originalBrewery": "Koningshoeven"
+  },
+  "RODENBACH_FRUITAGE_BIERE_0.25": {
+    "targetId": "RODENBACH FRUITAGE_ROUGE/RUBIS_0.25",
+    "targetTitle": "RODENBACH FRUITAGE",
+    "targetBrewery": "PALM (BAVARIA)",
+    "originalTitle": "Rodenbach Fruitage",
+    "originalBrewery": "Rodenbach"
+  },
+  "DUVEL_TRIPEL_HOP_CITRA_BLONDE_0.33": {
+    "targetId": "DUVEL_BLONDE_0.33",
+    "targetTitle": "DUVEL",
+    "targetBrewery": "DUVEL MOORTGAT",
+    "originalTitle": "Duvel Tripel Hop Citra",
+    "originalBrewery": "Duvel Moortgat"
+  },
+  "LA_TRAPPE_TRIPLE_NL_BLONDE_0.33": {
+    "targetId": null,
+    "originalTitle": "La Trappe Triple  (NL)",
+    "originalBrewery": "Koningshoeven"
+  },
+  "LUPULUS_ORGANICUS_BLONDE_0.33": {
+    "targetId": "LUPULUS ORGANICUS BIO",
+    "targetTitle": "LUPULUS ORGANICUS BIO",
+    "targetBrewery": "Lupulus",
+    "originalTitle": "Lupulus Organicus",
+    "originalBrewery": "Lupulus"
+  },
+  "LA_TRAPPE_DOUBLE_NL_BRUNE_0.33": {
+    "targetId": null,
+    "originalTitle": "La Trappe Double  (NL)",
+    "originalBrewery": "Koningshoeven"
+  },
+  "KASTEELBIER_ROUGE_BLIK_ROUGE___FRUIT_0.33": {
+    "targetId": "KASTEELBIER_ROUGE_BLIK_ROUGE___FRUIT_0.50",
+    "targetTitle": "Kasteelbier Rouge Blik",
+    "targetBrewery": "Van Honsebrouck",
+    "originalTitle": "Kasteelbier Rouge Blik",
+    "originalBrewery": "Van Honsebrouck"
+  },
+  "KAPITTEL_PRIOR_BRUNE_0.33": {
+    "targetId": "KAPITTEL_PRIOR_BRUNE_0.75",
+    "targetTitle": "Kapittel Prior",
+    "targetBrewery": "Van Eecke",
+    "originalTitle": "Kapittel Prior",
+    "originalBrewery": "Van Eecke"
+  },
+  "KAPITTEL_BLONDE_BLONDE_0.33": {
+    "targetId": "KAPITTEL_BLONDE_BLONDE_0.75",
+    "targetTitle": "Kapittel Blonde",
+    "targetBrewery": "Van Eecke",
+    "originalTitle": "Kapittel Blonde",
+    "originalBrewery": "Van Eecke"
+  },
+  "ST_FEUILLIEN_QUADRUPEL_BIERE_0.33": {
+    "targetId": null,
+    "originalTitle": "St Feuillien Quadrupel",
+    "originalBrewery": "Brasserie St-Feuillien"
+  },
+  "LA_TENDUE_SAISON_0.33": {
+    "targetId": null,
+    "originalTitle": "LA TENDUE",
+    "originalBrewery": "DU COMTE HENER"
+  },
+  "PAIX_DIEU_TRIPEL_33CL": {
+    "targetId": "PAIX DIEU_BLONDE_0.33",
+    "targetTitle": "PAIX DIEU",
+    "targetBrewery": "CAULIER",
+    "originalTitle": "Paix Dieu Tripel - 33cl",
+    "originalBrewery": "Unknown"
+  },
+  "BERTINCHAMPS BLONDE_BLONDE_20": {
+    "targetId": "BERTINCHAMPS_BLONDE_BLONDE_0.50",
+    "targetTitle": "BERTINCHAMPS BLONDE",
+    "targetBrewery": "BERTINCHAMPS",
+    "originalTitle": "BERTINCHAMPS BLONDE",
+    "originalBrewery": "BERTINCHAMPS"
+  },
+  "BE_GORDON_FINEST_TITANIUM_05": {
+    "targetId": null,
+    "originalTitle": "Gordon Finest Titanium",
+    "originalBrewery": "Gordon (John Martin)"
+  },
+  "BE_MORETTI_AUTENTICA_033": {
+    "targetId": "IT_MORETTI_AUTENTICA_033",
+    "targetTitle": "Birra Moretti L'Autentica",
+    "targetBrewery": "Birra Moretti",
+    "originalTitle": "Birra Moretti L'Autentica",
+    "originalBrewery": "Birra Moretti (Heineken)"
+  },
+  "STELLA_ARTOIS_BLONDE_0.33": {
+    "targetId": "STELLA_BLONDE_6",
+    "targetTitle": "Stella Artois",
+    "targetBrewery": "Stella Artois",
+    "originalTitle": "Stella Artois",
+    "originalBrewery": "Ab Inbev"
+  },
+  "TRAPPISTES_ROCHEFORT_10_BRUNE_0.33": {
+    "targetId": "ROCHEFORT_10_QUADRUPEL_0.33",
+    "targetTitle": "ROCHEFORT 10",
+    "targetBrewery": "ABBAYE DE NOTRE-DAME DE SAINT-RÉMY",
+    "originalTitle": "Trappistes Rochefort 10",
+    "originalBrewery": "St Remy"
+  },
+  "ST_BERNARDUS_ABT_12_BRUNE_0.33": {
+    "targetId": "ST BERNARDUS ABT_BRUNE_0.33",
+    "targetTitle": "St Bernardus Abt 12",
+    "targetBrewery": "St. Bernardus",
+    "originalTitle": "St Bernardus Abt 12",
+    "originalBrewery": "Watou"
+  },
+  "TRAPPISTES_ROCHEFORT_8_BRUNE_0.33": {
+    "targetId": "ROCHEFORT_8_BRUNE_0.33",
+    "targetTitle": "ROCHEFORT 8",
+    "targetBrewery": "ABBAYE DE NOTRE-DAME DE SAINT-RÉMY",
+    "originalTitle": "Trappistes Rochefort 8",
+    "originalBrewery": "St Remy"
+  },
+  "STELLA_ARTOIS_0_0_BLONDE_0.25": {
+    "targetId": "STELLA_BLONDE_6",
+    "targetTitle": "Stella Artois",
+    "targetBrewery": "Stella Artois",
+    "originalTitle": "Stella Artois 0°",
+    "originalBrewery": "Ab Inbev"
+  },
+  "TRAPPISTES_ROCHEFORT_6_BLONDE_0.33": {
+    "targetId": "ROCHEFORT_6_BRUNE_0.33",
+    "targetTitle": "ROCHEFORT 6",
+    "targetBrewery": "ABBAYE DE NOTRE-DAME DE SAINT-RÉMY",
+    "originalTitle": "Trappistes Rochefort 6",
+    "originalBrewery": "St Remy"
+  },
+  "CORNE_LA_TRIPLE_10_BLONDE_0.33": {
+    "targetId": "LA CORNE TRIPLE_BLONDE_0.33",
+    "targetTitle": "Corne La Triple 10",
+    "targetBrewery": "Ebly",
+    "originalTitle": "Corne La Triple 10",
+    "originalBrewery": "d'Ebly"
+  },
+  "DESPERADOS_BIERE_0.33": {
+    "targetId": "DESPERADOS_BLONDE_0.33",
+    "targetTitle": "DESPERADOS",
+    "targetBrewery": "HEINEKEN",
+    "originalTitle": "Desperados",
+    "originalBrewery": "Heineken"
+  },
+  "DESPERADOS_VIRGIN_0_0_BLONDE_0.33": {
+    "targetId": "DESPERADOS_VIRGIN_0,0%_BLONDE_0.33",
+    "targetTitle": "DESPERADOS VIRGIN 0,0%",
+    "targetBrewery": "HEINEKEN",
+    "originalTitle": "Desperados Virgin 0°",
+    "originalBrewery": "Desperados"
+  },
+  "FR_DESPERADOS_TROPICAL_033": {
+    "targetId": "NL_DESPERADOS_TROPICAL_033",
+    "targetTitle": "Desperados Tropical",
+    "targetBrewery": "Heineken",
+    "originalTitle": "Desperados Tropical",
+    "originalBrewery": "Desperados"
+  },
+  "BLOUP_BLOUP_MARK_I": {
+    "targetId": null,
+    "originalTitle": "BLOUP BLOUP MARK I",
+    "originalBrewery": "Noah & Dorian"
+  },
+  "BLOUP_BLOUP_MARK_II": {
+    "targetId": null,
+    "originalTitle": "BLOUP BLOUP MARK II",
+    "originalBrewery": "Noah & Dorian"
+  },
+  "KARMELIET_TRIPEL_BLONDE_0.33": {
+    "targetId": null,
+    "originalTitle": "Karmeliet Tripel",
+    "originalBrewery": "Bosteels Brewery"
+  },
+  "WESTMALLE_TRIPLE_BLONDE_0.33": {
+    "targetId": null,
+    "originalTitle": "Westmalle Triple",
+    "originalBrewery": "Westmalle"
+  },
+  "MAES_BLONDE_0.33": {
+    "targetId": "MAES_BLONDE_0.25",
+    "targetTitle": "MAES",
+    "targetBrewery": "ALKEN-MAES",
+    "originalTitle": "Maes",
+    "originalBrewery": "Alken-Maes"
+  },
+  "BUSH_PECHE_MEL_AMBREE_0.33": {
+    "targetId": null,
+    "originalTitle": "Bush Peche Mel",
+    "originalBrewery": "Dubuisson"
+  },
+  "DELIRIUM_NO_L_BRUNE_0.33": {
+    "targetId": "DELIRIUM NOEL_AMBREE_0.33",
+    "targetTitle": "DELIRIUM NOEL",
+    "targetBrewery": "HUYGHE",
+    "originalTitle": "Delirium Noël",
+    "originalBrewery": "Huyghe"
+  },
+  "BON_SECOURS_BLONDE_BLONDE_0.33": {
+    "targetId": "BONSECOURS BLONDE_BLONDE_0.33",
+    "targetTitle": "BONSECOURS BLONDE",
+    "targetBrewery": "CAULIER",
+    "originalTitle": "Bon Secours Blonde",
+    "originalBrewery": "Caulier"
+  },
+  "VEDETT_EXTRA_PILSNER_BLONDE_0.33": {
+    "targetId": null,
+    "originalTitle": "Vedett Extra Pilsner",
+    "originalBrewery": "Duvel Moortgat"
+  },
+  "LA_TRAPPE_QUADRUPEL_NL_BRUNE_0.33": {
+    "targetId": "LA TRAPPE QUADRUPEL_AMBREE_0.33",
+    "targetTitle": "LA TRAPPE QUADRUPEL",
+    "targetBrewery": "ABBAYE DE KONINGSHOEVEN",
+    "originalTitle": "La Trappe Quadrupel",
+    "originalBrewery": "Koningshoeven"
+  },
+  "TRAPPIST_ACHEL_BLONDE_BLONDE_0.33": {
+    "targetId": null,
+    "originalTitle": "Trappist Achel Blonde",
+    "originalBrewery": "St Benedictus"
+  },
+  "DUVEL_666_BLONDE_0.33": {
+    "targetId": "DUVEL 6.66_BLONDE_0.33",
+    "targetTitle": "DUVEL 6.66",
+    "targetBrewery": "DUVEL MOORTGAT",
+    "originalTitle": "Duvel 666",
+    "originalBrewery": "Duvel Moortgat"
+  },
+  "LINDEMANS_TAROT_D_OR_BLONDE_0.25": {
+    "targetId": "LINDEMANS TAROT D'OR_BLONDE_0.25",
+    "targetTitle": "LINDEMANS TAROT D'OR",
+    "targetBrewery": "Lindemans",
+    "originalTitle": "Lindemans Tarot d’Or",
+    "originalBrewery": "Lindemans"
+  },
+  "LUPULUS_TRIPEL_BLOND_BLONDE_0.33": {
+    "targetId": null,
+    "originalTitle": "Lupulus Tripel Blond",
+    "originalBrewery": "Lupulus"
+  },
+  "BUSH_TRIPEL_BLOND_BLONDE_0.33": {
+    "targetId": null,
+    "originalTitle": "Bush Tripel Blond",
+    "originalBrewery": "Dubuisson"
+  },
+  "YPRA_HOPPY_TRIPEL_BLONDE_0.33": {
+    "targetId": null,
+    "originalTitle": "Ypra Hoppy Tripel",
+    "originalBrewery": "Omer Vander Ghinste"
+  },
+  "LINDEMANS_GEUZE_BLONDE_0.25": {
+    "targetId": null,
+    "originalTitle": "Lindemans Geuze",
+    "originalBrewery": "Lindemans"
+  },
+  "FORCE_MAJEURE_TRADITIONAL_BLOND_0_0_BLONDE_0.33": {
+    "targetId": "FORCE_MAJEURE_TRADITIONAL_BLOND_BLONDE_0.33",
+    "targetTitle": "FORCE MAJEURE TRADITIONAL BLOND",
+    "targetBrewery": "FORCE MAJEURE",
+    "originalTitle": "Force Majeure Traditional Blond 0°",
+    "originalBrewery": "Force Majeure"
+  },
+  "FORCE_MAJEURE_NA_TRIPEL_AMBREE_0.33": {
+    "targetId": null,
+    "originalTitle": "Force Majeure NA Tripel",
+    "originalBrewery": "Force Majeur"
+  },
+  "MARTINS_PALE_ALE_AMBREE_0.33": {
+    "targetId": "MARTIN'S_PALE_ALE_AMBRÉE_0.33",
+    "targetTitle": "MARTIN'S PALE ALE",
+    "targetBrewery": "JOHN MARTIN",
+    "originalTitle": "Martins Pale Ale",
+    "originalBrewery": "Anthony Martin"
+  },
+  "T_TE_DE_MORT_RED_BIERE_0.33": {
+    "targetId": "TETE DE MORT RED_ROUGE/RUBIS_0.33",
+    "targetTitle": "TETE DE MORT RED",
+    "targetBrewery": "Du Bocq",
+    "originalTitle": "Tête De Mort Red",
+    "originalBrewery": "Brasserie du Bocq"
+  },
+  "VAL_DIEU_TRIPEL_BLONDE_0.75": {
+    "targetId": null,
+    "originalTitle": "Val Dieu Tripel",
+    "originalBrewery": "Val Dieu"
+  },
+  "CHIMAY_ROUGE_PREMIERE_BRUNE_0.33": {
+    "targetId": "CHIMAY ROUGE_AMBREE_0.33",
+    "targetTitle": "CHIMAY ROUGE",
+    "targetBrewery": "ABBAYE NOTRE-DAME DE SCOURMONT",
+    "originalTitle": "Chimay Rouge (Premiere)",
+    "originalBrewery": "Scourmont"
+  },
+  "TRAPPIST_ACHEL_BRUNE_BRUNE_0.33": {
+    "targetId": null,
+    "originalTitle": "Trappist Achel Brune",
+    "originalBrewery": "St Benedictus"
+  },
+  "TROUBADOUR_ZESTRA_NA_BLONDE_0.33": {
+    "targetId": "TROUBADOUR_ZESTRA_BLONDE_0.33",
+    "targetTitle": "TROUBADOUR ZESTRA",
+    "targetBrewery": "THE MUSKETEERS",
+    "originalTitle": "Troubadour Zestra NA",
+    "originalBrewery": "The Musketeers"
+  },
+  "FORCE_MAJEURE_NA_TRIPEL_HOP_AMBREE_0.33": {
+    "targetId": null,
+    "originalTitle": "Force Majeure NA Tripel Hop",
+    "originalBrewery": "Force Majeure"
+  },
+  "LA_TRAPPE_WITTE_TRAPPIST_BLANCHE_NL_BLANCHE_0.33": {
+    "targetId": "LA TRAPPE WITTE_BLANCHE_0.33",
+    "targetTitle": "LA TRAPPE WITTE",
+    "targetBrewery": "ABBAYE DE KONINGSHOEVEN",
+    "originalTitle": "La Trappe Witte Trappist Blanche",
+    "originalBrewery": "Koningshoeven"
+  },
+  "HOP_RUITER_BLONDE_0.33": {
+    "targetId": "HOPRUITER_TRIPEL_0.33",
+    "targetTitle": "HOPRUITER",
+    "targetBrewery": "SCHELDEBROUWERIJ",
+    "originalTitle": "Hop Ruiter",
+    "originalBrewery": "Scheldebrouwerij"
+  },
+  "ST_FEUILLIEN_BRUNE_BRUNE_0.33": {
+    "targetId": null,
+    "originalTitle": "St Feuillien Brune",
+    "originalBrewery": "St Feuillien"
+  },
+  "ST_BERNARDUS_BLANCHE_BLONDE_0.33": {
+    "targetId": null,
+    "originalTitle": "St Bernardus Blanche",
+    "originalBrewery": "St Bernardus"
+  },
+  "SURFINE_SAISON_BIERE_0.33": {
+    "targetId": null,
+    "originalTitle": "Surfine Saison",
+    "originalBrewery": "Brasserie Dubuisson"
+  },
+  "OUD_BEERSEL_OLD_GEUZE_BLONDE_0.38": {
+    "targetId": null,
+    "originalTitle": "Oud Beersel Old Geuze",
+    "originalBrewery": "Oud Beersel"
+  },
+  "QUINTINE_AMBER_AMBREE_0.33": {
+    "targetId": null,
+    "originalTitle": "Quintine Amber",
+    "originalBrewery": "Les Legendes"
+  },
+  "FORCE_MAJEURE_NA_BRUIN_BRUNE_0.33": {
+    "targetId": null,
+    "originalTitle": "Force Majeure NA Bruin",
+    "originalBrewery": "Force Majeure"
+  },
+  "BON_SECOURS_AMBREE_AMBREE_0.33": {
+    "targetId": "BONSECOURS AMBREE_AMBREE_0.33",
+    "targetTitle": "BONSECOURS AMBREE",
+    "targetBrewery": "CAULIER",
+    "originalTitle": "Bon Secours Ambree",
+    "originalBrewery": "Caulier"
+  },
+  "KAPITTEL_TRIPEL_ABT_BLONDE_0.75": {
+    "targetId": "KAPITTEL_TRIPEL_ABT_10_TRIPEL_0.33",
+    "targetTitle": "KAPITTEL TRIPEL ABT 10",
+    "targetBrewery": "BROUWERIJ LEROY",
+    "originalTitle": "Kapittel Tripel Abt",
+    "originalBrewery": "Van Eecke"
+  },
+  "KASTEELBIER_RUBUS_FRAMBOISE_BLIK_ROUGE___FRUIT_0.33": {
+    "targetId": null,
+    "originalTitle": "Kasteelbier Rubus Framboise Blik",
+    "originalBrewery": "Van Honsebrouck"
+  },
+  "LINOUÃE_FORTE_0.33": {
+    "targetId": null,
+    "originalTitle": "L'INOUÃE",
+    "originalBrewery": "LA MONTAGNARDE"
+  },
+  "MAES_0_0_BLONDE_0.25": {
+    "targetId": "MAES_0.0%_PILS_0.25",
+    "targetTitle": "MAES 0.0%",
+    "targetBrewery": "ALKEN-MAES",
+    "originalTitle": "Maes 0°",
+    "originalBrewery": "Alken-Maes"
+  },
+  "MAES_CANETTE_BLONDE_0.50": {
+    "targetId": null,
+    "originalTitle": "Maes Canette",
+    "originalBrewery": "Alken-Maes"
+  },
+  "MAES_RADLER_BLONDE_0.25": {
+    "targetId": null,
+    "targetTitle": "ADLER",
+    "targetBrewery": "ADLER",
+    "originalTitle": "Maes Radler",
+    "originalBrewery": "Alken-Maes"
+  },
+  "MAES_RADLER_CANETTE_BLONDE_0.33": {
+    "targetId": null,
+    "targetTitle": "ADLER",
+    "targetBrewery": "ADLER",
+    "originalTitle": "Maes Radler Canette",
+    "originalBrewery": "Alken-Maes"
+  },
+  "MAES_RADLER_CITROEN_0_0_BLIK_BLONDE_0.33": {
+    "targetId": null,
+    "targetTitle": "ADLER",
+    "targetBrewery": "ADLER",
+    "originalTitle": "Maes Radler Citroen 0° Blik",
+    "originalBrewery": "Alken-Maes"
+  },
+  "DUVEL_BARREL_AGED_KENTUCKY_STYLE_BLONDE_0.15": {
+    "targetId": "DUVEL_BARREL_AGED_KENTUCKY_STYLE_BLONDE_0.75",
+    "targetTitle": "Duvel Barrel Aged Kentucky Style",
+    "targetBrewery": "Duvel Moortgat",
+    "originalTitle": "Duvel Barrel Aged Kentucky Style",
+    "originalBrewery": "Duvel Moortgat"
+  },
+  "ABBAYE_DES_ROCS_SAISONNIERE_SAISON_0.33": {
+    "targetId": null,
+    "originalTitle": "Abbaye des Rocs Saisonnière",
+    "originalBrewery": "Abbaye des Rocs"
+  }
+}

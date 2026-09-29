@@ -42,6 +42,7 @@
         <div class="actions">
             <button class="btn btn-primary" id="btn-run-all">▶️ Exécuter tous les tests</button>
             <button class="btn btn-secondary" id="btn-copy-report">📋 Copier le rapport Markdown</button>
+            <button class="btn btn-secondary" id="btn-thanos-audit" style="border-color: var(--accent-gold); color: var(--accent-gold);">⚡ Audit Doublons DB (Thanos)</button>
         </div>
 
         <!-- Progress Bar -->
@@ -60,6 +61,9 @@
         <input type="text" class="search-input" id="search-tests" placeholder="Rechercher un test..." autocomplete="off">
         <button class="filter-status" id="btn-filter-failed">❌ Échoués uniquement</button>
     </div>
+
+    <!-- Thanos DB Audit Results -->
+    <div class="thanos-audit-container" id="thanos-audit-container" style="display: none; padding: 20px 24px;"></div>
 
     <!-- Test Results -->
     <div class="results-container" id="results-container">

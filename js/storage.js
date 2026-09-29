@@ -341,6 +341,46 @@ export function cleanupOrphanedUserData(allBeers) {
 }
 
 /**
+ * Thanos: Migrates historical deleted IDs to their active official equivalents.
+ * Uses data/thanos_aliases.json built from Git history.
+ * 
+ * @param {Array} allBeers - Currently loaded beers
+ * @returns {Promise<{ migrated: number }>}
+ */
+export async function applyHistoricalAliases(allBeers) {
+    if (!allBeers || allBeers.length === 0) return { migrated: 0 };
+    
+    let aliases = {};
+    try {
+        const res = await fetch('data/thanos_aliases.json');
+        if (res.ok) aliases = await res.json();
+    } catch (_) {
+        return { migrated: 0 };
+    }
+
+    const data = getAllUserData();
+    const userKeys = Object.keys(data);
+    let migrated = 0;
+
+    for (const oldId of userKeys) {
+        if (aliases[oldId] && aliases[oldId].targetId) {
+            const targetId = aliases[oldId].targetId;
+            if (targetId && targetId !== oldId) {
+                console.log(`[Thanos] Auto-migrating historical deleted ID: ${oldId} -> ${targetId}`);
+                migrateBeerData(oldId, targetId);
+                migrated++;
+            }
+        }
+    }
+
+    if (migrated > 0) {
+        console.log(`[Thanos] Successfully migrated ${migrated} legacy deleted IDs to active official beers.`);
+    }
+
+    return { migrated };
+}
+
+/**
  * Restore orphaned user data from the archive.
  * Use this to recover data that was incorrectly removed by cleanupOrphanedUserData.
  * 
