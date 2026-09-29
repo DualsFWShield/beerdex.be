@@ -556,7 +556,7 @@ export const OTASyncManager = {
      */
     applyReceivedData: function(payload, userImportChoices = {}, overwriteMode = false) {
         if (!payload) {
-            console.error('[OTA] applyReceivedData: payload is null or undefined!');
+            console.warn('[OTA] applyReceivedData: payload is null or undefined!');
             return { success: false, error: 'Payload vide' };
         }
 

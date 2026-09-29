@@ -131,8 +131,8 @@ export function similarity(a, b) {
 export function tokenSimilarity(a, b) {
     if (!a && !b) return 1;
     if (!a || !b) return 0;
-    const tokensA = new Set(normalize(a).split(/\s+/).filter(t => t.length > 0));
-    const tokensB = new Set(normalize(b).split(/\s+/).filter(t => t.length > 0));
+    const tokensA = new Set(normalize(a).split(/\s+/).filter(t => t.length > 0).map(t => VARIANT_CANONICAL[t] || t));
+    const tokensB = new Set(normalize(b).split(/\s+/).filter(t => t.length > 0).map(t => VARIANT_CANONICAL[t] || t));
     if (tokensA.size === 0 && tokensB.size === 0) return 1;
     if (tokensA.size === 0 || tokensB.size === 0) return 0;
     let intersection = 0;
@@ -149,35 +149,98 @@ export function tokenSimilarity(a, b) {
  * they are different beers (e.g. "Leffe Blonde" vs "Leffe Brune").
  * Returns true if there IS a conflict (beers should NOT be merged).
  */
-const VARIANT_WORDS = [
-    'blonde', 'blond', 'brune', 'bruin', 'ambree', 'amber', 'rouge', 'rubis',
-    'noire', 'black', 'blanche', 'witte', 'wit', 'gold', 'doree', 'triple',
-    'tripel', 'quadrupel', 'quad', 'double', 'dubbel', 'ipa', 'stout', 'porter',
-    'pils', 'lager', 'kriek', 'framboise', 'peche', 'cerise', 'grand cru',
-    'sans alcool', '0.0', 'radler', 'saison', 'hiver', 'noel', 'christmas',
-    'speciale', 'special', 'platinum', 'gold', 'silver', 'chrome', 'red',
-    'carbon', 'nickel', 'scotch'
-];
+/**
+ * Canonical variant synonyms mapping:
+ * Allows recognising that "tripel" == "triple", "blond" == "blonde", "dubbel" == "double", etc.
+ */
+const VARIANT_CANONICAL = {
+    'blonde': 'blond',
+    'blond': 'blond',
+    'brune': 'brune',
+    'bruin': 'brune',
+    'brown': 'brune',
+    'ambree': 'ambree',
+    'amber': 'ambree',
+    'rouge': 'rouge',
+    'red': 'rouge',
+    'rubis': 'rouge',
+    'bleue': 'bleue',
+    'bleu': 'bleue',
+    'blue': 'bleue',
+    'noire': 'noire',
+    'black': 'noire',
+    'blanche': 'blanche',
+    'witte': 'blanche',
+    'wit': 'blanche',
+    'white': 'blanche',
+    'gold': 'doree',
+    'doree': 'doree',
+    'triple': 'triple',
+    'tripel': 'triple',
+    'quadrupel': 'quadrupel',
+    'quad': 'quadrupel',
+    'double': 'double',
+    'dubbel': 'double',
+    'ipa': 'ipa',
+    'stout': 'stout',
+    'porter': 'porter',
+    'pils': 'pils',
+    'lager': 'lager',
+    'kriek': 'kriek',
+    'framboise': 'framboise',
+    'peche': 'peche',
+    'cerise': 'cerise',
+    'gueuze': 'gueuze',
+    'geuze': 'gueuze',
+    'lambic': 'lambic',
+    'grand cru': 'grand_cru',
+    'sans alcool': 'zero',
+    '0.0': 'zero',
+    '00': 'zero',
+    'zero': 'zero',
+    'virgin': 'zero',
+    'radler': 'radler',
+    'saison': 'saison',
+    'hiver': 'hiver',
+    'noel': 'noel',
+    'christmas': 'noel',
+    'speciale': 'speciale',
+    'special': 'speciale',
+    'platinum': 'platinum',
+    'silver': 'silver',
+    'chrome': 'chrome',
+    'carbon': 'carbon',
+    'nickel': 'nickel',
+    'scotch': 'scotch'
+};
 
 export function hasVariantConflict(titleA, titleB) {
     const normA = normalize(titleA);
     const normB = normalize(titleB);
+    const tokensA = normA.split(/\s+/);
+    const tokensB = normB.split(/\s+/);
     
-    const variantsA = [];
-    const variantsB = [];
+    const getCanonicalVariants = (tokens, normStr) => {
+        const canonical = new Set();
+        for (const [v, canon] of Object.entries(VARIANT_CANONICAL)) {
+            if (v.includes(' ')) {
+                if (normStr.includes(v)) canonical.add(canon);
+            } else if (tokens.includes(v)) {
+                canonical.add(canon);
+            }
+        }
+        return canonical;
+    };
     
-    for (const v of VARIANT_WORDS) {
-        // Check as whole word or substring
-        if (normA.includes(v)) variantsA.push(v);
-        if (normB.includes(v)) variantsB.push(v);
-    }
+    const canonA = getCanonicalVariants(tokensA, normA);
+    const canonB = getCanonicalVariants(tokensB, normB);
     
     // If one has variant words that the other doesn't, it's a conflict
-    for (const v of variantsA) {
-        if (!variantsB.includes(v)) return true;
+    for (const v of canonA) {
+        if (!canonB.has(v)) return true;
     }
-    for (const v of variantsB) {
-        if (!variantsA.includes(v)) return true;
+    for (const v of canonB) {
+        if (!canonA.has(v)) return true;
     }
     
     return false;
@@ -292,3 +355,97 @@ export function syncBACFromCountDiff(beer, oldCount, newCount) {
         }
     }
 }
+
+// ============================== //
+// Beer Type Categorization       //
+// ============================== //
+
+export const BEER_TYPE_CATEGORIES = [
+    { id: 'Blonde', label: 'Blonde', icon: '🍺' },
+    { id: 'Brune', label: 'Brune', icon: '🍫' },
+    { id: 'Ambrée', label: 'Ambrée', icon: '🍯' },
+    { id: 'Blanche', label: 'Blanche', icon: '🌾' },
+    { id: 'Triple', label: 'Triple', icon: '⚡' },
+    { id: 'Double', label: 'Double', icon: '✌️' },
+    { id: 'Quadruple', label: 'Quadruple', icon: '👑' },
+    { id: 'IPA', label: 'IPA', icon: '🌿' },
+    { id: 'Stout / Porter', label: 'Stout / Porter', icon: '☕' },
+    { id: 'Fruitée', label: 'Fruitée', icon: '🍒' },
+    { id: 'Sour / Gueuze', label: 'Sour / Gueuze', icon: '🍋' },
+    { id: 'Saison', label: 'Saison', icon: '🧑‍🌾' },
+    { id: 'Pils / Lager', label: 'Pils / Lager', icon: '🧊' },
+    { id: 'Sans Alcool', label: 'Sans Alcool', icon: '🚫' },
+    { id: 'Noël / Saisonnière', label: 'Noël / Saisonnière', icon: '🎄' },
+    { id: 'Spéciale / Autre', label: 'Spéciale / Autre', icon: '✨' }
+];
+
+export function categorizeBeerType(rawType) {
+    if (!rawType) return 'Spéciale / Autre';
+    const clean = String(rawType).replace(/Ã©/g, 'é').replace(/Ã/g, 'à').trim();
+    const sc = clean.toLowerCase();
+
+    // 1. Sans Alcool (check first)
+    if (sc.includes('sans alcool') || sc.includes('sans-alcool') || sc.includes('non-alcoholic') || sc.includes('0.0') || sc.includes('0%')) {
+        return 'Sans Alcool';
+    }
+    // 2. IPA (before blonde/ambree even if 'IPA (Blonde)')
+    if (sc.includes('ipa') || sc.includes('neipa') || sc.includes('dipa')) {
+        return 'IPA';
+    }
+    // 3. Quadruple
+    if (sc.includes('quadruple') || sc.includes('quadrupel') || sc.includes('quad')) {
+        return 'Quadruple';
+    }
+    // 4. Triple
+    if (sc.includes('triple') || sc.includes('tripel')) {
+        return 'Triple';
+    }
+    // 5. Double
+    if (sc.includes('double') || sc.includes('dubbel')) {
+        return 'Double';
+    }
+    // 6. Stout & Porter
+    if (sc.includes('stout') || sc.includes('porter') || sc.includes('black fuel') || sc === 'black' || sc === 'noire') {
+        return 'Stout / Porter';
+    }
+    // 7. Sour / Gueuze / Lambic
+    if (sc.includes('sour') || sc.includes('gueuze') || sc.includes('lambic') || sc.includes('rouge des flandres')) {
+        return 'Sour / Gueuze';
+    }
+    // 8. Saison
+    if (sc.includes('saison') && !sc.includes('traditionnelle')) {
+        return 'Saison';
+    }
+    // 9. Blanche / Wheat
+    if (sc.includes('blanche') || sc.includes('witbier') || sc.includes('weissbier') || sc.includes('wheat') || sc.includes('weizen')) {
+        return 'Blanche';
+    }
+    // 10. Fruitée / Rouge
+    if (sc.includes('fruit') || sc.includes('kriek') || sc.includes('cassis') || sc.includes('cerise') || sc.includes('framboise') || 
+        sc.includes('peche') || sc.includes('pêche') || sc.includes('rood') || sc.includes('rosee') || sc.includes('rosée') || 
+        sc.includes('rouge') || sc.includes('pasteque') || sc.includes('pastèque') || sc.includes('orange') || sc.includes('aromatise') || sc.includes('aromatisé')) {
+        return 'Fruitée';
+    }
+    // 11. Ambrée
+    if (sc.includes('ambree') || sc.includes('ambrée') || sc.includes('amber')) {
+        return 'Ambrée';
+    }
+    // 12. Brune
+    if (sc.includes('brune') || sc.includes('brown') || sc.includes('dark ale') || sc.includes('bock')) {
+        return 'Brune';
+    }
+    // 13. Pils / Lager
+    if (sc.includes('pils') || sc.includes('lager') || sc.includes('helles')) {
+        return 'Pils / Lager';
+    }
+    // 14. Blonde
+    if (sc.includes('blonde') || sc.includes('doree') || sc.includes('dorée') || sc.includes('pale ale')) {
+        return 'Blonde';
+    }
+    // 15. Noël / Saisonnière
+    if (sc.includes('noel') || sc.includes('noël') || sc.includes('saison') || sc.includes('hiver')) {
+        return 'Noël / Saisonnière';
+    }
+    return 'Spéciale / Autre';
+}
+

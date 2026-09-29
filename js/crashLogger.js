@@ -103,7 +103,7 @@ export function getDeviceInfo() {
         platform: nav.platform || 'N/A',
         language: nav.language || 'N/A',
         cookiesEnabled: nav.cookieEnabled,
-        online: nav.onLine,
+        online: typeof nav?.onLine === 'boolean' ? nav.onLine : true,
         hardwareConcurrency: nav.hardwareConcurrency || 'N/A',
         deviceMemory: nav.deviceMemory ? `${nav.deviceMemory} GB` : 'N/A',
         screenResolution: `${screen.width}x${screen.height}`,

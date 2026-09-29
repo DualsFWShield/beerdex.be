@@ -17,7 +17,9 @@ const ELIMINATION_RATE = 0.15; // g/l per hour
 // Belgian 2026 legal thresholds & International limits
 export let BAC_RULES = {};
 try {
-    const res = await fetch('data/bac_rules.json');
+    const rulesUrl = new URL('../data/bac_rules.json', import.meta.url).href;
+    const res = await fetch(rulesUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     BAC_RULES = await res.json();
 } catch (e) {
     console.error("Failed to load BAC rules", e);

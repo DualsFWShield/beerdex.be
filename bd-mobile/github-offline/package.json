@@ -4,6 +4,7 @@
   "dependencies": {
     "capacitor-widget-bridge": "^8.0.0",
     "@capacitor/android": "^8.0.0",
+    "@capacitor/app": "^8.0.0",
     "@capacitor/clipboard": "^8.0.0",
     "@capacitor/core": "^8.0.0",
     "@capacitor/filesystem": "^8.0.0",

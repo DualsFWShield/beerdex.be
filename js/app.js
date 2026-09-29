@@ -127,7 +127,6 @@ async function init() {
                 state.beers = [...state.beers, ...newBeersToAdd];
                 window.allBeers = state.beers;
                 if (window.Recommendation) window.Recommendation.init(state.beers);
-                applyFilters();
                 // We don't forcefully re-render to avoid jumping, but next paginate will include them.
                 // If user is searching right now, they'll show up on next input.
             }
@@ -181,41 +180,78 @@ async function init() {
         }
 
         // Setup Back Button Navigation (Universal)
+        const handleBackNavigation = () => {
+            // 1. If modals are open via modalStack
+            if (UI.modalStack && UI.modalStack.length > 0) {
+                const topModalClose = UI.modalStack.pop();
+                if (topModalClose) topModalClose(true);
+                return true;
+            }
+
+            // 1b. If modal-container is open / visible
+            const modalContainer = document.getElementById('modal-container');
+            if (modalContainer && !modalContainer.classList.contains('hidden') && modalContainer.innerHTML.trim() !== '') {
+                UI.closeModal(true);
+                return true;
+            }
+
+            // 2. If search bar is open
+            const searchBar = document.getElementById('search-bar');
+            if (searchBar && !searchBar.classList.contains('hidden')) {
+                searchBar.classList.add('hidden');
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) searchInput.value = '';
+                state.filter = '';
+                renderCurrentView();
+                return true;
+            }
+
+            // 3. If current view is not 'home' -> return to home view!
+            if (state.view && state.view !== 'home') {
+                state.view = 'home';
+                document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+                const homeBtn = document.querySelector('.nav-item[data-view="home"]');
+                if (homeBtn) homeBtn.classList.add('active');
+                renderCurrentView();
+                window.scrollTo(0, 0);
+                return true;
+            }
+
+            // 4. If history has previous state that is not initial
+            if (window.history.state && !window.history.state.isInitial && window.history.length > 1) {
+                window.history.back();
+                return true;
+            }
+
+            return false;
+        };
+
         // Strategy 1: Capacitor @capacitor/app plugin (if installed)
-        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
-            window.Capacitor.Plugins.App.addListener('backButton', ({ canGoBack }) => {
-                if (UI.modalStack && UI.modalStack.length > 0) {
-                    window.history.back();
-                    return;
+        const CapApp = (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) || (window.Capacitor && window.Capacitor.App);
+        if (CapApp && typeof CapApp.addListener === 'function') {
+            CapApp.addListener('backButton', ({ canGoBack }) => {
+                const handled = handleBackNavigation();
+                if (!handled) {
+                    if (canGoBack && window.history.length > 1) {
+                        window.history.back();
+                    } else if (typeof CapApp.minimizeApp === 'function') {
+                        CapApp.minimizeApp();
+                    } else if (typeof CapApp.exitApp === 'function') {
+                        CapApp.exitApp();
+                    }
                 }
-                if (window.history.state && window.history.state.isModal) {
-                    window.history.back();
-                    return;
-                }
-                if (canGoBack) {
-                    window.history.back();
-                    return;
-                }
-                window.Capacitor.Plugins.App.minimizeApp();
             });
         }
         // Strategy 2: Document 'backbutton' event (Android WebView / Cordova-style fallback)
         document.addEventListener('backbutton', (e) => {
             e.preventDefault();
-            if (UI.modalStack && UI.modalStack.length > 0) {
-                window.history.back();
-                return;
-            }
-            if (window.history.state && window.history.state.isModal) {
-                window.history.back();
-                return;
-            }
-            if (window.history.state && !window.history.state.isInitial) {
-                window.history.back();
-                return;
-            }
-            if (navigator.app && navigator.app.exitApp) {
-                navigator.app.exitApp();
+            const handled = handleBackNavigation();
+            if (!handled) {
+                if (navigator.app && navigator.app.exitApp) {
+                    navigator.app.exitApp();
+                } else if (CapApp && typeof CapApp.minimizeApp === 'function') {
+                    CapApp.minimizeApp();
+                }
             }
         }, false);
 
@@ -686,12 +722,17 @@ function applyFilters(beers, filters) {
     const getAlc = (b) => Utils.parseDegree(b.alcohol);
     const getVol = (b) => Utils.parseVolumeToMl(b.volume);
 
-    // Type & Brewery
+    // Type & Brewery (Category-aware)
     if (filters.type && filters.type.length > 0 && !filters.type.includes('All')) {
-        result = result.filter(b => filters.type.includes(b.type));
+        result = result.filter(b => {
+            const cat = Utils.categorizeBeerType ? Utils.categorizeBeerType(b.type) : b.type;
+            return filters.type.includes(cat) || filters.type.includes(b.type);
+        });
     } else if (typeof filters.type === 'string' && filters.type !== 'All') {
-        // Fallback if somehow a string gets passed
-        result = result.filter(b => b.type === filters.type);
+        result = result.filter(b => {
+            const cat = Utils.categorizeBeerType ? Utils.categorizeBeerType(b.type) : b.type;
+            return cat === filters.type || b.type === filters.type;
+        });
     }
     if (filters.brewery && filters.brewery !== 'All') result = result.filter(b => b.brewery === filters.brewery);
     if (filters.country && filters.country !== 'All') result = result.filter(b => b.searchCountry === filters.country);
@@ -784,17 +825,33 @@ function applyFilters(beers, filters) {
         else if (filters.sortBy === 'alcohol') { valA = getAlc(a); valB = getAlc(b); }
         else if (filters.sortBy === 'volume') { valA = getVol(a); valB = getVol(b); }
         else if (filters.sortBy === 'rarity') {
-            const ranks = { 'base': 0, 'commun': 1, 'rare': 2, 'super_rare': 3, 'epique': 4, 'mythique': 5, 'legendaire': 6, 'ultra_legendaire': 7 };
+            const ranks = { 'base': 0, 'commun': 1, 'rare': 2, 'super_rare': 3, 'epique': 4, 'mythique': 5, 'legendaire': 6, 'ultra_legendaire': 7, 'fondateur': 8 };
             valA = ranks[a.rarity || 'base'] || 0;
             valB = ranks[b.rarity || 'base'] || 0;
         } else if (filters.sortBy === 'community_rating') {
             valA = a.community_rating || 0;
             valB = b.community_rating || 0;
+        } else if (filters.sortBy === 'my_rating') {
+            const rA = Storage.getBeerRating(a.id);
+            const rB = Storage.getBeerRating(b.id);
+            valA = rA ? rA.score : 0;
+            valB = rB ? rB.score : 0;
+        } else if (filters.sortBy === 'brewbrother') {
+            valA = a._brewBrotherMatch ? a._brewBrotherMatch.total : (a.matchPercentage !== undefined ? a.matchPercentage : 0);
+            valB = b._brewBrotherMatch ? b._brewBrotherMatch.total : (b.matchPercentage !== undefined ? b.matchPercentage : 0);
+        } else {
+            valA = (a.title || '').toLowerCase();
+            valB = (b.title || '').toLowerCase();
         }
-        else { valA = a.title.toLowerCase(); valB = b.title.toLowerCase(); } // Default to Title
 
-        if (valA < valB) return filters.sortOrder === 'desc' ? 1 : -1;
-        if (valA > valB) return filters.sortOrder === 'desc' ? -1 : 1;
+        // Default to descending for ratings, brewbrother match, and rarity unless explicitly specified
+        let isDesc = filters.sortOrder === 'desc';
+        if (!filters.sortOrder && (filters.sortBy === 'brewbrother' || filters.sortBy === 'my_rating' || filters.sortBy === 'community_rating' || filters.sortBy === 'rarity')) {
+            isDesc = true;
+        }
+
+        if (valA < valB) return isDesc ? 1 : -1;
+        if (valA > valB) return isDesc ? -1 : 1;
         return 0;
     });
 
@@ -882,6 +939,115 @@ if ('serviceWorker' in navigator && !window.Capacitor) {
 
 
 
+function renderActiveFiltersBar(container, filters, onRemove, onClearAll) {
+    if (!filters || Object.keys(filters).length === 0) return;
+
+    const chips = [];
+
+    // Type chips
+    if (Array.isArray(filters.type)) {
+        filters.type.forEach(t => {
+            chips.push({ label: `Style: ${t}`, key: 'type', value: t });
+        });
+    }
+
+    // Rarity chips
+    if (Array.isArray(filters.rarity)) {
+        filters.rarity.forEach(r => {
+            chips.push({ label: `Rareté: ${i18n.t('rarity_' + r) || r}`, key: 'rarity', value: r });
+        });
+    }
+
+    // Brewery
+    if (filters.brewery && filters.brewery !== 'All') {
+        chips.push({ label: `🏭 ${filters.brewery}`, key: 'brewery' });
+    }
+
+    // Country
+    if (filters.country && filters.country !== 'All') {
+        chips.push({ label: `🌍 ${filters.country}`, key: 'country' });
+    }
+
+    // Region
+    if (filters.region && filters.region !== 'All') {
+        chips.push({ label: `📍 ${filters.region}`, key: 'region' });
+    }
+
+    // Favorites
+    if (filters.onlyFavorites) {
+        chips.push({ label: `⭐ Favoris`, key: 'onlyFavorites' });
+    }
+
+    // Custom
+    if (filters.onlyCustom) {
+        chips.push({ label: `✨ Mes créations`, key: 'onlyCustom' });
+    }
+
+    // Ratings
+    if (filters.minRating && parseInt(filters.minRating) > 0) {
+        chips.push({ label: `Note: ≥${filters.minRating}/20`, key: 'minRating' });
+    }
+    if (filters.community_rating && parseFloat(filters.community_rating) > 0) {
+        chips.push({ label: `Note comm: ≥${filters.community_rating}/5`, key: 'community_rating' });
+    }
+
+    // Alcohol
+    if (filters.alcMode === 'max' && parseFloat(filters.alcMax) < 15) {
+        chips.push({ label: `Alcool: ≤${filters.alcMax}%`, key: 'alcMode' });
+    } else if (filters.alcMode === 'range' && (filters.alcMin || filters.alcMax)) {
+        chips.push({ label: `Alcool: ${filters.alcMin || 0}% - ${filters.alcMax || 15}%`, key: 'alcMode' });
+    } else if (filters.alcMode === 'exact' && filters.alcExact) {
+        chips.push({ label: `Alcool: ${filters.alcExact}%`, key: 'alcMode' });
+    }
+
+    // Volume
+    if (filters.volMode === 'range' && (filters.volMin || filters.volMax)) {
+        chips.push({ label: `Vol: ${filters.volMin || 0} - ${filters.volMax || 1000} ml`, key: 'volMode' });
+    } else if (filters.volMode === 'exact' && filters.volExact) {
+        chips.push({ label: `Vol: ${filters.volExact} ml`, key: 'volMode' });
+    }
+
+    // Barrel aged
+    if (filters.barrel_aged) {
+        chips.push({ label: `🪵 Vieillie en fût`, key: 'barrel_aged' });
+    }
+
+    // Ingredients
+    if (filters.ingredients) {
+        chips.push({ label: `Ingrédient: ${filters.ingredients}`, key: 'ingredients' });
+    }
+
+    if (chips.length === 0) return;
+
+    const bar = document.createElement('div');
+    bar.className = 'active-filters-bar';
+    bar.style.cssText = 'display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:0 0 15px 0; padding:8px 12px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; font-size:0.8rem;';
+    
+    let html = `<span style="color:#888; font-weight:bold; margin-right:4px;">${i18n.t('filter_active_title') || 'Filtres'}:</span>`;
+    chips.forEach((c, idx) => {
+        html += `<span class="filter-chip" data-idx="${idx}" style="display:inline-flex; align-items:center; gap:4px; background:rgba(255,192,0,0.15); border:1px solid rgba(255,192,0,0.4); color:var(--accent-gold); padding:2px 8px; border-radius:12px; cursor:pointer;">
+            ${c.label} <span style="font-weight:bold; margin-left:2px;">✕</span>
+        </span>`;
+    });
+    html += `<button id="btn-clear-all-chips" style="background:none; border:none; color:#888; margin-left:auto; cursor:pointer; font-size:0.75rem; text-decoration:underline;">${i18n.t('filter_clear_all') || 'Tout effacer'}</button>`;
+    
+    bar.innerHTML = html;
+    container.appendChild(bar);
+
+    bar.querySelectorAll('.filter-chip').forEach(el => {
+        el.onclick = () => {
+            const idx = parseInt(el.getAttribute('data-idx'), 10);
+            const chip = chips[idx];
+            if (chip && onRemove) onRemove(chip.key, chip.value);
+        };
+    });
+
+    const btnClear = bar.querySelector('#btn-clear-all-chips');
+    if (btnClear && onClearAll) {
+        btnClear.onclick = onClearAll;
+    }
+}
+
 // Redefine renderCurrentView correctly to include applyFilters
 // This overwrites the previous definition in this file content block
 function renderCurrentView() {
@@ -913,7 +1079,7 @@ function renderCurrentView() {
     if (state.view === 'home') {
         const isDiscovery = Storage.getPreference('discoveryMode', false);
 
-        // 1. Check BrewBrother
+        // 1. Check BrewBrother Recommendations Mode
         if (state.activeFilters.useBrewBrother && window.Recommendation) {
             mainContent.innerHTML = '';
             showSkeletonLoading(mainContent);
@@ -928,7 +1094,18 @@ function renderCurrentView() {
                      idealAbv: parseFloat(state.activeFilters.recAbv)
                 }
             }).then(results => {
-                state.filteredBeers = results;
+                let finalBeers = Array.isArray(results) ? [...results] : [];
+                
+                // If text query is active, filter within recommendations
+                if (state.filter) {
+                    finalBeers = searchBeers(finalBeers, state.filter);
+                }
+                
+                // Apply any other active filters (types, alcohol, brewery...)
+                const subFilters = { ...state.activeFilters, useBrewBrother: false };
+                finalBeers = applyFilters(finalBeers, subFilters);
+
+                state.filteredBeers = finalBeers;
                 state.pagination.page = 1;
                 state.pagination.hasMore = false;
                 
@@ -936,6 +1113,34 @@ function renderCurrentView() {
                 if (busTab) busTab.style.display = isDiscovery ? 'none' : 'flex';
 
                 mainContent.innerHTML = '';
+
+                // BrewBrother Banner
+                const banner = document.createElement('div');
+                banner.className = 'brewbrother-active-banner';
+                banner.style.cssText = 'background:linear-gradient(135deg, rgba(255,192,0,0.15), rgba(30,30,30,0.95)); border:1px solid var(--accent-gold); padding:12px 16px; border-radius:12px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 15px rgba(0,0,0,0.3);';
+                banner.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:1.6rem;">🤖</span>
+                        <div>
+                            <div style="font-weight:bold; color:var(--accent-gold); font-size:0.95rem;">${i18n.t('brewbrother_banner_title') || 'Recommandations BrewBrother'}</div>
+                            <div style="font-size:0.8rem; color:#aaa;">${finalBeers.length} bières recommandées selon vos goûts</div>
+                        </div>
+                    </div>
+                    <button id="btn-disable-bb-banner" style="background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#fff; padding:6px 12px; border-radius:8px; font-size:0.8rem; cursor:pointer; font-weight:bold;">
+                        ✕ ${i18n.t('filter_clear_all') || 'Tout afficher'}
+                    </button>
+                `;
+                mainContent.appendChild(banner);
+                banner.querySelector('#btn-disable-bb-banner').onclick = () => {
+                    state.activeFilters.useBrewBrother = false;
+                    renderCurrentView();
+                };
+
+                loadMoreBeers(mainContent, false, isDiscovery, false);
+            }).catch(err => {
+                console.error("BrewBrother recommendation error:", err);
+                mainContent.innerHTML = '';
+                state.filteredBeers = state.beers;
                 loadMoreBeers(mainContent, false, isDiscovery, false);
             });
             return;
@@ -990,6 +1195,11 @@ function renderCurrentView() {
                 }
                 
                 if (typeof updateWidgetData === 'function') updateWidgetData();
+            }).catch(err => {
+                console.error("BrewBrother scoring error:", err);
+                mainContent.innerHTML = '';
+                state.filteredBeers = state.beers;
+                loadMoreBeers(mainContent, false, isDiscovery, false);
             });
             return;
         }
@@ -1012,6 +1222,23 @@ function renderCurrentView() {
 
         const busTab = document.querySelector('.nav-item[data-view="drunk"]');
         if (busTab) busTab.style.display = isDiscovery ? 'none' : 'flex';
+
+        // Render Active Filter Chips Summary (if any filters active)
+        renderActiveFiltersBar(mainContent, state.activeFilters, (key, value) => {
+            if (key === 'type') {
+                state.activeFilters.type = (state.activeFilters.type || []).filter(t => t !== value);
+                if (state.activeFilters.type.length === 0) delete state.activeFilters.type;
+            } else if (key === 'rarity') {
+                state.activeFilters.rarity = (state.activeFilters.rarity || []).filter(r => r !== value);
+                if (state.activeFilters.rarity.length === 0) delete state.activeFilters.rarity;
+            } else {
+                delete state.activeFilters[key];
+            }
+            renderCurrentView();
+        }, () => {
+            state.activeFilters = {};
+            renderCurrentView();
+        });
 
         // Render first batch - PASS NULL for filters to UI because we already filtered!
         loadMoreBeers(mainContent, false, isDiscovery, isDiscovery && state.filter);

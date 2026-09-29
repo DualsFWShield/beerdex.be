@@ -1,4 +1,4 @@
-const CACHE_NAME = 'Beerdex-v5.0.4'; // v5.0.4 BeerParty & DraftSync privacy policy and i18n update
+const CACHE_NAME = 'Beerdex-v5.0.5'; // v5.0.5 Cache GET-only guard & BAC rules resolution fix
 const ASSETS = [
     './index.html',
     './style.css',
@@ -119,6 +119,11 @@ self.addEventListener('activate', event => {
 
 // Fetch Event
 self.addEventListener('fetch', event => {
+    // Only handle GET requests (Cache API does not support HEAD, POST, PUT, DELETE)
+    if (event.request.method !== 'GET') {
+        return;
+    }
+
     const url = new URL(event.request.url);
     const isJSON = url.pathname.endsWith('.json') || url.search.includes('.json');
     const isImage = url.pathname.match(/\.(png|jpg|jpeg|gif|svg|webp|ico)$/i);
@@ -136,8 +141,10 @@ self.addEventListener('fetch', event => {
             // 2. Special handling for Google Fonts (Cache on the fly)
             if (isGoogleFont) {
                 return fetch(event.request).then(resp => {
-                    const clone = resp.clone();
-                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+                    if (resp && resp.status === 200 && event.request.method === 'GET') {
+                        const clone = resp.clone();
+                        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone)).catch(() => {});
+                    }
                     return resp;
                 }).catch(() => {
                     // Fail gracefully for fonts to avoid TypeError
@@ -155,9 +162,9 @@ self.addEventListener('fetch', event => {
             // 4. Fallback to Network
             return fetch(event.request).then(networkResponse => {
                 // Cache valid responses on the fly for images and data we encounter
-                if (networkResponse && networkResponse.status === 200 && (isImage || isJSON)) {
+                if (networkResponse && networkResponse.status === 200 && (isImage || isJSON) && event.request.method === 'GET') {
                     const responseToCache = networkResponse.clone();
-                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache));
+                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseToCache)).catch(() => {});
                 }
                 return networkResponse;
             }).catch(err => {

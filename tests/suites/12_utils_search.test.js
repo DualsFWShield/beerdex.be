@@ -22,7 +22,9 @@ import {
     tokenSimilarity,
     hasVariantConflict,
     fuzzyMatchBeers,
-    syncBACFromCountDiff
+    syncBACFromCountDiff,
+    BEER_TYPE_CATEGORIES,
+    categorizeBeerType
 } from '../../js/utils.js';
 import * as Storage from '../../js/storage.js';
 import * as BAC from '../../js/bac.js';
@@ -185,4 +187,110 @@ describe('🔍 Utils — Utilitaires, Parsing & Recherche Floue', () => {
         expect(afterDrinks).toBe(beforeDrinks);
     });
 
+    // ── 9. Variantes Synonymes & Détection de Volume Préréglé ──
+    it('hasVariantConflict — gère les synonymes multilingues (tripel/triple, dubbel/double)', () => {
+        expect(hasVariantConflict('LeFort Tripel', 'LEFORT TRIPLE')).toBe(false);
+        expect(hasVariantConflict('Westmalle Dubbel', 'Westmalle Double')).toBe(false);
+        expect(hasVariantConflict('Chouffe Blond', 'Chouffe Blonde')).toBe(false);
+        expect(hasVariantConflict('Leffe Blonde', 'Leffe Triple')).toBe(true);
+    });
+
+    it('parseVolumeToMl — détecte les équivalences exactes des préréglages de volume', () => {
+        const presets = [
+            { key: '15cl', ml: 150 },
+            { key: '25cl', ml: 250 },
+            { key: '33cl', ml: 330 },
+            { key: '50cl', ml: 500 },
+            { key: '75cl', ml: 750 },
+            { key: '150cl', ml: 1500 }
+        ];
+
+        // Format avec cl
+        presets.forEach(p => {
+            expect(parseVolumeToMl(p.key)).toBe(p.ml);
+        });
+
+        // Format en ml
+        expect(parseVolumeToMl('330ml')).toBe(330);
+        expect(parseVolumeToMl('500ml')).toBe(500);
+        expect(parseVolumeToMl('1500ml')).toBe(1500);
+
+        // Format en litres
+        expect(parseVolumeToMl('0.33L')).toBe(330);
+        expect(parseVolumeToMl('0.5L')).toBe(500);
+        expect(parseVolumeToMl('1.5L')).toBe(1500);
+
+        // Chiffre brut
+        expect(parseVolumeToMl('33')).toBe(330);
+        expect(parseVolumeToMl('50')).toBe(500);
+    });
+
+    // ── 8. Catégorisation Cohérente des Types de Bière ──
+    it('BEER_TYPE_CATEGORIES — contient 16 macro-catégories avec id, label et icône', () => {
+        expect(BEER_TYPE_CATEGORIES.length).toBe(16);
+        const ids = BEER_TYPE_CATEGORIES.map(c => c.id);
+        expect(ids.includes('Blonde')).toBe(true);
+        expect(ids.includes('Brune')).toBe(true);
+        expect(ids.includes('Ambrée')).toBe(true);
+        expect(ids.includes('Blanche')).toBe(true);
+        expect(ids.includes('IPA')).toBe(true);
+        expect(ids.includes('Triple')).toBe(true);
+        expect(ids.includes('Double')).toBe(true);
+        expect(ids.includes('Quadruple')).toBe(true);
+        expect(ids.includes('Stout / Porter')).toBe(true);
+        expect(ids.includes('Fruitée')).toBe(true);
+        expect(ids.includes('Sour / Gueuze')).toBe(true);
+        expect(ids.includes('Saison')).toBe(true);
+        expect(ids.includes('Pils / Lager')).toBe(true);
+        expect(ids.includes('Sans Alcool')).toBe(true);
+        expect(ids.includes('Noël / Saisonnière')).toBe(true);
+        expect(ids.includes('Spéciale / Autre')).toBe(true);
+    });
+
+    it('categorizeBeerType — regroupe les sous-variantes et corrige le mojibake proprement', () => {
+        // Ambrées & encodage
+        expect(categorizeBeerType('Ale (Ambrée)')).toBe('Ambrée');
+        expect(categorizeBeerType('Amber Ale')).toBe('Ambrée');
+        expect(categorizeBeerType('AmbrÃ©e')).toBe('Ambrée');
+        expect(categorizeBeerType('Ambrée Forte')).toBe('Ambrée');
+
+        // Sans Alcool (prioritaire sur le sous-type)
+        expect(categorizeBeerType('Blanche (Sans alcool)')).toBe('Sans Alcool');
+        expect(categorizeBeerType('IPA Sans Alcool')).toBe('Sans Alcool');
+        expect(categorizeBeerType('Bière 0.0%')).toBe('Sans Alcool');
+
+        // IPA & Hazy
+        expect(categorizeBeerType('American IPA')).toBe('IPA');
+        expect(categorizeBeerType('NEIPA / Hazy')).toBe('IPA');
+        expect(categorizeBeerType('Double IPA (DIPA)')).toBe('IPA');
+        expect(categorizeBeerType('Session IPA')).toBe('IPA');
+
+        // Styles belges
+        expect(categorizeBeerType('Tripel')).toBe('Triple');
+        expect(categorizeBeerType('Triple (Blonde)')).toBe('Triple');
+        expect(categorizeBeerType('Double (Brune)')).toBe('Double');
+        expect(categorizeBeerType('Quadruple (Brune)')).toBe('Quadruple');
+        expect(categorizeBeerType('Belgian Blonde')).toBe('Blonde');
+        expect(categorizeBeerType('Blonde (Houblonnée)')).toBe('Blonde');
+        expect(categorizeBeerType('Brune (Vieillie)')).toBe('Brune');
+
+        // Fruitées & Aromatisées
+        expect(categorizeBeerType('Aux fruits')).toBe('Fruitée');
+        expect(categorizeBeerType('Fruitée (Framboise)')).toBe('Fruitée');
+        expect(categorizeBeerType('Bière aromatisée Pastèque')).toBe('Fruitée');
+
+        // Saisons et Noël
+        expect(categorizeBeerType('Saison (Blonde)')).toBe('Saison');
+        expect(categorizeBeerType('de Noël')).toBe('Noël / Saisonnière');
+        expect(categorizeBeerType('🍂 Traditionnelles et de Saison')).toBe('Noël / Saisonnière');
+
+        // Stouts & Pils
+        expect(categorizeBeerType('Imperial Stout')).toBe('Stout / Porter');
+        expect(categorizeBeerType('Munich Helles')).toBe('Pils / Lager');
+        expect(categorizeBeerType('Pils (Blonde)')).toBe('Pils / Lager');
+
+        // Fallback
+        expect(categorizeBeerType(null)).toBe('Spéciale / Autre');
+        expect(categorizeBeerType('Inconnu')).toBe('Spéciale / Autre');
+    });
 });

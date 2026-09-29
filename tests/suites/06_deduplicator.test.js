@@ -5,10 +5,12 @@
 import { describe, it, expect } from '../core/test-framework.js';
 
 let Utils;
+let Deduplicator;
 try {
     Utils = await import('../../js/utils.js');
+    Deduplicator = await import('../../js/deduplicator.js');
 } catch (e) {
-    console.error('Failed to import Utils:', e);
+    console.error('Failed to import Utils or Deduplicator:', e);
 }
 
 describe('🔗 Déduplication & Matching', () => {
@@ -124,5 +126,32 @@ describe('🔗 Déduplication & Matching', () => {
 
     it('Variant Conflict: "IPA" vs non-IPA → conflit', () => {
         expect(Utils.hasVariantConflict('Chouffe IPA', 'Chouffe Blonde')).toBe(true);
+    });
+
+    it('hasVariantConflict — LeFort Tripel vs LEFORT TRIPLE → pas de conflit (synonyme)', () => {
+        expect(Utils.hasVariantConflict('LeFort Tripel', 'LEFORT TRIPLE')).toBe(false);
+    });
+
+    it('hasVariantConflict — Westmalle Dubbel vs Westmalle Double → pas de conflit (synonyme)', () => {
+        expect(Utils.hasVariantConflict('Westmalle Dubbel', 'Westmalle Double')).toBe(false);
+    });
+
+    it('hasVariantConflict — Chouffe Blond vs Chouffe Blonde → pas de conflit (synonyme)', () => {
+        expect(Utils.hasVariantConflict('Chouffe Blond', 'Chouffe Blonde')).toBe(false);
+    });
+
+    it('Deduplicator.findMatches — détecte LeFort Tripel (perso) et LEFORT TRIPLE (officielle)', () => {
+        const customBeers = [
+            { id: 'CUSTOM_LEFORT', title: 'LeFort Tripel', brewery: 'Omer Vander Ghinste', alcohol: '8.5', volume: '33' }
+        ];
+        const officialBeers = [
+            { id: 'LEFORT_TRIPLE_BLONDE_0.33', title: 'LEFORT TRIPLE', brewery: 'Omer Vander Ghinste', alcohol: '8.5°', volume: '0.33 L' }
+        ];
+
+        const matches = Deduplicator.findMatches(customBeers, officialBeers, 0.65, true);
+        expect(matches.length).toBe(1);
+        expect(matches[0].customBeer.id).toBe('CUSTOM_LEFORT');
+        expect(matches[0].officialBeer.id).toBe('LEFORT_TRIPLE_BLONDE_0.33');
+        expect(matches[0].score).toBeGreaterThanOrEqual(70);
     });
 });

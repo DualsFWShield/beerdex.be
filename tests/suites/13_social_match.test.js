@@ -151,4 +151,43 @@ describe('🍻 BeerMatch — Profils Sociaux, Dégustation P2P & Statistiques', 
         expect(Match.myProfile.pseudo).not.toBe('SuperBrasseur');
     });
 
+    // ── 5. Calcul Précis des Volumes Beerparty ──
+    it('Match.generateLocalProfile — calcule le volume total sans gonfler les bières avec volume "33"', () => {
+        const allBeersMap = new Map([
+            ['beer_33', { id: 'beer_33', title: 'Test 33', volume: '33', alcohol: '5.0' }],
+            ['beer_50', { id: 'beer_50', title: 'Test 50', volume: '50cl', alcohol: '8.0' }]
+        ]);
+
+        const ratings = {
+            'beer_33': { count: 3, history: [] }, // 3 x 330ml = 0.99 L (NOT 3 x 33L = 99L!)
+            'beer_50': { count: 2, history: [] }  // 2 x 500ml = 1.00 L
+        };
+
+        const profile = Match.generateLocalProfile(allBeersMap, ratings);
+        expect(profile.totalBeers).toBe(5);
+        expect(profile.totalLiters).toBeCloseTo(1.99, 1);
+        expect(profile.totalAlcoholLiters).toBeGreaterThan(0.1);
+        expect(profile.totalAlcoholLiters).toBeLessThan(0.2);
+    });
+
+    it('Match.generateLocalProfile — utilise l\'historique des volumes variés', () => {
+        const allBeersMap = new Map([
+            ['beer_mix', { id: 'beer_mix', title: 'Mix', volume: '33cl', alcohol: '10.0' }]
+        ]);
+
+        const ratings = {
+            'beer_mix': {
+                count: 3,
+                history: [
+                    { volume: 150 }, // 0.15 L
+                    { volume: 330 }, // 0.33 L
+                    { volume: 500 }  // 0.50 L
+                ]
+            }
+        };
+
+        const profile = Match.generateLocalProfile(allBeersMap, ratings);
+        // Total = 0.15 + 0.33 + 0.50 = 0.98 L
+        expect(profile.totalLiters).toBeCloseTo(0.98, 2);
+    });
 });

@@ -927,7 +927,24 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
     wrapper.style.maxHeight = '85vh';
     wrapper.style.overflow = 'hidden'; // Essential to prevent modal itself from scrolling, we scroll the form only
 
-    const types = [...new Set(allBeers.map(b => b.type).filter(Boolean))].sort();
+    const typeCategories = Utils.BEER_TYPE_CATEGORIES || [
+        { id: 'Blonde', label: 'Blonde', icon: '🍺' },
+        { id: 'Brune', label: 'Brune', icon: '🍫' },
+        { id: 'Ambrée', label: 'Ambrée', icon: '🍯' },
+        { id: 'Blanche', label: 'Blanche', icon: '🌾' },
+        { id: 'Triple', label: 'Triple', icon: '⚡' },
+        { id: 'Double', label: 'Double', icon: '✌️' },
+        { id: 'Quadruple', label: 'Quadruple', icon: '👑' },
+        { id: 'IPA', label: 'IPA', icon: '🌿' },
+        { id: 'Stout / Porter', label: 'Stout / Porter', icon: '☕' },
+        { id: 'Fruitée', label: 'Fruitée', icon: '🍒' },
+        { id: 'Sour / Gueuze', label: 'Sour / Gueuze', icon: '🍋' },
+        { id: 'Saison', label: 'Saison', icon: '🧑‍🌾' },
+        { id: 'Pils / Lager', label: 'Pils / Lager', icon: '🧊' },
+        { id: 'Sans Alcool', label: 'Sans Alcool', icon: '🚫' },
+        { id: 'Noël / Saisonnière', label: 'Noël / Saisonnière', icon: '🎄' },
+        { id: 'Spéciale / Autre', label: 'Spéciale / Autre', icon: '✨' }
+    ];
     const breweries = ['All', ...new Set(allBeers.map(b => b.brewery).filter(Boolean))].sort();
     const countries = ['All', ...new Set(allBeers.map(b => b.searchCountry).filter(Boolean))].sort();
     const regions = ['All', ...new Set(allBeers.map(b => b.searchRegion).filter(Boolean))].sort();
@@ -963,11 +980,24 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
         </div>
 
         <!-- TABS -->
-        <div class="filter-tabs" style="display:flex; overflow-x:auto; gap:10px; padding:15px 20px; scrollbar-width:none; flex-shrink:0; align-items:center;">
-            <button type="button" class="ftab active" data-tab="tab-gen" style="background:var(--accent-gold); color:#000; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">${i18n.t('tab_general')}</button>
-            <button type="button" class="ftab" data-tab="tab-tri" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">${i18n.t('tab_sort_notes')}</button>
-            <button type="button" class="ftab" data-tab="tab-attr" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">${i18n.t('tab_attributes')}</button>
-            ${Storage.getPreference('feat_brewbrother_enabled', true) ? `<button type="button" class="ftab" data-tab="tab-rec" style="background:#333; color:#fff; border:none; padding:8px 16px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap;">🤖 ${i18n.t('tab_recommendations') || 'Recommandations'}</button>` : ''}
+        <div class="filter-tabs" style="display:flex; overflow-x:auto; gap:10px; padding:12px 20px; scrollbar-width:none; flex-shrink:0; align-items:center;">
+            <button type="button" class="ftab active" data-tab="tab-gen" style="background:var(--accent-gold); color:#000; border:none; padding:8px 14px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px;">
+                <span>${i18n.t('tab_general')}</span>
+                <span class="tab-badge" id="badge-tab-gen" style="display:none; background:rgba(0,0,0,0.25); color:#000; font-size:0.75rem; padding:1px 6px; border-radius:10px;">0</span>
+            </button>
+            <button type="button" class="ftab" data-tab="tab-tri" style="background:#333; color:#fff; border:none; padding:8px 14px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px;">
+                <span>${i18n.t('tab_sort_notes')}</span>
+                <span class="tab-badge" id="badge-tab-tri" style="display:none; background:var(--accent-gold); color:#000; font-size:0.75rem; padding:1px 6px; border-radius:10px;">0</span>
+            </button>
+            <button type="button" class="ftab" data-tab="tab-attr" style="background:#333; color:#fff; border:none; padding:8px 14px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px;">
+                <span>${i18n.t('tab_attributes')}</span>
+                <span class="tab-badge" id="badge-tab-attr" style="display:none; background:var(--accent-gold); color:#000; font-size:0.75rem; padding:1px 6px; border-radius:10px;">0</span>
+            </button>
+            ${Storage.getPreference('feat_brewbrother_enabled', true) ? `
+            <button type="button" class="ftab" data-tab="tab-rec" style="background:#333; color:#fff; border:none; padding:8px 14px; border-radius:20px; font-weight:bold; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px;">
+                <span>🤖 ${i18n.t('tab_recommendations') || 'Recommandations'}</span>
+                <span class="tab-badge" id="badge-tab-rec" style="display:none; background:var(--accent-gold); color:#000; font-size:0.75rem; padding:1px 6px; border-radius:10px;">✨</span>
+            </button>` : ''}
         </div>
 
         <!-- SCROLLING FORM -->
@@ -975,33 +1005,37 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
             
             <!-- TAB: GENERAL -->
             <div id="tab-gen" class="tab-pane">
+                <!-- Type de bière (Catégories) -->
                 <div class="stat-card mb-20" style="margin-bottom:15px;">
                     <h4 style="margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
                         ${i18n.t('filter_type_label')} 
                         <span style="font-size:0.8rem; color:#888; font-weight:normal;">${i18n.t('filter_plural_suffix')}</span>
                     </h4>
                     <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                        ${types.map(t => {
-        const isChecked = activeFilters.type && activeFilters.type.includes(t);
-        return `
-                                <label style="display:flex; align-items:center; gap:6px; background:${isChecked ? 'rgba(255,192,0,0.2)' : 'rgba(255,255,255,0.05)'}; padding:6px 12px; border-radius:15px; cursor:pointer; border:1px solid ${isChecked ? 'var(--accent-gold)' : 'transparent'}; transition:all 0.2s;">
-                                    <input type="checkbox" class="cb-type" value="${t}" ${isChecked ? 'checked' : ''} style="display:none;">
-                                    <span style="font-size:0.85rem; color:${isChecked ? 'var(--accent-gold)' : '#fff'};">${t}</span>
+                        ${typeCategories.map(cat => {
+                            const isChecked = activeFilters.type && (activeFilters.type.includes(cat.id) || activeFilters.type.includes(cat.label));
+                            return `
+                                <label style="display:flex; align-items:center; gap:6px; background:${isChecked ? 'rgba(255,192,0,0.2)' : 'rgba(255,255,255,0.05)'}; padding:7px 12px; border-radius:18px; cursor:pointer; border:1px solid ${isChecked ? 'var(--accent-gold)' : 'rgba(255,255,255,0.1)'}; transition:all 0.2s;">
+                                    <input type="checkbox" class="cb-type" value="${cat.id}" ${isChecked ? 'checked' : ''} style="display:none;">
+                                    <span style="font-size:0.85rem; color:${isChecked ? 'var(--accent-gold)' : '#fff'}; font-weight:${isChecked ? 'bold' : 'normal'};">${cat.icon} ${cat.label}</span>
                                 </label>
                             `;
-    }).join('')}
+                        }).join('')}
                     </div>
                 </div>
-                <!-- Rareté -->
+                <!-- Rareté (avec Fondateur) -->
                 <div class="stat-card mb-20" style="margin-bottom:15px;">
                     <h4 style="margin-bottom:10px;">${i18n.t('filter_rarity_label')}</h4>
                     <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                        ${['base', 'commun', 'rare', 'super_rare', 'epique', 'mythique', 'legendaire', 'ultra_legendaire'].map(r => `
-                            <label style="display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.05); padding:6px 12px; border-radius:15px; cursor:pointer; border:1px solid var(--rarity-${r});">
-                                <input type="checkbox" class="cb-rarity" value="${r}" ${activeFilters.rarity && activeFilters.rarity.includes(r) ? 'checked' : ''} style="display:none;">
-                                <span style="font-size:0.8rem; text-transform:capitalize; color:#fff;">${i18n.t('rarity_' + r)}</span>
-                            </label>
-                        `).join('')}
+                        ${['base', 'commun', 'rare', 'super_rare', 'epique', 'mythique', 'legendaire', 'ultra_legendaire', 'fondateur'].map(r => {
+                            const isChecked = activeFilters.rarity && activeFilters.rarity.includes(r);
+                            return `
+                                <label style="display:flex; align-items:center; gap:6px; background:${isChecked ? 'rgba(255,192,0,0.2)' : 'rgba(255,255,255,0.05)'}; padding:6px 12px; border-radius:15px; cursor:pointer; border:1px solid var(--rarity-${r}); transition:all 0.2s;">
+                                    <input type="checkbox" class="cb-rarity" value="${r}" ${isChecked ? 'checked' : ''} style="display:none;">
+                                    <span style="font-size:0.8rem; text-transform:capitalize; color:${isChecked ? 'var(--accent-gold)' : '#fff'}; font-weight:${isChecked ? 'bold' : 'normal'};">${i18n.t('rarity_' + r)}</span>
+                                </label>
+                            `;
+                        }).join('')}
                     </div>
                 </div>
                 <div class="form-group stat-card mb-20">
@@ -1018,7 +1052,7 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
                 </div>
                 <div class="form-group stat-card mb-20">
                      <label class="form-group" style="display:flex; align-items:center; gap:10px; cursor:pointer; margin:0;">
-                        <input type="checkbox" name="onlyCustom" ${activeFilters.onlyCustom ? 'checked' : ''} style="width:20px; height:20px;">
+                        <input type="checkbox" name="onlyCustom" ${activeFilters.onlyCustom ? 'checked' : ''} style="width:20px; height:20px; accent-color:var(--accent-gold);">
                         <span style="font-weight:bold; color:var(--accent-gold);">${i18n.t('filter_my_creations')}</span>
                     </label>
                 </div>
@@ -1028,30 +1062,37 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
             <div id="tab-tri" class="tab-pane" style="display:none;">
                 <div class="stat-card mb-20" style="margin-bottom:15px;">
                     <h4 style="margin-bottom:10px;">${i18n.t('filter_sort_by')}</h4>
-                    <div style="display:flex; gap:10px;">
-                        <select name="sortBy" class="form-select" style="flex:2;">
-                            <option value="default" ${activeFilters.sortBy === 'default' ? 'selected' : ''}>${i18n.t('filter_sort_default')}</option>
-                            <option value="brewbrother" ${activeFilters.sortBy === 'brewbrother' ? 'selected' : ''}>${i18n.t('filter_sort_brewbrother') || 'Match BrewBrother'}</option>
-                            <option value="brewery" ${activeFilters.sortBy === 'brewery' ? 'selected' : ''}>${i18n.t('filter_brewery')}</option>
-                            <option value="alcohol" ${activeFilters.sortBy === 'alcohol' ? 'selected' : ''}>${i18n.t('filter_label_degree')} (%)</option>
-                            <option value="volume" ${activeFilters.sortBy === 'volume' ? 'selected' : ''}>Volume</option>
-                            <option value="rarity" ${activeFilters.sortBy === 'rarity' ? 'selected' : ''}>${i18n.t('filter_rarity_label')}</option>
-                            <option value="community_rating" ${activeFilters.sortBy === 'community_rating' ? 'selected' : ''}>${i18n.t('filter_community_note')}</option>
-                        </select>
-                        <select name="sortOrder" class="form-select" style="flex:1;">
-                            <option value="asc" ${activeFilters.sortOrder === 'asc' ? 'selected' : ''}>${i18n.t('filter_sort_asc')}</option>
-                            <option value="desc" ${activeFilters.sortOrder === 'desc' ? 'selected' : ''}>${i18n.t('filter_sort_desc')}</option>
-                        </select>
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <div style="display:flex; gap:10px;">
+                            <select name="sortBy" class="form-select" style="flex:2;">
+                                <option value="default" ${!activeFilters.sortBy || activeFilters.sortBy === 'default' ? 'selected' : ''}>${i18n.t('filter_sort_default')}</option>
+                                <option value="name" ${activeFilters.sortBy === 'name' ? 'selected' : ''}>${i18n.t('filter_sort_name') || 'Nom de la bière (A-Z)'}</option>
+                                <option value="brewbrother" ${activeFilters.sortBy === 'brewbrother' ? 'selected' : ''}>${i18n.t('filter_sort_brewbrother') || 'Match BrewBrother'}</option>
+                                <option value="brewery" ${activeFilters.sortBy === 'brewery' ? 'selected' : ''}>${i18n.t('filter_brewery')}</option>
+                                <option value="alcohol" ${activeFilters.sortBy === 'alcohol' ? 'selected' : ''}>${i18n.t('filter_label_degree')} (%)</option>
+                                <option value="volume" ${activeFilters.sortBy === 'volume' ? 'selected' : ''}>Volume</option>
+                                <option value="rarity" ${activeFilters.sortBy === 'rarity' ? 'selected' : ''}>${i18n.t('filter_rarity_label')}</option>
+                                <option value="my_rating" ${activeFilters.sortBy === 'my_rating' ? 'selected' : ''}>${i18n.t('filter_sort_my_rating') || 'Ma note personnelle'}</option>
+                                <option value="community_rating" ${activeFilters.sortBy === 'community_rating' ? 'selected' : ''}>${i18n.t('filter_community_note')}</option>
+                            </select>
+                            <select name="sortOrder" class="form-select" style="flex:1;">
+                                <option value="asc" ${activeFilters.sortOrder === 'asc' ? 'selected' : ''}>${i18n.t('filter_sort_asc')}</option>
+                                <option value="desc" ${activeFilters.sortOrder === 'desc' ? 'selected' : ''}>${i18n.t('filter_sort_desc')}</option>
+                            </select>
+                        </div>
                     </div>
                     
-                    <div style="margin-top:15px; display:flex; flex-direction:column; gap:8px;">
-                         <label style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:10px 12px; border-radius:8px; cursor:pointer;">
-                            <span style="font-size:0.95rem;">${i18n.t('filter_only_favs')}</span>
-                            <input type="checkbox" name="onlyFavorites" id="onlyFavorites" ${activeFilters.onlyFavorites ? 'checked' : ''} style="width:20px; height:20px;">
+                    <div style="margin-top:15px; display:flex; flex-direction:column; gap:10px;">
+                        <label style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:10px 14px; border-radius:10px; cursor:pointer;">
+                            <div>
+                                <div style="font-size:0.95rem; font-weight:bold;">${i18n.t('filter_pin_favorites') || 'Épingler les favoris au début'}</div>
+                                <div style="font-size:0.8rem; color:#888;">${i18n.t('filter_pin_favorites_desc') || 'Affiche vos bières favorites en premier'}</div>
+                            </div>
+                            <input type="checkbox" name="pinFavorites" id="pinFavorites" ${activeFilters.ignoreFavorites ? '' : 'checked'} style="width:20px; height:20px; accent-color:var(--accent-gold);">
                         </label>
-                         <label style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:10px 12px; border-radius:8px; cursor:pointer;">
-                            <span style="font-size:0.95rem; color:#aaa;">${i18n.t('filter_ignore_favs')}</span>
-                            <input type="checkbox" name="ignoreFavorites" id="ignoreFavorites" ${activeFilters.ignoreFavorites ? 'checked' : ''} style="width:20px; height:20px;">
+                        <label style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:10px 14px; border-radius:10px; cursor:pointer;">
+                            <span style="font-size:0.95rem;">⭐ ${i18n.t('filter_only_favs')}</span>
+                            <input type="checkbox" name="onlyFavorites" id="onlyFavorites" ${activeFilters.onlyFavorites ? 'checked' : ''} style="width:20px; height:20px; accent-color:var(--accent-gold);">
                         </label>
                     </div>
                 </div>
@@ -1120,37 +1161,52 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
             <!-- TAB: RECOMMANDATIONS (BrewBrother) -->
             ${Storage.getPreference('feat_brewbrother_enabled', true) ? `
             <div id="tab-rec" class="tab-pane" style="display:none;">
-                <div class="stat-card mb-20" style="margin-bottom:15px; background:linear-gradient(135deg, rgba(30,30,30,0.8), rgba(15,15,15,0.9)); border:1px solid var(--accent-gold);">
-                    <h4 style="margin-bottom:10px; color:var(--accent-gold); display:flex; align-items:center; gap:8px;">
-                        🤖 BrewBrother
-                    </h4>
-                    <p style="font-size:0.85rem; color:#aaa; margin-bottom:15px;">
-                        ${i18n.t('brewbrother_desc') || "Générez les 20 meilleures recommandations basées sur vos goûts et les disponibilités."}
+                <div class="stat-card mb-20" style="margin-bottom:15px; background:linear-gradient(135deg, rgba(35,30,15,0.85), rgba(15,15,15,0.95)); border:2px solid ${activeFilters.useBrewBrother ? 'var(--accent-gold)' : 'rgba(255,192,0,0.3)'}; border-radius:12px; padding:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <h4 style="margin:0; color:var(--accent-gold); display:flex; align-items:center; gap:8px; font-size:1.1rem;">
+                            🤖 BrewBrother AI
+                        </h4>
+                        <span id="bb-status-badge" style="background:${activeFilters.useBrewBrother ? 'var(--accent-gold)' : 'rgba(255,255,255,0.1)'}; color:${activeFilters.useBrewBrother ? '#000' : '#888'}; padding:3px 8px; border-radius:12px; font-size:0.75rem; font-weight:bold;">
+                            ${activeFilters.useBrewBrother ? 'Activé' : 'Désactivé'}
+                        </span>
+                    </div>
+                    
+                    <p style="font-size:0.85rem; color:#bbb; margin-bottom:15px; line-height:1.4;">
+                        ${i18n.t('brewbrother_desc') || "Générez les 20 meilleures recommandations basées sur vos goûts, vos dégustations et vos critères."}
                     </p>
+
+                    <!-- Bouton / Switch d'activation clair -->
+                    <label id="label-use-brewbrother" style="display:flex; justify-content:space-between; align-items:center; background:${activeFilters.useBrewBrother ? 'rgba(255,192,0,0.2)' : 'rgba(255,255,255,0.08)'}; border:1px solid ${activeFilters.useBrewBrother ? 'var(--accent-gold)' : 'rgba(255,255,255,0.15)'}; padding:14px 16px; border-radius:10px; cursor:pointer; margin-bottom:20px; transition:all 0.2s;">
+                        <div>
+                            <div style="font-size:1rem; font-weight:bold; color:var(--accent-gold);">${i18n.t('brewbrother_enable') || "Activer les Recommandations"}</div>
+                            <div style="font-size:0.8rem; color:#aaa; margin-top:2px;">Filtre le catalogue pour afficher uniquement votre Top 20</div>
+                        </div>
+                        <input type="checkbox" name="useBrewBrother" id="useBrewBrother" ${activeFilters.useBrewBrother ? 'checked' : ''} style="width:24px; height:24px; accent-color:var(--accent-gold);">
+                    </label>
 
                     <div class="form-group mb-20">
                         <label class="form-label">${i18n.t('brewbrother_mode_label') || "Mode de Profil"}</label>
                         <select name="recMode" id="rec-mode-select" class="form-select">
-                            <option value="auto" ${activeFilters.recMode === 'auto' ? 'selected' : ''}>${i18n.t('brewbrother_mode_auto') || "Automatique (Basé sur vos consos)"}</option>
+                            <option value="auto" ${activeFilters.recMode === 'auto' || !activeFilters.recMode ? 'selected' : ''}>${i18n.t('brewbrother_mode_auto') || "Automatique (Basé sur vos consos)"}</option>
                             <option value="manual" ${activeFilters.recMode === 'manual' ? 'selected' : ''}>${i18n.t('brewbrother_mode_manual') || "Manuel (Personnaliser)"}</option>
                         </select>
                     </div>
 
-                    <div id="rec-manual-options" style="display:${activeFilters.recMode === 'manual' ? 'block' : 'none'}; border-left:2px solid var(--accent-gold); padding-left:10px; margin-bottom:15px;">
+                    <div id="rec-manual-options" style="display:${activeFilters.recMode === 'manual' ? 'block' : 'none'}; border-left:2px solid var(--accent-gold); padding-left:12px; margin-bottom:15px;">
                         <label class="form-label">${i18n.t('filter_type_label')}</label>
-                        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
+                        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px;">
                             ${['IPA', 'Blonde', 'Brune', 'Triple', 'Stout', 'Blanche', 'Fruitée', 'Sour', 'Trappiste', 'Saison'].map(t => {
                                 const isChecked = activeFilters.recTypes && activeFilters.recTypes.includes(t);
                                 return `
-                                    <label style="display:flex; align-items:center; gap:4px; background:${isChecked ? 'rgba(255,192,0,0.2)' : 'rgba(255,255,255,0.05)'}; padding:4px 8px; border-radius:12px; cursor:pointer; border:1px solid ${isChecked ? 'var(--accent-gold)' : 'transparent'};">
+                                    <label style="display:flex; align-items:center; gap:4px; background:${isChecked ? 'rgba(255,192,0,0.2)' : 'rgba(255,255,255,0.05)'}; padding:6px 10px; border-radius:15px; cursor:pointer; border:1px solid ${isChecked ? 'var(--accent-gold)' : 'transparent'};">
                                         <input type="checkbox" name="recTypes" value="${t}" ${isChecked ? 'checked' : ''} style="display:none;">
-                                        <span style="font-size:0.75rem; color:${isChecked ? 'var(--accent-gold)' : '#fff'};">${t}</span>
+                                        <span style="font-size:0.8rem; color:${isChecked ? 'var(--accent-gold)' : '#fff'};">${t}</span>
                                     </label>`;
                             }).join('')}
                         </div>
                         
                         <label class="form-label">${i18n.t('brewbrother_ideal_abv') || "Degré d'Alcool Idéal"}</label>
-                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
                             <input type="range" name="recAbv" class="form-input" min="3" max="15" step="0.5" value="${activeFilters.recAbv || 7}" 
                                 oninput="document.getElementById('rec-abv-display').innerText = this.value" style="padding:0; height:30px; flex:1;">
                             <span style="min-width:45px; text-align:right;"><span id="rec-abv-display">${activeFilters.recAbv || 7}</span>%</span>
@@ -1162,9 +1218,9 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
                                 const isChecked = activeFilters.recFlavors && activeFilters.recFlavors.includes(t);
                                 const labelText = window.BrewBrotherNLP ? window.BrewBrotherNLP.getFlavorName(t) : t;
                                 return `
-                                    <label style="display:flex; align-items:center; gap:4px; background:${isChecked ? 'rgba(255,192,0,0.2)' : 'rgba(255,255,255,0.05)'}; padding:4px 8px; border-radius:12px; cursor:pointer; border:1px solid ${isChecked ? 'var(--accent-gold)' : 'transparent'};">
+                                    <label style="display:flex; align-items:center; gap:4px; background:${isChecked ? 'rgba(255,192,0,0.2)' : 'rgba(255,255,255,0.05)'}; padding:6px 10px; border-radius:15px; cursor:pointer; border:1px solid ${isChecked ? 'var(--accent-gold)' : 'transparent'};">
                                         <input type="checkbox" name="recFlavors" value="${t}" ${isChecked ? 'checked' : ''} style="display:none;">
-                                        <span style="font-size:0.75rem; color:${isChecked ? 'var(--accent-gold)' : '#fff'}; text-transform:capitalize;">${labelText}</span>
+                                        <span style="font-size:0.8rem; color:${isChecked ? 'var(--accent-gold)' : '#fff'}; text-transform:capitalize;">${labelText}</span>
                                     </label>`;
                             }).join('')}
                         </div>
@@ -1178,11 +1234,6 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
                         <label class="form-label">${i18n.t('filter_region')} (${i18n.t('brewbrother_availability') || "Disponibilité"})</label>
                         <select name="recRegion" class="form-select">${createOptions(regions, activeFilters.recRegion || 'All')}</select>
                     </div>
-
-                    <label style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:10px 12px; border-radius:8px; cursor:pointer; margin-bottom:15px;">
-                        <span style="font-size:0.95rem; font-weight:bold; color:var(--accent-gold);">${i18n.t('brewbrother_enable') || "Activer les Recommandations"}</span>
-                        <input type="checkbox" name="useBrewBrother" id="useBrewBrother" ${activeFilters.useBrewBrother ? 'checked' : ''} style="width:20px; height:20px;">
-                    </label>
                 </div>
             </div>
             ` : ''}
@@ -1273,19 +1324,22 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
     });
 
     // Checkbox styling toggle on click (Type and Rarity)
-    wrapper.querySelectorAll('label > .cb-type').forEach(cb => {
+    wrapper.querySelectorAll('label > .cb-type, label > .cb-rarity').forEach(cb => {
         cb.onchange = (e) => {
             const label = e.target.closest('label');
             const span = label.querySelector('span');
             if (e.target.checked) {
                 label.style.background = 'rgba(255,192,0,0.2)';
-                label.style.borderColor = 'var(--accent-gold)';
+                if (cb.classList.contains('cb-type')) label.style.borderColor = 'var(--accent-gold)';
                 span.style.color = 'var(--accent-gold)';
+                span.style.fontWeight = 'bold';
             } else {
                 label.style.background = 'rgba(255,255,255,0.05)';
-                label.style.borderColor = 'transparent';
+                if (cb.classList.contains('cb-type')) label.style.borderColor = 'rgba(255,255,255,0.1)';
                 span.style.color = '#fff';
+                span.style.fontWeight = 'normal';
             }
+            updateTabBadges();
         };
     });
 
@@ -1318,6 +1372,97 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
         };
     });
 
+    // Dynamic BrewBrother activation toggle styling
+    const useBbCb = wrapper.querySelector('#useBrewBrother');
+    const labelUseBb = wrapper.querySelector('#label-use-brewbrother');
+    const badgeBb = wrapper.querySelector('#bb-status-badge');
+    if (useBbCb) {
+        useBbCb.onchange = (e) => {
+            const checked = e.target.checked;
+            if (labelUseBb) {
+                labelUseBb.style.background = checked ? 'rgba(255,192,0,0.2)' : 'rgba(255,255,255,0.08)';
+                labelUseBb.style.borderColor = checked ? 'var(--accent-gold)' : 'rgba(255,255,255,0.15)';
+            }
+            if (badgeBb) {
+                badgeBb.style.background = checked ? 'var(--accent-gold)' : 'rgba(255,255,255,0.1)';
+                badgeBb.style.color = checked ? '#000' : '#888';
+                badgeBb.innerText = checked ? 'Activé' : 'Désactivé';
+            }
+            updateTabBadges();
+        };
+    }
+
+    // Dynamic Tab Active Badges Calculation
+    const updateTabBadges = () => {
+        const form = wrapper.querySelector('form');
+        if (!form) return;
+        const formData = new FormData(form);
+
+        // General Tab Count
+        const numTypes = wrapper.querySelectorAll('.cb-type:checked').length;
+        const numRarity = wrapper.querySelectorAll('.cb-rarity:checked').length;
+        const country = formData.get('country');
+        const region = formData.get('region');
+        const brewery = formData.get('brewery');
+        const onlyCustom = formData.get('onlyCustom') === 'on';
+        let genCount = numTypes + numRarity + (onlyCustom ? 1 : 0);
+        if (country && country !== 'All') genCount++;
+        if (region && region !== 'All') genCount++;
+        if (brewery && brewery !== 'All') genCount++;
+
+        const badgeGen = wrapper.querySelector('#badge-tab-gen');
+        if (badgeGen) {
+            badgeGen.style.display = genCount > 0 ? 'inline-block' : 'none';
+            badgeGen.innerText = genCount;
+        }
+
+        // Tri & Notes Count
+        const sortBy = formData.get('sortBy');
+        const onlyFavs = formData.get('onlyFavorites') === 'on';
+        const minR = parseInt(formData.get('minRating') || '0', 10);
+        const commR = parseFloat(formData.get('community_rating') || '0');
+        let triCount = (onlyFavs ? 1 : 0) + (minR > 0 ? 1 : 0) + (commR > 0 ? 1 : 0);
+        if (sortBy && sortBy !== 'default') triCount++;
+
+        const badgeTri = wrapper.querySelector('#badge-tab-tri');
+        if (badgeTri) {
+            badgeTri.style.display = triCount > 0 ? 'inline-block' : 'none';
+            badgeTri.innerText = triCount;
+        }
+
+        // Attributes Count
+        const alcMode = formData.get('alcMode');
+        const alcMax = parseFloat(formData.get('alcMax') || '15');
+        const volMode = formData.get('volMode');
+        const prodVol = formData.get('production_volume');
+        const dist = formData.get('distribution');
+        const barrel = formData.get('barrel_aged') === 'on';
+        const ings = (formData.get('ingredients') || '').trim();
+        let attrCount = (barrel ? 1 : 0) + (ings ? 1 : 0);
+        if (alcMode === 'range' || alcMode === 'exact' || (alcMode === 'max' && alcMax < 15)) attrCount++;
+        if (volMode && volMode !== 'any') attrCount++;
+        if (prodVol && prodVol !== 'All') attrCount++;
+        if (dist && dist !== 'All') attrCount++;
+
+        const badgeAttr = wrapper.querySelector('#badge-tab-attr');
+        if (badgeAttr) {
+            badgeAttr.style.display = attrCount > 0 ? 'inline-block' : 'none';
+            badgeAttr.innerText = attrCount;
+        }
+
+        // Recommandations Count
+        const useBb = formData.get('useBrewBrother') === 'on';
+        const badgeRec = wrapper.querySelector('#badge-tab-rec');
+        if (badgeRec) {
+            badgeRec.style.display = useBb ? 'inline-block' : 'none';
+            badgeRec.innerText = '✨';
+        }
+    };
+
+    wrapper.querySelector('form').addEventListener('change', updateTabBadges);
+    wrapper.querySelector('form').addEventListener('input', updateTabBadges);
+    updateTabBadges();
+
     wrapper.querySelector('form').onsubmit = (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
@@ -1336,7 +1481,8 @@ export function renderFilterModal(allBeers, activeFilters, onApply) {
 
         const filters = Object.fromEntries(formData.entries());
         filters.onlyFavorites = formData.get('onlyFavorites') === 'on';
-        filters.ignoreFavorites = formData.get('ignoreFavorites') === 'on';
+        const pinFavs = formData.get('pinFavorites') === 'on';
+        filters.ignoreFavorites = !pinFavs;
         filters.onlyCustom = formData.get('onlyCustom') === 'on';
         filters.barrel_aged = formData.get('barrel_aged') === 'on';
         filters.useBrewBrother = formData.get('useBrewBrother') === 'on';
@@ -1851,33 +1997,75 @@ export function renderBeerDetail(beer, onSave) {
     const customVolContainer = wrapper.querySelector('#custom-vol-container');
     const customVolInput = wrapper.querySelector('#custom-vol-input');
 
-    const updateVolUI = (vol) => {
-        let isCustom = true;
-        volBtns.forEach(btn => {
-            if (btn.dataset.vol === vol) {
-                btn.style.background = 'var(--accent-gold)';
-                btn.style.color = '#000';
-                btn.style.borderColor = 'var(--accent-gold)';
-                btn.style.fontWeight = 'bold';
-                isCustom = false;
-            } else {
-                btn.style.background = 'var(--bg-dark)';
-                btn.style.color = '#fff';
-                btn.style.borderColor = '#444';
-                btn.style.fontWeight = 'normal';
-            }
-        });
-        
-        if (isCustom) {
-            const customBtn = wrapper.querySelector('[data-vol="custom"]');
-            customBtn.style.background = 'var(--accent-gold)';
-            customBtn.style.color = '#000';
-            customBtn.style.borderColor = 'var(--accent-gold)';
-            customBtn.style.fontWeight = 'bold';
+    const PRESET_VOLUMES = [
+        { key: '15cl', ml: 150 },
+        { key: '25cl', ml: 250 },
+        { key: '33cl', ml: 330 },
+        { key: '50cl', ml: 500 },
+        { key: '75cl', ml: 750 },
+        { key: '150cl', ml: 1500 }
+    ];
+
+    const updateVolUI = (vol, isDirectCustom = false) => {
+        if (isDirectCustom || vol === 'custom') {
+            volBtns.forEach(btn => {
+                if (btn.dataset.vol === 'custom') {
+                    btn.style.background = 'var(--accent-gold)';
+                    btn.style.color = '#000';
+                    btn.style.borderColor = 'var(--accent-gold)';
+                    btn.style.fontWeight = 'bold';
+                } else {
+                    btn.style.background = 'var(--bg-dark)';
+                    btn.style.color = '#fff';
+                    btn.style.borderColor = '#444';
+                    btn.style.fontWeight = 'normal';
+                }
+            });
             customVolContainer.style.display = 'block';
-            customVolInput.value = vol;
-        } else {
+            if (vol && vol !== 'custom') customVolInput.value = vol;
+            setTimeout(() => customVolInput.focus(), 50);
+            return;
+        }
+
+        let matchingPreset = PRESET_VOLUMES.find(p => p.key === vol);
+        if (!matchingPreset && vol) {
+            const ml = Utils.parseVolumeToMl(vol);
+            if (ml > 0) matchingPreset = PRESET_VOLUMES.find(p => p.ml === ml);
+        }
+
+        if (matchingPreset) {
+            volBtns.forEach(btn => {
+                if (btn.dataset.vol === matchingPreset.key) {
+                    btn.style.background = 'var(--accent-gold)';
+                    btn.style.color = '#000';
+                    btn.style.borderColor = 'var(--accent-gold)';
+                    btn.style.fontWeight = 'bold';
+                } else {
+                    btn.style.background = 'var(--bg-dark)';
+                    btn.style.color = '#fff';
+                    btn.style.borderColor = '#444';
+                    btn.style.fontWeight = 'normal';
+                }
+            });
             customVolContainer.style.display = 'none';
+            hiddenVol.value = matchingPreset.key;
+        } else {
+            volBtns.forEach(btn => {
+                if (btn.dataset.vol === 'custom') {
+                    btn.style.background = 'var(--accent-gold)';
+                    btn.style.color = '#000';
+                    btn.style.borderColor = 'var(--accent-gold)';
+                    btn.style.fontWeight = 'bold';
+                } else {
+                    btn.style.background = 'var(--bg-dark)';
+                    btn.style.color = '#fff';
+                    btn.style.borderColor = '#444';
+                    btn.style.fontWeight = 'normal';
+                }
+            });
+            customVolContainer.style.display = 'block';
+            if (vol) customVolInput.value = vol;
+            hiddenVol.value = vol || '';
         }
     };
 
@@ -1885,7 +2073,10 @@ export function renderBeerDetail(beer, onSave) {
         btn.onclick = () => {
             const v = btn.dataset.vol;
             if (v === 'custom') {
-                updateVolUI(customVolInput.value || '33cl');
+                updateVolUI(customVolInput.value || 'custom', true);
+                if (customVolInput.value) {
+                    hiddenVol.value = customVolInput.value;
+                }
             } else {
                 hiddenVol.value = v;
                 updateVolUI(v);
@@ -1895,8 +2086,34 @@ export function renderBeerDetail(beer, onSave) {
     });
 
     customVolInput.oninput = (e) => {
+        const rawVal = e.target.value.trim();
         hiddenVol.value = e.target.value;
         Storage.savePreference('last_volume_preset', e.target.value);
+
+        if (rawVal) {
+            const ml = Utils.parseVolumeToMl(rawVal);
+            if (ml > 0) {
+                const match = PRESET_VOLUMES.find(p => p.ml === ml);
+                if (match) {
+                    hiddenVol.value = match.key;
+                    Storage.savePreference('last_volume_preset', match.key);
+                    volBtns.forEach(btn => {
+                        if (btn.dataset.vol === match.key) {
+                            btn.style.background = 'var(--accent-gold)';
+                            btn.style.color = '#000';
+                            btn.style.borderColor = 'var(--accent-gold)';
+                            btn.style.fontWeight = 'bold';
+                        } else {
+                            btn.style.background = 'var(--bg-dark)';
+                            btn.style.color = '#fff';
+                            btn.style.borderColor = '#444';
+                            btn.style.fontWeight = 'normal';
+                        }
+                    });
+                    customVolContainer.style.display = 'none';
+                }
+            }
+        }
     };
 
     // Init Volume UI
@@ -2599,21 +2816,13 @@ export function renderAddBeerForm(onSave, editModeBeer = null, prefillData = nul
 
 
 export function renderStats(allBeers, userData, container) {
-    const allBeerIds = new Set(allBeers.map(b => String(b.id)));
-    const apiBeersCountFixed = 197452; // Static count retrieved from OFF (approx. March 2026)
-    const historyApiIds = Object.keys(userData).filter(id => (id.startsWith('API_') || id.startsWith('OFF_')) && !allBeerIds.has(id));
-
-    // The "Total" for summary purposes (Static API + Scanned history)
-    const apiBeersCount = apiBeersCountFixed + historyApiIds.length;
-    const jsonBeersCount = Math.max(0, allBeers.length - allBeers.filter(b => String(b.id).startsWith('CUSTOM_')).length - allBeers.filter(b => String(b.id).startsWith('API_') || String(b.id).startsWith('OFF_')).length);
     const customBeersCount = allBeers.filter(b => String(b.id).startsWith('CUSTOM_')).length;
+    const jsonBeersCount = Math.max(0, allBeers.length - customBeersCount);
 
-    const totalBeers = jsonBeersCount + apiBeersCount + customBeersCount;
+    const totalBeers = jsonBeersCount + customBeersCount;
     const drunkCount = Object.values(userData).filter(u => (u.count || 0) > 0).length;
 
-    // Progress is based on local collection (JSON + Custom), as the API is "infinite"
-    const totalLocalBeers = jsonBeersCount + customBeersCount;
-    const percentage = Math.round((drunkCount / totalLocalBeers) * 100) || 0;
+    const percentage = Math.round((drunkCount / totalBeers) * 100) || 0;
 
     const totalDrunkCount = Object.values(userData).reduce((acc, curr) => acc + (curr.count || 0), 0);
 
@@ -2748,7 +2957,6 @@ export function renderStats(allBeers, userData, container) {
                 <div class="stats-total-app-count" style="font-size:1.5rem; font-weight:bold; color:#FFF;">${totalBeers.toLocaleString()}</div>
                 <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:10px; font-size:0.75rem;">
                      <div class="stat-badge stat-badge-json"><span style="font-weight:bold;">${jsonBeersCount}</span> JSON</div>
-                     <div class="stat-badge stat-badge-api"><span style="font-weight:bold;">${apiBeersCount}</span> API</div>
                      <div class="stat-badge stat-badge-custom"><span style="font-weight:bold;">${customBeersCount}</span> Custom</div>
                 </div>
             </div>
@@ -5054,19 +5262,27 @@ export function renderSettings(allBeers, userData, container, isDiscovery = fals
 export function renderDeduplicationWizard(allBeers) {
     const matches = Deduplicator.runCheck(allBeers, true);
     if (!matches || matches.length === 0) {
-        showToast(i18n.t('toast_nothing_found') || 'Aucun doublon trouvÃ©.');
+        showToast(i18n.t('toast_nothing_found') || 'Aucun doublon trouvé.');
         return;
     }
 
     let currentIndex = 0;
+    let mergedCount = 0;
 
     const showNext = () => {
         if (currentIndex >= matches.length) {
             modalContainer.style.display = '';
             modalContainer.classList.add('hidden');
             modalContainer.innerHTML = '';
-            showToast('Nettoyage terminé !');
-            renderSettings(allBeers, Storage.getAllUserData(), document.getElementById('main-content'));
+            if (mergedCount > 0) {
+                Storage.savePreference('dedup_manually_triggered', true);
+                window.dispatchEvent(new Event('beerdex-action'));
+                showToast(`Nettoyage terminé ! ${mergedCount} bière(s) fusionnée(s) avec succès.`, 'success');
+                setTimeout(() => window.location.reload(), 1200);
+            } else {
+                showToast('Nettoyage terminé. Aucune bière fusionnée.');
+                renderSettings(allBeers, Storage.getAllUserData(), document.getElementById('main-content'));
+            }
             return;
         }
 
@@ -5080,6 +5296,8 @@ export function renderDeduplicationWizard(allBeers) {
         const drinkCount = customData.count || 0;
         const historyCount = (customData.history || []).length;
         const hasRating = customData.score !== undefined;
+        const hasComment = !!customData.comment;
+        const isFav = !!customData.favorite;
 
         const migrationTitleText = i18n.t('migration_title') || 'Transfert disponible';
         const migrationSubtitleText = `${currentIndex + 1} / ${matches.length} - ${i18n.t('migration_subtitle') || 'Voulez-vous fusionner ces entrées ?'}`;
@@ -5095,61 +5313,78 @@ export function renderDeduplicationWizard(allBeers) {
 
         modalContainer.innerHTML = `
             <div class="modal-overlay active" id="migration-overlay">
-                <div class="modal-content" style="max-width: 420px; border: 1px solid rgba(255,192,0,0.3); background: var(--bg-card);">
+                <div class="modal-content" style="max-width: 440px; border: 1px solid rgba(255,192,0,0.3); background: var(--bg-card); max-height: 90vh; overflow-y: auto;">
                     <div style="text-align: center; padding: 20px 20px 10px;">
-                        <div style="font-size: 2rem; margin-bottom: 10px;">🧹</div>
+                        <div style="font-size: 2rem; margin-bottom: 8px;">🧹</div>
                         <h3 style="color: var(--accent-gold); font-family: 'Russo One', sans-serif; margin-bottom: 5px;">
                             ${migrationTitleText}
                         </h3>
-                        <p style="font-size: 0.8rem; color: #888; margin-bottom: 20px;">
+                        <p style="font-size: 0.8rem; color: #888; margin-bottom: 12px;">
                             ${migrationSubtitleText}
                         </p>
                     </div>
 
-                    <div style="display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px; margin: 0 15px 15px;">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 12px; margin: 0 15px 12px;">
                         <div style="text-align: center; flex: 1;">
                             <img src="${customImg}" alt="" onerror="this.src='images/beer/default.png'" 
-                                 style="width: 60px; height: 60px; object-fit: contain; border-radius: 8px; background: #222; margin-bottom: 6px;">
-                            <div style="font-size: 0.75rem; color: #aaa; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 auto;">${customBeer.title}</div>
-                            <div style="font-size: 0.65rem; color: #666; margin-top: 2px;">${migrationCustomLabel}</div>
+                                 style="width: 55px; height: 55px; object-fit: contain; border-radius: 8px; background: #222; margin-bottom: 6px;">
+                            <div style="font-size: 0.8rem; font-weight: bold; color: #aaa; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 auto;">${customBeer.title}</div>
+                            <div style="font-size: 0.7rem; color: #777;">${customBeer.brewery || 'Brasserie inconnue'}</div>
+                            <div style="font-size: 0.65rem; color: #888; margin-top: 2px;">${customBeer.alcohol || '?'}% • ${customBeer.volume || '33cl'}</div>
+                            <div style="font-size: 0.65rem; color: #e67e22; font-weight: bold; margin-top: 2px;">${migrationCustomLabel}</div>
                         </div>
 
-                        <div style="font-size: 1.5rem; color: var(--accent-gold);">→</div>
+                        <div style="font-size: 1.5rem; color: var(--accent-gold); flex-shrink: 0;">→</div>
 
                         <div style="text-align: center; flex: 1;">
                             <img src="${officialImg}" alt="" onerror="this.src='images/beer/default.png'" 
-                                 style="width: 60px; height: 60px; object-fit: contain; border-radius: 8px; background: #222; margin-bottom: 6px;">
-                            <div style="font-size: 0.75rem; color: #fff; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 auto;">${officialBeer.title}</div>
-                            <div style="font-size: 0.65rem; color: var(--accent-gold); margin-top: 2px;">${migrationOfficialLabel}</div>
+                                 style="width: 55px; height: 55px; object-fit: contain; border-radius: 8px; background: #222; margin-bottom: 6px;">
+                            <div style="font-size: 0.8rem; font-weight: bold; color: #fff; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 auto;">${officialBeer.title}</div>
+                            <div style="font-size: 0.7rem; color: var(--accent-gold);">${officialBeer.brewery || ''}</div>
+                            <div style="font-size: 0.65rem; color: #aaa; margin-top: 2px;">${officialBeer.type || ''} • ${officialBeer.alcohol || ''}</div>
+                            <div style="font-size: 0.65rem; color: var(--accent-gold); font-weight: bold; margin-top: 2px;">${migrationOfficialLabel}</div>
                         </div>
                     </div>
 
-                    <div style="padding: 0 15px 15px; font-size: 0.8rem; color: #aaa;">
-                        <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px;">
+                    <div style="padding: 0 15px 12px; font-size: 0.8rem; color: #aaa;">
+                        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                            <div style="font-weight: bold; color: #ddd; margin-bottom: 6px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">📋 Données à transférer</div>
                             <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                                 <span>${migrationSimilarityText}</span>
                                 <span style="color: var(--accent-gold); font-weight: bold;">${score}%</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                                 <span>${migrationDrinksText}</span>
-                                <span style="color: #fff;">${drinkCount}</span>
+                                <span style="color: #fff; font-weight: bold;">${drinkCount} conso(s)</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                                 <span>${migrationHistoryText}</span>
                                 <span style="color: #fff;">${historyCount} ${migrationEntriesText}</span>
                             </div>
-                            ${hasRating ? `<div style="display: flex; justify-content: space-between;">
+                            ${hasRating ? `<div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                                 <span>${migrationRatingText}</span>
-                                <span style="color: #fff;">${customData.score}/20</span>
+                                <span style="color: #fff; font-weight: bold;">${customData.score}/20</span>
+                            </div>` : ''}
+                            ${hasComment ? `<div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                <span>Commentaire</span>
+                                <span style="color: #aaa; font-style: italic; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">"${customData.comment}"</span>
+                            </div>` : ''}
+                            ${isFav ? `<div style="display: flex; justify-content: space-between;">
+                                <span>Statut</span>
+                                <span style="color: var(--accent-gold);">⭐ Favori</span>
                             </div>` : ''}
                         </div>
                     </div>
 
+                    <div style="margin: 0 15px 15px; padding: 10px 12px; background: rgba(244,67,54,0.12); border: 1px solid rgba(244,67,54,0.35); border-radius: 8px; color: #ff8a80; font-size: 0.75rem; line-height: 1.4; text-align: center;">
+                        ⚠️ <strong>Action définitive :</strong> La bière personnalisée sera <u>définitivement supprimée</u> de votre collection après la fusion complète de vos consommations, notes et historique vers la bière officielle.
+                    </div>
+
                     <div style="display: flex; gap: 10px; padding: 0 15px 20px;">
-                        <button id="btn-wiz-dismiss" class="btn-primary" style="flex: 1; background: #222; border: 1px solid #444; color: #aaa; margin: 0;">
+                        <button id="btn-wiz-dismiss" class="btn-primary" style="flex: 1; background: #222; border: 1px solid #444; color: #aaa; margin: 0; padding: 10px;">
                             ${migrationDismissText}
                         </button>
-                        <button id="btn-wiz-confirm" class="btn-primary" style="flex: 1; background: var(--accent-gold); color: #000; font-weight: bold; margin: 0;">
+                        <button id="btn-wiz-confirm" class="btn-primary" style="flex: 1; background: var(--accent-gold); color: #000; font-weight: bold; margin: 0; padding: 10px;">
                             ${migrationTransferText}
                         </button>
                     </div>
@@ -5177,10 +5412,13 @@ export function renderDeduplicationWizard(allBeers) {
         document.getElementById('btn-wiz-confirm').addEventListener('click', () => {
             const result = Storage.migrateBeerData(customBeer.id, officialBeer.id);
             if (result.success) {
+                mergedCount++;
+                const bIdx = allBeers.findIndex(b => b.id === customBeer.id);
+                if (bIdx !== -1) allBeers.splice(bIdx, 1);
                 Feedback.playSuccess();
-                setTimeout(() => window.location.reload(), 1500);
+                showToast(`Fusion réussie (${mergedCount}/${matches.length})`, 'success');
             } else {
-                showToast(i18n.t('migration_error') || 'Erreur.', 'error');
+                showToast(i18n.t('migration_error') || 'Erreur lors du transfert.', 'error');
             }
             currentIndex++;
             showNext();
@@ -7297,63 +7535,83 @@ function _renderMigrationModal(match, allBeers, parentContainer, migrationPrompt
     const migrationDismissText = i18n.t('migration_btn_dismiss') || 'Ignorer';
     const migrationTransferText = i18n.t('migration_btn_reconcile') || 'Fusionner et remplacer';
 
+    const hasComment = !!customData.comment;
+    const isFav = !!customData.favorite;
+
     modalContainer.innerHTML = `
         <div class="modal-overlay active" id="migration-overlay">
-            <div class="modal-content" style="max-width: 420px; border: 1px solid rgba(255,192,0,0.3); background: var(--bg-card);">
+            <div class="modal-content" style="max-width: 440px; border: 1px solid rgba(255,192,0,0.3); background: var(--bg-card); max-height: 90vh; overflow-y: auto;">
                 <div style="text-align: center; padding: 20px 20px 10px;">
-                    <div style="font-size: 2rem; margin-bottom: 10px;">🔄</div>
+                    <div style="font-size: 2rem; margin-bottom: 8px;">🔄</div>
                     <h3 style="color: var(--accent-gold); font-family: 'Russo One', sans-serif; margin-bottom: 5px;">
                         ${migrationTitleText}
                     </h3>
-                    <p style="font-size: 0.8rem; color: #888; margin-bottom: 20px;">
+                    <p style="font-size: 0.8rem; color: #888; margin-bottom: 12px;">
                         ${migrationSubtitleText}
                     </p>
                 </div>
 
-                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px; margin: 0 15px 15px;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 12px; margin: 0 15px 12px;">
                     <div style="text-align: center; flex: 1;">
                         <img src="${customImg}" alt="" onerror="this.src='images/beer/default.png'" 
-                             style="width: 60px; height: 60px; object-fit: contain; border-radius: 8px; background: #222; margin-bottom: 6px;">
-                        <div style="font-size: 0.75rem; color: #aaa; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 auto;">${customBeer.title}</div>
-                        <div style="font-size: 0.65rem; color: #666; margin-top: 2px;">${migrationCustomLabel}</div>
+                             style="width: 55px; height: 55px; object-fit: contain; border-radius: 8px; background: #222; margin-bottom: 6px;">
+                        <div style="font-size: 0.8rem; font-weight: bold; color: #aaa; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 auto;">${customBeer.title}</div>
+                        <div style="font-size: 0.7rem; color: #777;">${customBeer.brewery || 'Brasserie inconnue'}</div>
+                        <div style="font-size: 0.65rem; color: #888; margin-top: 2px;">${customBeer.alcohol || '?'}% • ${customBeer.volume || '33cl'}</div>
+                        <div style="font-size: 0.65rem; color: #e67e22; font-weight: bold; margin-top: 2px;">${migrationCustomLabel}</div>
                     </div>
 
-                    <div style="font-size: 1.5rem; color: var(--accent-gold);">→</div>
+                    <div style="font-size: 1.5rem; color: var(--accent-gold); flex-shrink: 0;">→</div>
 
                     <div style="text-align: center; flex: 1;">
                         <img src="${officialImg}" alt="" onerror="this.src='images/beer/default.png'" 
-                             style="width: 60px; height: 60px; object-fit: contain; border-radius: 8px; background: #222; margin-bottom: 6px;">
-                        <div style="font-size: 0.75rem; color: #fff; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 auto;">${officialBeer.title}</div>
-                        <div style="font-size: 0.65rem; color: var(--accent-gold); margin-top: 2px;">${migrationOfficialLabel}</div>
+                             style="width: 55px; height: 55px; object-fit: contain; border-radius: 8px; background: #222; margin-bottom: 6px;">
+                        <div style="font-size: 0.8rem; font-weight: bold; color: #fff; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0 auto;">${officialBeer.title}</div>
+                        <div style="font-size: 0.7rem; color: var(--accent-gold);">${officialBeer.brewery || ''}</div>
+                        <div style="font-size: 0.65rem; color: #aaa; margin-top: 2px;">${officialBeer.type || ''} • ${officialBeer.alcohol || ''}</div>
+                        <div style="font-size: 0.65rem; color: var(--accent-gold); font-weight: bold; margin-top: 2px;">${migrationOfficialLabel}</div>
                     </div>
                 </div>
 
-                <div style="padding: 0 15px 15px; font-size: 0.8rem; color: #aaa;">
-                    <div style="background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px;">
+                <div style="padding: 0 15px 12px; font-size: 0.8rem; color: #aaa;">
+                    <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                        <div style="font-weight: bold; color: #ddd; margin-bottom: 6px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">📋 Données à transférer</div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                             <span>${migrationSimilarityText}</span>
                             <span style="color: var(--accent-gold); font-weight: bold;">${score}%</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                             <span>${migrationDrinksText}</span>
-                            <span style="color: #fff;">${drinkCount}</span>
+                            <span style="color: #fff; font-weight: bold;">${drinkCount} conso(s)</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                             <span>${migrationHistoryText}</span>
                             <span style="color: #fff;">${historyCount} ${migrationEntriesText}</span>
                         </div>
-                        ${hasRating ? `<div style="display: flex; justify-content: space-between;">
+                        ${hasRating ? `<div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                             <span>${migrationRatingText}</span>
-                            <span style="color: #fff;">${customData.score}/20</span>
+                            <span style="color: #fff; font-weight: bold;">${customData.score}/20</span>
+                        </div>` : ''}
+                        ${hasComment ? `<div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <span>Commentaire</span>
+                            <span style="color: #aaa; font-style: italic; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">"${customData.comment}"</span>
+                        </div>` : ''}
+                        ${isFav ? `<div style="display: flex; justify-content: space-between;">
+                            <span>Statut</span>
+                            <span style="color: var(--accent-gold);">⭐ Favori</span>
                         </div>` : ''}
                     </div>
                 </div>
 
+                <div style="margin: 0 15px 15px; padding: 10px 12px; background: rgba(244,67,54,0.12); border: 1px solid rgba(244,67,54,0.35); border-radius: 8px; color: #ff8a80; font-size: 0.75rem; line-height: 1.4; text-align: center;">
+                    ⚠️ <strong>Action définitive :</strong> La bière personnalisée sera <u>définitivement supprimée</u> de votre collection après la fusion complète de vos consommations, notes et historique vers la bière officielle.
+                </div>
+
                 <div style="display: flex; gap: 10px; padding: 0 15px 20px;">
-                    <button id="btn-migration-dismiss" class="btn-primary" style="flex: 1; background: #222; border: 1px solid #444; color: #aaa; margin: 0;">
+                    <button id="btn-migration-dismiss" class="btn-primary" style="flex: 1; background: #222; border: 1px solid #444; color: #aaa; margin: 0; padding: 10px;">
                         ${migrationDismissText}
                     </button>
-                    <button id="btn-migration-confirm" class="btn-primary" style="flex: 1; background: var(--accent-gold); color: #000; font-weight: bold; margin: 0;">
+                    <button id="btn-migration-confirm" class="btn-primary" style="flex: 1; background: var(--accent-gold); color: #000; font-weight: bold; margin: 0; padding: 10px;">
                         ${migrationTransferText}
                     </button>
                 </div>
@@ -7395,19 +7653,29 @@ function _renderMigrationModal(match, allBeers, parentContainer, migrationPrompt
         if (result.success) {
             Storage.savePreference('dedup_manually_triggered', true);
             window.dispatchEvent(new Event('beerdex-action'));
+            
+            // Remove from in-memory allBeers
+            const bIdx = allBeers.findIndex(b => b.id === customBeer.id);
+            if (bIdx !== -1) allBeers.splice(bIdx, 1);
+
             const idx = migrationPrompts.findIndex(m => m.customBeer.id === customBeer.id && m.officialBeer.id === officialBeer.id);
             if (idx !== -1) migrationPrompts.splice(idx, 1);
-            modalContainer.style.display = 'none';
+            
+            modalContainer.style.display = '';
+            modalContainer.classList.add('hidden');
             modalContainer.innerHTML = '';
             showToast(i18n.t('migration_success') || `Transféré ! ${result.transferred.count} conso(s) et ${result.transferred.history} entrée(s) d'historique.`, 'success');
             Feedback.playSuccess();
-            // Re-render banner
+            
+            // Re-render banner with remaining prompts so user can continue
             const existingBanner = parentContainer.querySelector('.unrated-banner-modern');
             if (existingBanner) existingBanner.remove();
             renderUnratedBanner(allBeers, parentContainer, migrationPrompts);
             
-            // Reload to apply state change
-            setTimeout(() => window.location.reload(), 1500);
+            // Only reload if no more migration prompts remain
+            if (migrationPrompts.length === 0) {
+                setTimeout(() => window.location.reload(), 1200);
+            }
         } else {
             showToast(i18n.t('migration_error') || 'Erreur lors du transfert.', 'error');
         }

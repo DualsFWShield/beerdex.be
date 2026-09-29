@@ -1,4 +1,5 @@
 import * as Storage from './storage.js';
+import * as Utils from './utils.js';
 
 const ANIMAL_NAMES = [
     // Faune forestière & européenne
@@ -152,7 +153,7 @@ const Match = {
         return true;
     },
 
-    generateLocalProfile: function(allBeers) {
+    generateLocalProfile: function(allBeers, ratingsOverride = null) {
         const p = {};
         
         let pseudo = Storage.getPreference('beermatch_pseudo', '');
@@ -160,7 +161,7 @@ const Match = {
         p.pseudo = pseudo;
 
         const userData = Storage.getAllUserData();
-        const ratings = userData.ratings || userData;
+        const ratings = ratingsOverride || userData.ratings || userData;
         
         const validKeys = Object.keys(ratings).filter(k => ratings[k] && ratings[k].count > 0);
         const allConsumed = validKeys; 
@@ -169,43 +170,59 @@ const Match = {
         let totalLiters = 0;
         let totalAlcoholLiters = 0;
         
-        const isMap = allBeers instanceof window.Map;
+        // Build a fast lookup index from allBeers + custom beers for deterministic resolution
+        const beerIndex = new Map();
+        if (allBeers) {
+            const isMap = typeof allBeers.get === 'function';
+            if (isMap) {
+                allBeers.forEach((v, k) => beerIndex.set(k, v));
+            } else if (Array.isArray(allBeers)) {
+                allBeers.forEach(b => { if (b && b.id) beerIndex.set(b.id, b); });
+            }
+        }
+        // Also add custom beers from Storage (always available regardless of API state)
+        const customBeers = Storage.getCustomBeers ? Storage.getCustomBeers() : [];
+        customBeers.forEach(b => { if (b && b.id && !beerIndex.has(b.id)) beerIndex.set(b.id, b); });
 
         validKeys.forEach(k => { 
-            const count = parseInt(ratings[k].count) || 1;
+            const entry = ratings[k] || {};
+            const count = parseInt(entry.count) || 1;
             total += count; 
             
-            let beerObj = null;
-            if (isMap) beerObj = allBeers.get(k);
-            else if (Array.isArray(allBeers)) beerObj = allBeers.find(b => b.id === k);
+            const beerObj = beerIndex.get(k) || null;
             
-            if (beerObj) {
-                let volL = 0;
-                let abv = 0;
-                if (beerObj.volume) {
-                    const v = parseFloat(String(beerObj.volume).replace(',', '.'));
-                    if (!isNaN(v)) {
-                        const vStr = String(beerObj.volume).toLowerCase();
-                        if (vStr.includes('cl')) volL = v / 100;
-                        else if (vStr.includes('ml')) volL = v / 1000;
-                        else volL = v; // assume L
-                    }
+            let abv = 0;
+            if (beerObj && (beerObj.alcohol || beerObj.abv)) {
+                abv = Utils.parseDegree(beerObj.alcohol || beerObj.abv);
+            }
+            
+            const defaultMl = beerObj?.volume ? (Utils.parseVolumeToMl(beerObj.volume) || 330) : 330;
+            const defaultVolL = defaultMl / 1000;
+
+            const history = Array.isArray(entry.history) ? entry.history : [];
+            if (history.length > 0) {
+                history.forEach(h => {
+                    // h.volume is already in ml (stored by addConsumption)
+                    const hMl = h.volume ? (typeof h.volume === 'number' && h.volume > 0 ? h.volume : (Utils.parseVolumeToMl(h.volume) || defaultMl)) : defaultMl;
+                    const hL = hMl / 1000;
+                    totalLiters += hL;
+                    totalAlcoholLiters += hL * (abv / 100);
+                });
+                if (count > history.length) {
+                    const remaining = count - history.length;
+                    totalLiters += remaining * defaultVolL;
+                    totalAlcoholLiters += remaining * defaultVolL * (abv / 100);
                 }
-                if (beerObj.alcohol || beerObj.abv) {
-                    const abvStr = String(beerObj.alcohol || beerObj.abv);
-                    const a = parseFloat(abvStr.replace(',', '.'));
-                    if (!isNaN(a)) abv = a;
-                }
-                
-                totalLiters += volL * count;
-                totalAlcoholLiters += volL * (abv / 100) * count;
+            } else {
+                totalLiters += count * defaultVolL;
+                totalAlcoholLiters += count * defaultVolL * (abv / 100);
             }
         });
 
         if (Storage.getPreference('beermatch_share_total', true)) {
             p.totalBeers = total;
-            p.totalLiters = totalLiters;
-            p.totalAlcoholLiters = totalAlcoholLiters;
+            p.totalLiters = parseFloat(totalLiters.toFixed(2));
+            p.totalAlcoholLiters = parseFloat(totalAlcoholLiters.toFixed(2));
         }
         if (Storage.getPreference('beermatch_share_unique', true)) {
             p.uniqueBeers = allConsumed.length;
@@ -397,8 +414,8 @@ const Match = {
 
         return {
             totalGroupBeers,
-            totalGroupLiters,
-            totalGroupAlcoholLiters,
+            totalGroupLiters: parseFloat(totalGroupLiters.toFixed(2)),
+            totalGroupAlcoholLiters: parseFloat(totalGroupAlcoholLiters.toFixed(2)),
             uniqueGroupBeers: allUniqueBeers.size,
             podiums,
             commonBeers,
