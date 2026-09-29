@@ -14,22 +14,7 @@
         "ingredients": "Standard",
         "rarity_rank": "Commun"
     },
-    {
-        "title": "Maes",
-        "brewery": "Alken-Maes",
-        "type": "Blonde",
-        "volume": "0.25 L",
-        "alcohol": "5.2°",
-        "id": "MAES_BLONDE_0.25",
-        "image": "images/beer/be/maes-25cl.png",
-        "production_volume": "Industrielle",
-        "distribution": "Partout",
-        "barrel_aged": false,
-        "community_rating": 2.6,
-        "ingredients": "Standard",
-        "rarity_rank": "Base",
-        "barcode": "54064058"
-    },
+
     {
         "title": "Orval Trappist",
         "brewery": "Orval Brewery",
@@ -150,21 +135,7 @@
         "ingredients": "Standard",
         "rarity_rank": "Rare"
     },
-    {
-        "title": "Maes 0°",
-        "brewery": "Alken-Maes",
-        "type": "Blonde",
-        "volume": "0.25 L",
-        "alcohol": "0°",
-        "id": "MAES_0_0_BLONDE_0.25",
-        "image": "images/beer/be/maes-00-25cl.png",
-        "production_volume": "Industrielle",
-        "distribution": "Partout",
-        "barrel_aged": false,
-        "community_rating": 2,
-        "ingredients": "Sans alcool",
-        "rarity_rank": "Base"
-    },
+
     {
         "title": "Palm",
         "brewery": "Palm Breweries",
@@ -5163,21 +5134,7 @@
         "ingredients": "Standard",
         "rarity_rank": "Rare"
     },
-    {
-        "title": "Maes Canette",
-        "brewery": "Alken-Maes",
-        "type": "Blonde",
-        "volume": "0.50 L",
-        "alcohol": "5.2°",
-        "id": "MAES_CANETTE_BLONDE_0.50",
-        "image": "images/beer/be/maes-canette-50cl.png",
-        "production_volume": "Industrielle",
-        "distribution": "Partout",
-        "barrel_aged": false,
-        "community_rating": 2.6,
-        "ingredients": "Standard",
-        "rarity_rank": "Base"
-    },
+
     {
         "title": "Bush Amber 12° Caractere",
         "brewery": "Dubuisson",
@@ -5825,21 +5782,7 @@
         "ingredients": "Oud Bruin Blend",
         "rarity_rank": "Rare"
     },
-    {
-        "title": "Maes Radler",
-        "brewery": "Alken-Maes",
-        "type": "Blonde",
-        "volume": "0.25 L",
-        "alcohol": "2°",
-        "id": "MAES_RADLER_BLONDE_0.25",
-        "image": "images/beer/be/maes-radler-25cl.png",
-        "production_volume": "Industrielle",
-        "distribution": "Partout",
-        "barrel_aged": false,
-        "community_rating": 2.5,
-        "ingredients": "Jus de citron",
-        "rarity_rank": "Base"
-    },
+
     {
         "title": "La Gauloise Fruits Rouge",
         "brewery": "Du Bocq",
@@ -8769,21 +8712,7 @@
         "ingredients": "Standard",
         "rarity_rank": "Commun"
     },
-    {
-        "title": "Maes Radler Canette",
-        "brewery": "Alken-Maes",
-        "type": "Blonde",
-        "volume": "0.33 L",
-        "alcohol": "2°",
-        "id": "MAES_RADLER_CANETTE_BLONDE_0.33",
-        "image": "images/beer/be/maes-radler-canette-33cl.png",
-        "production_volume": "Industrielle",
-        "distribution": "Partout",
-        "barrel_aged": false,
-        "community_rating": 2.5,
-        "ingredients": "Jus de citron",
-        "rarity_rank": "Base"
-    },
+
     {
         "title": "Enigma El Dorado Triple IPA",
         "brewery": "Enigma",
@@ -9507,21 +9436,7 @@
         "ingredients": "Cerises",
         "rarity_rank": "Commun"
     },
-    {
-        "title": "Maes Radler Citroen 0° Blik",
-        "brewery": "Alken-Maes",
-        "type": "Blonde",
-        "volume": "0.33 L",
-        "alcohol": "0°",
-        "id": "MAES_RADLER_CITROEN_0_0_BLIK_BLONDE_0.33",
-        "image": "images/beer/be/maes-radler-citroen-00-blik-33cl.png",
-        "production_volume": "Industrielle",
-        "distribution": "Partout",
-        "barrel_aged": false,
-        "community_rating": 2.3,
-        "ingredients": "Sans alcool",
-        "rarity_rank": "Base"
-    },
+
     {
         "title": "Lupulus Neipa  Blik",
         "brewery": "Lupulus",
@@ -12667,10 +12582,10 @@
         "title": "Duvel Barrel Aged Kentucky Style",
         "brewery": "Duvel Moortgat",
         "type": "Blonde",
-        "volume": "0.15 L",
+        "volume": "0.75 L",
         "alcohol": "11.5°",
-        "id": "DUVEL_BARREL_AGED_KENTUCKY_STYLE_BLONDE_0.15",
-        "image": "images/beer/be/duvel-barrel-aged-kentucky.jpg",
+        "id": "DUVEL_BARREL_AGED_KENTUCKY_STYLE_BLONDE_0.75",
+        "image": "images/beer/be/duvel-barrel-aged-kentucky-75cl.jpg",
         "production_volume": "Régionale",
         "distribution": "Cavistes spécialisés",
         "barrel_aged": true,
@@ -12685,12 +12600,72 @@
         "volume": "0.33 L",
         "alcohol": "9°",
         "id": "LA_MONTAGNARDE_AMBREE_0.33",
-        "image": "images/beer/be/montagnarde-33cl.jpg",
+        "image": "images/beer/be/abbaye-des-rocs-la-montagnarde-33cl.jpg",
         "production_volume": "Artisanale",
         "distribution": "Cavistes spécialisés",
         "barrel_aged": false,
         "community_rating": 3.8,
         "ingredients": "Triple malt",
+        "rarity_rank": "Rare"
+    },
+    {
+        "title": "Abbaye des Rocs Brune",
+        "brewery": "Abbaye des Rocs",
+        "type": "Brune",
+        "volume": "0.33 L",
+        "alcohol": "9°",
+        "id": "ABBAYE_DES_ROCS_BRUNE_BRUNE_0.33",
+        "image": "images/beer/be/abbaye-des-rocs-brune-33cl.png",
+        "production_volume": "Artisanale",
+        "distribution": "Cavistes spécialisés",
+        "barrel_aged": false,
+        "community_rating": 3.8,
+        "ingredients": "Pur malt, 7 malts différents",
+        "rarity_rank": "Rare"
+    },
+    {
+        "title": "Abbaye des Rocs Blonde",
+        "brewery": "Abbaye des Rocs",
+        "type": "Blonde",
+        "volume": "0.33 L",
+        "alcohol": "9°",
+        "id": "ABBAYE_DES_ROCS_BLONDE_BLONDE_0.33",
+        "image": "images/beer/be/abbaye-des-rocs-blonde-33cl.jpg",
+        "production_volume": "Artisanale",
+        "distribution": "Cavistes spécialisés",
+        "barrel_aged": false,
+        "community_rating": 3.7,
+        "ingredients": "Pur malt",
+        "rarity_rank": "Rare"
+    },
+    {
+        "title": "Blanche des Honnelles",
+        "brewery": "Abbaye des Rocs",
+        "type": "Blanche",
+        "volume": "0.33 L",
+        "alcohol": "6°",
+        "id": "BLANCHE_DES_HONNELLES_BLANCHE_0.33",
+        "image": "images/beer/be/blanche-des-honnelles-33cl.jpg",
+        "production_volume": "Artisanale",
+        "distribution": "Cavistes spécialisés",
+        "barrel_aged": false,
+        "community_rating": 3.6,
+        "ingredients": "Malt d'orge et de froment, avoine, houblons",
+        "rarity_rank": "Rare"
+    },
+    {
+        "title": "Abbaye des Rocs Saisonnière",
+        "brewery": "Abbaye des Rocs",
+        "type": "Saison",
+        "volume": "0.33 L",
+        "alcohol": "5.4°",
+        "id": "ABBAYE_DES_ROCS_SAISONNIERE_SAISON_0.33",
+        "image": "images/beer/be/abbaye-des-rocs-saisonniere-33cl.jpg",
+        "production_volume": "Artisanale",
+        "distribution": "Cavistes spécialisés",
+        "barrel_aged": false,
+        "community_rating": 3.6,
+        "ingredients": "Dry Hopping",
         "rarity_rank": "Rare"
     },
     {
@@ -12700,7 +12675,7 @@
         "volume": "0.25 L",
         "alcohol": "4.5°",
         "id": "VIEUX_TEMPS_AMBREE_0.25",
-        "image": "images/beer/be/vieux-temps-25cl.jpg",
+        "image": "images/beer/be/vieux-temps-25cl.webp",
         "production_volume": "Industrielle",
         "distribution": "Partout",
         "barrel_aged": false,
