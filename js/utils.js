@@ -417,3 +417,87 @@ export function categorizeBeerType(rawType) {
     return 'Spéciale / Autre';
 }
 
+// ============================== //
+// Trappist Beers & Badges        //
+// ============================== //
+
+export const TRAPPIST_BREWERIES = [
+    'scourmont', 'chimay', 'orval', 'rochefort', 'saint-remy', 'saint-rémy',
+    'westmalle', 'westvleteren', 'saint-sixte', 'sint-sixtus', 'achel', 'achelse kluis',
+    'koningshoeven', 'la trappe', 'de kievit', 'zundert',
+    'tre fontane', 'fontane', 'cardeña', 'cardena', 'san pedro de cardeña',
+    'mount st bernard', 'mount saint-bernard', 'tynt meadow',
+    'engelszell', 'spencer', 'mont des cats'
+];
+
+export const TRAPPIST_TITLES = [
+    'chimay', 'orval', 'rochefort', 'westmalle', 'westvleteren', 'achel',
+    'la trappe', 'zundert', 'tre fontane', 'cardeña', 'cardena',
+    'tynt meadow', 'engelszell', 'gregorius', 'benno', 'nivard', 'spencer', 'mont des cats'
+];
+
+/**
+ * Identifies if a given beer is an authentic or historic Trappist beer.
+ * @param {Object} beer
+ * @returns {boolean}
+ */
+export function isTrappistBeer(beer) {
+    if (!beer) return false;
+    const brew = (beer.brewery || '').toLowerCase();
+    const title = (beer.title || '').toLowerCase();
+    const id = (beer.id || '').toLowerCase();
+    const type = (beer.type || '').toLowerCase();
+
+    if (type.includes('trappiste') || type.includes('trappist')) return true;
+    if (id.includes('trappist')) return true;
+
+    if (TRAPPIST_BREWERIES.some(tb => brew.includes(tb))) return true;
+    if (TRAPPIST_TITLES.some(tt => title.startsWith(tt) || title.includes(' ' + tt) || title.includes(tt + ' '))) return true;
+
+    return false;
+}
+
+/**
+ * Resolves the canonical Trappist Abbey key for achievements and grouping.
+ * @param {Object} beer
+ * @returns {string|null}
+ */
+export function getTrappistAbbey(beer) {
+    if (!beer) return null;
+    const brew = (beer.brewery || '').toLowerCase();
+    const title = (beer.title || '').toLowerCase();
+    const id = (beer.id || '').toLowerCase();
+
+    // Mont des Cats is brewed at Scourmont (Chimay), check it first before scourmont brewery match
+    if (brew.includes('mont des cats') || title.includes('mont des cats') || title.includes('cats') || id.includes('mont_des_cats')) return 'mont des cats';
+
+    if (brew.includes('scourmont') || brew.includes('chimay') || title.includes('chimay') || id.includes('chimay')) return 'chimay';
+    if (brew.includes('orval') || title.includes('orval') || id.includes('orval')) return 'orval';
+    if (brew.includes('rochefort') || brew.includes('saint-remy') || brew.includes('saint-rémy') || title.includes('rochefort') || id.includes('rochefort')) return 'rochefort';
+    if (brew.includes('westmalle') || title.includes('westmalle') || id.includes('westmalle')) return 'westmalle';
+    if (brew.includes('westvleteren') || brew.includes('saint-sixte') || brew.includes('sint-sixtus') || title.includes('westvleteren') || id.includes('westvleteren')) return 'westvleteren';
+    if (brew.includes('achel') || title.includes('achel') || id.includes('achel')) return 'achel';
+    if (brew.includes('koningshoeven') || brew.includes('la trappe') || title.includes('la trappe') || id.includes('la_trappe')) return 'la trappe';
+    if (brew.includes('zundert') || brew.includes('kievit') || title.includes('zundert') || id.includes('zundert')) return 'zundert';
+    if (brew.includes('tre fontane') || brew.includes('fontane') || title.includes('tre fontane') || id.includes('tre_fontane')) return 'tre fontane';
+    if (brew.includes('cardeña') || brew.includes('cardena') || title.includes('cardena') || id.includes('cardena')) return 'cardena';
+    if (brew.includes('mount st') || brew.includes('tynt meadow') || title.includes('tynt meadow') || id.includes('tynt_meadow')) return 'tynt meadow';
+    if (brew.includes('engelszell') || title.includes('engelszell') || title.includes('gregorius') || title.includes('benno') || title.includes('nivard') || id.includes('engelszell')) return 'engelszell';
+    if (brew.includes('spencer') || title.includes('spencer') || id.includes('spencer')) return 'spencer';
+
+    return null;
+}
+
+/**
+ * Returns the HTML markup for the Trappist seal badge on beer cards.
+ * Adapts dynamically to user theme variables.
+ * @param {Object} beer
+ * @returns {string}
+ */
+export function getTrappistBadgeHtml(beer) {
+    if (!isTrappistBeer(beer)) return '';
+    return `<div class="card-trappist-badge" title="Bière Trappiste Authentique / Authentique Produit Trappiste">
+        <div class="trappist-logo-icon"></div>
+    </div>`;
+}
+

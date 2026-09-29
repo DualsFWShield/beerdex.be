@@ -1,5 +1,6 @@
-const CACHE_NAME = 'Beerdex-v5.0.5'; // v5.0.5 Cache GET-only guard & BAC rules resolution fix
+const CACHE_NAME = 'Beerdex-v5.0.6'; // v5.0.6 Trappist badges, new abbeys & achievements
 const ASSETS = [
+    './images/Authentic_trappist_product_logo.svg',
     './index.html',
     './style.css',
     './style-museum.css',

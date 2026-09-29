@@ -567,5 +567,53 @@
     "targetId": null,
     "originalTitle": "Abbaye des Rocs Saisonnière",
     "originalBrewery": "Abbaye des Rocs"
+  },
+  "CHIMAY TRIPLE_BLONDE_0.33": {
+    "targetId": "CHIMAY_BLANCHE_TRIPLE_CINQ_CENTS_BLONDE_0.33",
+    "targetTitle": "Chimay Blanche",
+    "targetBrewery": "Abbaye Notre-Dame de Scourmont",
+    "originalTitle": "CHIMAY TRIPLE"
+  },
+  "CHIMAY_8_TRIPEL_TRIPEL_0.33": {
+    "targetId": "CHIMAY_BLANCHE_TRIPLE_CINQ_CENTS_BLONDE_0.33",
+    "targetTitle": "Chimay Blanche",
+    "targetBrewery": "Abbaye Notre-Dame de Scourmont",
+    "originalTitle": "CHIMAY 8 TRIPEL"
+  },
+  "CHIMAY_GEEL_BLONDE_0.33": {
+    "targetId": "CHIMAY JAUNE_BLONDE_0.33",
+    "targetTitle": "CHIMAY JAUNE",
+    "targetBrewery": "Abbaye Notre-Dame de Scourmont",
+    "originalTitle": "CHIMAY GEEL"
+  },
+  "CHIMAY_BLOND_BLONDE_0.33": {
+    "targetId": "CHIMAY DOREE_BLONDE_0.33",
+    "targetTitle": "CHIMAY DOREE",
+    "targetBrewery": "Abbaye Notre-Dame de Scourmont",
+    "originalTitle": "CHIMAY BLOND"
+  },
+  "CHIMAY_150_GROEN_BLONDE_0.33": {
+    "targetId": "CHIMAY VERTE 150_BLONDE_0.33",
+    "targetTitle": "CHIMAY VERTE 150",
+    "targetBrewery": "Abbaye Notre-Dame de Scourmont",
+    "originalTitle": "CHIMAY 150 GROEN"
+  },
+  "CHIMAY_7_ROOD_BRUNE_0.33": {
+    "targetId": "CHIMAY ROUGE_AMBREE_0.33",
+    "targetTitle": "CHIMAY ROUGE",
+    "targetBrewery": "Abbaye Notre-Dame de Scourmont",
+    "originalTitle": "CHIMAY 7 ROOD"
+  },
+  "CHIMAY_RED_PREMIERE_AMBREE_0.75": {
+    "targetId": "CHIMAY ROUGE_AMBREE_0.33",
+    "targetTitle": "CHIMAY ROUGE",
+    "targetBrewery": "Abbaye Notre-Dame de Scourmont",
+    "originalTitle": "Chimay Red Premiere"
+  },
+  "CHIMAY_BLAUW_GRANDE_RESERVE_33CL": {
+    "targetId": "CHIMAY_BLEU_GRANDE_RESERVE_BRUNE_0.33",
+    "targetTitle": "Chimay Bleu (Grande Reserve)",
+    "targetBrewery": "Abbaye Notre-Dame de Scourmont",
+    "originalTitle": "Chimay Blauw (Grande Reserve) - 33cl"
   }
 }

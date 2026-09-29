@@ -44,5 +44,35 @@
         "community_rating": 3.9,
         "ingredients": "Standard",
         "rarity_rank": "Rare"
+    },
+    {
+        "title": "Spencer Trappist Ale",
+        "brewery": "Spencer Brewery (Saint Joseph's Abbey)",
+        "type": "Blonde",
+        "volume": "0.33 L",
+        "alcohol": "6.5°",
+        "id": "SPENCER_TRAPPIST_ALE_BLONDE_0.33",
+        "image": "images/beer/world/spencer_trappist_ale.png",
+        "production_volume": "Artisanale",
+        "distribution": "Cavistes spécialisés",
+        "barrel_aged": false,
+        "community_rating": 3.8,
+        "ingredients": "Eau, malt d'orge, houblons américains Willamette, levure trappiste",
+        "rarity_rank": "Rare"
+    },
+    {
+        "title": "Spencer Trappist Imperial Stout",
+        "brewery": "Spencer Brewery (Saint Joseph's Abbey)",
+        "type": "Stout (Brune)",
+        "volume": "0.33 L",
+        "alcohol": "8.7°",
+        "id": "SPENCER_TRAPPIST_IMPERIAL_STOUT_BRUNE_0.33",
+        "image": "images/beer/world/spencer_trappist_imperial_stout.png",
+        "production_volume": "Artisanale",
+        "distribution": "Cavistes spécialisés",
+        "barrel_aged": false,
+        "community_rating": 3.9,
+        "ingredients": "Malt d'orge torréfié, houblon, levure trappiste",
+        "rarity_rank": "Super Rare"
     }
 ]

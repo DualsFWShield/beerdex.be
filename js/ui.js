@@ -861,19 +861,24 @@ export function renderBeerList(beers, container, filters = null, showCreatePromp
             </div>`;
         }
 
+        const trappistBadgeHtml = Utils.getTrappistBadgeHtml(beer);
+
         let badgesContainerHtml = '';
         if (cardStatsHtml) {
-            badgesContainerHtml = `<div class="card-badges-left" style="position:absolute; top:5px; left:5px; z-index:2; display:flex; flex-direction:column; gap:4px; font-size:0.75rem;">
+            badgesContainerHtml = `<div class="card-badges-left" style="position:absolute; top:6px; left:6px; z-index:3; display:flex; flex-direction:column; gap:5px; font-size:0.75rem;">
                 ${cardStatsHtml}
             </div>`;
         }
 
         card.innerHTML = `
             ${badgesContainerHtml}
-            ${isFavorite ? '<div style="position:absolute; top:5px; right:5px; z-index:2; font-size:1.2rem; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));">⭐</div>' : ''}
-            <svg class="check-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
+            <div class="card-badges-right" style="position:absolute; top:6px; right:6px; z-index:3; display:flex; align-items:center; gap:6px;">
+                ${isFavorite ? '<span class="card-fav-star" style="font-size:1.15rem; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5)); line-height:1;">⭐</span>' : ''}
+                ${trappistBadgeHtml}
+                <svg class="check-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
             <div class="beer-image-container" style="width:100%; height:120px; display:flex; justify-content:center; align-items:center;">
                 <img src="${displayImage}" alt="${beer.title}" class="beer-image" loading="${index < 10 ? 'eager' : 'lazy'}" 
                      onload="removeImageBackground(this)"
@@ -1724,7 +1729,14 @@ export function renderBeerDetail(beer, onSave) {
                     <button id="btn-toggle-fav" style="background:none; border:none; font-size:1.8rem; cursor:pointer;">
                         ${isFav ? '⭐' : '🤍'}
                     </button>
-                    <button id="btn-close-modal" style="background:none; border:none; color:#fff; font-size:1.8rem; cursor:pointer;">&times;</button>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        ${Utils.isTrappistBeer(beer) ? `
+                            <div class="modal-trappist-pill" title="Authentic Trappist Product" style="margin-bottom:0;">
+                                <div class="trappist-logo-icon"></div>
+                                <span>Bière Trappiste Authentique</span>
+                            </div>` : ''}
+                        <button id="btn-close-modal" style="background:none; border:none; color:#fff; font-size:1.8rem; cursor:pointer; line-height:1;">&times;</button>
+                    </div>
                 </div>
 
                 <div style="text-align: center; margin-bottom: 20px;">

@@ -1,5 +1,6 @@
 import { i18n } from './i18n.js';
 import * as Storage from './storage.js';
+import * as Utils from './utils.js';
 
 // --- Achievement Definitions ---
 // Types: 'count', 'volume', 'variety', 'special'
@@ -91,13 +92,13 @@ const ACHIEVEMENTS = [
         { id: 'type_white', titleKey: 'ach_type_white_title', descKey: 'ach_type_white_desc', icon: '❄️', condition: (s) => s.countByType('Blanche') >= 5 || s.countByType('Witbier') >= 5, rarity: 'rare' },
         { id: 'type_abbey', titleKey: 'ach_type_abbey_title', descKey: 'ach_type_abbey_desc', icon: '⛪', condition: (s) => s.countByType('Abbaye') >= 5 || s.countByType('Abbey') >= 5, rarity: 'rare' },
         { id: 'type_fruit', titleKey: 'ach_type_fruit_title', descKey: 'ach_type_fruit_desc', icon: '🍎', condition: (s) => s.fruitCount >= 5, rarity: 'rare' },
-        { id: 'brew_trappiste', titleKey: 'ach_brew_trappiste_title', descKey: 'ach_brew_trappiste_desc', icon: '✝️', condition: (s) => s.countByType('Trappiste') >= 3, rarity: 'rare' },
+        { id: 'brew_trappiste', titleKey: 'ach_brew_trappiste_title', descKey: 'ach_brew_trappiste_desc', icon: '✝️', condition: (s) => (s.uniqueTrappists ? s.uniqueTrappists.size >= 3 : s.countByType('Trappiste') >= 3), rarity: 'rare' },
     ].map(a => ({ ...a, categoryKey: 'ach_cat_styles' })),
 
     // --- TRAPPEURS ---
     ...[
-        { id: 'trappist_belgian', titleKey: 'ach_trappist_belgian_title', descKey: 'ach_trappist_belgian_desc', icon: '💣', condition: (s) => ['chimay', 'orval', 'rochefort', 'westmalle', 'westvleteren', 'achel'].every(b => s.hasBrewery(b)), categoryKey: 'ach_cat_styles', rarity: 'epique' },
-        { id: 'trappist_world', titleKey: 'ach_trappist_world_title', descKey: 'ach_trappist_world_desc', icon: '🌍', condition: (s) => ['chimay', 'orval', 'rochefort', 'westmalle', 'westvleteren', 'achel', 'la trappe', 'zundert', 'engelszell', 'spencer', 'tre fontane', 'tynt meadow'].every(b => s.hasBrewery(b)), categoryKey: 'ach_cat_styles', rarity: 'mythique' },
+        { id: 'trappist_belgian', titleKey: 'ach_trappist_belgian_title', descKey: 'ach_trappist_belgian_desc', icon: '💣', condition: (s) => ['chimay', 'orval', 'rochefort', 'westmalle', 'westvleteren', 'achel'].every(b => (s.drunkTrappistAbbeys && s.drunkTrappistAbbeys.has(b)) || s.hasBrewery(b)), categoryKey: 'ach_cat_styles', rarity: 'epique' },
+        { id: 'trappist_world', titleKey: 'ach_trappist_world_title', descKey: 'ach_trappist_world_desc', icon: '🌍', condition: (s) => (s.drunkTrappistAbbeys && s.drunkTrappistAbbeys.size >= 12) || ['chimay', 'orval', 'rochefort', 'westmalle', 'westvleteren', 'achel', 'la trappe', 'zundert', 'engelszell', 'spencer', 'tre fontane', 'tynt meadow'].every(b => (s.drunkTrappistAbbeys && s.drunkTrappistAbbeys.has(b)) || s.hasBrewery(b)), categoryKey: 'ach_cat_styles', rarity: 'mythique' },
     ],
 
     // --- FUN / HIDDEN --- (25)
@@ -221,6 +222,10 @@ export function checkAchievements(allBeers) {
         // Breweries
         drunkBreweries: new Set(),
         hasBrewery: (name) => Array.from(stats.drunkBreweries).some(b => b.includes(name.toLowerCase())),
+
+        // Trappist Abbeys & tracking
+        drunkTrappistAbbeys: new Set(),
+        uniqueTrappists: new Set(),
 
         // Names
         maxNameLength: 0,
@@ -358,6 +363,16 @@ export function checkAchievements(allBeers) {
                 if (beer.type) stats.drunkTypes.push(beer.type);
                 // Brewery
                 if (beer.brewery) stats.drunkBreweries.add(beer.brewery.toLowerCase());
+
+                // Trappist Tracking
+                if (Utils.isTrappistBeer(beer)) {
+                    stats.uniqueTrappists.add(beer.id);
+                    const abbey = Utils.getTrappistAbbey(beer);
+                    if (abbey) {
+                        stats.drunkTrappistAbbeys.add(abbey);
+                        stats.drunkBreweries.add(abbey);
+                    }
+                }
 
                 // Name
                 if (beer.title) {

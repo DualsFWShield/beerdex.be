@@ -1466,19 +1466,90 @@ body.is-offline .offline-badge {
     background: linear-gradient(145deg, var(--bg-card), #1a1a10);
 }
 
-.beer-card .check-icon {
+/* Top-right card badges & checkmark */
+.card-badges-right {
     position: absolute;
-    top: 8px;
-    right: 8px;
+    top: 6px;
+    right: 6px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.card-fav-star {
+    font-size: 1.15rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    line-height: 1;
+}
+
+.beer-card .check-icon {
+    position: static;
+    top: auto;
+    right: auto;
     color: var(--accent-gold);
     opacity: 0;
     transform: scale(0);
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: none;
 }
 
 .beer-card.drunk .check-icon {
+    display: inline-block;
     opacity: 1;
     transform: scale(1);
+}
+
+/* --- Trappist Badge on Beer Cards (Top-Right, clean hexagonal seal without circle) --- */
+.card-trappist-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 27px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.25s ease;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.7));
+}
+
+.beer-card:hover .card-trappist-badge {
+    transform: scale(1.18);
+    filter: drop-shadow(0 0 8px var(--accent-gold, #FFC000));
+}
+
+.card-trappist-badge .trappist-logo-icon {
+    width: 100%;
+    height: 100%;
+}
+
+.trappist-logo-icon {
+    width: 18px;
+    height: 20px;
+    background-color: var(--accent-gold, #FFC000);
+    -webkit-mask: url('images/Authentic_trappist_product_logo.svg') no-repeat center / contain;
+    mask: url('images/Authentic_trappist_product_logo.svg') no-repeat center / contain;
+    transition: background-color 0.25s ease;
+}
+
+.modal-trappist-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    background: rgba(255, 192, 0, 0.12);
+    border: 1px solid var(--accent-gold, #FFC000);
+    color: var(--accent-gold, #FFC000);
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 0;
+    width: fit-content;
+    white-space: nowrap;
+}
+.modal-trappist-pill .trappist-logo-icon {
+    width: 13px;
+    height: 15px;
 }
 
 .beer-image {
