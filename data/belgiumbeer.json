@@ -517,18 +517,18 @@
     "rarity_rank": "Saisonnière"
   },
   {
-    "title": "CAROLUS TRIPLE",
+    "title": "GOUDEN CAROLUS TRIPEL",
     "brewery": "HET ANKER",
     "type": "Blonde",
     "volume": "0.33 L",
     "alcohol": "9°",
-    "id": "CAROLUS TRIPLE_BLONDE_0.33",
-    "image": "images/beer/be/CAROLUS_TRIPLE_BLONDE_033.png",
+    "id": "GOUDEN_CAROLUS_TRIPEL_BLONDE_0.33",
+    "image": "images/beer/be/gouden-carolus-tripel-33cl.png",
     "production_volume": "Régionale",
     "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 3.7,
-    "ingredients": "Standard",
+    "community_rating": 3.8,
+    "ingredients": "East Kent Golding Hop",
     "rarity_rank": "Commun",
     "barcode": "5425006240116"
   },
