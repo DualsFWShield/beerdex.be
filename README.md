@@ -15,34 +15,58 @@ Beerdex est une Progressive Web App (PWA) gratuite, respectueuse de la vie priv�
 
 ## ✨ Fonctionnalités
 
-### 🔍 REMPLISSEZ VOTRE BEERDEX
-*   **Capturez vos dégustations** : Scannez, répertoriez et collectionnez chaque bouteille, canette ou pression grâce au scanner intégré (Open Food Facts).
-*   **Mode Découverte** : Gamifiez votre expérience en cachant les bières que vous n'avez pas encore débusquées.
-*   **Fiches Détaillées** : Notez l'amertume (IBU), le degré d'alcool, le style, les calories et vos impressions personnelles.
+### 🍺 A. Le Dex & La Collection (L'esprit Pokédex)
+*   **Base de Données Massive** : Des milliers de références belges, françaises, allemandes et internationales méticuleusement documentées (degrés, styles, brasseries, volumes, ingrédients, calories, notes de dégustation).
+*   **Système de Rareté & Reveal Card** : Animation de révélation holographique façon cartes à collectionner TCG (Pokémon/Hearthstone) basée sur la rareté (`Base`, `Commun`, `Rare`, `Super Rare`, `Épique`, `Mythique`, `Légendaire`, `Ultra Légendaire`).
+*   **Rareté Dynamique d'Import** : Calcul intelligent qui adapte la rareté des bières importées selon votre pays d'origine !
+*   **Vues Multiples & Recherche Magique** :
+    *   Bascule instantanée entre affichage en Grille (Grid) et en Liste (List).
+    *   Recherche magique ultra-réactive (s'ouvre et filtre automatiquement dès que vous tapez au clavier sur PC).
+    *   Filtres multi-critères par style (Trappiste, IPA, Stout, Pils, Fruitée, etc.), brasserie, pays, rareté et statut de dégustation.
+*   **Mode Découverte** : Possibilité de masquer les bières non encore dégustées pour gamifier votre collection.
 
-### 🛡️ SÉCURITÉ & SÉRIEUX
-*   **Calculateur d'Alcoolémie** : Suivez votre taux (g/L) estimé en temps réel selon votre profil (poids/sexe).
-*   **Indicateur de Conduite** : Sachez précisément combien de temps vous devez attendre avant de reprendre le volant en toute sécurité.
-*   **Réglementation Locale** : Adaptation automatique des seuils de sanction (France, Belgique, US, etc.).
+### 📝 B. Dégustation, Notation & Arômes
+*   **Ajout Rapide en 1 Clic** : Enregistrement de dégustation instantané avec sélection du volume (25cl, 33cl, pinte, personnalisé).
+*   **Fiche de Dégustation Complète** : Note sur 20, commentaires personnalisés et historique précis.
+*   **Roue des Saveurs Interactive (Aroma Wheel)** : Décomposez le profil aromatique (agrumes, torréfaction, épices, fruits exotiques...) pour un ressenti zythologique précis.
+*   **Bières Personnalisées (Custom)** : Créez et intégrez manuellement n'importe quelle micro-cuvée locale introuvable dans la base.
 
-### 📊 STATISTIQUES & RÉCAP
-*   **Tableau de Bord** : Visualisez votre volume total bu (en litres... ou en baignoires !).
-*   **Beerdex Wrapped** : Vivez votre propre récapitulatif annuel pour découvrir vos styles et brasseries préférés.
-*   **Succès & Rangs** : Plus de 100 succès à débloquer pour passer de "Novice" à "Légende".
+### 📷 C. Scanner Hybride & Hors-Ligne
+*   **Scanner Code-barres Instantané** : Détection caméra ultra-rapide via `Html5Qrcode` (avec sélection automatique du capteur arrière).
+*   **Recherche Locale en Cache** : Réponse immédiate 100% hors-ligne grâce à la base de données locale EAN13.
+*   **Fallback Hybride Silencieux** : En cas de code-barres inconnu, interrogation d'OpenFoodFacts pour préremplir automatiquement la fiche.
 
-### 🌍 GLOBAL & ACCESSIBLE
-*   **Multilingue** : Entièrement traduit en **Français** et en **Anglais**.
-*   **No Framework** : Construit sans dépendance lourde pour une vitesse de chargement instantanée (même sur vieux mobiles).
-*   **Local First** : Vos données vous appartiennent et ne quittent jamais votre téléphone.
+### 🎮 D. Gamer Mode & BAC IRL (Taux d'Alcoolémie)
+*   **Calculateur Métabolique Précis** : Estimation en direct du taux d'alcoolémie dans le sang (g/L) selon le sexe, le poids et le métabolisme.
+*   **Statistiques IRL Gamifiées** : Vos capacités traduites en direct en statistiques de jeu vidéo :
+    *   *Ping* : Temps de réaction ralenti.
+    *   *FPS* : Baisse de fluidité motrice.
+    *   *Aim Assist* : Perte de précision.
+    *   *FOV (Field of View)* : Rétrécissement du champ visuel.
+*   **Rangs Compétitifs** : Évolution de votre rang (de *Wood Division* à *Global Elite*).
+*   **Streaks & Sécurité** : Suivi des séries (jours consécutifs de dégustation OU de sobriété) et calcul précis du temps d'attente avant de pouvoir reconduire.
 
-### 💾 Données & Vie Privée
-*   **Local First** : Toutes les données sont stockées dans votre navigateur (IndexedDB/LocalStorage).
-*   **Import/Export Avancé** :
-    *   **Sauvegarde Fichier** : Export complet ou partiel (Bières perso, notes...) en JSON.
-    *   **Lien Magique** : Transférez vos données vers un autre appareil via un simple lien URL.
-*   **Partage Social** :
-    *   Générez des stories Instagram personnalisées avec vos notes.
-    *   Partagez des liens directs vers vos bières préférées.
+### 🗺️ E. Carte Zythologique Interactive (Maps)
+*   **Exploration Géographique** : Cartographie interactive par régions et provinces (Belgique, France, Allemagne, Pays-Bas, USA, Colombie, etc.).
+*   **Découverte Régionale** : Localisation des brasseries artisanales et suivi du pourcentage de complétion par terroir.
+
+### 📚 F. Beerpedia (L'Encyclopédie de la Bière)
+*   Un compendium intégré dédié à la zythologie : histoire des styles, méthodes de fermentation, guides des verres adaptés et lexique brassicole.
+
+### 📊 G. Statistiques, Heatmap & Wrapped
+*   **Dashboard & Calendrier Heatmap** : Visualisation chronologique de votre consommation façon contributions GitHub.
+*   **Équivalences Ludiques** : Suivi du volume total consommé (en litres, fûts ou... baignoires !).
+*   **Système d'Achievements** : Plus de 100 succès et trophées à débloquer au fil de vos dégustations.
+*   **Beerdex Wrapped** : Rétrospective annuelle interactive et musicale façon Spotify Wrapped pour revivre vos temps forts zythologiques.
+
+### 🖼️ H. Générateur de Posters de Collection
+*   **Posters Haute Définition** : Génération de posters de votre collection (`poster-classic.html` et `poster-museum.html`) prêts à être imprimés ou exposés.
+
+### 🔄 I. Sauvegarde, Partage & Synchronisation P2P
+*   **100% Hors-Ligne & Respect de la Vie Privée** : Zéro compte obligatoire, zéro tracking, données hébergées localement (`localStorage`).
+*   **Synchronisation Sans Contact (OTA / P2P)** : Échange direct en pair-à-pair entre appareils sans passer par un serveur tiers.
+*   **Partage Social & Stories** : Génération d'images élégantes pour Instagram/Snapchat et liens magiques d'import.
+*   **Import / Export Avancé** : Sauvegarde JSON complète ou sélective pour transférer votre profil en toute sérénité.
 
 ---
 
@@ -67,14 +91,14 @@ Ce projet est réalisé **sans aucun framework** (No React, No Vue, No Build Ste
 2.  Ouvrez `index.html` dans votre navigateur.
     *   *Note : Pour que le Service Worker (PWA) fonctionne, il est préférable d'utiliser un serveur local simple (ex: Live Server sur VSCode ou `python -m http.server`).*
 
-
-
 ## 🤝 Contribuer
 
-Les contributions sont les bienvenues ! Pour ajouter de nouvelles bières à la base de données statique :
-1.  Ajoutez l'entrée dans le fichier JSON correspondant dans `data/`.
-2.  Ajoutez l'image dans `images/beer/`.
-3.  Proposez une Pull Request.
+Les contributions sont les bienvenues ! Pour ajouter de nouvelles bières à la base de données :
+1. Consultez le guide dédié aux ajouts : **[AI_DB_GUIDE.md](AI_DB_GUIDE.md)**.
+2. Ajoutez l'entrée dans `data/belgiumbeer.json` (ou le fichier régional adéquat dans `data/`).
+3. Vérifiez et ajoutez la brasserie dans `data/breweries.json` avec sa province et son pays.
+4. Placez l'image de la bière dans le dossier approprié (`images/beer/be/`, `images/beer/world/`, etc.) avec un nom au format `[brasserie]-[biere]-[volume].[ext]`.
+5. Proposez une Pull Request.
 
 ## 📄 Licence
 
@@ -134,7 +158,7 @@ Ces liens peuvent être utilisés comme raccourcis favoris :
 **Sauvegardes (Fichier)**
 *   **[💾 Complète (Tout)](https://beerdex.dualsfwshield.be/?action=export)** : `?action=export`
 *   **[🍺 Bières Custom Uniquement](https://beerdex.dualsfwshield.be/?action=export&scope=custom)** : `?action=export&scope=custom`
-*   **[� Notes & Historique Uniquement](https://beerdex.dualsfwshield.be/?action=export&scope=ratings)** : `?action=export&scope=ratings`
+*   **[📝 Notes & Historique Uniquement](https://beerdex.dualsfwshield.be/?action=export&scope=ratings)** : `?action=export&scope=ratings`
 
 **Partage (Lien Cloud)**
 *   **[🔗 Lien Magique (Tout)](https://beerdex.dualsfwshield.be/?action=export&mode=url)** : `?action=export&mode=url`

@@ -29,3 +29,10 @@ N'hésite pas à ajouter une entrée avec la date, ton "nom" (ou modèle), et le
 > **Sujet** : [Idée] Filtres et Pagination
 > **Message** : 
 > Attention à la logique de filtrage dans `app.js` et `ui.js`. Actuellement `renderCurrentView` gère un peu de filtrage, mais `ui.js` en fait aussi. Ça peut casser la pagination infinie si on ne fait pas gaffe. Si quelqu'un touche à la recherche ou aux filtres, il faudra peut-être centraliser tout le filtrage dans `app.js` AVANT d'envoyer le sous-tableau à `ui.js`.
+
+> **Date** : 2026-10-05
+> **Modèle** : Antigravity (Gemini 3.8 Flash)
+> **Sujet** : [Ajout] Intégration des gammes Houppe, Soultrip (Good Souls Club) et Mythos
+> **Message** : 
+> Ajout de 12 nouvelles bières dans `belgiumbeer.json` et enregistrement des brasseries dans `breweries.json` (Brasserie de Namur, Good Souls Club, Olympic Brewery). Les images ont été renommées proprement et placées dans `images/beer/be/` et `images/beer/world/`. Attention aux noms d'images des bières du Good Souls Club : `Soultrip-pale-IPA.png` est en fait la `Soulflower` (Hazy Pale IPA) et `Soultrip-wheat-beer.png` est la `Soulshine` (Wheat Beer).
+

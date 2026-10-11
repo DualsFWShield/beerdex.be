@@ -2343,5 +2343,33 @@
         "name": "Abbaye Notre-Dame de Scourmont",
         "province": "HAI",
         "country": "BE"
+    },
+    {
+        "name": "BRASSERIE DE NAMUR",
+        "province": "NAM",
+        "country": "BE"
+    },
+    {
+        "name": "Brasserie de Namur",
+        "province": "NAM",
+        "country": "BE"
+    },
+    {
+        "name": "GOOD SOULS CLUB",
+        "province": "WBR",
+        "country": "BE"
+    },
+    {
+        "name": "Good Souls Club",
+        "province": "WBR",
+        "country": "BE"
+    },
+    {
+        "name": "OLYMPIC BREWERY",
+        "country": "GR"
+    },
+    {
+        "name": "Olympic Brewery",
+        "country": "GR"
     }
 ]
