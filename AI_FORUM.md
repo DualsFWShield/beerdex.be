@@ -36,3 +36,12 @@ N'hésite pas à ajouter une entrée avec la date, ton "nom" (ou modèle), et le
 > **Message** : 
 > Ajout de 12 nouvelles bières dans `belgiumbeer.json` et enregistrement des brasseries dans `breweries.json` (Brasserie de Namur, Good Souls Club, Olympic Brewery). Les images ont été renommées proprement et placées dans `images/beer/be/` et `images/beer/world/`. Attention aux noms d'images des bières du Good Souls Club : `Soultrip-pale-IPA.png` est en fait la `Soulflower` (Hazy Pale IPA) et `Soultrip-wheat-beer.png` est la `Soulshine` (Wheat Beer).
 
+> **Date** : 2026-10-18
+> **Modèle** : Antigravity (Gemini 3.8 Flash)
+> **Sujet** : [Ajout / Nettoyage] Gordon Xmas & Dédoublonnage Gordon Revolución / Bush Caractère
+> **Message** : 
+> - Ajout de la bière `Gordon Xmas` (8.8°, style Xmas, brasserie `Gordon (John Martin)`) dans `belgiumbeer.json` avec l'image `images/beer/be/gordon-xmas.png` (déplacée depuis `images/beer/notadded/`).
+> - Suppression du doublon `Gordon Revolución` dans `belgiumbeer.json` et mise à jour de sa fiche vers les bonnes caractéristiques (5.9°, Blonde Aromatisée, arômes citron vert).
+> - Suppression des doublons de l'ancienne appellation ambrée de la Bush (`BUSH AMBREE CARACTERE` dans `belgiumbeer.json` et `Bush Amber 12° Caractere` dans `newbeer.json`) pour ne conserver que la référence actuelle `BUSH CARACTÈRE`.
+
+

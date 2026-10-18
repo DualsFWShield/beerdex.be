@@ -4938,21 +4938,6 @@
     "rarity_rank": "Rare"
   },
   {
-    "title": "Bush Amber 12° Caractere",
-    "brewery": "Dubuisson",
-    "type": "Blonde",
-    "volume": "0.33 L",
-    "alcohol": "12°",
-    "id": "BUSH_AMBER_12_CARACTERE_BLONDE_0.33",
-    "image": "images/beer/be/bush-amber-12-caractere-33cl.png",
-    "production_volume": "Régionale",
-    "distribution": "Cavistes & Supermarchés",
-    "barrel_aged": false,
-    "community_rating": 3.7,
-    "ingredients": "Standard",
-    "rarity_rank": "Commun"
-  },
-  {
     "title": "Petrus Nitro Quad Chocolate & Cherry",
     "brewery": "De Brabandere",
     "type": "Quadruple (Brune)",

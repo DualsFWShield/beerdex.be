@@ -439,22 +439,6 @@
     "rarity_rank": "Base"
   },
   {
-    "title": "BUSH AMBREE CARACTERE",
-    "brewery": "DUBUISSON",
-    "type": "Ambrée",
-    "volume": "0.33 L",
-    "alcohol": "12°",
-    "id": "BUSH AMBREE CARACTERE_AMBREE_0.33",
-    "image": "images/beer/be/BUSH_AMBREE_CARACTERE_AMBREE_033.png",
-    "production_volume": "Régionale",
-    "distribution": "Partout",
-    "barrel_aged": false,
-    "community_rating": 3.7,
-    "ingredients": "Malt Caramel",
-    "rarity_rank": "Commun",
-    "barcode": "5411551300818"
-  },
-  {
     "title": "BUSH BLONDE",
     "brewery": "DUBUISSON",
     "type": "Blonde",
@@ -3608,17 +3592,17 @@
   {
     "title": "Gordon Revolución",
     "brewery": "Gordon (John Martin)",
-    "type": "Bière aromatisée Tequila",
-    "volume": "0.33 L",
-    "alcohol": "8.0°",
-    "id": "BE_GORDON_REVOLUCION_033",
-    "image": "images/beer/world/gordon-revolucion.jpg",
+    "type": "Blonde Aromatisée",
+    "volume": "0.5 L",
+    "alcohol": "5.9°",
+    "id": "BE_GORDON_REVOLUCION_050",
+    "image": "images/beer/be/gordon-revolucion.jpg",
     "production_volume": "Industrielle",
-    "distribution": "Supermarché",
+    "distribution": "Partout",
     "barrel_aged": false,
-    "community_rating": 2.6,
-    "ingredients": "Bière aromatisée tequila",
-    "rarity_rank": "Base"
+    "community_rating": 3.5,
+    "ingredients": "Eau, malt d'orge, sirop de glucose, houblon, acide citrique, acide lactique, arômes (Citron Vert)",
+    "rarity_rank": "Commun"
   },
   {
     "title": "Gordon Xotic Lime Mojito",
@@ -3693,21 +3677,6 @@
     "barrel_aged": false,
     "community_rating": 3.2,
     "ingredients": "Eau, malt d'orge, maïs, houblon",
-    "rarity_rank": "Commun"
-  },
-  {
-    "title": "Gordon Revolución",
-    "brewery": "Gordon Finest Beers",
-    "type": "Blonde Aromatisée",
-    "volume": "0.50 L",
-    "alcohol": "5.9°",
-    "id": "BE_GORDON_REVOLUCION_050",
-    "image": "images/beer/be/gordon-revolucion.jpg",
-    "production_volume": "Industrielle",
-    "distribution": "Partout",
-    "barrel_aged": false,
-    "community_rating": 3.5,
-    "ingredients": "Eau, malt d'orge, sirop de glucose, houblon, acide citrique, acide lactique, arômes (Citron Vert)",
     "rarity_rank": "Commun"
   },
   {
@@ -6266,5 +6235,21 @@
     "ingredients": "Bière lager Mythos, jus de citron concentré",
     "rarity_rank": "Commun",
     "barcode": "5201309338015"
+  },
+  {
+    "title": "Gordon Xmas",
+    "brewery": "Gordon (John Martin)",
+    "type": "Xmas",
+    "volume": "0.33 L",
+    "alcohol": "8.8°",
+    "id": "BE_GORDON_XMAS_033",
+    "image": "images/beer/be/gordon-xmas.png",
+    "production_volume": "Industrielle",
+    "distribution": "Supermarché",
+    "barrel_aged": false,
+    "community_rating": 3.6,
+    "ingredients": "Eau, malt d'orge, houblon, levure, arôme toffee",
+    "rarity_rank": "Saisonnière",
+    "description": "Gordon Xmas kicked off the tradition of Christmas brews in the 1930s. The perfect accompaniment at Christmas dinners and New Year’s parties, this beer dons its glad rags, while its supple foam melts in the mouth and the white flakes against a red background tickle the nose. A perfect gift for under the Christmas tree! With everyone chanting in unison: Merry Gordon Xmas!"
   }
 ]
